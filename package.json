@@ -12,11 +12,17 @@
     "@types/react": "^16.14.23",
     "@types/react-dom": "^16.9.14",
     "@types/react-redux": "^7.1.23",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "install-peerdeps": "^3.0.3",
     "module-alias": "^2.2.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.6",
     "react-scripts": "5.0.0",
+    "styled-components": "^5.3.3",
     "typescript": "~4.1.5"
   },
   "scripts": {
@@ -41,6 +47,10 @@
     ]
   },
   "devDependencies": {
+    "@types/styled-components": "^5.1.24",
+    "eslint-import-resolver-typescript": "^2.5.0",
+    "install": "^0.13.0",
+    "npm": "^8.5.3",
     "react-app-rewire-alias": "^1.1.7",
     "react-app-rewired": "^2.2.1",
     "tsconfig-paths": "^3.13.0"

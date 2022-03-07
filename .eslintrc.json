@@ -11,11 +11,17 @@
       "node": {
         "extensions": [".js", ".jsx", ".ts", ".tsx"],
         "moduleDirectory": ["node_modules", "src/"]
+      },
+      "alias": {
+        "extensions": [".js", ".jsx"],
+        "map": [["@", "."]]
       }
     }
   },
   "extends": [
     "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "airbnb",
     "prettier",
     "plugin:import/errors",
     "plugin:import/warnings",
@@ -35,6 +41,8 @@
     // note you must disable the base rule as it can report incorrect errors
     "no-use-before-define": "off",
     "@typescript-eslint/no-use-before-define": ["error"],
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": ["error"],
     "react/jsx-filename-extension": [
       2,
       { "extensions": [".js", ".jsx", ".ts", ".tsx"] }
