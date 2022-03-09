@@ -7,6 +7,7 @@ export const TabsHeader = styled.ul`
   flex-wrap: nowrap;
   align-items: center;
   gap: 2px;
+  overflow-x: auto;
 
   background: #eee;
   margin: 0;

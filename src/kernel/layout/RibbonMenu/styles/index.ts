@@ -7,5 +7,9 @@ export { TabsContent } from "./TabsContent";
 export { TabContent } from "./TabContent";
 export { StyledSection, SectionName, SectionContent } from "./TabSection";
 
-const RibbonMenu = styled.nav``;
+const RibbonMenu = styled.nav`
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 0;
+`;
 export default RibbonMenu;

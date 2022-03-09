@@ -8,9 +8,11 @@ export const TabsContent = styled.ul`
   align-items: center;
   padding-left: 5px;
   gap: 5px;
+  overflow-x: auto;
 
   background: #white;
   border: 1px solid #aaa;
   margin: 0;
-  min-height: 100px;
+  min-height: 130px;
+  max-height: 130px;
 `;

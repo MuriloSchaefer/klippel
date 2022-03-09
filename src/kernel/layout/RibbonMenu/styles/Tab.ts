@@ -15,8 +15,6 @@ export const Tab = styled.li<TabProps>`
   text-align: center;
   width: 12ch;
 
-  margin-left: -1px;
-  padding-top: 4px;
   height: 25px;
   cursor: pointer;
   border-radius: 5px 5px 0 0;

@@ -25,7 +25,10 @@ const TabSection = ({
   return (
     <StyledSection>
       <SectionContent>{children}</SectionContent>
-      <SectionName onClick={handleDropDownToggle}>
+      <SectionName
+        onClick={handleDropDownToggle}
+        hasDropdown={dropdownContent !== null}
+      >
         {name}{" "}
         {dropdownContent && <DropdownSectionIcon open={isDropdownOpen} />}
       </SectionName>

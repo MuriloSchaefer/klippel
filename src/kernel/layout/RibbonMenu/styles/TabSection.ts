@@ -1,27 +1,37 @@
 import styled from "styled-components";
 
-export const SectionName = styled.div`
+export const SectionName = styled.div<{ hasDropdown: boolean }>`
   height: 20px;
   background-color: #eee;
+  cursor: ${(p) => (p.hasDropdown ? "pointer" : "default")};
 `;
 
 export const SectionContent = styled.div`
-  height: 70px;
-  background-color: pink;
+  height: 90px;
+  background-color: #eee;
 `;
 
-export const StyledSection = styled.div`
+export const StyledSection = styled.section`
   width: fit-content;
-  background-color: gray;
 
+  position: static;
   border: 1px solid #aaa;
-  max-height: 90px;
   display: flex;
   flex-direction: column;
+  max-height: 130px;
 `;
 
 export const DropdownSectionContent = styled.div<{ open: boolean }>`
-  display: ${(p) => (p.open ? "block" : "none")};
+  background-color: #000;
+  border: 1px solid #aaa;
+  border-top: none;
+
+  position: absolute;
+  margin: auto;
+  margin-top: 110px;
+  z-index: 1;
+  margin-right: auto;
+  display: ${(p) => (p.open ? "inline-block" : "none")};
 `;
 
 export const DropdownSectionIcon = styled.div<{ open: boolean }>`

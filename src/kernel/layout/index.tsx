@@ -22,16 +22,22 @@ export default (): React.ReactElement => {
         <TabSection
           key="1"
           name="Produto"
-          dropdownContent={
-            <div style={{ height: "300px", backgroundColor: "black" }} />
-          }
+          dropdownContent={<div style={{ height: "300px", width: "400px" }} />}
         >
           <div style={{ width: "200px", height: "90px" }} />
         </TabSection>,
-        <TabSection key="2" name="Modelo">
+        <TabSection
+          key="2"
+          name="Modelo"
+          dropdownContent={<div style={{ height: "300px", width: "400px" }} />}
+        >
           <div style={{ width: "400px", height: "90px" }} />
         </TabSection>,
-        <TabSection key="3" name="Composição">
+        <TabSection
+          key="3"
+          name="Composição"
+          dropdownContent={<div style={{ height: "300px", width: "400px" }} />}
+        >
           <div style={{ width: "500px", height: "90px" }} />
         </TabSection>,
         <TabSection key="4" name="Fichas">
@@ -53,6 +59,7 @@ export default (): React.ReactElement => {
   return (
     <ThemeContext.Provider value={memoizedTheme}>
       <RibbonMenu tabs={tabs} initialTab="composer" />
+      <div style={{ height: "1500px", width: "100%" }} />
     </ThemeContext.Provider>
   );
 };
