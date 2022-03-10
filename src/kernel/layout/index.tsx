@@ -1,10 +1,13 @@
-import React, { useMemo, useState } from "react";
+import Canvas from "@kernel/Canvas";
+import ModulesContext from "@kernel/contexts/modules";
+import React, { useContext, useMemo, useState } from "react";
 import RibbonMenu, { Tabs } from "./RibbonMenu";
 import TabSection from "./RibbonMenu/TabSection";
 import { Theme, ThemeContext } from "./ThemeContext";
 
 export default (): React.ReactElement => {
   const [theme, setTheme] = useState<Theme>(Theme.Dark);
+  const { loadedModules } = useContext(ModulesContext);
 
   const memoizedTheme = useMemo(
     () => ({
@@ -56,10 +59,15 @@ export default (): React.ReactElement => {
     },
   };
 
+  // load modules tabs
+  loadedModules.forEach((module) => {
+    console.log(module);
+  });
+
   return (
     <ThemeContext.Provider value={memoizedTheme}>
       <RibbonMenu tabs={tabs} initialTab="composer" />
-      <div style={{ height: "1500px", width: "100%" }} />
+      <Canvas />
     </ThemeContext.Provider>
   );
 };

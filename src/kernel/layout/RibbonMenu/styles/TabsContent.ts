@@ -10,7 +10,7 @@ export const TabsContent = styled.ul`
   gap: 5px;
   overflow-x: auto;
 
-  background: #white;
+  background-color: white;
   border: 1px solid #aaa;
   margin: 0;
   min-height: 130px;

@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 export const SectionName = styled.div<{ hasDropdown: boolean }>`
   height: 20px;
+  width: 100%;
   background-color: #eee;
   cursor: ${(p) => (p.hasDropdown ? "pointer" : "default")};
 `;
@@ -19,6 +20,7 @@ export const StyledSection = styled.section`
   display: flex;
   flex-direction: column;
   max-height: 130px;
+  align-items: center;
 `;
 
 export const DropdownSectionContent = styled.div<{ open: boolean }>`
