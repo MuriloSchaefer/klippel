@@ -1,13 +1,19 @@
-import Canvas from "@kernel/Canvas";
-import ModulesContext from "@kernel/contexts/modules";
-import React, { useContext, useMemo, useState } from "react";
+import ModulesContext from "@kernel/modules/context";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import Viewport from "@kernel/viewport";
 import RibbonMenu, { Tabs } from "./RibbonMenu";
-import TabSection from "./RibbonMenu/TabSection";
 import { Theme, ThemeContext } from "./ThemeContext";
 
-export default (): React.ReactElement => {
+interface LayoutProps {
+  children: React.ReactElement<typeof Viewport>;
+}
+
+export default ({ children }: LayoutProps): React.ReactElement => {
   const [theme, setTheme] = useState<Theme>(Theme.Dark);
-  const { loadedModules } = useContext(ModulesContext);
+  const [tabs, setTabs] = useState<Tabs>({});
+  const [loadModules, setLoadModules] = useState(true);
+
+  const { modules } = useContext(ModulesContext);
 
   const memoizedTheme = useMemo(
     () => ({
@@ -17,57 +23,30 @@ export default (): React.ReactElement => {
     [theme]
   );
 
-  const tabs: Tabs = {
-    composer: {
-      name: "composer",
-      label: "Compositor",
-      sections: [
-        <TabSection
-          key="1"
-          name="Produto"
-          dropdownContent={<div style={{ height: "300px", width: "400px" }} />}
-        >
-          <div style={{ width: "200px", height: "90px" }} />
-        </TabSection>,
-        <TabSection
-          key="2"
-          name="Modelo"
-          dropdownContent={<div style={{ height: "300px", width: "400px" }} />}
-        >
-          <div style={{ width: "400px", height: "90px" }} />
-        </TabSection>,
-        <TabSection
-          key="3"
-          name="Composição"
-          dropdownContent={<div style={{ height: "300px", width: "400px" }} />}
-        >
-          <div style={{ width: "500px", height: "90px" }} />
-        </TabSection>,
-        <TabSection key="4" name="Fichas">
-          <div style={{ width: "200px", height: "90px" }} />
-        </TabSection>,
-      ],
-    },
-    seller: {
-      name: "seller",
-      label: "Vendas",
-      sections: [
-        <TabSection key="5" name="Leads">
-          <div style={{ width: "300px", height: "90px" }} />
-        </TabSection>,
-      ],
-    },
-  };
-
   // load modules tabs
-  loadedModules.forEach((module) => {
-    console.log(module);
-  });
+  useEffect(() => {
+    const newTabs: Tabs = {};
+    if (!loadModules) return;
+
+    modules.forEach((module) => {
+      if (module?.ribbonTabs) {
+        console.log(module);
+        Object.entries(module.ribbonTabs).forEach(([tabName, tabValues]) => {
+          newTabs[tabName] = newTabs[tabName]
+            ? newTabs[tabName]
+            : { ...tabValues, sections: [] };
+          newTabs[tabName].sections.push(...tabValues.sections);
+        });
+      }
+    });
+    setTabs(newTabs);
+    setLoadModules(false);
+  }, []);
 
   return (
     <ThemeContext.Provider value={memoizedTheme}>
       <RibbonMenu tabs={tabs} initialTab="composer" />
-      <Canvas />
+      {children}
     </ThemeContext.Provider>
   );
 };

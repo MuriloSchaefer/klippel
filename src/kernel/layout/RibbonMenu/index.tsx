@@ -8,9 +8,12 @@ import RibbonMenu, {
   Tab,
 } from "./styles";
 
+export { default as TabSection } from "./TabSection";
+
 export interface RibbonTab {
   name: string;
   label: string;
+  loaded?: boolean;
   sections: Array<React.ReactNode>;
 }
 

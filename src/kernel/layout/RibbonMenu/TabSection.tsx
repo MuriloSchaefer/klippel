@@ -25,6 +25,11 @@ const TabSection = ({
   return (
     <StyledSection>
       <SectionContent>{children}</SectionContent>
+      {dropdownContent && (
+        <DropdownSectionContent open={isDropdownOpen}>
+          {dropdownContent}
+        </DropdownSectionContent>
+      )}
       <SectionName
         onClick={handleDropDownToggle}
         hasDropdown={dropdownContent !== null}
@@ -32,11 +37,6 @@ const TabSection = ({
         {name}{" "}
         {dropdownContent && <DropdownSectionIcon open={isDropdownOpen} />}
       </SectionName>
-      {dropdownContent && (
-        <DropdownSectionContent open={isDropdownOpen}>
-          {dropdownContent}
-        </DropdownSectionContent>
-      )}
     </StyledSection>
   );
 };

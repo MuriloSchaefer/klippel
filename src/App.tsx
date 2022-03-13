@@ -1,19 +1,34 @@
-import ModulesContext from "@kernel/contexts/modules";
+// External imports
+import React, { useMemo, useRef } from "react";
+
+// Kernel imports
+import ModulesContext from "@kernel/modules/context";
 import Layout from "@kernel/layout";
-import React, { useMemo } from "react";
+
+// Modules imports
+import ComposerModule from "modules/Composer";
+import ComposerViewport from "modules/Composer/viewport";
+
+// Internal imports
 import "./App.css";
 
-import SVGModule from "modules/SVG";
-
 const App = (): React.ReactElement => {
+  const viewportRef = useRef<HTMLDivElement>(null);
   const memoizedModules = useMemo(
-    () => ({ loadedModules: [SVGModule] }),
-    [SVGModule]
+    () => ({
+      modules: new Map([[ComposerModule.name, ComposerModule]]),
+    }),
+    [ComposerModule]
   );
 
   return (
     <ModulesContext.Provider value={memoizedModules}>
-      <Layout />
+      <Layout>
+        <ComposerViewport
+          ref={viewportRef}
+          modelPath="/catalog/camiseta-fem/croqui-p/modelo.svg"
+        />
+      </Layout>
     </ModulesContext.Provider>
   );
 };

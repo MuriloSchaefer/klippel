@@ -24,7 +24,13 @@ export const StyledSection = styled.section`
 `;
 
 export const DropdownSectionContent = styled.div<{ open: boolean }>`
-  background-color: #000;
+  :before {
+    heigth: 2px;
+    width: 80%;
+    background-color: red;
+  }
+
+  background-color: #777;
   border: 1px solid #aaa;
   border-top: none;
 

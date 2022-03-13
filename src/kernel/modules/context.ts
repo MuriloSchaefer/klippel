@@ -1,12 +1,12 @@
-import { IModule } from "@kernel/modules/base";
 import { createContext } from "react";
+import { IModule } from "./base";
 
 export type ModulesContextType = {
-  loadedModules: Array<IModule>;
+  modules: Map<string, IModule>;
 };
 
 const ModulesContext = createContext<ModulesContextType>({
-  loadedModules: [],
+  modules: new Map(),
 });
 
 export default ModulesContext;
