@@ -1,5 +1,5 @@
 import { IModule } from "@kernel/modules/base";
-import useSVG from "./hooks/useSVG";
+import useModel from "./hooks/useModel";
 import initialTabs from "./ribbonMenu";
 
 /**
@@ -9,6 +9,6 @@ import initialTabs from "./ribbonMenu";
 const ComposerModule: IModule = {
   name: "composer",
   ribbonTabs: initialTabs,
-  hooks: [useSVG],
+  hooks: [useModel],
 };
 export default ComposerModule;

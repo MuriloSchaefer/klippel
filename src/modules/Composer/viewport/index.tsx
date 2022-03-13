@@ -1,14 +1,14 @@
 import Viewport, { ViewportProps } from "@kernel/viewport";
 import React from "react";
-import useSVG from "../hooks/useSVG";
+import useModel from "../hooks/useModel";
 
-interface ComposerViewportProps extends ViewportProps {
-  modelPath: string;
-}
+type ComposerViewportProps = ViewportProps;
 
-const ComposerViewport = ({ ref, modelPath }: ComposerViewportProps) => {
-  const svgViewport = useSVG({
-    path: modelPath,
+const ComposerViewport = ({ ref }: ComposerViewportProps) => {
+  const svgViewport = useModel({
+    mannequinSize: "p",
+    product: "camiseta-fem",
+    model: "modelo",
   });
   return <Viewport ref={ref}>{svgViewport}</Viewport>;
 };

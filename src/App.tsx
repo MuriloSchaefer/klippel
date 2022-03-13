@@ -24,10 +24,7 @@ const App = (): React.ReactElement => {
   return (
     <ModulesContext.Provider value={memoizedModules}>
       <Layout>
-        <ComposerViewport
-          ref={viewportRef}
-          modelPath="/catalog/camiseta-fem/croqui-p/modelo.svg"
-        />
+        <ComposerViewport ref={viewportRef} />
       </Layout>
     </ModulesContext.Provider>
   );

@@ -1,4 +1,5 @@
 import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
+// eslint-disable-next-line import/no-cycle
 import counterReducer from "@kernel/features/redux-example/counterSlice";
 
 export const store = configureStore({
