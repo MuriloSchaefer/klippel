@@ -45,8 +45,8 @@ export const graphSlice = createSlice({
       });
     },
     addEdge: (state, action: PayloadAction<Edge>) => {
-      const exists = state.edges[action.payload.id] !== null;
-      if (exists) throw Error("Edge already exists");
+      const edge = state.edges[action.payload.id];
+      if (edge) throw Error("Edge already exists");
 
       state.edges[action.payload.id] = action.payload;
       state.adjacencyList[action.payload.sourceId].outputs.push(
@@ -55,6 +55,11 @@ export const graphSlice = createSlice({
       state.adjacencyList[action.payload.targetId].inputs.push(
         action.payload.id
       );
+
+      state.nodes[action.payload.sourceId].outputs[action.payload.targetId] =
+        action.payload;
+      state.nodes[action.payload.targetId].inputs[action.payload.sourceId] =
+        action.payload;
     },
     removeEdge: (state, action: PayloadAction<string>) => {
       const edge = state.edges[action.payload];

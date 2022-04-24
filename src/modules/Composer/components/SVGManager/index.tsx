@@ -1,12 +1,12 @@
 import React, { ReactElement, useEffect, useState } from "react";
-import { SvgLoader, SvgProxy } from "react-svgmt";
+import { SvgLoader } from "react-svgmt";
 import useSVG from "../../hooks/loadSVG";
 
 interface UseModelProps {
   mannequinSize: string;
   product: string;
   model: string;
-  onPartsLoaded: (svgNode: SVGElement) => void;
+  children: ReactElement;
 }
 
 /** Hook that loads an SVG model */
@@ -14,7 +14,7 @@ const SVGManager = ({
   mannequinSize,
   product,
   model,
-  onPartsLoaded,
+  children,
 }: UseModelProps): ReactElement => {
   const [svgXML, setSvgXML] = useState<string>("");
 
@@ -27,13 +27,7 @@ const SVGManager = ({
   }, [mannequinSize, product, model]);
 
   return svgXML ? (
-    <SvgLoader svgXML={svgXML}>
-      <SvgProxy
-        selector="#partes"
-        fill="red"
-        onElementSelected={(svgNode: SVGElement) => onPartsLoaded(svgNode)}
-      />
-    </SvgLoader>
+    <SvgLoader svgXML={svgXML}>{children}</SvgLoader>
   ) : (
     <div>Loading...</div>
   );
