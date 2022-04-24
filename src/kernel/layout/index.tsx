@@ -28,7 +28,7 @@ export default ({ children }: LayoutProps): React.ReactElement => {
     const newTabs: Tabs = {};
     if (!loadModules) return;
 
-    modules.forEach((module) => {
+    Object.values(modules).forEach((module) => {
       if (module?.components.ribbonTabs) {
         Object.entries(module.components.ribbonTabs).forEach(
           ([tabName, tabValues]) => {

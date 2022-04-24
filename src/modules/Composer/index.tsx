@@ -3,9 +3,9 @@ import useModel from "./components/SVGManager";
 import initialTabs from "./components/ribbonMenu";
 import ComposerViewport from "./components/viewport";
 
-export interface IGraphModule extends IModule {
+export interface IComposerModule extends IModule {
   hooks: {
-    useModel: () => ReturnType<typeof useModel>;
+    useModel: typeof useModel;
   };
 }
 
@@ -13,7 +13,7 @@ export interface IGraphModule extends IModule {
  * Composer module handles any operation on SVG
  * such as loading, parsing, and serializing
  */
-const ComposerModule: IModule = {
+const ComposerModule: IComposerModule = {
   name: "composer",
   components: {
     ribbonTabs: initialTabs,

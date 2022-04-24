@@ -13,7 +13,8 @@ export const initializeStore = () => {
   const { modules } = useContext(ModulesContext);
 
   const modulesReducers = Object.entries(modules).reduce(
-    (store, [name, module]) => ({ ...store, [name]: module.reducer }),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (store, [_name, module]) => ({ ...store, ...module.reducers }),
     staticReducers
   );
 

@@ -30,6 +30,7 @@ const SVGManager = ({
     <SvgLoader svgXML={svgXML}>
       <SvgProxy
         selector="#partes"
+        fill="red"
         onElementSelected={(svgNode: SVGElement) => onPartsLoaded(svgNode)}
       />
     </SvgLoader>

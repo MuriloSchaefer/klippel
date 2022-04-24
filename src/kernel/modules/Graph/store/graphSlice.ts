@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 // eslint-disable-next-line import/no-cycle
 import { RootState } from "@kernel/store";
+
 import Node from "../interfaces/Node";
 import Edge from "../interfaces/Edge";
 

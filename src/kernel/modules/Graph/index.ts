@@ -1,6 +1,8 @@
 import { IModule } from "../base";
-import useGraph from "../../hooks/useGraph";
+// eslint-disable-next-line import/no-cycle
+import useGraph from "./hooks/useGraph";
 
+// eslint-disable-next-line import/no-cycle
 import reducer, {
   addNode,
   removeNode,

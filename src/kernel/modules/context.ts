@@ -2,11 +2,11 @@ import { createContext } from "react";
 import { IModule } from "./base";
 
 export type ModulesContextType = {
-  modules: Map<string, IModule>;
+  modules: { [name: string]: IModule };
 };
 
 const ModulesContext = createContext<ModulesContextType>({
-  modules: new Map(),
+  modules: {},
 });
 
 export default ModulesContext;
