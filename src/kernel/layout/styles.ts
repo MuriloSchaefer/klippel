@@ -1,4 +1,4 @@
-import Viewport from "@kernel/viewport";
+import Viewport from "@kernel/layout/Viewport";
 import styled from "styled-components";
 
 export const FullScreenViewport = styled(Viewport)`

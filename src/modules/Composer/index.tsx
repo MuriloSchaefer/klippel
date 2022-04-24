@@ -1,14 +1,24 @@
 import { IModule } from "@kernel/modules/base";
-import useModel from "./hooks/useModel";
-import initialTabs from "./ribbonMenu";
+import useModel from "./components/SVGManager";
+import initialTabs from "./components/ribbonMenu";
+import ComposerViewport from "./components/viewport";
+
+export interface IGraphModule extends IModule {
+  hooks: {
+    useModel: () => ReturnType<typeof useModel>;
+  };
+}
 
 /**
- * SVG module handles any operation on SVG
+ * Composer module handles any operation on SVG
  * such as loading, parsing, and serializing
  */
 const ComposerModule: IModule = {
   name: "composer",
-  ribbonTabs: initialTabs,
-  hooks: [useModel],
+  components: {
+    ribbonTabs: initialTabs,
+    viewport: ComposerViewport,
+  },
+  hooks: { useModel },
 };
 export default ComposerModule;

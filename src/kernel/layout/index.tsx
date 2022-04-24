@@ -1,6 +1,6 @@
 import ModulesContext from "@kernel/modules/context";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import Viewport from "@kernel/viewport";
+import Viewport from "@kernel/layout/Viewport";
 import RibbonMenu, { Tabs } from "./RibbonMenu";
 import { Theme, ThemeContext } from "./ThemeContext";
 
@@ -29,14 +29,15 @@ export default ({ children }: LayoutProps): React.ReactElement => {
     if (!loadModules) return;
 
     modules.forEach((module) => {
-      if (module?.ribbonTabs) {
-        console.log(module);
-        Object.entries(module.ribbonTabs).forEach(([tabName, tabValues]) => {
-          newTabs[tabName] = newTabs[tabName]
-            ? newTabs[tabName]
-            : { ...tabValues, sections: [] };
-          newTabs[tabName].sections.push(...tabValues.sections);
-        });
+      if (module?.components.ribbonTabs) {
+        Object.entries(module.components.ribbonTabs).forEach(
+          ([tabName, tabValues]) => {
+            newTabs[tabName] = newTabs[tabName]
+              ? newTabs[tabName]
+              : { ...tabValues, sections: [] };
+            newTabs[tabName].sections.push(...tabValues.sections);
+          }
+        );
       }
     });
     setTabs(newTabs);
