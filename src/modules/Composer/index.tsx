@@ -1,7 +1,7 @@
 import { IModule } from "@kernel/modules/base";
 import useModel from "./components/SVGManager";
-import initialTabs from "./components/ribbonMenu";
-import ComposerViewport from "./components/viewport";
+import initialTabs from "./components/RibbonMenu";
+import ComposerViewport from "./components/Viewport";
 
 export interface IComposerModule extends IModule {
   hooks: {
@@ -18,6 +18,9 @@ const ComposerModule: IComposerModule = {
   components: {
     ribbonTabs: initialTabs,
     viewport: ComposerViewport,
+  },
+  store: {
+    reducers: {},
   },
   hooks: { useModel },
 };

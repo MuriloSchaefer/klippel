@@ -8,13 +8,14 @@ import ModulesContext from "@kernel/modules/context";
 import Layout from "@kernel/layout";
 
 // Modules imports
-import GraphModule from "@kernel/modules/Graph";
+import GraphModule from "@kernel/modules/GraphsManager";
 
 import ComposerModule from "modules/Composer";
-import ComposerViewport from "modules/Composer/components/viewport";
+import ComposerViewport from "modules/Composer/components/Viewport";
 
 // Internal imports
 import "./App.css";
+import EventManager from "@kernel/events/manager";
 
 const App = (): React.ReactElement => {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,7 @@ const App = (): React.ReactElement => {
   return (
     <ModulesContext.Provider value={memoizedModules}>
       <Provider store={initializeStore()}>
+        <EventManager />
         <Layout>
           <ComposerViewport innerRef={viewportRef} />
         </Layout>

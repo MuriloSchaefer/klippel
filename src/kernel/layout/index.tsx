@@ -1,15 +1,22 @@
-import ModulesContext from "@kernel/modules/context";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import Viewport from "@kernel/layout/Viewport";
-import RibbonMenu, { Tabs } from "./RibbonMenu";
-import { Theme, ThemeContext } from "./ThemeContext";
+
+import ModulesContext from "@kernel/modules/context";
+
+import { Theme, ThemeContext } from "../contexts/ThemeContext";
+import RibbonMenu, { Tabs } from "./components/RibbonMenu";
+import Viewport from "./components/Viewport";
+import Content from "./components/Content";
+
+import LeftPanel from "./components/Sidepanels/components/LeftPanel";
+import RightPanel from "./components/Sidepanels/components/RightPanel";
+import { LeftPanelContext } from "./components/Sidepanels/contexts/LeftPanelContext";
 
 interface LayoutProps {
   children: React.ReactElement<typeof Viewport>;
 }
 
 export default ({ children }: LayoutProps): React.ReactElement => {
-  const [theme, setTheme] = useState<Theme>(Theme.Dark);
+  const [theme, setTheme] = useState<Theme>(Theme.Light);
   const [tabs, setTabs] = useState<Tabs>({});
   const [loadModules, setLoadModules] = useState(true);
 
@@ -21,6 +28,21 @@ export default ({ children }: LayoutProps): React.ReactElement => {
       setTheme,
     }),
     [theme]
+  );
+
+  const [leftPanel, setLeftPanel] = useState<{
+    title: string;
+    content: React.ReactNode;
+  }>({
+    title: "Left Panel Title",
+    content: <div>left panel content</div>,
+  });
+  const memoizedLeftPanel = useMemo(
+    () => ({
+      leftPanel,
+      setLeftPanel,
+    }),
+    [leftPanel]
   );
 
   // load modules tabs
@@ -47,7 +69,15 @@ export default ({ children }: LayoutProps): React.ReactElement => {
   return (
     <ThemeContext.Provider value={memoizedTheme}>
       <RibbonMenu tabs={tabs} initialTab="composer" />
-      {children}
+      <LeftPanelContext.Provider value={memoizedLeftPanel}>
+        <Content>
+          <LeftPanel />
+          <div style={{ gridArea: "content", padding: "15px" }}>{children}</div>
+          <RightPanel title="test">
+            <div>test</div>
+          </RightPanel>
+        </Content>
+      </LeftPanelContext.Provider>
     </ThemeContext.Provider>
   );
 };

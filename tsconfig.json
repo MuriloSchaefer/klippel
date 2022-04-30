@@ -17,7 +17,8 @@
     "jsx": "react-jsx",
     "baseUrl": "./src",
     "paths": {
-      "@kernel/*": ["kernel/*"]
+      "@kernel/*": ["kernel/*"],
+      "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"]
     }
   },
   "include": ["src"]

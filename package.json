@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^6.4.3",
     "@reduxjs/toolkit": "^1.8.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
     "@types/jest": "^24.9.1",
     "@types/node": "^12.20.46",
-    "@types/react": "^16.14.23",
-    "@types/react-dom": "^16.9.14",
+    "@types/react": "^18.0.7",
+    "@types/react-dom": "^18.0.0",
     "@types/react-redux": "^7.1.23",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -18,12 +19,13 @@
     "eslint-plugin-prettier": "^4.0.0",
     "install-peerdeps": "^3.0.3",
     "module-alias": "^2.2.2",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "prettier": "^2.6.2",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "react-redux": "^7.2.6",
     "react-scripts": "5.0.0",
     "react-svgmt": "^1.2.0",
-    "styled-components": "^5.3.3",
+    "styled-components": "^6.0.0-alpha.5",
     "svg-parser": "^2.0.4",
     "typescript": "~4.1.5"
   },
@@ -31,10 +33,10 @@
     "styled-components": "^5.3.3"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
-    "eject": "react-app-rewired eject"
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"

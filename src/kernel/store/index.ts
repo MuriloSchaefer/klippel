@@ -1,12 +1,21 @@
-import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
-import { useContext } from "react";
+import {
+  configureStore,
+  ThunkAction,
+  Action,
+  AnyAction,
+  Middleware,
+} from "@reduxjs/toolkit";
+import React, { useContext } from "react";
 import ModulesContext from "@kernel/modules/context";
 
 // eslint-disable-next-line import/no-cycle
-import graphModule from "@kernel/modules/Graph";
+import graphModule from "@kernel/modules/GraphsManager";
 
-const staticReducers = {
-  ...graphModule.reducers,
+const staticReducers: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: React.Reducer<any, AnyAction>;
+} = {
+  ...graphModule.store.reducers,
 };
 
 export const initializeStore = () => {
@@ -14,12 +23,23 @@ export const initializeStore = () => {
 
   const modulesReducers = Object.entries(modules).reduce(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (store, [_name, module]) => ({ ...store, ...module.reducers }),
+    (store, [_name, module]) => ({ ...store, ...module.store.reducers }),
     staticReducers
+  );
+
+  const middlewares = Object.entries(modules).reduce(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (acc: Middleware[], [_name, module]) => [
+      ...acc,
+      ...(module.store.middlewares ?? []),
+    ],
+    []
   );
 
   return configureStore({
     reducer: modulesReducers,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(middlewares),
   });
 };
 

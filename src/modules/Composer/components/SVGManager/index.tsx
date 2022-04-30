@@ -6,7 +6,7 @@ interface UseModelProps {
   mannequinSize: string;
   product: string;
   model: string;
-  children: ReactElement;
+  children: ReactElement[];
 }
 
 /** Hook that loads an SVG model */
