@@ -1,8 +1,6 @@
-import { Middleware, AnyAction } from "@reduxjs/toolkit";
+import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 import { Reducer } from "react";
 import { IModule } from "../base";
-// eslint-disable-next-line import/no-cycle
-import useGraph from "./hooks/useGraph";
 
 // eslint-disable-next-line import/no-cycle
 import reducer, {
@@ -13,6 +11,7 @@ import reducer, {
   updateNode,
   addEdge,
   removeEdge,
+  selectGraphById,
 } from "./store/graphsManagerSlice";
 import createGraph from "./store/middlewares/newGraph";
 import { GraphsManagerState } from "./store/state";
@@ -28,13 +27,13 @@ export interface IGraphModule extends IModule {
       addEdge: typeof addEdge;
       removeEdge: typeof removeEdge;
     };
-    middlewares: Middleware[];
+    middlewares: ListenerMiddlewareInstance[];
     reducers: {
       graphsManager: Reducer<GraphsManagerState, AnyAction>;
     };
-  };
-  hooks: {
-    useGraph: typeof useGraph;
+    selectors: {
+      selectGraphById: typeof selectGraphById;
+    };
   };
 }
 
@@ -57,8 +56,9 @@ const GraphModule: IGraphModule = {
     },
     middlewares: [createGraph],
     reducers: { graphsManager: reducer },
+    selectors: { selectGraphById },
   },
-  hooks: { useGraph },
+  hooks: {},
 };
 
 export default GraphModule;

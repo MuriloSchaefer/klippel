@@ -109,6 +109,7 @@ const ComposerViewport = ({
   };
 
   const onPartsLoaded = (svgNode: SVGElement) => {
+    dispatch({ type: "[Composer] Parse Elements" });
     parseElements(svgNode, root);
     setLeftPanel({
       ...leftPanel,

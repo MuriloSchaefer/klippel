@@ -1,14 +1,16 @@
-import { AnyAction, Dispatch } from "redux";
+import { createListenerMiddleware } from "@reduxjs/toolkit";
+import { AnyAction } from "redux";
+import { newGraph } from "../graphsManagerSlice";
 
-const createGraph =
-  ({ dispatch }: { dispatch: Dispatch }) =>
-  (next: Dispatch<AnyAction>) =>
-  (action: AnyAction) => {
-    if (action.type === "graphs/newGraph") {
-      const { graphId } = action.payload;
-      dispatch({ type: "new", payload: { graphId } });
-    }
-    return next(action);
-  };
+const newGraphMiddleware = createListenerMiddleware();
 
-export default createGraph;
+newGraphMiddleware.startListening({
+  actionCreator: newGraph,
+  effect: (action: AnyAction, listenerApi) => {
+    const { graphId } = action.payload;
+    console.log(`Graph ${graphId} created`);
+    listenerApi.dispatch({ type: "test" });
+  },
+});
+
+export default newGraphMiddleware;

@@ -24,7 +24,8 @@ export const initializeStore = (modules: { [name: string]: IModule }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (acc: Middleware[], [_name, module]) => [
       ...acc,
-      ...(module.store.middlewares ?? []),
+      ...(module.store.middlewares?.map((listener) => listener.middleware) ??
+        []),
     ],
     []
   );
@@ -32,7 +33,7 @@ export const initializeStore = (modules: { [name: string]: IModule }) => {
   return configureStore({
     reducer: modulesReducers,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(middlewares),
+      getDefaultMiddleware().prepend(middlewares),
   });
 };
 

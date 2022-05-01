@@ -2,6 +2,7 @@ import { IModule } from "@kernel/modules/base";
 import useModel from "./components/SVGManager";
 import initialTabs from "./components/RibbonMenu";
 import ComposerViewport from "./components/Viewport";
+import parseElementsMiddleware from "./store/middlewares/parseElements";
 
 export interface IComposerModule extends IModule {
   hooks: {
@@ -21,6 +22,7 @@ const ComposerModule: IComposerModule = {
   },
   store: {
     reducers: {},
+    middlewares: [parseElementsMiddleware],
   },
   hooks: { useModel },
 };

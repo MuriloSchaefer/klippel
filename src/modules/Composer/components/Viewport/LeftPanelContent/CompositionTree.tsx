@@ -1,4 +1,6 @@
-import useGraph from "@kernel/modules/GraphsManager/hooks/useGraph";
+import useModule from "@kernel/hooks/useModule";
+import { IGraphModule } from "@kernel/modules/GraphsManager";
+import { useAppSelector } from "@kernel/store/hooks";
 import React from "react";
 import styled from "styled-components";
 
@@ -26,7 +28,12 @@ const CompositionTree = ({
   graphId,
   rootId = "root",
 }: CompositionTreeProps): React.ReactElement => {
-  const { adjacencyList, edges } = useGraph(graphId);
+  const graphManager = useModule<IGraphModule>("GraphsManager");
+  const { selectGraphById } = graphManager.store.selectors;
+
+  const { adjacencyList, edges } = useAppSelector((state) =>
+    selectGraphById(state, graphId)
+  );
 
   const buildTree = (nodeId: string): React.ReactElement => {
     const isComposition = adjacencyList[nodeId].outputs.length > 0;
@@ -37,7 +44,7 @@ const CompositionTree = ({
             <ItemLabel>{nodeId}</ItemLabel>
             {isComposition && (
               <TreeItem key={nodeId}>
-                {adjacencyList[nodeId].outputs.map((edgeId) => {
+                {adjacencyList[nodeId].outputs.map((edgeId: string) => {
                   const childId = edges[edgeId].targetId;
                   return buildTree(childId);
                 })}
