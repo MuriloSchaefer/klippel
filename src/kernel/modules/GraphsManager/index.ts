@@ -14,6 +14,7 @@ import reducer, {
   addEdge,
   removeEdge,
 } from "./store/graphsManagerSlice";
+import createGraph from "./store/middlewares/newGraph";
 import { GraphsManagerState } from "./store/state";
 
 export interface IGraphModule extends IModule {
@@ -54,7 +55,7 @@ const GraphModule: IGraphModule = {
       addEdge,
       removeEdge,
     },
-    middlewares: [],
+    middlewares: [createGraph],
     reducers: { graphsManager: reducer },
   },
   hooks: { useGraph },

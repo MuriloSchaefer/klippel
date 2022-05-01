@@ -26,12 +26,12 @@ const App = (): React.ReactElement => {
         [ComposerModule.name]: ComposerModule,
       },
     }),
-    [ComposerModule]
+    [GraphModule, ComposerModule]
   );
 
   return (
     <ModulesContext.Provider value={memoizedModules}>
-      <Provider store={initializeStore()}>
+      <Provider store={initializeStore(memoizedModules.modules)}>
         <EventManager />
         <Layout>
           <ComposerViewport innerRef={viewportRef} />

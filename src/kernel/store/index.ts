@@ -5,22 +5,15 @@ import {
   AnyAction,
   Middleware,
 } from "@reduxjs/toolkit";
-import React, { useContext } from "react";
-import ModulesContext from "@kernel/modules/context";
-
-// eslint-disable-next-line import/no-cycle
-import graphModule from "@kernel/modules/GraphsManager";
+import React from "react";
+import { IModule } from "@kernel/modules/base";
 
 const staticReducers: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: React.Reducer<any, AnyAction>;
-} = {
-  ...graphModule.store.reducers,
-};
+} = {};
 
-export const initializeStore = () => {
-  const { modules } = useContext(ModulesContext);
-
+export const initializeStore = (modules: { [name: string]: IModule }) => {
   const modulesReducers = Object.entries(modules).reduce(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (store, [_name, module]) => ({ ...store, ...module.store.reducers }),
