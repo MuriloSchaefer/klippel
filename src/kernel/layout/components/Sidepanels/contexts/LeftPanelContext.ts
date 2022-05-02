@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext } from "react";
 
 export type LeftPanelType = {
   title: string;
@@ -15,4 +15,3 @@ export const LeftPanelContext = createContext<LeftPanelContextProps>({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setLeftPanel: (_leftPanel: LeftPanelType) => null,
 });
-export const useLeftPanel = () => useContext(LeftPanelContext);

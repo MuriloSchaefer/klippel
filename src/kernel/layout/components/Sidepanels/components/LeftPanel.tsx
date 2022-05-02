@@ -1,9 +1,11 @@
-import React, { MouseEvent, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { Theme, useTheme } from "@kernel/contexts/ThemeContext";
+import { useAppDispatch } from "@kernel/store/hooks";
+import { leftPanelCollapsed, leftPanelExpanded } from "@kernel/layout/ations";
 import SidePanelContent from "./SidePanelContent";
 import LeftPanelTitle from "./LeftPanelTitle";
-import { useLeftPanel } from "../contexts/LeftPanelContext";
+import useLeftPanel from "../hooks/useLeftPanel";
 
 const StyledLeftPanel = styled("div")<{ theme: Theme }>`
   grid-area: leftPanel;
@@ -15,14 +17,16 @@ const StyledLeftPanel = styled("div")<{ theme: Theme }>`
 `;
 
 const LeftPanel = () => {
+  const dispatch = useAppDispatch();
   const { theme } = useTheme();
   const [expanded, setExpanded] = useState(true);
 
   const { leftPanel } = useLeftPanel();
 
-  const handleClick = (event: MouseEvent) => {
+  const handleClick = () => {
     // expandable logic for left panel
-    console.log(event);
+    if (expanded) dispatch(leftPanelCollapsed());
+    else dispatch(leftPanelExpanded());
     setExpanded(!expanded);
   };
 

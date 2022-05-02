@@ -2,7 +2,10 @@ import { IModule } from "@kernel/modules/base";
 import useModel from "./components/SVGManager";
 import initialTabs from "./components/RibbonMenu";
 import ComposerViewport from "./components/Viewport";
-import parseElementsMiddleware from "./store/middlewares/parseElements";
+import { MODULE_NAME } from "./constants";
+
+import parseMannequin from "./store/middlewares/parseMannequin";
+import parseElements from "./store/middlewares/parseParts";
 
 export interface IComposerModule extends IModule {
   hooks: {
@@ -15,14 +18,14 @@ export interface IComposerModule extends IModule {
  * such as loading, parsing, and serializing
  */
 const ComposerModule: IComposerModule = {
-  name: "composer",
+  name: MODULE_NAME,
   components: {
     ribbonTabs: initialTabs,
     viewport: ComposerViewport,
   },
   store: {
     reducers: {},
-    middlewares: [parseElementsMiddleware],
+    middlewares: [parseElements, parseMannequin],
   },
   hooks: { useModel },
 };

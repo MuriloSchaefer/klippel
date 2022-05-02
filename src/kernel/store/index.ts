@@ -13,6 +13,8 @@ const staticReducers: {
   [key: string]: React.Reducer<any, AnyAction>;
 } = {};
 
+const staticMiddlewares: Middleware[] = [];
+
 export const initializeStore = (modules: { [name: string]: IModule }) => {
   const modulesReducers = Object.entries(modules).reduce(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -27,17 +29,16 @@ export const initializeStore = (modules: { [name: string]: IModule }) => {
       ...(module.store.middlewares?.map((listener) => listener.middleware) ??
         []),
     ],
-    []
+    staticMiddlewares
   );
 
+  // TODO: Add serializableCheck middleware
   return configureStore({
     reducer: modulesReducers,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().prepend(middlewares),
+      getDefaultMiddleware({ serializableCheck: false }).prepend(middlewares),
   });
 };
-
-// QUESTION: how to type this?
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AppDispatch = any; // typeof store.dispatch;
