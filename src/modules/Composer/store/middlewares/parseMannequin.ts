@@ -7,8 +7,8 @@ import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice"
 import {
   MannequinLayer,
   MannequinView,
+  MannequinAttributes,
 } from "modules/Composer/interfaces/Mannequin";
-import MannequinAttributes from "modules/Composer/interfaces/MannequinAttributes";
 import { DEFAULT_MANNEQUIN_COLOR } from "modules/Composer/constants";
 import { parseMannequin } from "../actions";
 

@@ -4,7 +4,8 @@ import { AnyAction } from "redux";
 import Node from "@kernel/modules/GraphsManager/interfaces/Node";
 import Edge from "@kernel/modules/GraphsManager/interfaces/Edge";
 import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
-import Part from "../../interfaces/Part";
+import { DEFAULT_MANNEQUIN_COLOR } from "modules/Composer/constants";
+import Part, { PartAttributes } from "../../interfaces/Part";
 import { parseParts } from "../actions";
 import Composite from "../../interfaces/Composition";
 
@@ -73,7 +74,22 @@ middleware.startListening({
       outputs: {},
     };
 
+    const partsBaseAttributes: PartAttributes = {
+      id: "partsAttributes",
+      type: "PartsAttributes",
+      color: DEFAULT_MANNEQUIN_COLOR,
+      inputs: {
+        [partsLayer.id]: {
+          id: `${partsLayer.id}_"partsAttributes"`,
+          sourceId: partsLayer.id,
+          targetId: "partsAttributes",
+        } as Edge,
+      },
+      outputs: {},
+    };
+
     dispatch(addNode({ graphId, node: partsLayer }));
+    dispatch(addNode({ graphId, node: partsBaseAttributes }));
 
     // group element, recurse
     const parts = Array.from<SVGAElement>(svgRoot.children);
