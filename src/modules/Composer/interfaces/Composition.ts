@@ -1,5 +1,5 @@
 import Node from "@kernel/modules/GraphsManager/interfaces/Node";
 
-type Composite = Node;
+type Composition = Node;
 
-export default Composite;
+export default Composition;

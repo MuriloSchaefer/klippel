@@ -6,7 +6,7 @@ import Edge from "@kernel/modules/GraphsManager/interfaces/Edge";
 import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
 import Part from "../../interfaces/Part";
 import { parseParts } from "../actions";
-import Composite from "../../interfaces/Composite";
+import Composite from "../../interfaces/Composition";
 
 const middleware = createListenerMiddleware();
 
@@ -58,18 +58,26 @@ const parseNode = (
 middleware.startListening({
   actionCreator: parseParts,
   effect: (action: AnyAction, listenerApi) => {
-    const root: Part = {
-      id: `root`,
-      type: "Root",
-      inputs: {},
+    const { graphId, svgRoot } = action.payload;
+    const { dispatch } = listenerApi;
+    const partsLayer: Part = {
+      id: `partsLayer`,
+      type: "PartsLayer",
+      inputs: {
+        root: {
+          id: "root-partsLayer",
+          sourceId: "root",
+          targetId: "partsLayer",
+        },
+      },
       outputs: {},
     };
 
-    const { graphId, svgRoot } = action.payload;
+    dispatch(addNode({ graphId, node: partsLayer }));
 
-    listenerApi.dispatch(addNode({ graphId, node: root }));
-
-    parseNode(svgRoot, root, graphId, listenerApi.dispatch);
+    // group element, recurse
+    const parts = Array.from<SVGAElement>(svgRoot.children);
+    parts.forEach((part) => parseNode(part, partsLayer, graphId, dispatch));
   },
 });
 

@@ -1,17 +1,19 @@
-import emitCustomEvent from "@kernel/events/emitEvent";
-import { useAppSelector } from "@kernel/store/hooks";
+import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
 import {
   MannequinAttributes,
   MannequinLayer,
 } from "modules/Composer/interfaces/Mannequin";
+import { mannequinChangeEvent } from "modules/Composer/store/actions";
 import React from "react";
-import { MannequinChangeEvent } from "./events/MannequinChange";
+import { MannequinChangeEvent } from "../../../interfaces/events/MannequinChange";
 
 export interface MannequinSectionProps {
   graphId: string;
 }
 
 const MannequinControls = ({ graphId }: MannequinSectionProps) => {
+  const dispatch = useAppDispatch();
+
   const {
     mannequinAttributes,
   }: {
@@ -20,13 +22,14 @@ const MannequinControls = ({ graphId }: MannequinSectionProps) => {
   } = useAppSelector((state) => state.graphsManager.graphs[graphId].nodes);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    emitCustomEvent("mannequin-change", {
-      oldAttributes: { skinColor: mannequinAttributes.skinColor },
-      newAttributes: { skinColor: e.target.value },
-    } as MannequinChangeEvent);
+    dispatch(
+      mannequinChangeEvent({
+        graphId,
+        oldAttributes: { skinColor: mannequinAttributes.skinColor },
+        newAttributes: { skinColor: e.target.value },
+      } as MannequinChangeEvent)
+    );
   };
-
-  console.log(mannequinAttributes);
 
   return (
     <div>

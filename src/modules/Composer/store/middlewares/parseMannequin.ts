@@ -9,6 +9,7 @@ import {
   MannequinView,
 } from "modules/Composer/interfaces/Mannequin";
 import MannequinAttributes from "modules/Composer/interfaces/MannequinAttributes";
+import { DEFAULT_MANNEQUIN_COLOR } from "modules/Composer/constants";
 import { parseMannequin } from "../actions";
 
 const middleware = createListenerMiddleware();
@@ -38,7 +39,7 @@ middleware.startListening({
     const mannequinAttributesNode: MannequinAttributes = {
       id: "mannequinAttributes",
       type: "MannequinAttributes",
-      skinColor: "#ff0000",
+      skinColor: DEFAULT_MANNEQUIN_COLOR,
       inputs: {
         [mannequinLayerNode.id]: {
           id: `${mannequinLayerNode.id}_"mannequinAttributes"`,
