@@ -4,16 +4,17 @@ import { AnyAction } from "redux";
 import Node from "@kernel/modules/GraphsManager/interfaces/Node";
 import Edge from "@kernel/modules/GraphsManager/interfaces/Edge";
 import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
-import { DEFAULT_MANNEQUIN_COLOR } from "modules/Composer/constants";
-import Part, { PartAttributes } from "../../interfaces/Part";
+import { DEFAULT_PART_COLOR } from "modules/Composer/constants";
+import { Part, PartProperties, PartsLayer } from "../../interfaces/Part";
 import { parseParts } from "../actions";
-import Composite from "../../interfaces/Composition";
+import { Composition } from "../../interfaces/Composition";
 
 const middleware = createListenerMiddleware();
 
 const parseNode = (
   node: Element,
   parent: Node,
+  baseProperties: PartProperties,
   graphId: string,
   dispatch: ThunkDispatch<unknown, unknown, AnyAction>
 ): void => {
@@ -22,6 +23,7 @@ const parseNode = (
     const part: Part = {
       id: node.id,
       type: "Part",
+      properties: baseProperties,
       inputs: {
         [parent.id]: {
           id: `${parent.id}-${node.id}`,
@@ -34,9 +36,10 @@ const parseNode = (
     dispatch(addNode({ graphId, node: part }));
   } else if (node.tagName === "g") {
     // group object, add part to graph
-    const compositionNode: Composite = {
+    const compositionNode: Composition = {
       id: node.id,
       type: "Composition",
+      properties: {},
       inputs: {
         [parent.id]: {
           id: `${parent.id}_${node.id}`,
@@ -51,7 +54,7 @@ const parseNode = (
     // group element, recurse
     const parts = Array.from(node.children);
     parts.forEach((part) =>
-      parseNode(part, compositionNode, graphId, dispatch)
+      parseNode(part, compositionNode, baseProperties, graphId, dispatch)
     );
   }
 };
@@ -61,9 +64,12 @@ middleware.startListening({
   effect: (action: AnyAction, listenerApi) => {
     const { graphId, svgRoot } = action.payload;
     const { dispatch } = listenerApi;
-    const partsLayer: Part = {
+    const partsLayer: PartsLayer = {
       id: `partsLayer`,
       type: "PartsLayer",
+      baseProperties: {
+        color: DEFAULT_PART_COLOR,
+      },
       inputs: {
         root: {
           id: "root-partsLayer",
@@ -74,26 +80,13 @@ middleware.startListening({
       outputs: {},
     };
 
-    const partsBaseAttributes: PartAttributes = {
-      id: "partsAttributes",
-      type: "PartsAttributes",
-      color: DEFAULT_MANNEQUIN_COLOR,
-      inputs: {
-        [partsLayer.id]: {
-          id: `${partsLayer.id}_"partsAttributes"`,
-          sourceId: partsLayer.id,
-          targetId: "partsAttributes",
-        } as Edge,
-      },
-      outputs: {},
-    };
-
     dispatch(addNode({ graphId, node: partsLayer }));
-    dispatch(addNode({ graphId, node: partsBaseAttributes }));
 
     // group element, recurse
     const parts = Array.from<SVGAElement>(svgRoot.children);
-    parts.forEach((part) => parseNode(part, partsLayer, graphId, dispatch));
+    parts.forEach((part) =>
+      parseNode(part, partsLayer, partsLayer.baseProperties, graphId, dispatch)
+    );
   },
 });
 

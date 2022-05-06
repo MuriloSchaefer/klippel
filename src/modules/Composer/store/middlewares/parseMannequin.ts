@@ -7,7 +7,6 @@ import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice"
 import {
   MannequinLayer,
   MannequinView,
-  MannequinAttributes,
 } from "modules/Composer/interfaces/Mannequin";
 import { DEFAULT_MANNEQUIN_COLOR } from "modules/Composer/constants";
 import { parseMannequin } from "../actions";
@@ -26,6 +25,9 @@ middleware.startListening({
     const mannequinLayerNode: MannequinLayer = {
       id: `mannequinLayer`,
       type: "MannequinLayer",
+      properties: {
+        skinColor: DEFAULT_MANNEQUIN_COLOR,
+      },
       inputs: {
         root: {
           id: "root-mannequinLayer",
@@ -36,22 +38,8 @@ middleware.startListening({
       outputs: {},
     };
 
-    const mannequinAttributesNode: MannequinAttributes = {
-      id: "mannequinAttributes",
-      type: "MannequinAttributes",
-      skinColor: DEFAULT_MANNEQUIN_COLOR,
-      inputs: {
-        [mannequinLayerNode.id]: {
-          id: `${mannequinLayerNode.id}_"mannequinAttributes"`,
-          sourceId: mannequinLayerNode.id,
-          targetId: "mannequinAttributes",
-        } as Edge,
-      },
-      outputs: {},
-    };
-
     dispatch(addNode({ graphId, node: mannequinLayerNode }));
-    dispatch(addNode({ graphId, node: mannequinAttributesNode }));
+
     views.forEach((view) => {
       const node: MannequinView = {
         id: view.id,

@@ -8,9 +8,13 @@ import {
   newGraph,
   removeGraph,
 } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+import Part from "modules/Composer/interfaces/Part";
+import { partSelectedEvent } from "modules/Composer/store/actions";
+import useRightPanel from "@kernel/layout/components/Sidepanels/hooks/useRightPanel";
 import ComposerLeftPanelContent from "./LeftPanelContent";
 import SVGManager from "../SVGManager";
 import Proxies from "../SVGManager/proxies";
+import ComposerRightPanelContent from "./RightPanelContent";
 
 interface ComposerViewportProps extends ViewportProps {
   mannequinSize?: string;
@@ -29,6 +33,7 @@ const ComposerViewport = ({
   // Hooks
   const dispatch = useAppDispatch();
   const { leftPanel, setLeftPanel } = useLeftPanel();
+  const { rightPanel, setRightPanel } = useRightPanel();
   useEffect(() => {
     dispatch(newGraph(graphId));
 
@@ -44,6 +49,22 @@ const ComposerViewport = ({
     });
   };
 
+  const onPartSelected = (part: Part) => {
+    console.log("part selected", part);
+    dispatch(partSelectedEvent({ part }));
+
+    setRightPanel({
+      ...rightPanel,
+      title: part.id,
+      content: (
+        <ComposerRightPanelContent
+          compositionGraphId={graphId}
+          selectedPart={part.id}
+        />
+      ),
+    });
+  };
+
   return (
     <Viewport innerRef={innerRef}>
       <SVGManager
@@ -52,7 +73,11 @@ const ComposerViewport = ({
         product={product}
         model={model}
       >
-        <Proxies graphId={graphId} onPartsLoaded={onPartsLoaded} />
+        <Proxies
+          graphId={graphId}
+          onPartsLoaded={onPartsLoaded}
+          onPartSelected={onPartSelected}
+        />
       </SVGManager>
     </Viewport>
   );

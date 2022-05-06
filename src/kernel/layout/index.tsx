@@ -10,6 +10,7 @@ import Content from "./components/Content";
 import LeftPanel from "./components/Sidepanels/components/LeftPanel";
 import RightPanel from "./components/Sidepanels/components/RightPanel";
 import { LeftPanelContext } from "./components/Sidepanels/contexts/LeftPanelContext";
+import { RightPanelContext } from "./components/Sidepanels/contexts/RightPanelContext";
 
 interface LayoutProps {
   children: React.ReactElement<typeof Viewport>;
@@ -45,6 +46,21 @@ export default ({ children }: LayoutProps): React.ReactElement => {
     [leftPanel]
   );
 
+  const [rightPanel, setRightPanel] = useState<{
+    title: string;
+    content: React.ReactNode;
+  }>({
+    title: "Right Panel Title",
+    content: <div>right panel content</div>,
+  });
+  const memoizedRightPanel = useMemo(
+    () => ({
+      rightPanel,
+      setRightPanel,
+    }),
+    [rightPanel]
+  );
+
   // load modules tabs
   useEffect(() => {
     const newTabs: Tabs = {};
@@ -70,13 +86,15 @@ export default ({ children }: LayoutProps): React.ReactElement => {
     <ThemeContext.Provider value={memoizedTheme}>
       <RibbonMenu tabs={tabs} initialTab="composer" />
       <LeftPanelContext.Provider value={memoizedLeftPanel}>
-        <Content>
-          <LeftPanel />
-          <div style={{ gridArea: "content", padding: "15px" }}>{children}</div>
-          <RightPanel title="test">
-            <div>test</div>
-          </RightPanel>
-        </Content>
+        <RightPanelContext.Provider value={memoizedRightPanel}>
+          <Content>
+            <LeftPanel />
+            <div style={{ gridArea: "content", padding: "15px" }}>
+              {children}
+            </div>
+            <RightPanel />
+          </Content>
+        </RightPanelContext.Provider>
       </LeftPanelContext.Provider>
     </ThemeContext.Provider>
   );

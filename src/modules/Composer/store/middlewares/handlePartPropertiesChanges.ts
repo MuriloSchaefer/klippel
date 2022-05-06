@@ -2,19 +2,23 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
 import { updateNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
-import { mannequinChangedEvent } from "../actions";
+import { Part } from "modules/Composer/interfaces/Part";
+import { partPropertiesChanged } from "../actions";
 
 const middleware = createListenerMiddleware();
 
 middleware.startListening({
-  actionCreator: mannequinChangedEvent,
+  actionCreator: partPropertiesChanged,
   effect: (action: AnyAction, listenerApi) => {
     const { dispatch } = listenerApi;
-    const { graphId, newAttributes } = action.payload;
+    const { graphId, partId, oldProperties, newProperties } = action.payload;
     dispatch(
       updateNode({
         graphId,
-        node: { ...newAttributes, id: "mannequinProperties" },
+        node: {
+          id: partId,
+          properties: { ...oldProperties, ...newProperties },
+        } as Part,
       })
     );
   },

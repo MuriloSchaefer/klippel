@@ -1,8 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { Theme, ThemeContext } from "@kernel/contexts/ThemeContext";
+import { Theme, useTheme } from "@kernel/contexts/ThemeContext";
 import RightPanelTitle from "./RightPanelTitle";
 import SidePanelContent from "./SidePanelContent";
+import useRightPanel from "../hooks/useRightPanel";
 
 const StyledRightPanel = styled("div")<{ theme: Theme }>`
   grid-area: rightPanel;
@@ -13,16 +14,15 @@ const StyledRightPanel = styled("div")<{ theme: Theme }>`
   right: 0;
 `;
 
-export interface RightPanelProps {
-  title: string;
-  children: React.ReactNode;
-}
-const RightPanel = ({ title, children }: RightPanelProps) => {
-  const { theme } = React.useContext(ThemeContext);
+const RightPanel = () => {
+  const { theme } = useTheme();
+
+  const { rightPanel } = useRightPanel();
+
   return (
-    <StyledRightPanel title={title} theme={theme}>
-      <RightPanelTitle title={title} />
-      <SidePanelContent>{children}</SidePanelContent>
+    <StyledRightPanel theme={theme}>
+      <RightPanelTitle title={rightPanel.title} />
+      <SidePanelContent>{rightPanel.content}</SidePanelContent>
     </StyledRightPanel>
   );
 };

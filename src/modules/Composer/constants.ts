@@ -6,3 +6,4 @@ export const PARTS_LAYER_ID = "partes";
 export const ANNOTATIONS_LAYER_ID = "anotacoes";
 
 export const DEFAULT_MANNEQUIN_COLOR = "#ffdbac";
+export const DEFAULT_PART_COLOR = "#ffffff";

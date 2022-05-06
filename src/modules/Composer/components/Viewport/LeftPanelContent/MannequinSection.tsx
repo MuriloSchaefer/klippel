@@ -1,11 +1,8 @@
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
-import {
-  MannequinAttributes,
-  MannequinLayer,
-} from "modules/Composer/interfaces/Mannequin";
-import { mannequinChangeEvent } from "modules/Composer/store/actions";
+import { MannequinLayer } from "modules/Composer/interfaces/Mannequin";
+import { mannequinChangedEvent } from "modules/Composer/store/actions";
 import React from "react";
-import { MannequinChangeEvent } from "../../../interfaces/events/MannequinChange";
+import { MannequinChangedEvent } from "../../../interfaces/events/MannequinChanged";
 
 export interface MannequinSectionProps {
   graphId: string;
@@ -15,19 +12,18 @@ const MannequinControls = ({ graphId }: MannequinSectionProps) => {
   const dispatch = useAppDispatch();
 
   const {
-    mannequinAttributes,
+    mannequinLayer,
   }: {
     mannequinLayer: MannequinLayer;
-    mannequinAttributes: MannequinAttributes;
   } = useAppSelector((state) => state.graphsManager.graphs[graphId].nodes);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(
-      mannequinChangeEvent({
+      mannequinChangedEvent({
         graphId,
-        oldAttributes: { skinColor: mannequinAttributes.skinColor },
+        oldAttributes: { skinColor: mannequinLayer.properties.skinColor },
         newAttributes: { skinColor: e.target.value },
-      } as MannequinChangeEvent)
+      } as MannequinChangedEvent)
     );
   };
 
@@ -38,7 +34,7 @@ const MannequinControls = ({ graphId }: MannequinSectionProps) => {
         id="skin"
         list="skincolors"
         name="skin"
-        value={mannequinAttributes.skinColor}
+        value={mannequinLayer.properties.skinColor}
         onChange={handleChange}
       />
       <datalist id="skincolors">

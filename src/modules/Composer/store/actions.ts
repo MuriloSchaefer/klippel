@@ -1,6 +1,8 @@
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { MannequinChangeEvent } from "../interfaces/events/MannequinChange";
+import { MannequinChangedEvent } from "../interfaces/events/MannequinChanged";
+import { PartPropertiesChangedEvent } from "../interfaces/events/PartPropertiesChanged";
+import { PartSelectedEvent } from "../interfaces/events/PartSelected";
 
 // EVENTS
 export const startSVGLoad = createAction<{
@@ -14,8 +16,14 @@ export const SVGLoaded = createAction<{
 
 // UI EVENTS
 
-export const mannequinChangeEvent = createAction<MannequinChangeEvent>(
+export const mannequinChangedEvent = createAction<MannequinChangedEvent>(
   `[${MODULE_NAME}] Mannequin attributes changed`
+);
+export const partSelectedEvent = createAction<PartSelectedEvent>(
+  `[${MODULE_NAME}] Part selected`
+);
+export const partPropertiesChanged = createAction<PartPropertiesChangedEvent>(
+  `[${MODULE_NAME}] Part properties changed`
 );
 
 // COMMANDS

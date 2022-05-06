@@ -3,8 +3,8 @@ import { AnyAction } from "redux";
 
 import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
 import { MANNEQUIN_LAYER_ID, PARTS_LAYER_ID } from "modules/Composer/constants";
-import Part from "../../interfaces/Part";
 import { parseMannequin, parseParts, SVGLoaded } from "../actions";
+import { Garment } from "../../interfaces/Garment";
 
 const middleware = createListenerMiddleware();
 
@@ -14,9 +14,10 @@ middleware.startListening({
     const { dispatch } = listenerApi;
     const { graphId, svgRoot }: { graphId: string; svgRoot: SVGElement } =
       action.payload;
-    const root: Part = {
+    const root: Garment = {
       id: `root`,
-      type: "Root",
+      type: "Garment",
+      properties: {},
       inputs: {},
       outputs: {},
     };

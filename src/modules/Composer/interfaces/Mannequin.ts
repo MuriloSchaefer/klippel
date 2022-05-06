@@ -1,8 +1,13 @@
 import Node from "@kernel/modules/GraphsManager/interfaces/Node";
 
-export type MannequinView = Node;
-export type MannequinLayer = Node;
+export interface MannequinView extends Node {
+  type: "MannequinView";
+}
+export interface MannequinLayer extends Node {
+  type: "MannequinLayer";
+  properties: MannequinProperties;
+}
 
-export interface MannequinAttributes extends Node {
+export interface MannequinProperties {
   skinColor: string;
 }

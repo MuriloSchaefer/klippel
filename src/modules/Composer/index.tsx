@@ -8,6 +8,7 @@ import parseMannequin from "./store/middlewares/parseMannequin";
 import parseElements from "./store/middlewares/parseParts";
 import parseSVG from "./store/middlewares/parseSVG";
 import handleMannequinChanges from "./store/middlewares/handleMannequinChanges";
+import handlePartPropertiesChanges from "./store/middlewares/handlePartPropertiesChanges";
 
 export interface IComposerModule extends IModule {
   hooks: {
@@ -32,6 +33,7 @@ const ComposerModule: IComposerModule = {
       parseMannequin,
       parseSVG,
       handleMannequinChanges,
+      handlePartPropertiesChanges,
     ],
   },
   hooks: { useModel },

@@ -1,9 +1,15 @@
 import Node from "@kernel/modules/GraphsManager/interfaces/Node";
 
-type Part = Node;
-export type PartLayer = Node;
+export interface Part extends Node {
+  type: "Part";
+  properties: PartProperties;
+}
+export interface PartsLayer extends Node {
+  type: "PartsLayer";
+  baseProperties: PartProperties;
+}
 
-export interface PartAttributes extends Node {
+export interface PartProperties {
   color: string;
   material?: string;
 }
