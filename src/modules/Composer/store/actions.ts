@@ -15,9 +15,8 @@ export const SVGLoaded = createAction<{
 }>(`[${MODULE_NAME}] SVG Loaded`);
 
 // UI EVENTS
-
 export const mannequinChangedEvent = createAction<MannequinChangedEvent>(
-  `[${MODULE_NAME}] Mannequin attributes changed`
+  `[${MODULE_NAME}] Mannequin properties changed`
 );
 export const partSelectedEvent = createAction<PartSelectedEvent>(
   `[${MODULE_NAME}] Part selected`

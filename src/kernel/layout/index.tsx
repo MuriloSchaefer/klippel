@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import ModulesContext from "@kernel/modules/context";
 
+import { useAppSelector } from "@kernel/store/hooks";
 import { Theme, ThemeContext } from "../contexts/ThemeContext";
 import RibbonMenu, { Tabs } from "./components/RibbonMenu";
 import Viewport from "./components/Viewport";
@@ -29,6 +30,10 @@ export default ({ children }: LayoutProps): React.ReactElement => {
       setTheme,
     }),
     [theme]
+  );
+
+  const isLeftPanelOpen = useAppSelector(
+    (state) => state.kernelUIState.leftPanel.isOpen
   );
 
   const [leftPanel, setLeftPanel] = useState<{
@@ -68,6 +73,7 @@ export default ({ children }: LayoutProps): React.ReactElement => {
 
     Object.values(modules).forEach((module) => {
       if (module?.components.ribbonTabs) {
+        // If modules has some ribbonTabs, add the tab if it does not exists or extend it if it does exist
         Object.entries(module.components.ribbonTabs).forEach(
           ([tabName, tabValues]) => {
             newTabs[tabName] = newTabs[tabName]
@@ -87,7 +93,7 @@ export default ({ children }: LayoutProps): React.ReactElement => {
       <RibbonMenu tabs={tabs} initialTab="composer" />
       <LeftPanelContext.Provider value={memoizedLeftPanel}>
         <RightPanelContext.Provider value={memoizedRightPanel}>
-          <Content>
+          <Content isLeftPanelOpen={isLeftPanelOpen}>
             <LeftPanel />
             <div style={{ gridArea: "content", padding: "15px" }}>
               {children}

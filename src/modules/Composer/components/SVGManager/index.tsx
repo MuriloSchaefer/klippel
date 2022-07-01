@@ -38,6 +38,12 @@ const SVGManager = ({
       onSVGReady={(svgRoot: SVGElement) =>
         dispatch(SVGLoaded({ graphId, svgRoot }))
       }
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+      }}
     >
       {children}
     </SvgLoader>

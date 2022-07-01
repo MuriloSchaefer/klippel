@@ -10,7 +10,21 @@ import parseSVG from "./store/middlewares/parseSVG";
 import handleMannequinChanges from "./store/middlewares/handleMannequinChanges";
 import handlePartPropertiesChanges from "./store/middlewares/handlePartPropertiesChanges";
 
+import ComposerUI from "./store/Slice";
+
 export interface IComposerModule extends IModule {
+  store: {
+    reducers: {
+      ComposerUI: typeof ComposerUI;
+    };
+    middlewares: [
+      parseElements: typeof parseElements,
+      parseMannequin: typeof parseMannequin,
+      parseSVG: typeof parseSVG,
+      handleMannequinChanges: typeof handleMannequinChanges,
+      handlePartPropertiesChanges: typeof handlePartPropertiesChanges
+    ];
+  };
   hooks: {
     useModel: typeof useModel;
   };
@@ -27,7 +41,9 @@ const ComposerModule: IComposerModule = {
     viewport: ComposerViewport,
   },
   store: {
-    reducers: {},
+    reducers: {
+      ComposerUI,
+    },
     middlewares: [
       parseElements,
       parseMannequin,

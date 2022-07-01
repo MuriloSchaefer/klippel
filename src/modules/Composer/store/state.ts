@@ -10,3 +10,22 @@ export interface CompositionGraphState extends GraphState {
     [id: string]: Composition | MannequinLayer | PartsLayer | Part;
   };
 }
+
+export interface UIState {
+  leftPanel: {
+    isOpen: boolean;
+  };
+  rightPanel: {
+    isOpen: boolean;
+    selectedPartId: string | null; // null means no part is selected
+  };
+  viewport: {
+    loadingSVG: boolean;
+    parsing: {
+      parts: boolean;
+      mannequin: boolean;
+      annotations: boolean;
+    };
+    graphId: string | null; // null means no graph is available
+  };
+}
