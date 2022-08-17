@@ -1,4 +1,4 @@
-import Part from "../Part";
+import { Part } from "../Part";
 
 export interface PartSelectedEvent {
   part: Part;

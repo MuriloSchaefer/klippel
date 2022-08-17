@@ -3,7 +3,7 @@ const useSVG = async (
   product: string,
   model: string
 ): Promise<string> => {
-  const svgPath = `/catalog/${product}/croqui-${mannequinSize}/${model}.svg`;
+  const svgPath = `/catalog/${product}/${model}.svg`;
   const response = await fetch(svgPath);
   const blob = await response.blob();
   return blob.text();

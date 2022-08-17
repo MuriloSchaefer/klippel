@@ -13,7 +13,7 @@ const staticReducers: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: React.Reducer<any, AnyAction>;
 } = {
-  kernelUIState: kernelUIReducer,
+  kernelUI: kernelUIReducer,
 };
 
 const staticMiddlewares: Middleware[] = [];

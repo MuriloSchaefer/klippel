@@ -33,7 +33,10 @@ export default ({ children }: LayoutProps): React.ReactElement => {
   );
 
   const isLeftPanelOpen = useAppSelector(
-    (state) => state.kernelUIState.leftPanel.isOpen
+    (state) => state.kernelUI.leftPanel.isOpen
+  );
+  const isRightPanelOpen = useAppSelector(
+    (state) => state.kernelUI.rightPanel.isOpen
   );
 
   const [leftPanel, setLeftPanel] = useState<{
@@ -93,7 +96,10 @@ export default ({ children }: LayoutProps): React.ReactElement => {
       <RibbonMenu tabs={tabs} initialTab="composer" />
       <LeftPanelContext.Provider value={memoizedLeftPanel}>
         <RightPanelContext.Provider value={memoizedRightPanel}>
-          <Content isLeftPanelOpen={isLeftPanelOpen}>
+          <Content
+            isLeftPanelOpen={isLeftPanelOpen}
+            isRightPanelOpen={isRightPanelOpen}
+          >
             <LeftPanel />
             <div style={{ gridArea: "content", padding: "15px" }}>
               {children}

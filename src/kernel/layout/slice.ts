@@ -1,9 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { KernelUIState } from "./state";
+import { KernelUI } from "./state";
 
-import { leftPanelCollapsed, leftPanelExpanded } from "./ations";
+import {
+  leftPanelCollapsed,
+  leftPanelExpanded,
+  rightPanelClosed,
+  rightPanelOpened,
+} from "./ations";
 
-const initialKernelUIState: KernelUIState = {
+const initialKernelUI: KernelUI = {
   leftPanel: {
     isOpen: true,
     title: "Left Panel",
@@ -18,21 +23,35 @@ const initialKernelUIState: KernelUIState = {
 
 export const KernelUISlice = createSlice({
   name: "kernelUI",
-  initialState: initialKernelUIState,
+  initialState: initialKernelUI,
   reducers: {},
   // The `extraReducers` field use actions created outside the slice, therefore we can add proper naming
   extraReducers: (builder) => {
     builder
-      .addCase(leftPanelCollapsed, (state: KernelUIState) => ({
+      .addCase(leftPanelCollapsed, (state: KernelUI) => ({
         ...state,
         leftPanel: {
           ...state.leftPanel,
           isOpen: false,
         },
       }))
-      .addCase(leftPanelExpanded, (state: KernelUIState) => ({
+      .addCase(leftPanelExpanded, (state: KernelUI) => ({
         ...state,
         leftPanel: {
+          ...state.leftPanel,
+          isOpen: true,
+        },
+      }))
+      .addCase(rightPanelClosed, (state: KernelUI) => ({
+        ...state,
+        rightPanel: {
+          ...state.leftPanel,
+          isOpen: false,
+        },
+      }))
+      .addCase(rightPanelOpened, (state: KernelUI) => ({
+        ...state,
+        rightPanel: {
           ...state.leftPanel,
           isOpen: true,
         },

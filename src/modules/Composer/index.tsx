@@ -9,6 +9,8 @@ import parseElements from "./store/middlewares/parseParts";
 import parseSVG from "./store/middlewares/parseSVG";
 import handleMannequinChanges from "./store/middlewares/handleMannequinChanges";
 import handlePartPropertiesChanges from "./store/middlewares/handlePartPropertiesChanges";
+import handlePartSelectedEvent from "./store/middlewares/handlePartSelectedEvent";
+import handleRightPanelClosedEvent from "./store/middlewares/handleRightPanelClosedEvent";
 
 import ComposerUI from "./store/Slice";
 
@@ -22,7 +24,9 @@ export interface IComposerModule extends IModule {
       parseMannequin: typeof parseMannequin,
       parseSVG: typeof parseSVG,
       handleMannequinChanges: typeof handleMannequinChanges,
-      handlePartPropertiesChanges: typeof handlePartPropertiesChanges
+      handlePartPropertiesChanges: typeof handlePartPropertiesChanges,
+      handlePartSelectedEvent: typeof handlePartSelectedEvent,
+      handleRightPanelClosedEvent: typeof handleRightPanelClosedEvent
     ];
   };
   hooks: {
@@ -50,6 +54,8 @@ const ComposerModule: IComposerModule = {
       parseSVG,
       handleMannequinChanges,
       handlePartPropertiesChanges,
+      handlePartSelectedEvent,
+      handleRightPanelClosedEvent,
     ],
   },
   hooks: { useModel },

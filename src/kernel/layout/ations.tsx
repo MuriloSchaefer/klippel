@@ -11,3 +11,10 @@ export const leftPanelExpanded = createAction(
 export const leftPanelCollapsed = createAction(
   `[${MODULE_NAME}:UI] Left Panel Collapsed`
 );
+
+export const rightPanelClosed = createAction(
+  `[${MODULE_NAME}:UI] Right Panel Closed`
+);
+export const rightPanelOpened = createAction(
+  `[${MODULE_NAME}:UI] Right Panel Opened`
+);

@@ -21,6 +21,9 @@ export const mannequinChangedEvent = createAction<MannequinChangedEvent>(
 export const partSelectedEvent = createAction<PartSelectedEvent>(
   `[${MODULE_NAME}] Part selected`
 );
+export const partUnSelectedEvent = createAction(
+  `[${MODULE_NAME}] Part unselected`
+);
 export const partPropertiesChanged = createAction<PartPropertiesChangedEvent>(
   `[${MODULE_NAME}] Part properties changed`
 );

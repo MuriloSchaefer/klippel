@@ -50,7 +50,6 @@ const ComposerViewport = ({
   };
 
   const onPartSelected = (part: Part) => {
-    console.log("part selected", part);
     dispatch(partSelectedEvent({ part }));
 
     setRightPanel({

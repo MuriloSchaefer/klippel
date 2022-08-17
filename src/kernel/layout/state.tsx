@@ -1,4 +1,4 @@
-export interface KernelUIState {
+export interface KernelUI {
   leftPanel: {
     isOpen: boolean;
     title: string;

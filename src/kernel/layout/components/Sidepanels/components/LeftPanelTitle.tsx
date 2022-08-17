@@ -10,7 +10,7 @@ const StyledLeftPanelTitle = styled("div")<{ theme: Theme; isOpen: boolean }>`
   display: inline-flex;
   justify-content: center;
   width: 100%;
-  border-bottom: solid ${(props) => (props.isOpen ? "1px" : "0px")}
+  border-bottom: solid ${(props) => (props.isOpen ? "1px" : "0px")},
     ${(props) => (props.theme === Theme.Dark ? "#eee" : "#333")};
 
   &::after {
