@@ -3,23 +3,23 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import ModulesContext from "@kernel/modules/context";
 
 import { useAppSelector } from "@kernel/store/hooks";
+import ViewportContentContext, {
+  ViewportContentMap,
+} from "@kernel/contexts/viewports";
 import { Theme, ThemeContext } from "../contexts/ThemeContext";
 import RibbonMenu, { Tabs } from "./components/RibbonMenu";
-import Viewport from "./components/Viewport";
-import Content from "./components/Content";
 
 import LeftPanel from "./components/Sidepanels/components/LeftPanel";
 import RightPanel from "./components/Sidepanels/components/RightPanel";
 import { LeftPanelContext } from "./components/Sidepanels/contexts/LeftPanelContext";
 import { RightPanelContext } from "./components/Sidepanels/contexts/RightPanelContext";
+import ViewportManager from "./components/ViewportManager";
+import Content from "./components/Content";
 
-interface LayoutProps {
-  children: React.ReactElement<typeof Viewport>;
-}
-
-export default ({ children }: LayoutProps): React.ReactElement => {
+export default (): React.ReactElement => {
   const [theme, setTheme] = useState<Theme>(Theme.Light);
   const [tabs, setTabs] = useState<Tabs>({});
+  const [viewports, setViewports] = useState<ViewportContentMap>({});
   const [loadModules, setLoadModules] = useState(true);
 
   const { modules } = useContext(ModulesContext);
@@ -32,6 +32,14 @@ export default ({ children }: LayoutProps): React.ReactElement => {
     [theme]
   );
 
+  const memoizedViewports = useMemo(
+    () => ({
+      viewports,
+      setViewports,
+    }),
+    [viewports]
+  );
+
   const isLeftPanelOpen = useAppSelector(
     (state) => state.kernelUI.leftPanel.isOpen
   );
@@ -39,13 +47,7 @@ export default ({ children }: LayoutProps): React.ReactElement => {
     (state) => state.kernelUI.rightPanel.isOpen
   );
 
-  const [leftPanel, setLeftPanel] = useState<{
-    title: string;
-    content: React.ReactNode;
-  }>({
-    title: "Left Panel Title",
-    content: <div>left panel content</div>,
-  });
+  const [leftPanel, setLeftPanel] = useState<React.ReactNode>(<div />);
   const memoizedLeftPanel = useMemo(
     () => ({
       leftPanel,
@@ -54,13 +56,7 @@ export default ({ children }: LayoutProps): React.ReactElement => {
     [leftPanel]
   );
 
-  const [rightPanel, setRightPanel] = useState<{
-    title: string;
-    content: React.ReactNode;
-  }>({
-    title: "Right Panel Title",
-    content: <div>right panel content</div>,
-  });
+  const [rightPanel, setRightPanel] = useState<React.ReactNode>(<div />);
   const memoizedRightPanel = useMemo(
     () => ({
       rightPanel,
@@ -93,21 +89,21 @@ export default ({ children }: LayoutProps): React.ReactElement => {
 
   return (
     <ThemeContext.Provider value={memoizedTheme}>
-      <RibbonMenu tabs={tabs} initialTab="composer" />
-      <LeftPanelContext.Provider value={memoizedLeftPanel}>
-        <RightPanelContext.Provider value={memoizedRightPanel}>
-          <Content
-            isLeftPanelOpen={isLeftPanelOpen}
-            isRightPanelOpen={isRightPanelOpen}
-          >
-            <LeftPanel />
-            <div style={{ gridArea: "content", padding: "15px" }}>
-              {children}
-            </div>
-            <RightPanel />
-          </Content>
-        </RightPanelContext.Provider>
-      </LeftPanelContext.Provider>
+      <ViewportContentContext.Provider value={memoizedViewports}>
+        <RibbonMenu tabs={tabs} initialTab="composer" />
+        <LeftPanelContext.Provider value={memoizedLeftPanel}>
+          <RightPanelContext.Provider value={memoizedRightPanel}>
+            <Content
+              isLeftPanelOpen={isLeftPanelOpen}
+              isRightPanelOpen={isRightPanelOpen}
+            >
+              <ViewportManager />
+              <LeftPanel />
+              <RightPanel />
+            </Content>
+          </RightPanelContext.Provider>
+        </LeftPanelContext.Provider>
+      </ViewportContentContext.Provider>
     </ThemeContext.Provider>
   );
 };

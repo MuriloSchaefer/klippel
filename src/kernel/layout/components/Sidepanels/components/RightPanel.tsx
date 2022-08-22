@@ -11,6 +11,9 @@ const StyledRightPanel = styled("div")<{ theme: Theme; isOpen: boolean }>`
   grid-area: rightPanel;
   background-color: ${(props) =>
     props.theme === Theme.Dark ? "#333" : "#eee"};
+
+  border-left: solid 1px
+    ${(props) => (props.theme === Theme.Dark ? "#eee" : "#333")};
   color: ${(props) => (props.theme === Theme.Dark ? "#ddd" : "#333")};
   position: sticky;
   display: ${(props) => (props.isOpen ? "block" : "none")};
@@ -20,7 +23,9 @@ const StyledRightPanel = styled("div")<{ theme: Theme; isOpen: boolean }>`
 const RightPanel = () => {
   const dispatch = useAppDispatch();
   const { theme } = useTheme();
-  const isOpen = useAppSelector((state) => state.kernelUI.rightPanel.isOpen);
+  const { isOpen, title } = useAppSelector(
+    (state) => state.kernelUI.rightPanel
+  );
 
   const { rightPanel } = useRightPanel();
 
@@ -31,12 +36,8 @@ const RightPanel = () => {
 
   return (
     <StyledRightPanel theme={theme} isOpen={isOpen}>
-      <RightPanelTitle
-        title={rightPanel.title}
-        onClick={handleClick}
-        isOpen={isOpen}
-      />
-      <SidePanelContent>{rightPanel.content}</SidePanelContent>
+      <RightPanelTitle title={title} onClick={handleClick} isOpen={isOpen} />
+      <SidePanelContent>{rightPanel}</SidePanelContent>
     </StyledRightPanel>
   );
 };

@@ -1,11 +1,17 @@
-import { createContext, Ref } from "react";
+import React, { createContext, Dispatch, SetStateAction } from "react";
 
-export type ViewportsContextType = {
-  viewport: Ref<HTMLElement>;
+export type ViewportContentMap = {
+  [id: string]: React.ReactElement;
 };
 
-const ViewportContext = createContext<ViewportsContextType>({
-  viewport: null,
+export type ViewportContentContextProps = {
+  viewports: ViewportContentMap;
+  setViewports: Dispatch<SetStateAction<ViewportContentMap>>;
+};
+
+const ViewportContentContext = createContext<ViewportContentContextProps>({
+  viewports: {},
+  setViewports: () => null,
 });
 
-export default ViewportContext;
+export default ViewportContentContext;

@@ -9,23 +9,25 @@ export const SectionName = styled.div<{ hasDropdown: boolean }>`
 
 export const SectionContent = styled.div`
   height: 90px;
+  width: 100%;
+  position: relative; // to allow absolute positioning of inner elements
   background-color: #eee;
+  display: flex;
+  flex-direction: row;
 `;
 
-export const StyledSection = styled.section`
-  width: fit-content;
-
-  position: static;
+export const StyledSection = styled.section<{ width: string }>`
+  width: ${(p) => p.width};
+  height: 100%;
   border: 1px solid #aaa;
   display: flex;
   flex-direction: column;
-  max-height: 130px;
   align-items: center;
 `;
 
 export const DropdownSectionContent = styled.div<{ open: boolean }>`
   :before {
-    heigth: 2px;
+    height: 2px;
     width: 80%;
     background-color: red;
   }
@@ -37,7 +39,7 @@ export const DropdownSectionContent = styled.div<{ open: boolean }>`
   position: absolute;
   margin: auto;
   margin-top: 110px;
-  z-index: 1;
+  z-index: 10;
   margin-right: auto;
   display: ${(p) => (p.open ? "inline-block" : "none")};
 `;

@@ -18,6 +18,8 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "install-peerdeps": "^3.0.3",
+    "loadash": "^1.0.0",
+    "lodash": "^4.17.21",
     "module-alias": "^2.2.2",
     "prettier": "^2.6.2",
     "react": "^18.0.0",
@@ -56,6 +58,7 @@
     ]
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.183",
     "@types/styled-components": "^5.1.24",
     "@types/svg-parser": "^2.0.3",
     "eslint-import-resolver-typescript": "^2.5.0",

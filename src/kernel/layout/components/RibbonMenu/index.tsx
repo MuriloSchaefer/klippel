@@ -9,6 +9,7 @@ import RibbonMenu, {
 } from "./styles";
 
 export { default as TabSection } from "./TabSection";
+export { default as FixedSideBar } from "./FixedSideBar";
 
 export interface RibbonTab {
   name: string;
@@ -27,7 +28,7 @@ interface RibbonMenuProps {
 }
 
 /**
- * Ribbon Menu that provides extensability
+ * Ribbon Menu
  *
  */
 const RibbonMenuComponent = ({

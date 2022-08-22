@@ -1,6 +1,4 @@
-import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/GraphsManager";
-import { useAppSelector } from "@kernel/store/hooks";
+import useGraph from "@kernel/hooks/useGraph";
 import React from "react";
 import styled from "styled-components";
 
@@ -28,12 +26,12 @@ const CompositionTree = ({
   graphId,
   rootId = "root",
 }: CompositionTreeProps): React.ReactElement => {
-  const graphManager = useModule<IGraphModule>("GraphsManager");
-  const { selectGraphById } = graphManager.store.selectors;
+  const graph = useGraph(graphId);
+  if (!graph) return <Tree />;
 
-  const { adjacencyList, edges } = useAppSelector((state) =>
-    selectGraphById(state, graphId)
-  );
+  const {
+    instance: { adjacencyList, edges },
+  } = graph;
 
   const buildTree = (nodeId: string): React.ReactElement => {
     const isComposition = adjacencyList[nodeId].outputs.length > 0;

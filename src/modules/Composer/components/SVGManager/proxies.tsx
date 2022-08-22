@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useAppSelector } from "@kernel/store/hooks";
 import { SvgProxy } from "react-svgmt";
 import {
   MannequinProperties,
@@ -11,6 +10,7 @@ import {
 } from "modules/Composer/constants";
 import { CompositionGraphState } from "modules/Composer/store/state";
 import { Part, PartsLayer } from "modules/Composer/interfaces/Part";
+import useGraph from "@kernel/hooks/useGraph";
 
 export interface ProxiesProps {
   graphId: string;
@@ -27,11 +27,10 @@ const Proxies = ({
 }: ProxiesProps) => {
   const [parts, setParts] = React.useState<Part[]>([]);
 
-  const graph = useAppSelector<CompositionGraphState>(
-    (state) => state.graphsManager.graphs[graphId]
-  );
+  const graph = useGraph<CompositionGraphState>(graphId);
 
   if (!graph) {
+    console.warn("proxy rendering without graph instance");
     return null;
   }
 
@@ -39,7 +38,7 @@ const Proxies = ({
    * Finds all parts and attaches onClick listener to each one.
    */
   useEffect(() => {
-    const filteredNodes = Object.values(graph.nodes).filter(
+    const filteredNodes = Object.values(graph.instance.nodes).filter(
       (node): node is Part => node.type === "Part"
     );
     setParts(filteredNodes);
@@ -52,7 +51,7 @@ const Proxies = ({
     mannequinLayer: MannequinLayer;
     partsLayer: PartsLayer;
     mannequinProperties?: MannequinProperties;
-  } = graph.nodes;
+  } = graph.instance.nodes;
 
   /**
    * Attach on click event to garment parts
@@ -61,7 +60,7 @@ const Proxies = ({
   const attachListeners = (svgRoot: SVGElement) => {
     svgRoot.addEventListener("click", (e: MouseEvent) => {
       if (e.target instanceof SVGElement && onPartSelected) {
-        onPartSelected(graph.nodes[e.target.id] as Part);
+        onPartSelected(graph.instance.nodes[e.target.id] as Part);
       }
     });
     if (onPartsLoaded) onPartsLoaded(svgRoot);

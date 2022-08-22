@@ -1,15 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+import { viewportAdded, viewportSelected } from "@kernel/layout/ations";
 import { UIState } from "./state";
 
-import { startSVGLoad, SVGLoaded, parseParts } from "./actions";
+import {
+  startSVGLoad,
+  SVGLoaded,
+  parseParts,
+  partSelectedEvent,
+} from "./actions";
 
 const UIInitialState: UIState = {
-  leftPanel: {
-    isOpen: true,
-  },
+  leftPanel: {},
   rightPanel: {
-    isOpen: false,
     selectedPartId: null,
   },
   viewport: {
@@ -30,6 +33,26 @@ export const composerSlice = createSlice({
   // The `extraReducers` field use actions created outside the slice, therefore we can add proper naming
   extraReducers: (builder) => {
     builder
+      .addCase(viewportAdded, (state: UIState, action) => ({
+        leftPanel: {},
+        rightPanel: {
+          selectedPartId: null,
+        },
+        viewport: {
+          ...state.viewport,
+          graphId: action.payload.id,
+        },
+      }))
+      .addCase(viewportSelected, (state: UIState, action) => ({
+        leftPanel: {},
+        rightPanel: {
+          selectedPartId: null,
+        },
+        viewport: {
+          ...state.viewport,
+          graphId: action.payload,
+        },
+      }))
       .addCase(startSVGLoad, (state: UIState) => ({
         ...state,
         viewport: {
@@ -52,6 +75,13 @@ export const composerSlice = createSlice({
             ...state.viewport.parsing,
             parts: true,
           },
+        },
+      }))
+      .addCase(partSelectedEvent, (state: UIState, action) => ({
+        ...state,
+        rightPanel: {
+          ...state.rightPanel,
+          selectedPartId: action.payload.part.id,
         },
       }));
   },

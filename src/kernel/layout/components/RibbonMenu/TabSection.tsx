@@ -7,12 +7,14 @@ import {
 
 interface TabSectionProps {
   name: string;
+  width?: string;
   children?: React.ReactNode;
   dropdownContent?: React.ReactNode;
 }
 
-const TabSection = ({
+export const TabSection = ({
   name,
+  width,
   children,
   dropdownContent,
 }: TabSectionProps): React.ReactElement => {
@@ -23,7 +25,7 @@ const TabSection = ({
   };
 
   return (
-    <StyledSection>
+    <StyledSection width={width}>
       <SectionContent>{children}</SectionContent>
       {dropdownContent && (
         <DropdownSectionContent open={isDropdownOpen}>
@@ -44,6 +46,7 @@ const TabSection = ({
 TabSection.defaultProps = {
   children: null,
   dropdownContent: null,
+  width: "fit-content",
 };
 
 export default TabSection;

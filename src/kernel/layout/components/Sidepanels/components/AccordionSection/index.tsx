@@ -8,12 +8,18 @@ const StyledAccordionSection = styled.details`
 `;
 const AccordionTitle = styled.summary`
   display: block;
+  background-color: #800747;
+  color: #fff;
+  text-align: center;
   cursor: pointer;
   padding: 5px 3px;
 `;
 const AccordionContent = styled("div")`
   height: "auto";
   overflow: hidden;
+  background-color: #a55b81;
+  color: #fff;
+  padding: 5px;
   -webkit-transition: height 0.3s ease-in-out;
   -moz-transition: height 0.3s ease-in-out;
   -o-transition: height 0.3s ease-in-out;

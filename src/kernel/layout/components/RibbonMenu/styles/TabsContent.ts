@@ -3,6 +3,7 @@ import styled from "styled-components";
 // eslint-disable-next-line import/prefer-default-export
 export const TabsContent = styled.ul`
   display: flex;
+  position: relative;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
@@ -13,7 +14,6 @@ export const TabsContent = styled.ul`
   background-color: #ddd;
   border: 1px solid #aaa;
   margin: 0;
-  min-height: 130px;
-  max-height: 130px;
+  height: 130px;
   box-shadow: 10px;
 `;

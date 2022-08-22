@@ -1,29 +1,38 @@
-import React from "react";
+import React, { useEffect } from "react";
 
+import useGraph from "@kernel/hooks/useGraph";
 import AccordionSection from "@kernel/layout/components/Sidepanels/components/AccordionSection";
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
-import { partPropertiesChanged } from "modules/Composer/store/actions";
 
-export interface ComposerRightPanelContentProps {
-  compositionGraphId: string;
-  selectedPart: string;
-}
+import { rightPanelTitleChanged } from "@kernel/layout/ations";
+import { partPropertiesChanged } from "../../../store/actions";
+import { CompositionGraphState } from "../../../store/state";
 
-const ComposerRightPanelContent = ({
-  compositionGraphId,
-  selectedPart,
-}: ComposerRightPanelContentProps) => {
+const ComposerRightPanelContent = () => {
   const dispatch = useAppDispatch();
-  const part = useAppSelector(
-    (state) =>
-      state.graphsManager.graphs[compositionGraphId].nodes[selectedPart]
+  const selectedPartId = useAppSelector<string>(
+    (state) => state.ComposerUI.rightPanel.selectedPartId
   );
+
+  const graphId = useAppSelector((state) => state.ComposerUI.viewport.graphId);
+  const graph = useGraph<CompositionGraphState>(graphId);
+  const part = graph?.instance?.nodes[selectedPartId];
+
+  useEffect(() => {
+    if (part && part.type === "Part") {
+      dispatch(rightPanelTitleChanged("Configurações"));
+    }
+  }, [part]);
+
+  if (!graph || !part || part.type !== "Part") {
+    return null;
+  }
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(
       partPropertiesChanged({
-        graphId: compositionGraphId,
-        partId: selectedPart,
+        graphId,
+        partId: selectedPartId,
         oldProperties: {
           ...part.properties,
           color: part.properties.color,

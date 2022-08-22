@@ -2,6 +2,7 @@ import React, { Ref } from "react";
 import StyledViewport from "./styles";
 
 export interface ViewportProps {
+  id?: string;
   innerRef: Ref<HTMLDivElement>;
   children?: React.ReactElement;
 }
@@ -11,14 +12,18 @@ export interface ViewportProps {
  * @param {ViewportProps} props viewport properties
  * @returns a React element for the viewport
  */
-const Viewport = ({
+export const Viewport = ({
+  id,
   innerRef,
   children,
 }: ViewportProps): React.ReactElement => (
-  <StyledViewport ref={innerRef}>{children}</StyledViewport>
+  <StyledViewport ref={innerRef} id={id}>
+    {children}
+  </StyledViewport>
 );
 
 Viewport.defaultProps = {
+  id: "unknown",
   children: null,
 };
 

@@ -4,5 +4,5 @@ export interface PartPropertiesChangedEvent {
   graphId: string;
   partId: string;
   oldProperties: PartProperties;
-  newProperties: PartPropertiesChangedEvent;
+  newProperties: PartProperties;
 }

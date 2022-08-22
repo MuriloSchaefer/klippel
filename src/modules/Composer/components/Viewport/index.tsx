@@ -1,16 +1,16 @@
 import React, { useEffect } from "react";
 
-import useLeftPanel from "@kernel/layout/components/Sidepanels/hooks/useLeftPanel";
+// kernel imports
 import Viewport, { ViewportProps } from "@kernel/layout/components/Viewport";
 import { useAppDispatch } from "@kernel/store/hooks";
+import { newGraph } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+import { useActiveViewport } from "@kernel/hooks/useViewport";
 
-import {
-  newGraph,
-  removeGraph,
-} from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
-import Part from "modules/Composer/interfaces/Part";
-import { partSelectedEvent } from "modules/Composer/store/actions";
-import useRightPanel from "@kernel/layout/components/Sidepanels/hooks/useRightPanel";
+// internal imports
+import useGraph from "@kernel/hooks/useGraph";
+import { CompositionGraphState } from "modules/Composer/store/state";
+import { Part } from "../../interfaces/Part";
+import { partSelectedEvent } from "../../store/actions";
 import ComposerLeftPanelContent from "./LeftPanelContent";
 import SVGManager from "../SVGManager";
 import Proxies from "../SVGManager/proxies";
@@ -23,61 +23,48 @@ interface ComposerViewportProps extends ViewportProps {
 }
 
 const ComposerViewport = ({
-  innerRef,
   mannequinSize = "p",
   product = "camiseta-fem",
   model = "modelo",
 }: ComposerViewportProps) => {
-  const graphId = "composer";
-
   // Hooks
   const dispatch = useAppDispatch();
-  const { leftPanel, setLeftPanel } = useLeftPanel();
-  const { rightPanel, setRightPanel } = useRightPanel();
-  useEffect(() => {
-    dispatch(newGraph(graphId));
+  const viewport = useActiveViewport();
+  const graph = useGraph<CompositionGraphState>(viewport.state.id);
 
-    return () => dispatch(removeGraph(graphId));
-  }, []);
+  useEffect(() => {
+    if (!graph) {
+      dispatch(newGraph(viewport.state.id));
+    }
+    viewport.panels.right.close();
+    viewport.panels.right.setContent(<ComposerRightPanelContent />);
+  }, [viewport.state.id]);
 
   const onPartsLoaded = () => {
     // QUESTION: How to do it with redux actions and middlewares?
-    setLeftPanel({
-      ...leftPanel,
-      title: "Compositor",
-      content: <ComposerLeftPanelContent compositionGraphId={graphId} />,
-    });
+    viewport.panels.left.setContent(<ComposerLeftPanelContent />);
   };
 
   const onPartSelected = (part: Part) => {
     dispatch(partSelectedEvent({ part }));
-
-    setRightPanel({
-      ...rightPanel,
-      title: part.id,
-      content: (
-        <ComposerRightPanelContent
-          compositionGraphId={graphId}
-          selectedPart={part.id}
-        />
-      ),
-    });
   };
 
   return (
-    <Viewport innerRef={innerRef}>
-      <SVGManager
-        graphId={graphId}
-        mannequinSize={mannequinSize}
-        product={product}
-        model={model}
-      >
-        <Proxies
-          graphId={graphId}
-          onPartsLoaded={onPartsLoaded}
-          onPartSelected={onPartSelected}
-        />
-      </SVGManager>
+    <Viewport innerRef={null} id={viewport.state.id}>
+      {graph && (
+        <SVGManager
+          graphId={viewport.state.id}
+          mannequinSize={mannequinSize}
+          product={product}
+          model={model}
+        >
+          <Proxies
+            graphId={viewport.state.id}
+            onPartsLoaded={onPartsLoaded}
+            onPartSelected={onPartSelected}
+          />
+        </SVGManager>
+      )}
     </Viewport>
   );
 };

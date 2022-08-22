@@ -1,37 +1,48 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { isEmpty } from "lodash";
 
 import AccordionSection from "@kernel/layout/components/Sidepanels/components/AccordionSection";
 
-import { useAppSelector } from "@kernel/store/hooks";
+import { useComposerUIState } from "modules/Composer/hooks/useComposerUIState";
+import useGraph from "@kernel/hooks/useGraph";
+import { useAppDispatch } from "@kernel/store/hooks";
+import { leftPanelTitleChanged } from "@kernel/layout/ations";
 import CompositionTree from "./CompositionTree";
 import MannequinControls from "./MannequinSection";
-import { MannequinLayer } from "../../../interfaces/Mannequin";
 
 export interface ComposerLeftPanelContentProps {
-  compositionGraphId: string;
   rootId?: string;
 }
 
 const ComposerLeftPanelContent = ({
-  compositionGraphId,
   rootId = "root",
 }: ComposerLeftPanelContentProps) => {
+  const dispatch = useAppDispatch();
   const {
-    mannequinLayer,
-  }: {
-    mannequinLayer: MannequinLayer;
-  } = useAppSelector(
-    (state) => state.graphsManager.graphs[compositionGraphId].nodes
-  );
+    viewport: { graphId },
+  } = useComposerUIState();
+  if (!graphId) return null;
+
+  useEffect(() => {
+    dispatch(leftPanelTitleChanged("Detalhes"));
+  }, [graphId]);
+
+  const graph = useGraph(graphId);
+  if (!graph) return null;
+
+  const { mannequinLayer } = graph.instance.nodes;
 
   return (
     <>
-      <AccordionSection title="Árvore de composição">
-        <CompositionTree graphId={compositionGraphId} rootId={rootId} />
-      </AccordionSection>
+      {!isEmpty(graph.instance.nodes) && (
+        <AccordionSection title="Árvore de composição">
+          <CompositionTree graphId={graphId} rootId={rootId} />
+        </AccordionSection>
+      )}
+
       {mannequinLayer && (
         <AccordionSection title="Maneco">
-          <MannequinControls graphId={compositionGraphId} />
+          <MannequinControls graphId={graphId} />
         </AccordionSection>
       )}
     </>

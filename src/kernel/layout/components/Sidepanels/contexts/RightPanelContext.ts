@@ -1,9 +1,6 @@
 import React, { createContext } from "react";
 
-export type RightPanelType = {
-  title: string;
-  content: React.ReactNode;
-};
+export type RightPanelType = React.ReactNode;
 
 export interface RightPanelContextProps {
   rightPanel: RightPanelType;
@@ -11,7 +8,7 @@ export interface RightPanelContextProps {
 }
 
 export const RightPanelContext = createContext<RightPanelContextProps>({
-  rightPanel: { title: "", content: null },
+  rightPanel: null,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setRightPanel: (_leftPanel: RightPanelType) => null,
 });

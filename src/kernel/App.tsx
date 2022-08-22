@@ -1,5 +1,5 @@
 // External imports
-import React, { useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import { Provider } from "react-redux";
 
 // Kernel imports
@@ -11,14 +11,10 @@ import Layout from "@kernel/layout";
 import GraphModule from "@kernel/modules/GraphsManager";
 
 import ComposerModule from "modules/Composer";
-import ComposerViewport from "modules/Composer/components/Viewport";
 
 // Internal imports
-import "./App.css";
-import EventManager from "@kernel/events/manager";
 
 const App = (): React.ReactElement => {
-  const viewportRef = useRef<HTMLDivElement>(null);
   const memoizedModules = useMemo(
     () => ({
       modules: {
@@ -32,10 +28,7 @@ const App = (): React.ReactElement => {
   return (
     <ModulesContext.Provider value={memoizedModules}>
       <Provider store={initializeStore(memoizedModules.modules)}>
-        <EventManager />
-        <Layout>
-          <ComposerViewport innerRef={viewportRef} />
-        </Layout>
+        <Layout />
       </Provider>
     </ModulesContext.Provider>
   );

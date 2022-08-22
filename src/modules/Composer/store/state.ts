@@ -12,11 +12,8 @@ export interface CompositionGraphState extends GraphState {
 }
 
 export interface UIState {
-  leftPanel: {
-    isOpen: boolean;
-  };
+  leftPanel: Record<string, never>;
   rightPanel: {
-    isOpen: boolean;
     selectedPartId: string | null; // null means no part is selected
   };
   viewport: {

@@ -22,7 +22,7 @@ const StyledLeftPanel = styled("div")<{ theme: Theme; isOpen: boolean }>`
 const LeftPanel = () => {
   const dispatch = useAppDispatch();
   const { theme } = useTheme();
-  const isOpen = useAppSelector((state) => state.kernelUI.leftPanel.isOpen);
+  const { isOpen, title } = useAppSelector((state) => state.kernelUI.leftPanel);
 
   const { leftPanel } = useLeftPanel();
 
@@ -34,12 +34,8 @@ const LeftPanel = () => {
 
   return (
     <StyledLeftPanel theme={theme} isOpen={isOpen}>
-      <LeftPanelTitle
-        title={leftPanel.title}
-        onClick={handleClick}
-        isOpen={isOpen}
-      />
-      {isOpen && <SidePanelContent>{leftPanel.content}</SidePanelContent>}
+      <LeftPanelTitle title={title} onClick={handleClick} isOpen={isOpen} />
+      {isOpen && <SidePanelContent>{leftPanel}</SidePanelContent>}
     </StyledLeftPanel>
   );
 };
