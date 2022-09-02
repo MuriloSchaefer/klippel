@@ -5,7 +5,7 @@ import ComposerViewport from "./components/Viewport";
 import { MODULE_NAME } from "./constants";
 
 import parseMannequin from "./store/middlewares/parseMannequin";
-import parseElements from "./store/middlewares/parseParts";
+import parseElements from "./store/middlewares/parseGarment";
 import parseSVG from "./store/middlewares/parseSVG";
 import handleMannequinChanges from "./store/middlewares/handleMannequinChanges";
 import handlePartPropertiesChanges from "./store/middlewares/handlePartPropertiesChanges";

@@ -5,6 +5,7 @@ export interface ViewportProps {
   id?: string;
   innerRef: Ref<HTMLDivElement>;
   children?: React.ReactElement;
+  style?: any;
 }
 
 /**
@@ -16,8 +17,9 @@ export const Viewport = ({
   id,
   innerRef,
   children,
+  style,
 }: ViewportProps): React.ReactElement => (
-  <StyledViewport ref={innerRef} id={id}>
+  <StyledViewport ref={innerRef} id={id} style={style}>
     {children}
   </StyledViewport>
 );
@@ -25,6 +27,7 @@ export const Viewport = ({
 Viewport.defaultProps = {
   id: "unknown",
   children: null,
+  style: {},
 };
 
 export default Viewport;

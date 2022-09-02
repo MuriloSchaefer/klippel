@@ -21,7 +21,7 @@ const SVGManager = ({
   children,
 }: UseModelProps): ReactElement => {
   const dispatch = useAppDispatch();
-  const [svgXML, setSvgXML] = useState<string>("");
+  const [svgXML, setSvgXML] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const loadSVG = async () => {

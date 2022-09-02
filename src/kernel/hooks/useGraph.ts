@@ -10,10 +10,11 @@ import {
   addEdge,
   removeEdge,
 } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+import { createSelector } from "reselect";
 
 export interface Graph<T = GraphState> {
   id: string;
-  instance: T;
+  state: T | undefined;
   actions: {
     addNode(node: Node): void;
     removeNode(id: string): void;
@@ -28,17 +29,21 @@ export interface Graph<T = GraphState> {
  * @param id The graph id.
  * @returns {Graph | undefined} The graph object. Returns undefined if the graph does not exist.
  */
-const useGraph = <T = GraphState>(graphId: string): Graph<T> | undefined => {
+const useGraph = <G = GraphState, R = G>(
+  graphId: string,
+  graphSelector: (g: G) => R
+): Graph<R> => {
   const dispatch = useAppDispatch();
-  const graphsManager = useAppSelector((state) => state.graphsManager);
 
-  if (!(graphId in graphsManager.graphs)) {
-    return undefined;
-  }
+  const selector = createSelector(
+    (state: any) => state.graphsManager.graphs[graphId],
+    (g) => (g ? graphSelector(g) : undefined)
+  );
+  const graphState = useAppSelector<R | undefined>(selector);
 
   return {
     id: graphId,
-    instance: graphsManager.graphs[graphId],
+    state: graphState,
     actions: {
       addNode: (node) => {
         dispatch(addNode({ graphId, node }));

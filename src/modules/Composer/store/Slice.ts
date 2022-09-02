@@ -6,8 +6,9 @@ import { UIState } from "./state";
 import {
   startSVGLoad,
   SVGLoaded,
-  parseParts,
+  parseGarment,
   partSelectedEvent,
+  garmentParseFinished,
 } from "./actions";
 
 const UIInitialState: UIState = {
@@ -18,7 +19,7 @@ const UIInitialState: UIState = {
   viewport: {
     loadingSVG: false,
     parsing: {
-      parts: false,
+      garment: false,
       mannequin: false,
       annotations: false,
     },
@@ -67,13 +68,23 @@ export const composerSlice = createSlice({
           loadingSVG: false,
         },
       }))
-      .addCase(parseParts, (state: UIState) => ({
+      .addCase(parseGarment, (state: UIState) => ({
         ...state,
         viewport: {
           ...state.viewport,
           parsing: {
             ...state.viewport.parsing,
-            parts: true,
+            garment: true,
+          },
+        },
+      }))
+      .addCase(garmentParseFinished, (state: UIState) => ({
+        ...state,
+        viewport: {
+          ...state.viewport,
+          parsing: {
+            ...state.viewport.parsing,
+            garment: false,
           },
         },
       }))

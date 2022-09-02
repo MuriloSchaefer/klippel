@@ -1,7 +1,8 @@
 import Edge from "./Edge";
 
-interface Node {
-  id: string;
+export type NodeId = string;
+export interface Node {
+  id: NodeId;
   inputs: { [nodeId: string]: Edge };
 
   outputs: { [nodeId: string]: Edge };

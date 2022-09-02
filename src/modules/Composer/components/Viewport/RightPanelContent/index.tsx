@@ -5,6 +5,9 @@ import AccordionSection from "@kernel/layout/components/Sidepanels/components/Ac
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
 
 import { rightPanelTitleChanged } from "@kernel/layout/ations";
+
+import { Part } from "../../../interfaces/Part";
+import { Composition } from "../../../interfaces/Composition";
 import { partPropertiesChanged } from "../../../store/actions";
 import { CompositionGraphState } from "../../../store/state";
 
@@ -13,20 +16,24 @@ const ComposerRightPanelContent = () => {
   const selectedPartId = useAppSelector<string>(
     (state) => state.ComposerUI.rightPanel.selectedPartId
   );
-
   const graphId = useAppSelector((state) => state.ComposerUI.viewport.graphId);
-  const graph = useGraph<CompositionGraphState>(graphId);
-  const part = graph?.instance?.nodes[selectedPartId];
+
+  const graph = useGraph<CompositionGraphState, Composition | Part>(
+    graphId,
+    (g) => g.nodes[selectedPartId]
+  );
 
   useEffect(() => {
-    if (part && part.type === "Part") {
+    if (graph?.state && graph?.state.type === "Part") {
       dispatch(rightPanelTitleChanged("Configurações"));
     }
-  }, [part]);
+  }, [graph?.state]);
 
-  if (!graph || !part || part.type !== "Part") {
+  if (!graph) {
     return null;
   }
+  const { state: part } = graph;
+  if (!part || part.type !== "Part") return null;
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(

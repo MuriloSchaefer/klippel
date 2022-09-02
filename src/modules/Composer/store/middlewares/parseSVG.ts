@@ -2,9 +2,9 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
 import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
-import { MANNEQUIN_LAYER_ID, PARTS_LAYER_ID } from "modules/Composer/constants";
-import { parseMannequin, parseParts, SVGLoaded } from "../actions";
-import { Garment } from "../../interfaces/Garment";
+import { GARMENT_ID } from "modules/Composer/constants";
+import { SVGNode } from "modules/Composer/interfaces/svg";
+import { parseGarment, SVGLoaded } from "../actions";
 
 const middleware = createListenerMiddleware();
 
@@ -14,30 +14,29 @@ middleware.startListening({
     const { dispatch } = listenerApi;
     const { graphId, svgRoot }: { graphId: string; svgRoot: SVGElement } =
       action.payload;
-    const root: Garment = {
+    const root: SVGNode = {
       id: `root`,
-      type: "Garment",
+      tag: "svg",
       properties: {},
       inputs: {},
       outputs: {},
     };
-
+    console.log(svgRoot);
     dispatch(addNode({ graphId, node: root }));
 
-    // Find parts
-    const partsLayer = svgRoot.querySelectorAll<SVGElement>(
-      `#${PARTS_LAYER_ID}`
-    );
-    if (partsLayer && partsLayer.length > 0) {
-      dispatch(parseParts({ graphId, svgRoot: partsLayer[0] }));
-    }
+    // Find defs
+    // const svgDefinitions = svgRoot.querySelector<SVGElement>("defs");
+    // if (svgDefinitions) {
+    //   console.log(svgDefinitions);
+    // }
 
-    // Find mannequin layer
-    const mannequinLayer = svgRoot.querySelectorAll<SVGElement>(
-      `#${MANNEQUIN_LAYER_ID}`
+    // Find parts
+    const garmentObject = svgRoot.querySelectorAll<SVGElement>(
+      `#${GARMENT_ID}`
     );
-    if (mannequinLayer && mannequinLayer.length > 0) {
-      dispatch(parseMannequin({ graphId, svgRoot: mannequinLayer[0] }));
+
+    if (garmentObject && garmentObject.length > 0) {
+      dispatch(parseGarment({ graphId, svgRoot: garmentObject[0] }));
     }
   },
 });

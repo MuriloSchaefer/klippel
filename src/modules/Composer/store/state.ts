@@ -1,13 +1,10 @@
 import { GraphState } from "@kernel/modules/GraphsManager/store/state";
 import { Composition } from "../interfaces/Composition";
-import { MannequinLayer } from "../interfaces/Mannequin";
-import { Part, PartsLayer } from "../interfaces/Part";
+import { Part } from "../interfaces/Part";
 
 export interface CompositionGraphState extends GraphState {
   nodes: {
-    partsLayer: PartsLayer;
-    mannequinLayer: MannequinLayer;
-    [id: string]: Composition | MannequinLayer | PartsLayer | Part;
+    [id: string]: Composition | Part;
   };
 }
 
@@ -19,7 +16,7 @@ export interface UIState {
   viewport: {
     loadingSVG: boolean;
     parsing: {
-      parts: boolean;
+      garment: boolean;
       mannequin: boolean;
       annotations: boolean;
     };

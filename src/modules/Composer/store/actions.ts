@@ -14,6 +14,11 @@ export const SVGLoaded = createAction<{
   svgRoot: SVGElement;
 }>(`[${MODULE_NAME}] SVG Loaded`);
 
+export const garmentParseFinished = createAction<{
+  graphId: string;
+  svgRoot: SVGElement;
+}>(`[${MODULE_NAME}] Garment Parse Finished`);
+
 // UI EVENTS
 export const mannequinChangedEvent = createAction<MannequinChangedEvent>(
   `[${MODULE_NAME}] Mannequin properties changed`
@@ -32,10 +37,10 @@ export const partPropertiesChanged = createAction<PartPropertiesChangedEvent>(
 export const parseSVG = createAction<{
   svgRoot: SVGElement;
 }>(`[${MODULE_NAME}] Parse SVG`);
-export const parseParts = createAction<{
+export const parseGarment = createAction<{
   graphId: string;
   svgRoot: SVGElement;
-}>(`[${MODULE_NAME}] Parse Parts`);
+}>(`[${MODULE_NAME}] Parse Garment`);
 export const parseMannequin = createAction<{
   graphId: string;
   svgRoot: SVGElement;

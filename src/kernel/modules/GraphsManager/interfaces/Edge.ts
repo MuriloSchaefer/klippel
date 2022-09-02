@@ -1,5 +1,6 @@
-interface Edge {
-  id: string;
+export type EdgeId = string;
+export interface Edge {
+  id: EdgeId;
 
   sourceId: string;
 

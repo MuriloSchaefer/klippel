@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-
+import styled from "styled-components";
 // kernel imports
 import Viewport, { ViewportProps } from "@kernel/layout/components/Viewport";
 import { useAppDispatch } from "@kernel/store/hooks";
@@ -16,6 +16,10 @@ import SVGManager from "../SVGManager";
 import Proxies from "../SVGManager/proxies";
 import ComposerRightPanelContent from "./RightPanelContent";
 
+const StyledViewport = styled.div`
+  cursor: crosshair;
+`;
+
 interface ComposerViewportProps extends ViewportProps {
   mannequinSize?: string;
   product?: string;
@@ -30,10 +34,20 @@ const ComposerViewport = ({
   // Hooks
   const dispatch = useAppDispatch();
   const viewport = useActiveViewport();
-  const graph = useGraph<CompositionGraphState>(viewport.state.id);
+  const graph = useGraph<CompositionGraphState, string>(
+    viewport.state.id,
+    (g) => g.id
+  );
 
   useEffect(() => {
-    if (!graph) {
+    if (!graph.state) {
+      dispatch(newGraph(viewport.state.id));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!graph.state) {
+      console.log("creating graph");
       dispatch(newGraph(viewport.state.id));
     }
     viewport.panels.right.close();
@@ -45,27 +59,29 @@ const ComposerViewport = ({
     viewport.panels.left.setContent(<ComposerLeftPanelContent />);
   };
 
-  const onPartSelected = (part: Part) => {
+  const onMaterialSelected = (part: Part) => {
     dispatch(partSelectedEvent({ part }));
   };
 
   return (
-    <Viewport innerRef={null} id={viewport.state.id}>
-      {graph && (
-        <SVGManager
-          graphId={viewport.state.id}
-          mannequinSize={mannequinSize}
-          product={product}
-          model={model}
-        >
-          <Proxies
+    <StyledViewport>
+      <Viewport innerRef={null} id={viewport.state.id}>
+        {graph.state ? (
+          <SVGManager
             graphId={viewport.state.id}
-            onPartsLoaded={onPartsLoaded}
-            onPartSelected={onPartSelected}
-          />
-        </SVGManager>
-      )}
-    </Viewport>
+            mannequinSize={mannequinSize}
+            product={product}
+            model={model}
+          >
+            <Proxies
+              graphId={viewport.state.id}
+              onPartsLoaded={onPartsLoaded}
+              onMaterialSelected={onMaterialSelected}
+            />
+          </SVGManager>
+        ) : undefined}
+      </Viewport>
+    </StyledViewport>
   );
 };
 

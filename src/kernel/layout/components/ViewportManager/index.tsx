@@ -22,7 +22,7 @@ const ViewportManager = (): React.ReactElement => {
   useEffect(() => {
     if (!viewportManager.state.tabs.length) {
       // add welcome screen in case no tabs are open yet
-      viewportManager.hooks.addViewport("Bem-Vindo", <div>Bem vindo</div>);
+      // viewportManager.hooks.addViewport("Bem-Vindo", <div>Bem vindo</div>);
     }
   }, [viewportManager.state]);
 

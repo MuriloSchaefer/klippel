@@ -1,16 +1,36 @@
-import Node from "../interfaces/Node";
-import Edge from "../interfaces/Edge";
+import { Node } from "../interfaces/Node";
+import { Edge, EdgeId } from "../interfaces/Edge";
 
-export interface GraphState {
-  nodes: { [id: string]: Node };
-  edges: { [id: string]: Edge };
-  adjacencyList: { [id: string]: { inputs: string[]; outputs: string[] } };
+export interface NodeConnections {
+  inputs: EdgeId[];
+  outputs: EdgeId[];
 }
+export interface AdjacencyList {
+  [id: string]: NodeConnections;
+}
+
+export interface EdgesHashMap {
+  [id: string]: Edge;
+}
+
+export interface NodesHashMap<NT = Node> {
+  [id: string]: NT;
+}
+export interface GraphState {
+  id: GraphId;
+  nodes: NodesHashMap;
+  edges: EdgesHashMap;
+  adjacencyList: AdjacencyList;
+}
+export type GraphId = string;
 export interface GraphsManagerState {
   graphs: { [graphId: string]: GraphState };
 }
 
-export const newGraphState: GraphState = {
+export const newGraphState: Pick<
+  GraphState,
+  "nodes" | "edges" | "adjacencyList"
+> = {
   nodes: {},
   edges: {},
   adjacencyList: {},

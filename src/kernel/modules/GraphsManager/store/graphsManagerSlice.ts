@@ -16,10 +16,11 @@ export const graphsManagerSlice = createSlice({
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
     newGraph: (state: GraphsManagerState, action: PayloadAction<string>) => {
-      const graph = state.graphs[action.payload];
+      const id = action.payload;
+      const graph = state.graphs[id];
       if (graph) return;
 
-      state.graphs[action.payload] = newGraphState;
+      state.graphs[id] = { ...newGraphState, id };
     },
     removeGraph: (state: GraphsManagerState, action: PayloadAction<string>) => {
       const graph = state.graphs[action.payload];

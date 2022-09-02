@@ -16,7 +16,11 @@ export default () => {
   const handleModelSelection = () => {
     viewportManager.hooks.addViewport(
       "New Tab",
-      <ComposerViewport innerRef={null} />
+      <ComposerViewport
+        innerRef={null}
+        product="camisa-polo"
+        model="processed"
+      />
     );
   };
 

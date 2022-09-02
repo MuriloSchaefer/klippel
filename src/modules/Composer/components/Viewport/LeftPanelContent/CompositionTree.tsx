@@ -1,6 +1,14 @@
+import {
+  AdjacencyList as AL,
+  NodeConnections,
+} from "@kernel/modules/GraphsManager/store/state";
+import { NodeId } from "@kernel/modules/GraphsManager/interfaces/Node";
+
 import useGraph from "@kernel/hooks/useGraph";
 import React from "react";
 import styled from "styled-components";
+import { CompositionGraphState } from "modules/Composer/store/state";
+import { EdgeId } from "@kernel/modules/GraphsManager/interfaces/Edge";
 
 export interface CompositionTreeProps {
   graphId: string;
@@ -26,25 +34,35 @@ const CompositionTree = ({
   graphId,
   rootId = "root",
 }: CompositionTreeProps): React.ReactElement => {
-  const graph = useGraph(graphId);
-  if (!graph) return <Tree />;
+  const { state: adjacencyList } = useGraph<CompositionGraphState, AL>(
+    graphId,
+    (g) => g.adjacencyList
+  );
+  const filterChildren = (nodeId: NodeId) =>
+    adjacencyList &&
+    Object.entries(adjacencyList).filter(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ([_id, c]: [NodeId, NodeConnections]) => c.inputs.includes(nodeId)
+    );
 
-  const {
-    instance: { adjacencyList, edges },
-  } = graph;
+  if (!adjacencyList) return <Tree />;
 
-  const buildTree = (nodeId: string): React.ReactElement => {
-    const isComposition = adjacencyList[nodeId].outputs.length > 0;
+  const buildTree = (nodeId: NodeId): React.ReactElement => {
+    if (!(nodeId in adjacencyList)) return <Tree />;
+    const connection = adjacencyList[nodeId];
+    const hasSubtree = connection.outputs.length > 0;
+
     return (
       <Tree key={nodeId}>
         <TreeItem>
           <ItemDetails>
             <ItemLabel>{nodeId}</ItemLabel>
-            {isComposition && (
+            {hasSubtree && (
               <TreeItem key={nodeId}>
-                {adjacencyList[nodeId].outputs.map((edgeId: string) => {
-                  const childId = edges[edgeId].targetId;
-                  return buildTree(childId);
+                {connection.outputs.map((edgeId: EdgeId) => {
+                  const children = filterChildren(edgeId) ?? [];
+
+                  return children.map(([id]) => buildTree(id));
                 })}
               </TreeItem>
             )}
