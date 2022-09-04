@@ -9,6 +9,8 @@ import { useActiveViewport } from "@kernel/hooks/useViewport";
 // internal imports
 import useGraph from "@kernel/hooks/useGraph";
 import { CompositionGraphState } from "modules/Composer/store/state";
+import SettingsPanel from "@kernel/layout/components/Sidepanels/components/SettingsPanel";
+import DetailsPanel from "@kernel/layout/components/Sidepanels/components/DetailsPanel";
 import { Part } from "../../interfaces/Part";
 import { partSelectedEvent } from "../../store/actions";
 import ComposerLeftPanelContent from "./LeftPanelContent";
@@ -50,38 +52,38 @@ const ComposerViewport = ({
       console.log("creating graph");
       dispatch(newGraph(viewport.state.id));
     }
-    viewport.panels.right.close();
-    viewport.panels.right.setContent(<ComposerRightPanelContent />);
   }, [viewport.state.id]);
-
-  const onPartsLoaded = () => {
-    // QUESTION: How to do it with redux actions and middlewares?
-    viewport.panels.left.setContent(<ComposerLeftPanelContent />);
-  };
 
   const onMaterialSelected = (part: Part) => {
     dispatch(partSelectedEvent({ part }));
   };
 
   return (
-    <StyledViewport>
-      <Viewport innerRef={null} id={viewport.state.id}>
-        {graph.state ? (
-          <SVGManager
-            graphId={viewport.state.id}
-            mannequinSize={mannequinSize}
-            product={product}
-            model={model}
-          >
-            <Proxies
+    <>
+      <SettingsPanel>
+        <ComposerLeftPanelContent />
+      </SettingsPanel>
+      <StyledViewport>
+        <Viewport innerRef={null} id={viewport.state.id}>
+          {graph.state ? (
+            <SVGManager
               graphId={viewport.state.id}
-              onPartsLoaded={onPartsLoaded}
-              onMaterialSelected={onMaterialSelected}
-            />
-          </SVGManager>
-        ) : undefined}
-      </Viewport>
-    </StyledViewport>
+              mannequinSize={mannequinSize}
+              product={product}
+              model={model}
+            >
+              <Proxies
+                graphId={viewport.state.id}
+                onMaterialSelected={onMaterialSelected}
+              />
+            </SVGManager>
+          ) : undefined}
+        </Viewport>
+      </StyledViewport>
+      <DetailsPanel>
+        <ComposerRightPanelContent />
+      </DetailsPanel>
+    </>
   );
 };
 

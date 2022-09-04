@@ -2,10 +2,11 @@ import React, { useEffect } from "react";
 
 import useGraph from "@kernel/hooks/useGraph";
 import AccordionSection from "@kernel/layout/components/Sidepanels/components/AccordionSection";
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
+import { useAppDispatch } from "@kernel/store/hooks";
 
 import { rightPanelTitleChanged } from "@kernel/layout/ations";
 
+import useComposerUIState from "modules/Composer/hooks/useComposerUIState";
 import { Part } from "../../../interfaces/Part";
 import { Composition } from "../../../interfaces/Composition";
 import { partPropertiesChanged } from "../../../store/actions";
@@ -13,27 +14,25 @@ import { CompositionGraphState } from "../../../store/state";
 
 const ComposerRightPanelContent = () => {
   const dispatch = useAppDispatch();
-  const selectedPartId = useAppSelector<string>(
-    (state) => state.ComposerUI.rightPanel.selectedPartId
+  const selectedPartId = useComposerUIState(
+    (ui) => ui.rightPanel.selectedPartId
   );
-  const graphId = useAppSelector((state) => state.ComposerUI.viewport.graphId);
+  const graphId = useComposerUIState((ui) => ui.viewport.graphId);
 
-  const graph = useGraph<CompositionGraphState, Composition | Part>(
-    graphId,
-    (g) => g.nodes[selectedPartId]
+  const { state: node } = useGraph<CompositionGraphState, Composition | Part>(
+    graphId ?? "",
+    (g) => g.nodes[selectedPartId ?? ""]
   );
 
   useEffect(() => {
-    if (graph?.state && graph?.state.type === "Part") {
+    if (node) {
       dispatch(rightPanelTitleChanged("Configurações"));
     }
-  }, [graph?.state]);
+  }, [node]);
 
-  if (!graph) {
+  if (!node || !graphId || !selectedPartId) {
     return null;
   }
-  const { state: part } = graph;
-  if (!part || part.type !== "Part") return null;
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(
@@ -41,10 +40,10 @@ const ComposerRightPanelContent = () => {
         graphId,
         partId: selectedPartId,
         oldProperties: {
-          ...part.properties,
-          color: part.properties.color,
+          ...node.properties,
+          color: node.properties.color,
         },
-        newProperties: { ...part.properties, color: e.target.value },
+        newProperties: { ...node.properties, color: e.target.value },
       })
     );
   };
@@ -57,17 +56,17 @@ const ComposerRightPanelContent = () => {
           id="skin"
           list="colors"
           name="skin"
-          value={part.properties.color}
+          value={node.properties.color}
           onChange={handleColorChange}
         />
-        <datalist id="colors">
+        {/* <datalist id="colors">
           <option>#fff</option>
           <option>magenta</option>
           <option>#f1c27d</option>
           <option>#e0ac69</option>
           <option>#c68642</option>
           <option>#8d5524</option>
-        </datalist>
+        </datalist> */}
       </div>
     </AccordionSection>
   );

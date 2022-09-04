@@ -2,17 +2,12 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import ModulesContext from "@kernel/modules/context";
 
-import { useAppSelector } from "@kernel/store/hooks";
 import ViewportContentContext, {
   ViewportContentMap,
 } from "@kernel/contexts/viewports";
 import { Theme, ThemeContext } from "../contexts/ThemeContext";
 import RibbonMenu, { Tabs } from "./components/RibbonMenu";
 
-import LeftPanel from "./components/Sidepanels/components/LeftPanel";
-import RightPanel from "./components/Sidepanels/components/RightPanel";
-import { LeftPanelContext } from "./components/Sidepanels/contexts/LeftPanelContext";
-import { RightPanelContext } from "./components/Sidepanels/contexts/RightPanelContext";
 import ViewportManager from "./components/ViewportManager";
 import Content from "./components/Content";
 
@@ -38,31 +33,6 @@ export default (): React.ReactElement => {
       setViewports,
     }),
     [viewports]
-  );
-
-  const isLeftPanelOpen = useAppSelector(
-    (state) => state.kernelUI.leftPanel.isOpen
-  );
-  const isRightPanelOpen = useAppSelector(
-    (state) => state.kernelUI.rightPanel.isOpen
-  );
-
-  const [leftPanel, setLeftPanel] = useState<React.ReactNode>(<div />);
-  const memoizedLeftPanel = useMemo(
-    () => ({
-      leftPanel,
-      setLeftPanel,
-    }),
-    [leftPanel]
-  );
-
-  const [rightPanel, setRightPanel] = useState<React.ReactNode>(<div />);
-  const memoizedRightPanel = useMemo(
-    () => ({
-      rightPanel,
-      setRightPanel,
-    }),
-    [rightPanel]
   );
 
   // load modules tabs
@@ -91,18 +61,11 @@ export default (): React.ReactElement => {
     <ThemeContext.Provider value={memoizedTheme}>
       <ViewportContentContext.Provider value={memoizedViewports}>
         <RibbonMenu tabs={tabs} initialTab="composer" />
-        <LeftPanelContext.Provider value={memoizedLeftPanel}>
-          <RightPanelContext.Provider value={memoizedRightPanel}>
-            <Content
-              isLeftPanelOpen={isLeftPanelOpen}
-              isRightPanelOpen={isRightPanelOpen}
-            >
-              <ViewportManager />
-              <LeftPanel />
-              <RightPanel />
-            </Content>
-          </RightPanelContext.Provider>
-        </LeftPanelContext.Provider>
+        <Content>
+          <div id="settingsPanel" />
+          <ViewportManager />
+          <div id="detailsPanel" />
+        </Content>
       </ViewportContentContext.Provider>
     </ThemeContext.Provider>
   );

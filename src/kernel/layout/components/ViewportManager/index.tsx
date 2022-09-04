@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 // kernel imports
 import { useViewportManager } from "@kernel/hooks/useViewportManager";
@@ -18,13 +18,6 @@ import ViewportTabs, {
 const ViewportManager = (): React.ReactElement => {
   const viewportManager = useViewportManager();
   const viewport = useViewport(viewportManager.state.activeTab);
-
-  useEffect(() => {
-    if (!viewportManager.state.tabs.length) {
-      // add welcome screen in case no tabs are open yet
-      // viewportManager.hooks.addViewport("Bem-Vindo", <div>Bem vindo</div>);
-    }
-  }, [viewportManager.state]);
 
   const handleAddTab = (): void => {
     viewportManager.hooks.addViewport("New Tab", <>New Tab</>);

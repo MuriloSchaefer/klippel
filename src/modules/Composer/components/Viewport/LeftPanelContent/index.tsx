@@ -15,15 +15,13 @@ const ComposerLeftPanelContent = ({
   rootId = "root",
 }: ComposerLeftPanelContentProps) => {
   const dispatch = useAppDispatch();
-  const {
-    viewport: { graphId },
-  } = useComposerUIState();
-  if (!graphId) return null;
+  const graphId = useComposerUIState((ui) => ui.viewport.graphId);
 
   useEffect(() => {
     dispatch(leftPanelTitleChanged("Detalhes"));
   }, [graphId]);
 
+  if (!graphId) return null;
   return (
     <AccordionSection title="Árvore de composição">
       <CompositionTree graphId={graphId} rootId={rootId} />

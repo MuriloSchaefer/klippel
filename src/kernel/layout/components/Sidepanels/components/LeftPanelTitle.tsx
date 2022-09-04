@@ -16,6 +16,7 @@ const StyledLeftPanelTitle = styled("div")<{ theme: Theme; isOpen: boolean }>`
   &::after {
     position: absolute;
     right: -15px;
+    z-index: 998;
     top: 1em;
     content: "${(props) => (props.isOpen ? "<" : ">")}";
     display: inline-flex;

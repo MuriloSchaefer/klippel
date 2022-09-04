@@ -39,7 +39,6 @@ export const DropdownSectionContent = styled.div<{ open: boolean }>`
   position: absolute;
   margin: auto;
   margin-top: 110px;
-  z-index: 10;
   margin-right: auto;
   display: ${(p) => (p.open ? "inline-block" : "none")};
 `;

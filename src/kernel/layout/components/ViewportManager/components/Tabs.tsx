@@ -20,7 +20,7 @@ export const StyledViewportTab = styled.li<StyledTabProps>`
   list-style: none;
   text-align: center;
   position: relative;
-  width: fit-content;
+  width: max-content;
   padding: 0 30px 0 10px;
 
   height: 25px;
@@ -100,6 +100,7 @@ export const TabsHeader = styled.ul`
 const ViewportTabs = styled.nav`
   position: -webkit-sticky; /* Safari */
   position: sticky;
+  flex: 1;
   top: 0;
 `;
 export default ViewportTabs;
