@@ -1,20 +1,35 @@
 import { createListenerMiddleware, ThunkDispatch } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
+import _, { isEmpty } from "lodash";
 import Node from "@kernel/modules/GraphsManager/interfaces/Node";
 import Edge from "@kernel/modules/GraphsManager/interfaces/Edge";
 import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
-import { DEFAULT_PART_COLOR } from "modules/Composer/constants";
+
 import { Garment } from "modules/Composer/interfaces/Garment";
-import _, { isEmpty } from "lodash";
-import {
-  Part as Material,
-  PartProperties as Properties,
-} from "../../interfaces/Part";
+import { Material, Properties } from "../../interfaces/Material";
 import { garmentParseFinished, parseGarment } from "../actions";
 
 const middleware = createListenerMiddleware();
 
+const xdom2properties = (node: Element): Properties => {
+  const children = Array.from(node.children);
+  const metadata = children.find((c) => c.tagName === "metadata");
+  if (!metadata) return {} as Properties;
+
+  const odmProperties = Array.from(metadata.children);
+  const properties = odmProperties.reduce((acc, property) => {
+    const name = property.getAttribute("xodm:name");
+    const value = property.getAttribute("xodm:value");
+    const type = property.getAttribute("xodm:type");
+
+    if (!name || !value || !type) return acc;
+
+    return { ...acc, [name]: { value, type } };
+  }, {} as Properties);
+
+  return properties;
+};
 const parseNode = (
   node: Element,
   parent: Node,
@@ -25,12 +40,15 @@ const parseNode = (
   if (isEmpty(node.id)) {
     node.setAttribute("id", _.uniqueId("random_"));
   }
+  // group element, recurse
+  const children = Array.from(node.children);
+  const hasChildren = !isEmpty(children);
 
-  // vector object, add part to graph
+  // vector object, add material to graph
   const material: Material = {
     id: node.id,
-    type: "Part",
-    properties: baseProperties,
+    type: "Material",
+    properties: { ...baseProperties, ...xdom2properties(node) },
     inputs: {
       [parent.id]: {
         id: `${parent.id}-${node.id}`,
@@ -41,10 +59,7 @@ const parseNode = (
     outputs: {},
   };
   dispatch(addNode({ graphId, node: material }));
-  if (node.tagName === "g") {
-    // group element, recurse
-    const children = Array.from(node.children);
-
+  if (hasChildren) {
     // const properties = children.filter((c) => c.tagName === "metadata");
     const parts = children.filter((c) => c.tagName !== "metadata");
 
@@ -69,12 +84,10 @@ middleware.startListening({
       properties: {
         details: "",
       },
-      baseProperties: {
-        color: DEFAULT_PART_COLOR,
-      },
+      baseProperties: {},
       inputs: {
         root: {
-          id: "root",
+          id: "root-garmentRoot",
           sourceId: "root",
           targetId: "garmentRoot",
         },

@@ -1,8 +1,8 @@
-import { PartProperties } from "../Part";
+import { Properties } from "../Material";
 
-export interface PartPropertiesChangedEvent {
+export interface PropertiesChangedEvent {
   graphId: string;
-  partId: string;
-  oldProperties: PartProperties;
-  newProperties: PartProperties;
+  materialId: string;
+  oldProperties: Properties;
+  newProperties: Properties;
 }

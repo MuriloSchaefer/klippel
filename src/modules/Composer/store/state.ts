@@ -1,17 +1,17 @@
 import { GraphState } from "@kernel/modules/GraphsManager/store/state";
 import { Composition } from "../interfaces/Composition";
-import { Part } from "../interfaces/Part";
+import { Material } from "../interfaces/Material";
 
 export interface CompositionGraphState extends GraphState {
   nodes: {
-    [id: string]: Composition | Part;
+    [id: string]: Composition | Material;
   };
 }
 
 export interface UIState {
   leftPanel: Record<string, never>;
   rightPanel: {
-    selectedPartId: string | null; // null means no part is selected
+    selectedMaterialId: string | null; // null means no part is selected
   };
   viewport: {
     loadingSVG: boolean;

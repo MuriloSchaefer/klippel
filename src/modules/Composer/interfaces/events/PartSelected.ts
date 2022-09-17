@@ -1,6 +1,6 @@
 import { Composition } from "../Composition";
-import { Part } from "../Part";
+import { Material } from "../Material";
 
-export interface PartSelectedEvent {
-  part: Part | Composition;
+export interface MaterialSelectedEvent {
+  material: Material | Composition;
 }

@@ -7,14 +7,14 @@ import {
   startSVGLoad,
   SVGLoaded,
   parseGarment,
-  partSelectedEvent,
+  materialSelectedEvent,
   garmentParseFinished,
 } from "./actions";
 
 const UIInitialState: UIState = {
   leftPanel: {},
   rightPanel: {
-    selectedPartId: null,
+    selectedMaterialId: null,
   },
   viewport: {
     loadingSVG: false,
@@ -37,7 +37,7 @@ export const composerSlice = createSlice({
       .addCase(viewportAdded, (state: UIState, action) => ({
         leftPanel: {},
         rightPanel: {
-          selectedPartId: null,
+          selectedMaterialId: null,
         },
         viewport: {
           ...state.viewport,
@@ -47,7 +47,7 @@ export const composerSlice = createSlice({
       .addCase(viewportSelected, (state: UIState, action) => ({
         leftPanel: {},
         rightPanel: {
-          selectedPartId: null,
+          selectedMaterialId: null,
         },
         viewport: {
           ...state.viewport,
@@ -88,11 +88,11 @@ export const composerSlice = createSlice({
           },
         },
       }))
-      .addCase(partSelectedEvent, (state: UIState, action) => ({
+      .addCase(materialSelectedEvent, (state: UIState, action) => ({
         ...state,
         rightPanel: {
           ...state.rightPanel,
-          selectedPartId: action.payload.part.id,
+          selectedMaterialId: action.payload.material.id,
         },
       }));
   },

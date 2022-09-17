@@ -62,7 +62,7 @@ export default (): React.ReactElement => {
       <ViewportContentContext.Provider value={memoizedViewports}>
         <RibbonMenu tabs={tabs} initialTab="composer" />
         <Content>
-          <div id="settingsPanel" />
+          <div id="settingsPanel" style={{ zIndex: 2 }} />
           <ViewportManager />
           <div id="detailsPanel" />
         </Content>

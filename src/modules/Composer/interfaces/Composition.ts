@@ -1,13 +1,9 @@
 import { Node } from "@kernel/modules/GraphsManager/interfaces/Node";
-
-export interface CompositionProperties {
-  details?: string;
-  color: string;
-}
+import { Properties } from "./Material";
 
 export interface Composition extends Node {
   type: "Composition";
-  properties: CompositionProperties;
+  properties: Properties;
 }
 
 export default Composition;

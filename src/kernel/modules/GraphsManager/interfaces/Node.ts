@@ -1,4 +1,4 @@
-import Edge from "./Edge";
+import { Edge } from "./Edge";
 
 export type NodeId = string;
 export interface Node {

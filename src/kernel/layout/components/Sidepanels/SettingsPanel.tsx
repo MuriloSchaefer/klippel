@@ -8,7 +8,10 @@ import { SETTING_PANEL_ID } from "@kernel/layout/constants";
 import SidePanelContent from "./SidePanelContent";
 import LeftPanelTitle from "./LeftPanelTitle";
 
-const StyledLeftPanel = styled("div")<{ theme: Theme; isOpen: boolean }>`
+export const StyledSettingsPanel = styled("div")<{
+  theme: Theme;
+  isOpen: boolean;
+}>`
   background-color: ${(props) =>
     props.theme === Theme.Dark ? "#333" : "#eee"};
   color: ${(props) => (props.theme === Theme.Dark ? "#ddd" : "#333")};
@@ -45,10 +48,10 @@ const SettingsPanel = ({ children }: { children: React.ReactNode }) => {
   if (!container) return null;
 
   return createPortal(
-    <StyledLeftPanel theme={theme} isOpen={isOpen}>
+    <StyledSettingsPanel theme={theme} isOpen={isOpen}>
       <LeftPanelTitle title={title} onClick={handleClick} isOpen={isOpen} />
       {isOpen && <SidePanelContent>{children}</SidePanelContent>}
-    </StyledLeftPanel>,
+    </StyledSettingsPanel>,
     container
   );
 };

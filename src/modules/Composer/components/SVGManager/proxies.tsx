@@ -1,15 +1,15 @@
 import React from "react";
 import { SvgProxy } from "react-svgmt";
 import { CompositionGraphState } from "modules/Composer/store/state";
-import { Part } from "modules/Composer/interfaces/Part";
+import { Material } from "modules/Composer/interfaces/Material";
 import useGraph from "@kernel/hooks/useGraph";
-import Composition from "modules/Composer/interfaces/Composition";
+import { Composition } from "modules/Composer/interfaces/Composition";
 import { NodesHashMap } from "@kernel/modules/GraphsManager/store/state";
 
 export interface ProxiesProps {
   graphId: string;
   onPartsLoaded?: (svgRoot: SVGElement) => void;
-  onMaterialSelected?: (part: Part) => void;
+  onMaterialSelected?: (material: Material | Composition) => void;
 }
 
 const Proxies = ({
@@ -17,11 +17,11 @@ const Proxies = ({
   onPartsLoaded,
   onMaterialSelected,
 }: ProxiesProps) => {
-  // const [parts, setParts] = React.useState<Part[]>([]);
+  // const [parts, setParts] = React.useState<Material[]>([]);
 
   const { state: nodes } = useGraph<
     CompositionGraphState,
-    NodesHashMap<Composition | Part>
+    NodesHashMap<Composition | Material>
   >(graphId, (g) => g.nodes);
 
   if (!nodes) return null;
@@ -31,25 +31,31 @@ const Proxies = ({
    * @param svgRoot SVG element
    */
   const attachListeners = (svgRoot: SVGElement) => {
-    svgRoot.addEventListener("click", (e: MouseEvent) => {
-      if (e.target instanceof SVGElement && onMaterialSelected) {
-        onMaterialSelected(nodes[e.target.id] as Part);
-      }
-    });
+    if (nodes[svgRoot.id].properties.Tipo !== undefined) {
+      svgRoot.addEventListener("click", (e: MouseEvent) => {
+        if (e.target instanceof SVGElement && onMaterialSelected) {
+          onMaterialSelected(nodes[e.target.id]);
+        }
+      });
+    }
+
     if (onPartsLoaded) onPartsLoaded(svgRoot);
   };
 
   return (
     <>
       {nodes &&
-        Object.entries(nodes).map(([id, node]) => (
-          <SvgProxy
-            key={id}
-            selector={`#${id}`}
-            fill={"color" in node.properties ? node.properties.color : "blue"}
-            onElementSelected={attachListeners}
-          />
-        ))}
+        Object.entries(nodes)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          .filter(([_id, node]) => node.properties.Tipo !== undefined)
+          .map(([id, node]) => (
+            <SvgProxy
+              key={id}
+              selector={`#${id}`}
+              fill={node.properties.Cor?.value}
+              onElementSelected={attachListeners}
+            />
+          ))}
 
       {/* <SvgProxy
         selector="#maneco"

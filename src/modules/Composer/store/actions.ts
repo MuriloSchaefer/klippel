@@ -1,8 +1,7 @@
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { MannequinChangedEvent } from "../interfaces/events/MannequinChanged";
-import { PartPropertiesChangedEvent } from "../interfaces/events/PartPropertiesChanged";
-import { PartSelectedEvent } from "../interfaces/events/PartSelected";
+import { PropertiesChangedEvent } from "../interfaces/events/PartPropertiesChanged";
+import { MaterialSelectedEvent } from "../interfaces/events/PartSelected";
 
 // EVENTS
 export const startSVGLoad = createAction<{
@@ -20,17 +19,14 @@ export const garmentParseFinished = createAction<{
 }>(`[${MODULE_NAME}] Garment Parse Finished`);
 
 // UI EVENTS
-export const mannequinChangedEvent = createAction<MannequinChangedEvent>(
-  `[${MODULE_NAME}] Mannequin properties changed`
+export const materialSelectedEvent = createAction<MaterialSelectedEvent>(
+  `[${MODULE_NAME}] Material selected`
 );
-export const partSelectedEvent = createAction<PartSelectedEvent>(
-  `[${MODULE_NAME}] Part selected`
+export const materialUnSelectedEvent = createAction(
+  `[${MODULE_NAME}] Material unselected`
 );
-export const partUnSelectedEvent = createAction(
-  `[${MODULE_NAME}] Part unselected`
-);
-export const partPropertiesChanged = createAction<PartPropertiesChangedEvent>(
-  `[${MODULE_NAME}] Part properties changed`
+export const materialPropertiesChanged = createAction<PropertiesChangedEvent>(
+  `[${MODULE_NAME}] Material properties changed`
 );
 
 // COMMANDS

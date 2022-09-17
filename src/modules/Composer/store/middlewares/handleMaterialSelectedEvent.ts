@@ -2,12 +2,12 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
 import { rightPanelOpened } from "@kernel/layout/ations";
-import { partSelectedEvent } from "../actions";
+import { materialSelectedEvent } from "../actions";
 
 const middleware = createListenerMiddleware();
 
 middleware.startListening({
-  actionCreator: partSelectedEvent,
+  actionCreator: materialSelectedEvent,
   effect: (action: AnyAction, listenerApi) => {
     const { dispatch } = listenerApi;
     dispatch(rightPanelOpened());

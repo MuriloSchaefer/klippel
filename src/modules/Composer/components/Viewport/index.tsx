@@ -9,10 +9,12 @@ import { useActiveViewport } from "@kernel/hooks/useViewport";
 // internal imports
 import useGraph from "@kernel/hooks/useGraph";
 import { CompositionGraphState } from "modules/Composer/store/state";
-import SettingsPanel from "@kernel/layout/components/Sidepanels/components/SettingsPanel";
-import DetailsPanel from "@kernel/layout/components/Sidepanels/components/DetailsPanel";
-import { Part } from "../../interfaces/Part";
-import { partSelectedEvent } from "../../store/actions";
+import SettingsPanel from "@kernel/layout/components/Sidepanels/SettingsPanel";
+import DetailsPanel from "@kernel/layout/components/Sidepanels/DetailsPanel";
+
+import { Material } from "../../interfaces/Material";
+import { Composition } from "../../interfaces/Composition";
+import { materialSelectedEvent } from "../../store/actions";
 import ComposerLeftPanelContent from "./LeftPanelContent";
 import SVGManager from "../SVGManager";
 import Proxies from "../SVGManager/proxies";
@@ -54,8 +56,9 @@ const ComposerViewport = ({
     }
   }, [viewport.state.id]);
 
-  const onMaterialSelected = (part: Part) => {
-    dispatch(partSelectedEvent({ part }));
+  const onMaterialSelected = (material: Material | Composition) => {
+    console.log(material);
+    dispatch(materialSelectedEvent({ material }));
   };
 
   return (

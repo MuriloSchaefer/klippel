@@ -4,10 +4,11 @@ import styled from "styled-components";
 
 import { CompositionGraphState, UIState } from "modules/Composer/store/state";
 import { Composition } from "modules/Composer/interfaces/Composition";
-import { Part } from "modules/Composer/interfaces/Part";
+import { Material } from "modules/Composer/interfaces/Material";
 import { useAppDispatch } from "@kernel/store/hooks";
-import { partSelectedEvent } from "modules/Composer/store/actions";
+import { materialSelectedEvent } from "modules/Composer/store/actions";
 import { useComposerUIState } from "modules/Composer/hooks/useComposerUIState";
+import MaterialPreviewCircle from "../../Utils/MaterialPreviewCircle";
 
 const StyledTreeItem = styled.li``;
 const ItemDetails = styled.details`
@@ -23,42 +24,52 @@ const Tree = styled.ul`
 const ItemLabel = styled.summary<{ isSelected: boolean }>`
   cursor: pointer;
   color: ${(p) => (p.isSelected ? "purple" : "white")};
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 
 interface TreeItemProps {
   graphId: string;
   nodeId: string;
+  children: React.ReactNode;
 }
 
-export const TreeItem = ({ graphId, nodeId }: TreeItemProps) => {
+const TreeItem = ({ graphId, nodeId, children }: TreeItemProps) => {
   const dispatch = useAppDispatch();
-  const { state: node } = useGraph<CompositionGraphState, Composition | Part>(
-    graphId,
-    (g) => g.nodes[nodeId]
-  );
+  const { state: node } = useGraph<
+    CompositionGraphState,
+    Composition | Material
+  >(graphId, (g) => g.nodes[nodeId]);
   const selectedMaterial = useComposerUIState(
-    (ui: UIState) => ui.rightPanel.selectedPartId
+    (ui: UIState) => ui.rightPanel.selectedMaterialId
   );
-  const children: string[] = Object.keys(node?.outputs ?? []);
 
   const handleSelection = (e: React.MouseEvent) => {
-    console.log(node);
-
+    if (node) dispatch(materialSelectedEvent({ material: node }));
     e.stopPropagation();
-    return node && dispatch(partSelectedEvent({ part: node }));
   };
 
   if (!node) return null;
   return (
     <Tree key={`${graphId}-${nodeId}`}>
-      <StyledTreeItem key={nodeId} onClick={handleSelection}>
+      <StyledTreeItem
+        key={nodeId}
+        onClick={node.properties.Tipo?.value ? handleSelection : undefined}
+      >
         <ItemDetails>
-          <ItemLabel isSelected={node.id === selectedMaterial}>
-            {node.id}
-          </ItemLabel>
-          {children.map((childId) => (
-            <TreeItem graphId={graphId} nodeId={childId} />
-          ))}
+          <>
+            <ItemLabel isSelected={node.id === selectedMaterial}>
+              <span>{node.properties.Nome?.value ?? node.id}</span>
+              {node.properties.Cor && (
+                <MaterialPreviewCircle
+                  color={node.properties.Cor.value}
+                  r={5}
+                />
+              )}
+            </ItemLabel>
+            {children}
+          </>
           {/* {hasSubtree && (
           <StyledTreeItem key={nodeId}>
             {connection.outputs.map((edgeId: EdgeId) => {
@@ -74,4 +85,6 @@ export const TreeItem = ({ graphId, nodeId }: TreeItemProps) => {
   );
 };
 
-export default TreeItem;
+export const MemoizedTreeItem = React.memo(TreeItem);
+
+export default MemoizedTreeItem;
