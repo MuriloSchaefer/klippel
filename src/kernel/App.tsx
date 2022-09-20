@@ -10,6 +10,7 @@ import Layout from "@kernel/modules/LayoutManager/components";
 // Modules imports
 import LayoutModule from "@kernel/modules/LayoutManager";
 import GraphModule from "@kernel/modules/GraphsManager";
+import MouseManagerModule from "@kernel/modules/MouseManager";
 
 import ComposerModule from "modules/Composer";
 
@@ -19,6 +20,7 @@ const App = (): React.ReactElement => {
   const memoizedModules = useMemo(
     () => ({
       modules: {
+        [MouseManagerModule.name]: MouseManagerModule,
         [LayoutModule.name]: LayoutModule,
         [GraphModule.name]: GraphModule,
         [ComposerModule.name]: ComposerModule,

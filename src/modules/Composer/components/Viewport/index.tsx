@@ -10,18 +10,19 @@ import { useAppDispatch } from "@kernel/store/hooks";
 import { newGraph } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
 
 // internal imports
-import { CompositionGraphState } from "modules/Composer/store/state";
-
-import { Material } from "../../interfaces/Material";
-import { Composition } from "../../interfaces/Composition";
-import { materialSelectedEvent } from "../../store/actions";
-import ComposerLeftPanelContent from "./LeftPanelContent";
-import SVGManager from "../SVGManager";
-import Proxies from "../SVGManager/proxies";
-import ComposerRightPanelContent from "./RightPanelContent";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
 import { IGraphModule } from "@kernel/modules/GraphsManager";
+
+import { Material } from "../../interfaces/Material";
+import { Composition } from "../../interfaces/Composition";
+import { CompositionGraphState } from "../../store/state";
+import { materialSelectedEvent } from "../../store/actions";
+import Proxies from "../SVGManager/proxies";
+
+import ComposerLeftPanelContent from "./LeftPanelContent";
+import SVGManager from "../SVGManager";
+import ComposerRightPanelContent from "./RightPanelContent";
 
 const StyledViewport = styled.div`
   cursor: crosshair;
