@@ -17,7 +17,9 @@ middleware.startListening({
     const root: SVGNode = {
       id: `root`,
       tag: "svg",
-      properties: {},
+      properties: {
+        Nome: { value: "Documento", type: "string" },
+      },
       inputs: {},
       outputs: {},
     };

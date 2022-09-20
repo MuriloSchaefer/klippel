@@ -15,6 +15,8 @@ import reducer, {
 } from "./store/graphsManagerSlice";
 import { GraphsManagerState } from "./store/state";
 
+import useGraph from "./hooks/useGraph";
+
 export interface IGraphModule extends IModule {
   store: {
     actions: {
@@ -34,6 +36,9 @@ export interface IGraphModule extends IModule {
       selectGraphById: typeof selectGraphById;
     };
   };
+  hooks: {
+    useGraph: typeof useGraph;
+  };
 }
 
 /**
@@ -41,7 +46,7 @@ export interface IGraphModule extends IModule {
  * such as loading, parsing, and serializing
  */
 const GraphModule: IGraphModule = {
-  name: "GraphsManager",
+  name: "GraphManager",
   components: {},
   store: {
     actions: {
@@ -57,7 +62,9 @@ const GraphModule: IGraphModule = {
     reducers: { graphsManager: reducer },
     selectors: { selectGraphById },
   },
-  hooks: {},
+  hooks: {
+    useGraph,
+  },
 };
 
 export default GraphModule;

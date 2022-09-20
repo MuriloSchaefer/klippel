@@ -1,5 +1,5 @@
-import Viewport from "@kernel/layout/components/Viewport";
 import styled from "styled-components";
+import { Viewport } from "./Viewport";
 
 export const FullScreenViewport = styled(Viewport)`
   width: 500px;

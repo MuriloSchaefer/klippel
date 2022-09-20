@@ -81,9 +81,7 @@ middleware.startListening({
     const garmentRoot: Garment = {
       id: `garmentRoot`,
       type: "Garment",
-      properties: {
-        details: "",
-      },
+      properties: xdom2properties(svgRoot),
       baseProperties: {},
       inputs: {
         root: {

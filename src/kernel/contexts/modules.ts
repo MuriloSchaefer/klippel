@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { IModule } from "./base";
+import { IModule } from "../modules/base";
 
 export type ModulesContextType = {
   modules: { [name: string]: IModule };

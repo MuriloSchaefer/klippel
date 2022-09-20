@@ -1,6 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-import { viewportAdded, viewportSelected } from "@kernel/layout/ations";
+import {
+  viewportAdded,
+  viewportSelected,
+} from "@kernel/modules/LayoutManager/ations";
 import { UIState } from "./state";
 
 import {

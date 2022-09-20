@@ -1,5 +1,5 @@
 import { IModule } from "@kernel/modules/base";
-import ModulesContext from "@kernel/modules/context";
+import ModulesContext from "@kernel/contexts/modules";
 import { useContext } from "react";
 
 const useModule = <T = IModule>(name: string): T => {

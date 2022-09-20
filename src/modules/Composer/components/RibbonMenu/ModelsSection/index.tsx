@@ -1,10 +1,18 @@
 import React from "react";
-import { FixedSideBar, TabSection } from "@kernel/layout/components/RibbonMenu";
-import { useViewportManager } from "@kernel/hooks/useViewportManager";
+
+import {
+  FixedSideBar,
+  TabSection,
+} from "@kernel/modules/LayoutManager/components/RibbonMenu";
+
+import useModule from "@kernel/hooks/useModule";
+import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
+
 import ComposerViewport from "../../Viewport";
 
 export default () => {
-  const viewportManager = useViewportManager();
+  const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
+  const viewportManager = layoutManager.hooks.useViewportManager();
 
   /**
    * Add a new Model to the Composer

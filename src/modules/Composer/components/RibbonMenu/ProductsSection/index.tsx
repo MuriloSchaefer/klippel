@@ -1,5 +1,8 @@
 import React from "react";
-import { FixedSideBar, TabSection } from "@kernel/layout/components/RibbonMenu";
+import {
+  FixedSideBar,
+  TabSection,
+} from "@kernel/modules/LayoutManager/components/RibbonMenu";
 
 export default () => (
   <TabSection

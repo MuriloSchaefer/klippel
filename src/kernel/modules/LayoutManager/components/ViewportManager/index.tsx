@@ -1,10 +1,10 @@
 import React from "react";
 
 // kernel imports
-import { useViewportManager } from "@kernel/hooks/useViewportManager";
 
 // internal imports
-import useViewport from "@kernel/hooks/useViewport";
+import { useViewportManager } from "../../hooks/useViewportManager";
+import useViewport from "../../hooks/useViewport";
 import ViewportTabs, {
   AddViewportTab,
   TabsHeader,

@@ -1,16 +1,16 @@
 import React, { useEffect } from "react";
 import styled from "styled-components";
 // kernel imports
-import Viewport, { ViewportProps } from "@kernel/layout/components/Viewport";
+import Viewport, {
+  ViewportProps,
+} from "@kernel/modules/LayoutManager/components/Viewport";
+import SettingsPanel from "@kernel/modules/LayoutManager/components/Sidepanels/SettingsPanel";
+import DetailsPanel from "@kernel/modules/LayoutManager/components/Sidepanels/DetailsPanel";
 import { useAppDispatch } from "@kernel/store/hooks";
 import { newGraph } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
-import { useActiveViewport } from "@kernel/hooks/useViewport";
 
 // internal imports
-import useGraph from "@kernel/hooks/useGraph";
 import { CompositionGraphState } from "modules/Composer/store/state";
-import SettingsPanel from "@kernel/layout/components/Sidepanels/SettingsPanel";
-import DetailsPanel from "@kernel/layout/components/Sidepanels/DetailsPanel";
 
 import { Material } from "../../interfaces/Material";
 import { Composition } from "../../interfaces/Composition";
@@ -19,6 +19,9 @@ import ComposerLeftPanelContent from "./LeftPanelContent";
 import SVGManager from "../SVGManager";
 import Proxies from "../SVGManager/proxies";
 import ComposerRightPanelContent from "./RightPanelContent";
+import useModule from "@kernel/hooks/useModule";
+import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
+import { IGraphModule } from "@kernel/modules/GraphsManager";
 
 const StyledViewport = styled.div`
   cursor: crosshair;
@@ -37,8 +40,12 @@ const ComposerViewport = ({
 }: ComposerViewportProps) => {
   // Hooks
   const dispatch = useAppDispatch();
-  const viewport = useActiveViewport();
-  const graph = useGraph<CompositionGraphState, string>(
+  const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
+  const graphManager = useModule<IGraphModule>("GraphManager");
+
+  const viewport = layoutManager.hooks.useActiveViewport();
+
+  const graph = graphManager.hooks.useGraph<CompositionGraphState, string>(
     viewport.state.id,
     (g) => g.id
   );

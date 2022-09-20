@@ -4,10 +4,11 @@ import { Provider } from "react-redux";
 
 // Kernel imports
 import { initializeStore } from "@kernel/store";
-import ModulesContext from "@kernel/modules/context";
-import Layout from "@kernel/layout";
+import ModulesContext from "@kernel/contexts/modules";
+import Layout from "@kernel/modules/LayoutManager/components";
 
 // Modules imports
+import LayoutModule from "@kernel/modules/LayoutManager";
 import GraphModule from "@kernel/modules/GraphsManager";
 
 import ComposerModule from "modules/Composer";
@@ -18,11 +19,12 @@ const App = (): React.ReactElement => {
   const memoizedModules = useMemo(
     () => ({
       modules: {
+        [LayoutModule.name]: LayoutModule,
         [GraphModule.name]: GraphModule,
         [ComposerModule.name]: ComposerModule,
       },
     }),
-    [GraphModule, ComposerModule]
+    [LayoutModule, GraphModule, ComposerModule]
   );
 
   return (

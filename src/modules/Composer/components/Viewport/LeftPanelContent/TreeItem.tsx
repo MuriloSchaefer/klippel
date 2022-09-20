@@ -1,11 +1,13 @@
 import React from "react";
-import useGraph from "@kernel/hooks/useGraph";
 import styled from "styled-components";
+
+import { useAppDispatch } from "@kernel/store/hooks";
+import useModule from "@kernel/hooks/useModule";
+import { IGraphModule } from "@kernel/modules/GraphsManager";
 
 import { CompositionGraphState, UIState } from "modules/Composer/store/state";
 import { Composition } from "modules/Composer/interfaces/Composition";
 import { Material } from "modules/Composer/interfaces/Material";
-import { useAppDispatch } from "@kernel/store/hooks";
 import { materialSelectedEvent } from "modules/Composer/store/actions";
 import { useComposerUIState } from "modules/Composer/hooks/useComposerUIState";
 import MaterialPreviewCircle from "../../Utils/MaterialPreviewCircle";
@@ -26,18 +28,26 @@ const ItemLabel = styled.summary<{ isSelected: boolean }>`
   color: ${(p) => (p.isSelected ? "purple" : "white")};
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.3em;
 `;
 
 interface TreeItemProps {
   graphId: string;
   nodeId: string;
   children: React.ReactNode;
+  showHiddenNodes?: boolean;
 }
 
-const TreeItem = ({ graphId, nodeId, children }: TreeItemProps) => {
+const TreeItem = ({
+  graphId,
+  nodeId,
+  children,
+  showHiddenNodes,
+}: TreeItemProps) => {
   const dispatch = useAppDispatch();
-  const { state: node } = useGraph<
+  const graphManager = useModule<IGraphModule>("GraphManager");
+
+  const { state: node } = graphManager.hooks.useGraph<
     CompositionGraphState,
     Composition | Material
   >(graphId, (g) => g.nodes[nodeId]);
@@ -55,10 +65,12 @@ const TreeItem = ({ graphId, nodeId, children }: TreeItemProps) => {
     <Tree key={`${graphId}-${nodeId}`}>
       <StyledTreeItem
         key={nodeId}
-        onClick={node.properties.Tipo?.value ? handleSelection : undefined}
+        onDoubleClick={
+          node.properties.Tipo?.value ? handleSelection : undefined
+        }
       >
-        <ItemDetails>
-          <>
+        {(node.properties.Nome?.value || showHiddenNodes) && (
+          <ItemDetails>
             <ItemLabel isSelected={node.id === selectedMaterial}>
               <span>{node.properties.Nome?.value ?? node.id}</span>
               {node.properties.Cor && (
@@ -69,8 +81,7 @@ const TreeItem = ({ graphId, nodeId, children }: TreeItemProps) => {
               )}
             </ItemLabel>
             {children}
-          </>
-          {/* {hasSubtree && (
+            {/* {hasSubtree && (
           <StyledTreeItem key={nodeId}>
             {connection.outputs.map((edgeId: EdgeId) => {
               const children = filterChildren(edgeId) ?? [];
@@ -79,10 +90,14 @@ const TreeItem = ({ graphId, nodeId, children }: TreeItemProps) => {
             })}
           </TreeItem>
         )} */}
-        </ItemDetails>
+          </ItemDetails>
+        )}
       </StyledTreeItem>
     </Tree>
   );
+};
+TreeItem.defaultProps = {
+  showHiddenNodes: false,
 };
 
 export const MemoizedTreeItem = React.memo(TreeItem);

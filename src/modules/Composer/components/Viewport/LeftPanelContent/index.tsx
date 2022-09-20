@@ -1,11 +1,13 @@
 import React, { useEffect } from "react";
 
-import AccordionSection from "@kernel/layout/components/Sidepanels/components/AccordionSection";
-
-import { useComposerUIState } from "modules/Composer/hooks/useComposerUIState";
+import useModule from "@kernel/hooks/useModule";
 import { useAppDispatch } from "@kernel/store/hooks";
-import { leftPanelTitleChanged } from "@kernel/layout/ations";
+import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
+import AccordionSection from "@kernel/modules/LayoutManager/components/Sidepanels/components/AccordionSection";
+
+import { useComposerUIState } from "../../../hooks/useComposerUIState";
 import CompositionTree from "./CompositionTree";
+import MaterialList from "./MaterialList";
 
 export interface ComposerLeftPanelContentProps {
   rootId?: string;
@@ -14,6 +16,10 @@ export interface ComposerLeftPanelContentProps {
 const ComposerLeftPanelContent = ({
   rootId = "root",
 }: ComposerLeftPanelContentProps) => {
+  const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
+
+  const { leftPanelTitleChanged } = layoutManager.store.actions;
+
   const dispatch = useAppDispatch();
   const graphId = useComposerUIState((ui) => ui.viewport.graphId);
 
@@ -23,9 +29,15 @@ const ComposerLeftPanelContent = ({
 
   if (!graphId) return null;
   return (
-    <AccordionSection title="Árvore de composição">
-      <CompositionTree graphId={graphId} rootId={rootId} />
-    </AccordionSection>
+    <>
+      <AccordionSection title="Árvore de composição">
+        <CompositionTree graphId={graphId} rootId={rootId} />
+      </AccordionSection>
+
+      <AccordionSection title="Lista de materiais">
+        <MaterialList graphId={graphId} rootId={rootId} />
+      </AccordionSection>
+    </>
   );
 };
 

@@ -1,8 +1,10 @@
-import ViewportContentContext from "@kernel/contexts/viewports";
-import { changeViewportTitle } from "@kernel/layout/ations";
-import { ViewportTabState } from "@kernel/layout/state";
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
 import React, { useContext } from "react";
+
+import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
+
+import ViewportContentContext from "../contexts/viewports";
+import { changeViewportTitle } from "../ations";
+import { ViewportTabState } from "../state";
 
 export interface ViewportData {
   state: ViewportTabState;
@@ -22,7 +24,9 @@ const useViewport = (id: string): ViewportData | undefined => {
   const dispatch = useAppDispatch();
   const { viewports, setViewports } = useContext(ViewportContentContext);
 
-  const tabs = useAppSelector((state) => state.kernelUI.viewportManager.tabs);
+  const tabs = useAppSelector(
+    (state) => state.layoutManager.viewportManager.tabs
+  );
 
   const viewportState = tabs.find((tab: ViewportTabState) => tab.id === id);
   const viewportContent = viewports[id];
@@ -48,7 +52,7 @@ const useViewport = (id: string): ViewportData | undefined => {
  */
 export const useActiveViewport = (): ViewportData => {
   const activeTab = useAppSelector(
-    (state) => state.kernelUI.viewportManager.activeTab
+    (state) => state.layoutManager.viewportManager.activeTab
   );
   const viewport = useViewport(activeTab);
   if (!viewport) throw new Error("No active viewport");

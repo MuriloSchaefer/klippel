@@ -1,6 +1,6 @@
-import { Tabs } from "@kernel/layout/components/RibbonMenu";
 import { Reducer } from "react";
 import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
+import { Tabs } from "./LayoutManager/components/RibbonMenu";
 
 export interface IModule {
   name: string;
@@ -17,4 +17,7 @@ export interface IModule {
     reducers: { [key: string]: Reducer<any, AnyAction> }; // Reducers used by the module
   };
   hooks: { [name: string]: CallableFunction };
+  constants?: {
+    [key: string]: unknown;
+  };
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Tabs } from "@kernel/layout/components/RibbonMenu";
+import { Tabs } from "@kernel/modules/LayoutManager/components/RibbonMenu";
 import ProductsSection from "./ProductsSection";
 import ModelsSection from "./ModelsSection";
 

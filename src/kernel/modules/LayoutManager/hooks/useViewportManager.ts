@@ -1,14 +1,11 @@
-import ViewportContentContext from "@kernel/contexts/viewports";
-// import { Viewport } from "@kernel/layout/components/Viewport";
-import {
-  viewportAdded,
-  viewportClosed,
-  viewportSelected,
-} from "@kernel/layout/ations";
-import { ViewportManagerState } from "@kernel/layout/state";
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
 import _ from "lodash";
 import React, { useContext } from "react";
+
+import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
+
+import ViewportContentContext from "../contexts/viewports";
+import { ViewportManagerState } from "../state";
+import { viewportAdded, viewportClosed, viewportSelected } from "../ations";
 
 export interface ViewportManagerData {
   state: ViewportManagerState;
@@ -27,7 +24,7 @@ export const useViewportManager = (): ViewportManagerData => {
   const dispatch = useAppDispatch();
 
   const viewportManager = useAppSelector<ViewportManagerState>(
-    (state) => state.kernelUI.viewportManager
+    (state) => state.layoutManager.viewportManager
   );
 
   const { viewports, setViewports } = useContext(ViewportContentContext);
@@ -45,7 +42,6 @@ export const useViewportManager = (): ViewportManagerData => {
       },
       removeViewport(id: string) {
         dispatch(viewportClosed(id));
-        // setViewports({ ...viewports, [id]: content });
       },
       selectViewport(id: string) {
         dispatch(viewportSelected(id));

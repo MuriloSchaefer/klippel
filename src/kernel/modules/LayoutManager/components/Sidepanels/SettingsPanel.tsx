@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { Theme, useTheme } from "@kernel/contexts/ThemeContext";
+
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
-import { leftPanelCollapsed, leftPanelExpanded } from "@kernel/layout/ations";
-import { SETTING_PANEL_ID } from "@kernel/layout/constants";
+import {
+  Theme,
+  useTheme,
+} from "@kernel/modules/LayoutManager/contexts/ThemeContext";
+
+import useModule from "@kernel/hooks/useModule";
 import SidePanelContent from "./SidePanelContent";
 import LeftPanelTitle from "./LeftPanelTitle";
+import { ILayoutManagerModule } from "../..";
 
 export const StyledSettingsPanel = styled("div")<{
   theme: Theme;
@@ -29,13 +34,20 @@ export const StyledSettingsPanel = styled("div")<{
 
 const SettingsPanel = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch();
+  const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
+  const { leftPanelCollapsed, leftPanelExpanded } = layoutManager.store.actions;
+
   const { theme } = useTheme();
-  const { isOpen, title } = useAppSelector((state) => state.kernelUI.leftPanel);
+  const { isOpen, title } = useAppSelector(
+    (state) => state.layoutManager.leftPanel
+  );
 
   const [container, setContainer] = useState<HTMLElement | null>(null);
   useEffect(() => {
     if (!container) {
-      setContainer(document.getElementById(SETTING_PANEL_ID));
+      setContainer(
+        document.getElementById(layoutManager.constants.SETTING_PANEL_ID)
+      );
     }
   }, []);
 

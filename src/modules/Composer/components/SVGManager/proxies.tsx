@@ -2,9 +2,11 @@ import React from "react";
 import { SvgProxy } from "react-svgmt";
 import { CompositionGraphState } from "modules/Composer/store/state";
 import { Material } from "modules/Composer/interfaces/Material";
-import useGraph from "@kernel/hooks/useGraph";
+
 import { Composition } from "modules/Composer/interfaces/Composition";
 import { NodesHashMap } from "@kernel/modules/GraphsManager/store/state";
+import useModule from "@kernel/hooks/useModule";
+import { IGraphModule } from "@kernel/modules/GraphsManager";
 
 export interface ProxiesProps {
   graphId: string;
@@ -18,8 +20,9 @@ const Proxies = ({
   onMaterialSelected,
 }: ProxiesProps) => {
   // const [parts, setParts] = React.useState<Material[]>([]);
+  const graphManager = useModule<IGraphModule>("GraphManager");
 
-  const { state: nodes } = useGraph<
+  const { state: nodes } = graphManager.hooks.useGraph<
     CompositionGraphState,
     NodesHashMap<Composition | Material>
   >(graphId, (g) => g.nodes);
@@ -32,9 +35,11 @@ const Proxies = ({
    */
   const attachListeners = (svgRoot: SVGElement) => {
     if (nodes[svgRoot.id].properties.Tipo !== undefined) {
-      svgRoot.addEventListener("click", (e: MouseEvent) => {
+      svgRoot.addEventListener("dblclick", (e: MouseEvent) => {
+        console.log(nodes[svgRoot.id], e);
         if (e.target instanceof SVGElement && onMaterialSelected) {
-          onMaterialSelected(nodes[e.target.id]);
+          onMaterialSelected(nodes[svgRoot.id]);
+          e.stopPropagation();
         }
       });
     }
@@ -47,7 +52,7 @@ const Proxies = ({
       {nodes &&
         Object.entries(nodes)
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          .filter(([_id, node]) => node.properties.Tipo !== undefined)
+          .filter(([_id, node]) => node.properties.Nome !== undefined)
           .map(([id, node]) => (
             <SvgProxy
               key={id}

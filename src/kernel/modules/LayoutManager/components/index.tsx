@@ -1,15 +1,15 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
-import ModulesContext from "@kernel/modules/context";
+import ModulesContext from "@kernel/contexts/modules";
 
 import ViewportContentContext, {
   ViewportContentMap,
-} from "@kernel/contexts/viewports";
+} from "../contexts/viewports";
 import { Theme, ThemeContext } from "../contexts/ThemeContext";
-import RibbonMenu, { Tabs } from "./components/RibbonMenu";
+import RibbonMenu, { Tabs } from "./RibbonMenu";
 
-import ViewportManager from "./components/ViewportManager";
-import Content from "./components/Content";
+import ViewportManager from "./ViewportManager";
+import Content from "./Content";
 
 export default (): React.ReactElement => {
   const [theme, setTheme] = useState<Theme>(Theme.Light);

@@ -7,14 +7,11 @@ import {
 } from "@reduxjs/toolkit";
 import React from "react";
 import { IModule } from "@kernel/modules/base";
-import kernelUIReducer from "@kernel/layout/slice";
 
 const staticReducers: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: React.Reducer<any, AnyAction>;
-} = {
-  kernelUI: kernelUIReducer,
-};
+} = {};
 
 const staticMiddlewares: Middleware[] = [];
 
