@@ -13,6 +13,7 @@ import GraphModule from "@kernel/modules/GraphsModule";
 import MouseManagerModule from "@kernel/modules/MouseModule";
 
 import ComposerModule from "modules/Composer";
+import ServiceWorkerModule from "./modules/ServiceWorkerModule";
 
 // Internal imports
 
@@ -20,6 +21,7 @@ const App = (): React.ReactElement => {
   const memoizedModules = useMemo(
     () => ({
       modules: {
+        [ServiceWorkerModule.name]: ServiceWorkerModule,
         [MouseManagerModule.name]: MouseManagerModule,
         [LayoutModule.name]: LayoutModule,
         [GraphModule.name]: GraphModule,

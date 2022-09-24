@@ -20,7 +20,7 @@ const ViewportManager = (): React.ReactElement => {
   const viewport = useViewport(viewportManager.state.activeTab);
 
   const handleAddTab = (): void => {
-    viewportManager.hooks.addViewport("New Tab", <>New Tab</>);
+    viewportManager.hooks.addViewport("New Tab", <>New tab</>);
   };
 
   const handleTabSelection = (id: string): void => {

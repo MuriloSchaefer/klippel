@@ -12,10 +12,10 @@ import { materialSelectedEvent } from "modules/Composer/store/actions";
 import { useComposerUIState } from "modules/Composer/hooks/useComposerUIState";
 import MaterialPreviewCircle from "../../Utils/MaterialPreviewCircle";
 
-const StyledTreeItem = styled.div``;
 const ItemDetails = styled.details`
   padding-left: 1rem;
   border-left: 1px dashed #aaa;
+  margin-bottom: 0.1rem;
   &&[open] > summary {
     list-style-type: "🔽";
   }
@@ -27,6 +27,7 @@ const ItemDetails = styled.details`
 const ItemLabel = styled.summary<{ isSelected: boolean }>`
   cursor: pointer;
   color: ${(p) => (p.isSelected ? "purple" : "white")};
+  margin-bottom: 0.1rem;
 
   && > div {
     padding-left: 0.1rem;
@@ -65,27 +66,21 @@ const TreeItem = ({
     e.stopPropagation();
   };
 
-  if (!node) return null;
+  if (!node || !(node.properties.Nome?.value || showHiddenNodes)) return null;
   return (
-    <StyledTreeItem
-      key={nodeId}
+    <ItemDetails
       onClick={node.properties.Tipo?.value ? handleSelection : undefined}
     >
-      {(node.properties.Nome?.value || showHiddenNodes) && (
-        <ItemDetails>
-          <ItemLabel isSelected={node.id === selectedMaterial}>
-            <div>
-              <span>{node.properties.Nome?.value ?? node.id}</span>
-              {node.properties.Cor && (
-                <MaterialPreviewCircle
-                  color={node.properties.Cor.value}
-                  r={5}
-                />
-              )}
-            </div>
-          </ItemLabel>
-          {children}
-          {/* {hasSubtree && (
+      <ItemLabel isSelected={node.id === selectedMaterial}>
+        <div>
+          <span>{node.properties.Nome?.value ?? node.id}</span>
+          {node.properties.Cor && (
+            <MaterialPreviewCircle color={node.properties.Cor.value} r={5} />
+          )}
+        </div>
+      </ItemLabel>
+      {children}
+      {/* {hasSubtree && (
           <StyledTreeItem key={nodeId}>
             {connection.outputs.map((edgeId: EdgeId) => {
               const children = filterChildren(edgeId) ?? [];
@@ -94,9 +89,7 @@ const TreeItem = ({
             })}
           </TreeItem>
         )} */}
-        </ItemDetails>
-      )}
-    </StyledTreeItem>
+    </ItemDetails>
   );
 };
 TreeItem.defaultProps = {
