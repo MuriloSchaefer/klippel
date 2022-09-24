@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   viewportAdded,
   viewportSelected,
-} from "@kernel/modules/LayoutManager/ations";
+} from "@kernel/modules/LayoutModule/ations";
 import { UIState } from "./state";
 
 import {

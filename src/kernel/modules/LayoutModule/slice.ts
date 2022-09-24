@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { KernelUI } from "./state";
+import { LayoutModuleState } from "./state";
 
 import {
   leftPanelCollapsed,
@@ -13,7 +13,7 @@ import {
   viewportSelected,
 } from "./ations";
 
-const initialKernelUI: KernelUI = {
+const initialLayoutModule: LayoutModuleState = {
   viewportManager: {
     activeTab: "welcome",
     tabs: [
@@ -25,7 +25,7 @@ const initialKernelUI: KernelUI = {
   },
   leftPanel: {
     isOpen: true,
-    title: "Left Panel",
+    title: "Left P(state) => state.LayoutModule.anel",
     content: {},
   },
   rightPanel: {
@@ -35,70 +35,79 @@ const initialKernelUI: KernelUI = {
   },
 };
 
-export const KernelUISlice = createSlice({
-  name: "kernelUI",
-  initialState: initialKernelUI,
+export const LayoutModuleSlice = createSlice({
+  name: "LayoutModule",
+  initialState: initialLayoutModule,
   reducers: {},
   // The `extraReducers` field use actions created outside the slice, therefore we can add proper naming
   extraReducers: (builder) => {
     builder
-      .addCase(leftPanelCollapsed, (state: KernelUI) => ({
+      .addCase(leftPanelCollapsed, (state: LayoutModuleState) => ({
         ...state,
         leftPanel: {
           ...state.leftPanel,
           isOpen: false,
         },
       }))
-      .addCase(leftPanelExpanded, (state: KernelUI) => ({
+      .addCase(leftPanelExpanded, (state: LayoutModuleState) => ({
         ...state,
         leftPanel: {
           ...state.leftPanel,
           isOpen: true,
         },
       }))
-      .addCase(leftPanelTitleChanged, (state: KernelUI, { payload }) => ({
-        ...state,
-        leftPanel: {
-          ...state.leftPanel,
-          title: payload,
-        },
-      }))
-      .addCase(rightPanelClosed, (state: KernelUI) => ({
+      .addCase(
+        leftPanelTitleChanged,
+        (state: LayoutModuleState, { payload }) => ({
+          ...state,
+          leftPanel: {
+            ...state.leftPanel,
+            title: payload,
+          },
+        })
+      )
+      .addCase(rightPanelClosed, (state: LayoutModuleState) => ({
         ...state,
         rightPanel: {
           ...state.leftPanel,
           isOpen: false,
         },
       }))
-      .addCase(rightPanelOpened, (state: KernelUI) => ({
+      .addCase(rightPanelOpened, (state: LayoutModuleState) => ({
         ...state,
         rightPanel: {
           ...state.leftPanel,
           isOpen: true,
         },
       }))
-      .addCase(rightPanelTitleChanged, (state: KernelUI, { payload }) => ({
-        ...state,
-        rightPanel: {
-          ...state.rightPanel,
-          title: payload,
-        },
-      }))
-      .addCase(viewportAdded, (state: KernelUI, { payload }) => ({
+      .addCase(
+        rightPanelTitleChanged,
+        (state: LayoutModuleState, { payload }) => ({
+          ...state,
+          rightPanel: {
+            ...state.rightPanel,
+            title: payload,
+          },
+        })
+      )
+      .addCase(viewportAdded, (state: LayoutModuleState, { payload }) => ({
         ...state,
         viewportManager: {
           activeTab: payload.id,
           tabs: [...state.viewportManager.tabs, payload],
         },
       }))
-      .addCase(viewportSelected, (state: KernelUI, { payload: id }) => ({
-        ...state,
-        viewportManager: {
-          ...state.viewportManager,
-          activeTab: id,
-        },
-      }))
-      .addCase(viewportClosed, (state: KernelUI, { payload: id }) => {
+      .addCase(
+        viewportSelected,
+        (state: LayoutModuleState, { payload: id }) => ({
+          ...state,
+          viewportManager: {
+            ...state.viewportManager,
+            activeTab: id,
+          },
+        })
+      )
+      .addCase(viewportClosed, (state: LayoutModuleState, { payload: id }) => {
         const tabs = state.viewportManager.tabs.filter((tab) => tab.id !== id);
         const nextTab = tabs.length > 0 ? tabs[0].id : "welcome";
         const activeTab =
@@ -117,4 +126,4 @@ export const KernelUISlice = createSlice({
   },
 });
 
-export default KernelUISlice.reducer;
+export default LayoutModuleSlice.reducer;

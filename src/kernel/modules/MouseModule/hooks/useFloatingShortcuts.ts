@@ -21,7 +21,7 @@ export const useFloatingShortcuts = (id: string): ShortcutsData => {
   const dispatch = useAppDispatch();
 
   const shortcuts = useAppSelector<FloatingShortcuts | undefined>(
-    (state) => state.MouseManager.shortcuts[id]
+    (state) => state.MouseModule.shortcuts[id]
   );
 
   return {

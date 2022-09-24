@@ -14,7 +14,7 @@ export const useFloatingShortcutsManager = (): IShortcutsManager => {
   const dispatch = useAppDispatch();
 
   const managerState = useAppSelector<FloatingShortcutsHashMap | undefined>(
-    (state) => state.MouseManager.shortcuts
+    (state) => state.MouseModule.shortcuts
   );
 
   return {

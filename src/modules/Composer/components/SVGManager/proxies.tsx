@@ -4,9 +4,9 @@ import { CompositionGraphState } from "modules/Composer/store/state";
 import { Material } from "modules/Composer/interfaces/Material";
 
 import { Composition } from "modules/Composer/interfaces/Composition";
-import { NodesHashMap } from "@kernel/modules/GraphsManager/store/state";
+import { NodesHashMap } from "@kernel/modules/GraphsModule/store/state";
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/GraphsManager";
+import { IGraphModule } from "@kernel/modules/GraphsModule";
 
 export interface ProxiesProps {
   graphId: string;
@@ -33,9 +33,9 @@ const Proxies = ({
   onMouseDown,
 }: ProxiesProps) => {
   // const [parts, setParts] = React.useState<Material[]>([]);
-  const graphManager = useModule<IGraphModule>("GraphManager");
+  const graphModule = useModule<IGraphModule>("GraphModule");
 
-  const { state: nodes } = graphManager.hooks.useGraph<
+  const { state: nodes } = graphModule.hooks.useGraph<
     CompositionGraphState,
     NodesHashMap<Composition | Material>
   >(graphId, (g) => g.nodes);

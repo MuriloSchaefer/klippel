@@ -1,4 +1,4 @@
-import { Node } from "@kernel/modules/GraphsManager/interfaces/Node";
+import { Node } from "@kernel/modules/GraphsModule/interfaces/Node";
 
 export interface Property {
   value: string;

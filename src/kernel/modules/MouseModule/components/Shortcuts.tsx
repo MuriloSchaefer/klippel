@@ -25,7 +25,7 @@ const FloatingShortcutsContainer = ({
 }) => {
   const elemRef = useRef<HTMLDivElement | null>(null);
   const mousePosition = useAppSelector(
-    (state) => state.MouseManager.mousePosition
+    (state) => state.MouseModule.mousePosition
   );
   const {
     state,

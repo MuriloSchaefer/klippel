@@ -5,12 +5,12 @@ import { Provider } from "react-redux";
 // Kernel imports
 import { initializeStore } from "@kernel/store";
 import ModulesContext from "@kernel/contexts/modules";
-import Layout from "@kernel/modules/LayoutManager/components";
+import Layout from "@kernel/modules/LayoutModule/components";
 
 // Modules imports
-import LayoutModule from "@kernel/modules/LayoutManager";
-import GraphModule from "@kernel/modules/GraphsManager";
-import MouseManagerModule from "@kernel/modules/MouseManager";
+import LayoutModule from "@kernel/modules/LayoutModule";
+import GraphModule from "@kernel/modules/GraphsModule";
+import MouseManagerModule from "@kernel/modules/MouseModule";
 
 import ComposerModule from "modules/Composer";
 

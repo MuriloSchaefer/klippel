@@ -11,7 +11,7 @@ export interface FloatingShortcutsHashMap {
   [id: string]: FloatingShortcuts;
 }
 
-export interface MouseManagerState {
+export interface MouseModuleState {
   mousePosition: {
     x: number;
     y: number;

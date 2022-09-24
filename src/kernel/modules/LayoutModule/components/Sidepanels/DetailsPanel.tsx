@@ -3,12 +3,12 @@ import { createPortal } from "react-dom";
 import {
   Theme,
   useTheme,
-} from "@kernel/modules/LayoutManager/contexts/ThemeContext";
+} from "@kernel/modules/LayoutModule/contexts/ThemeContext";
 import styled from "styled-components";
 
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
 import useModule from "@kernel/hooks/useModule";
-import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
+import { ILayoutModule } from "@kernel/modules/LayoutModule";
 
 import RightPanelTitle from "./RightPanelTitle";
 import SidePanelContent from "./SidePanelContent";
@@ -32,19 +32,19 @@ const StyledRightPanel = styled("div")<{ theme: Theme; isOpen: boolean }>`
 const DetailsPanel = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch();
 
-  const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
-  const { rightPanelClosed } = layoutManager.store.actions;
+  const layoutModule = useModule<ILayoutModule>("LayoutModule");
+  const { rightPanelClosed } = layoutModule.store.actions;
 
   const { theme } = useTheme();
   const { isOpen, title } = useAppSelector(
-    (state) => state.layoutManager.rightPanel
+    (state) => state.LayoutModule.rightPanel
   );
 
   const [container, setContainer] = useState<HTMLElement | null>(null);
   useEffect(() => {
     if (!container) {
       setContainer(
-        document.getElementById(layoutManager.constants.DETAILS_PANEL_ID)
+        document.getElementById(layoutModule.constants.DETAILS_PANEL_ID)
       );
     }
   }, []);

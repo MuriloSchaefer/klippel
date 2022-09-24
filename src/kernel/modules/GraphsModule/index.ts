@@ -46,7 +46,7 @@ export interface IGraphModule extends IModule {
  * such as loading, parsing, and serializing
  */
 const GraphModule: IGraphModule = {
-  name: "GraphManager",
+  name: "GraphModule",
   components: {},
   store: {
     actions: {

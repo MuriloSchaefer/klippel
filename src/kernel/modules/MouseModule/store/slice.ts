@@ -6,9 +6,9 @@ import {
   floatingShortcutsCreated,
   floatingShortcutsOpened,
 } from "./actions";
-import { MouseManagerState } from "./state";
+import { MouseModuleState } from "./state";
 
-const initialMouseManagerState: MouseManagerState = {
+const initialMouseModuleState: MouseModuleState = {
   mousePosition: {
     x: 0,
     y: 0,
@@ -20,16 +20,16 @@ const initialMouseManagerState: MouseManagerState = {
   shortcuts: {},
 };
 
-export const MouseManagerSlice = createSlice({
-  name: "MouseManagerUI",
-  initialState: initialMouseManagerState,
+export const MouseModuleSlice = createSlice({
+  name: "MouseModule",
+  initialState: initialMouseModuleState,
   reducers: {},
   // The `extraReducers` field use actions created outside the slice, therefore we can add proper naming
   extraReducers: (builder) => {
     builder
       .addCase(
         floatingDocumentationExpanded,
-        (state: MouseManagerState, { payload: { content, x, y } }) => ({
+        (state: MouseModuleState, { payload: { content, x, y } }) => ({
           ...state,
           mousePosition: {
             x,
@@ -41,26 +41,23 @@ export const MouseManagerSlice = createSlice({
           },
         })
       )
-      .addCase(floatingDocumentationCollapsed, (state: MouseManagerState) => ({
+      .addCase(floatingDocumentationCollapsed, (state: MouseModuleState) => ({
         ...state,
         documentation: {
           visible: false,
           content: null,
         },
       }))
-      .addCase(
-        floatingShortcutsCreated,
-        (state: MouseManagerState, action) => ({
-          ...state,
-          shortcuts: {
-            ...state.shortcuts,
-            [action.payload.id]: {
-              visible: false,
-            },
+      .addCase(floatingShortcutsCreated, (state: MouseModuleState, action) => ({
+        ...state,
+        shortcuts: {
+          ...state.shortcuts,
+          [action.payload.id]: {
+            visible: false,
           },
-        })
-      )
-      .addCase(floatingShortcutsOpened, (state: MouseManagerState, action) => ({
+        },
+      }))
+      .addCase(floatingShortcutsOpened, (state: MouseModuleState, action) => ({
         ...state,
         mousePosition: {
           x: action.payload.x,
@@ -73,7 +70,7 @@ export const MouseManagerSlice = createSlice({
           },
         },
       }))
-      .addCase(floatingShortcutsClosed, (state: MouseManagerState, action) => ({
+      .addCase(floatingShortcutsClosed, (state: MouseModuleState, action) => ({
         ...state,
         shortcuts: {
           ...state.shortcuts,
@@ -85,4 +82,4 @@ export const MouseManagerSlice = createSlice({
   },
 });
 
-export default MouseManagerSlice.reducer;
+export default MouseModuleSlice.reducer;

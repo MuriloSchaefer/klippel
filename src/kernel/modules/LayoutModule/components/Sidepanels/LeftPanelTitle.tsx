@@ -1,6 +1,9 @@
 import React, { MouseEvent, useContext } from "react";
 import styled from "styled-components";
-import { ThemeContext, Theme } from "@kernel/modules/LayoutManager/contexts/ThemeContext";
+import {
+  ThemeContext,
+  Theme,
+} from "@kernel/modules/LayoutModule/contexts/ThemeContext";
 
 const StyledLeftPanelTitle = styled("div")<{ theme: Theme; isOpen: boolean }>`
   position: sticky;

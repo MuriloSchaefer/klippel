@@ -1,6 +1,6 @@
-import Edge from "@kernel/modules/GraphsManager/interfaces/Edge";
-import Node from "@kernel/modules/GraphsManager/interfaces/Node";
-import { GraphState } from "@kernel/modules/GraphsManager/store/state";
+import { Edge } from "@kernel/modules/GraphsModule/interfaces/Edge";
+import { Node } from "@kernel/modules/GraphsModule/interfaces/Node";
+import { GraphState } from "@kernel/modules/GraphsModule/store/state";
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
 
 import {
@@ -9,7 +9,7 @@ import {
   updateNode,
   addEdge,
   removeEdge,
-} from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+} from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
 import { createSelector } from "reselect";
 
 export interface Graph<T = GraphState> {

@@ -1,11 +1,11 @@
 import React from "react";
 
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/GraphsManager";
+import { IGraphModule } from "@kernel/modules/GraphsModule";
 import {
   AdjacencyList,
   EdgesHashMap,
-} from "@kernel/modules/GraphsManager/store/state";
+} from "@kernel/modules/GraphsModule/store/state";
 
 import { CompositionGraphState } from "../../../store/state";
 import { MemoizedTreeItem as TreeItem } from "./TreeItem";
@@ -19,9 +19,9 @@ const MaterialList = ({
   graphId,
   rootId = "root",
 }: MaterialListProps): React.ReactElement => {
-  const graphManager = useModule<IGraphModule>("GraphManager");
+  const graphModule = useModule<IGraphModule>("GraphModule");
 
-  const { state } = graphManager.hooks.useGraph<
+  const { state } = graphModule.hooks.useGraph<
     CompositionGraphState,
     { adjacencyList: AdjacencyList; edges: EdgesHashMap }
   >(graphId, (g) => ({ adjacencyList: g.adjacencyList, edges: g.edges }));

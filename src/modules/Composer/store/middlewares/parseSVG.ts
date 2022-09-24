@@ -1,7 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
-import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+import { addNode } from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
 import { GARMENT_ID } from "modules/Composer/constants";
 import { SVGNode } from "modules/Composer/interfaces/svg";
 import { parseGarment, SVGLoaded } from "../actions";

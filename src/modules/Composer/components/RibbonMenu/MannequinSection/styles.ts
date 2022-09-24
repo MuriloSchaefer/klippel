@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { TabSection } from "@kernel/modules/LayoutManager/components/RibbonMenu";
+import { TabSection } from "@kernel/modules/LayoutModule/components/RibbonMenu";
 
 const StyledTabSection = styled(TabSection)`
   display: flex;

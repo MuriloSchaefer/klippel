@@ -2,7 +2,7 @@ import React from "react";
 import {
   FixedSideBar,
   TabSection,
-} from "@kernel/modules/LayoutManager/components/RibbonMenu";
+} from "@kernel/modules/LayoutModule/components/RibbonMenu";
 
 export default () => (
   <TabSection

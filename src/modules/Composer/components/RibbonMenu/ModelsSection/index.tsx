@@ -3,16 +3,16 @@ import React from "react";
 import {
   FixedSideBar,
   TabSection,
-} from "@kernel/modules/LayoutManager/components/RibbonMenu";
+} from "@kernel/modules/LayoutModule/components/RibbonMenu";
 
 import useModule from "@kernel/hooks/useModule";
-import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
+import { ILayoutModule } from "@kernel/modules/LayoutModule";
 
 import ComposerViewport from "../../Viewport";
 
 export default () => {
-  const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
-  const viewportManager = layoutManager.hooks.useViewportManager();
+  const layoutModule = useModule<ILayoutModule>("LayoutModule");
+  const viewportManager = layoutModule.hooks.useViewportManager();
 
   /**
    * Add a new Model to the Composer

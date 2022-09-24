@@ -7,12 +7,12 @@ import {
   floatingDocumentationExpanded,
   floatingDocumentationCollapsed,
 } from "./store/actions";
-import { MouseManagerState } from "./store/state";
+import { MouseModuleState } from "./store/state";
 import { useFloatingShortcuts } from "./hooks/useFloatingShortcuts";
 import { useFloatingDocumentation } from "./hooks/useFloatingDocumentation";
 import { useFloatingShortcutsManager } from "./hooks/useFloatingShortcutsManager";
 
-export interface IMouseManagerModule extends IModule {
+export interface IMouseModule extends IModule {
   store: {
     actions: {
       floatingDocumentationExpanded: typeof floatingDocumentationExpanded;
@@ -20,7 +20,7 @@ export interface IMouseManagerModule extends IModule {
     };
     middlewares: ListenerMiddlewareInstance[];
     reducers: {
-      MouseManager: Reducer<MouseManagerState, AnyAction>;
+      MouseModule: Reducer<MouseModuleState, AnyAction>;
     };
   };
   hooks: {
@@ -34,8 +34,8 @@ export interface IMouseManagerModule extends IModule {
  * SVG module handles any operation on SVG
  * such as loading, parsing, and serializing
  */
-const MouseManagerModule: IMouseManagerModule = {
-  name: "MouseManager",
+const MouseModule: IMouseModule = {
+  name: "MouseModule",
   components: {},
   store: {
     actions: {
@@ -44,7 +44,7 @@ const MouseManagerModule: IMouseManagerModule = {
     },
     middlewares: [],
     reducers: {
-      MouseManager: reducer,
+      MouseModule: reducer,
     },
   },
   hooks: {
@@ -55,4 +55,4 @@ const MouseManagerModule: IMouseManagerModule = {
   constants: {},
 };
 
-export default MouseManagerModule;
+export default MouseModule;

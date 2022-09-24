@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
-import { ThemeContext } from "@kernel/modules/LayoutManager/contexts/ThemeContext";
+import { ThemeContext } from "@kernel/modules/LayoutModule/contexts/ThemeContext";
 
 const StyledSidePanelContent = styled.div``;
 

@@ -8,7 +8,7 @@ export interface ViewportManagerState {
   tabs: ViewportTabState[];
 }
 
-export interface KernelUI {
+export interface LayoutModuleState {
   viewportManager: ViewportManagerState;
   leftPanel: {
     isOpen: boolean;

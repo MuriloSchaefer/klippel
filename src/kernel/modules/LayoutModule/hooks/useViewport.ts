@@ -25,7 +25,7 @@ const useViewport = (id: string): ViewportData | undefined => {
   const { viewports, setViewports } = useContext(ViewportContentContext);
 
   const tabs = useAppSelector(
-    (state) => state.layoutManager.viewportManager.tabs
+    (state) => state.LayoutModule.viewportManager.tabs
   );
 
   const viewportState = tabs.find((tab: ViewportTabState) => tab.id === id);
@@ -52,7 +52,7 @@ const useViewport = (id: string): ViewportData | undefined => {
  */
 export const useActiveViewport = (): ViewportData => {
   const activeTab = useAppSelector(
-    (state) => state.layoutManager.viewportManager.activeTab
+    (state) => state.LayoutModule.viewportManager.activeTab
   );
   const viewport = useViewport(activeTab);
   if (!viewport) throw new Error("No active viewport");

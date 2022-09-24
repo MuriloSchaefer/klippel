@@ -2,9 +2,9 @@ import { createListenerMiddleware, ThunkDispatch } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
 import _, { isEmpty } from "lodash";
-import Node from "@kernel/modules/GraphsManager/interfaces/Node";
-import Edge from "@kernel/modules/GraphsManager/interfaces/Edge";
-import { addNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+import Node from "@kernel/modules/GraphsModule/interfaces/Node";
+import Edge from "@kernel/modules/GraphsModule/interfaces/Edge";
+import { addNode } from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
 
 import { Garment } from "modules/Composer/interfaces/Garment";
 import { Material, Properties } from "../../interfaces/Material";

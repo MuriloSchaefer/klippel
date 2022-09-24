@@ -1,4 +1,4 @@
-import { GraphState } from "@kernel/modules/GraphsManager/store/state";
+import { GraphState } from "@kernel/modules/GraphsModule/store/state";
 import { Composition } from "../interfaces/Composition";
 import { Material } from "../interfaces/Material";
 

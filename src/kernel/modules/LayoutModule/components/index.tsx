@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import ModulesContext from "@kernel/contexts/modules";
-import FloatingDocumentationContainer from "@kernel/modules/MouseManager/components/Documentation";
+import FloatingDocumentationContainer from "@kernel/modules/MouseModule/components/Documentation";
 
 import ViewportContentContext, {
   ViewportContentMap,

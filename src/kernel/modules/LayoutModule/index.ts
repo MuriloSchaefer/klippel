@@ -15,13 +15,13 @@ import {
   viewportClosed,
   viewportSelected,
 } from "./ations";
-import { KernelUI } from "./state";
+import { LayoutModuleState } from "./state";
 import { useViewportManager } from "./hooks/useViewportManager";
 import useViewport, { useActiveViewport } from "./hooks/useViewport";
 
 import { DETAILS_PANEL_ID, SETTING_PANEL_ID } from "./constants";
 
-export interface ILayoutManagerModule extends IModule {
+export interface ILayoutModule extends IModule {
   store: {
     actions: {
       leftPanelCollapsed: typeof leftPanelCollapsed;
@@ -36,7 +36,7 @@ export interface ILayoutManagerModule extends IModule {
     };
     middlewares: ListenerMiddlewareInstance[];
     reducers: {
-      layoutManager: Reducer<KernelUI, AnyAction>;
+      LayoutModule: Reducer<LayoutModuleState, AnyAction>;
     };
   };
   hooks: {
@@ -54,8 +54,8 @@ export interface ILayoutManagerModule extends IModule {
  * SVG module handles any operation on SVG
  * such as loading, parsing, and serializing
  */
-const LayoutManagerModule: ILayoutManagerModule = {
-  name: "LayoutManager",
+const LayoutModule: ILayoutModule = {
+  name: "LayoutModule",
   components: {},
   store: {
     actions: {
@@ -70,7 +70,7 @@ const LayoutManagerModule: ILayoutManagerModule = {
       viewportSelected,
     },
     middlewares: [],
-    reducers: { layoutManager: reducer },
+    reducers: { LayoutModule: reducer },
   },
   hooks: {
     useViewportManager,
@@ -83,4 +83,4 @@ const LayoutManagerModule: ILayoutManagerModule = {
   },
 };
 
-export default LayoutManagerModule;
+export default LayoutModule;

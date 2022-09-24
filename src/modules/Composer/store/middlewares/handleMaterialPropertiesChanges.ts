@@ -1,7 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
-import { updateNode } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+import { updateNode } from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
 import { Material } from "modules/Composer/interfaces/Material";
 import { materialPropertiesChanged } from "../actions";
 

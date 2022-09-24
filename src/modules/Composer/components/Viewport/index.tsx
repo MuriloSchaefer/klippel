@@ -4,21 +4,21 @@ import styled from "styled-components";
 import {
   Viewport,
   ViewportProps,
-} from "@kernel/modules/LayoutManager/components/Viewport";
-import SettingsPanel from "@kernel/modules/LayoutManager/components/Sidepanels/SettingsPanel";
-import DetailsPanel from "@kernel/modules/LayoutManager/components/Sidepanels/DetailsPanel";
+} from "@kernel/modules/LayoutModule/components/Viewport";
+import SettingsPanel from "@kernel/modules/LayoutModule/components/Sidepanels/SettingsPanel";
+import DetailsPanel from "@kernel/modules/LayoutModule/components/Sidepanels/DetailsPanel";
 import { useAppDispatch } from "@kernel/store/hooks";
-import { newGraph } from "@kernel/modules/GraphsManager/store/graphsManagerSlice";
+import { newGraph } from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
 
 // internal imports
 import useModule from "@kernel/hooks/useModule";
-import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
-import { IGraphModule } from "@kernel/modules/GraphsManager";
+import { ILayoutModule } from "@kernel/modules/LayoutModule";
+import { IGraphModule } from "@kernel/modules/GraphsModule";
 
-import { IMouseManagerModule } from "@kernel/modules/MouseManager";
+import { IMouseModule } from "@kernel/modules/MouseModule";
 import { Composition } from "modules/Composer/interfaces/Composition";
 import { Material } from "modules/Composer/interfaces/Material";
-import FloatingShortcutsContainer from "@kernel/modules/MouseManager/components/Shortcuts";
+import FloatingShortcutsContainer from "@kernel/modules/MouseModule/components/Shortcuts";
 import { CompositionGraphState } from "../../store/state";
 import { materialSelectedEvent } from "../../store/actions";
 import Proxies from "../SVGManager/proxies";
@@ -44,18 +44,18 @@ const ComposerViewport = ({
 }: ComposerViewportProps) => {
   // Hooks
   const dispatch = useAppDispatch();
-  const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
-  const graphManager = useModule<IGraphModule>("GraphManager");
-  const mouseManager = useModule<IMouseManagerModule>("MouseManager");
+  const layoutModule = useModule<ILayoutModule>("LayoutModule");
+  const graphModule = useModule<IGraphModule>("GraphModule");
+  const mouseModule = useModule<IMouseModule>("MouseModule");
 
-  const viewport = layoutManager.hooks.useActiveViewport();
-  const floatingShortcuts = mouseManager.hooks.useFloatingShortcuts(
+  const viewport = layoutModule.hooks.useActiveViewport();
+  const floatingShortcuts = mouseModule.hooks.useFloatingShortcuts(
     `${viewport.state.id}-shortcuts`
   );
   const floatingShortcutsManager =
-    mouseManager.hooks.useFloatingShortcutsManager();
+    mouseModule.hooks.useFloatingShortcutsManager();
 
-  const graph = graphManager.hooks.useGraph<CompositionGraphState, string>(
+  const graph = graphModule.hooks.useGraph<CompositionGraphState, string>(
     viewport.state.id,
     (g) => g.id
   );

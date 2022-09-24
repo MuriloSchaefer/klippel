@@ -1,8 +1,8 @@
 import React from "react";
 
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/GraphsManager";
-import AccordionSection from "@kernel/modules/LayoutManager/components/Sidepanels/components/AccordionSection";
+import { IGraphModule } from "@kernel/modules/GraphsModule";
+import AccordionSection from "@kernel/modules/LayoutModule/components/Sidepanels/components/AccordionSection";
 import { useAppDispatch } from "@kernel/store/hooks";
 
 import { useComposerUIState } from "../../../hooks/useComposerUIState";
@@ -13,13 +13,13 @@ import { CompositionGraphState } from "../../../store/state";
 
 const ComposerRightPanelContent = () => {
   const dispatch = useAppDispatch();
-  const graphManager = useModule<IGraphModule>("GraphManager");
+  const graphModule = useModule<IGraphModule>("GraphModule");
   const selectedMaterialId = useComposerUIState(
     (ui) => ui.rightPanel.selectedMaterialId
   );
   const graphId = useComposerUIState((ui) => ui.viewport.graphId);
 
-  const { state: node } = graphManager.hooks.useGraph<
+  const { state: node } = graphModule.hooks.useGraph<
     CompositionGraphState,
     Composition | Material
   >(graphId ?? "", (g) => g.nodes[selectedMaterialId ?? ""]);

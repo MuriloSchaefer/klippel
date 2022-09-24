@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 import { useAppDispatch } from "@kernel/store/hooks";
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/GraphsManager";
+import { IGraphModule } from "@kernel/modules/GraphsModule";
 
 import { CompositionGraphState, UIState } from "modules/Composer/store/state";
 import { Composition } from "modules/Composer/interfaces/Composition";
@@ -50,9 +50,9 @@ const TreeItem = ({
   showHiddenNodes,
 }: TreeItemProps) => {
   const dispatch = useAppDispatch();
-  const graphManager = useModule<IGraphModule>("GraphManager");
+  const graphModule = useModule<IGraphModule>("GraphModule");
 
-  const { state: node } = graphManager.hooks.useGraph<
+  const { state: node } = graphModule.hooks.useGraph<
     CompositionGraphState,
     Composition | Material
   >(graphId, (g) => g.nodes[nodeId]);

@@ -23,10 +23,10 @@ const StyledFloatingDocumentation = styled.div<{
 const FloatingDocumentationContainer = () => {
   const dispatch = useAppDispatch();
   const mousePosition = useAppSelector(
-    (state) => state.MouseManager.mousePosition
+    (state) => state.MouseModule.mousePosition
   );
   const documentation = useAppSelector(
-    (state) => state.MouseManager.documentation
+    (state) => state.MouseModule.documentation
   );
   const elemRef = useRef<HTMLDivElement | null>(null);
 

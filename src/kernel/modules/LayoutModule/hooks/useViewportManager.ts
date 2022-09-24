@@ -24,7 +24,7 @@ export const useViewportManager = (): ViewportManagerData => {
   const dispatch = useAppDispatch();
 
   const viewportManager = useAppSelector<ViewportManagerState>(
-    (state) => state.layoutManager.viewportManager
+    (state) => state.LayoutModule.viewportManager
   );
 
   const { viewports, setViewports } = useContext(ViewportContentContext);

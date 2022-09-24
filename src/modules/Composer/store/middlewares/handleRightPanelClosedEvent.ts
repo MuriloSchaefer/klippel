@@ -1,7 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
-import { rightPanelClosed } from "@kernel/modules/LayoutManager/ations";
+import { rightPanelClosed } from "@kernel/modules/LayoutModule/ations";
 import { materialUnSelectedEvent } from "../actions";
 
 const middleware = createListenerMiddleware();
