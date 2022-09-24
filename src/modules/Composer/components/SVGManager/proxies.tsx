@@ -11,13 +11,26 @@ import { IGraphModule } from "@kernel/modules/GraphsManager";
 export interface ProxiesProps {
   graphId: string;
   onPartsLoaded?: (svgRoot: SVGElement) => void;
-  onMaterialSelected?: (material: Material | Composition) => void;
+  onClick?: (props: {
+    selectedMaterial: Material | Composition;
+    event: MouseEvent;
+  }) => void;
+  onDblClick?: (props: {
+    selectedMaterial: Material | Composition;
+    event: MouseEvent;
+  }) => void;
+  onMouseDown?: (props: {
+    selectedMaterial: Material | Composition;
+    event: MouseEvent;
+  }) => void;
 }
 
 const Proxies = ({
   graphId,
   onPartsLoaded,
-  onMaterialSelected,
+  onClick,
+  onDblClick,
+  onMouseDown,
 }: ProxiesProps) => {
   // const [parts, setParts] = React.useState<Material[]>([]);
   const graphManager = useModule<IGraphModule>("GraphManager");
@@ -33,15 +46,27 @@ const Proxies = ({
    * Attach on click event to garment parts
    * @param svgRoot SVG element
    */
-  const attachListeners = (svgRoot: SVGElement) => {
+  const attachMouseListeners = (svgRoot: SVGElement) => {
+    const listener = (
+      e: MouseEvent,
+      callback: CallableFunction | undefined
+    ) => {
+      if (e.target instanceof SVGElement && callback) {
+        callback({ selectedMaterial: nodes[svgRoot.id], event: e });
+        e.stopPropagation();
+      }
+    };
+
     if (nodes[svgRoot.id].properties.Tipo !== undefined) {
-      svgRoot.addEventListener("dblclick", (e: MouseEvent) => {
-        console.log(nodes[svgRoot.id], e);
-        if (e.target instanceof SVGElement && onMaterialSelected) {
-          onMaterialSelected(nodes[svgRoot.id]);
-          e.stopPropagation();
-        }
-      });
+      svgRoot.addEventListener("dblclick", (e: MouseEvent) =>
+        listener(e, onDblClick)
+      );
+      svgRoot.addEventListener("click", (e: MouseEvent) =>
+        listener(e, onClick)
+      );
+      svgRoot.addEventListener("mousedown", (e: MouseEvent) =>
+        listener(e, onMouseDown)
+      );
     }
 
     if (onPartsLoaded) onPartsLoaded(svgRoot);
@@ -52,13 +77,13 @@ const Proxies = ({
       {nodes &&
         Object.entries(nodes)
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          .filter(([_id, node]) => node.properties.Nome !== undefined)
+          .filter(([_id, node]) => node.properties.Nome !== undefined) // only attach listener in nodes that have a name property (has metadata)
           .map(([id, node]) => (
             <SvgProxy
               key={id}
               selector={`#${id}`}
               fill={node.properties.Cor?.value}
-              onElementSelected={attachListeners}
+              onElementSelected={attachMouseListeners}
             />
           ))}
 
@@ -73,7 +98,9 @@ const Proxies = ({
 
 Proxies.defaultProps = {
   onPartsLoaded: () => null,
-  onMaterialSelected: () => null,
+  onClick: () => null,
+  onDblClick: () => null,
+  onMouseDown: () => null,
 };
 
 export default Proxies;

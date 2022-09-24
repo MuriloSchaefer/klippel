@@ -25,8 +25,8 @@ export const StyledSettingsPanel = styled("div")<{
     ${(props) => (props.theme === Theme.Dark ? "#eee" : "#333")};
   position: sticky;
   height: 100%;
-  min-width: ${(p) => (p.isOpen ? "20vw" : "1vw")};
-  width: ${(p) => (p.isOpen ? "20vw" : "1vw")};
+  min-width: ${(p) => (p.isOpen ? "25vw" : "1vw")};
+  width: ${(p) => (p.isOpen ? "25vw" : "1vw")};
   transition: width 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
   max-width: 25vw;
   left: 0;

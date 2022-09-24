@@ -95,7 +95,7 @@ export const composerSlice = createSlice({
         ...state,
         rightPanel: {
           ...state.rightPanel,
-          selectedMaterialId: action.payload.material.id,
+          selectedMaterialId: action.payload.id,
         },
       }));
   },

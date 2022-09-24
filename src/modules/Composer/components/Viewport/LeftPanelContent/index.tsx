@@ -7,7 +7,6 @@ import AccordionSection from "@kernel/modules/LayoutManager/components/Sidepanel
 
 import { useComposerUIState } from "../../../hooks/useComposerUIState";
 import CompositionTree from "./CompositionTree";
-import MaterialList from "./MaterialList";
 
 export interface ComposerLeftPanelContentProps {
   rootId?: string;
@@ -29,15 +28,9 @@ const ComposerLeftPanelContent = ({
 
   if (!graphId) return null;
   return (
-    <>
-      <AccordionSection title="Árvore de composição">
-        <CompositionTree graphId={graphId} rootId={rootId} />
-      </AccordionSection>
-
-      <AccordionSection title="Lista de materiais">
-        <MaterialList graphId={graphId} rootId={rootId} />
-      </AccordionSection>
-    </>
+    <AccordionSection title="Árvore de composição">
+      <CompositionTree graphId={graphId} rootId={rootId} />
+    </AccordionSection>
   );
 };
 

@@ -12,23 +12,28 @@ import { materialSelectedEvent } from "modules/Composer/store/actions";
 import { useComposerUIState } from "modules/Composer/hooks/useComposerUIState";
 import MaterialPreviewCircle from "../../Utils/MaterialPreviewCircle";
 
-const StyledTreeItem = styled.li``;
+const StyledTreeItem = styled.div``;
 const ItemDetails = styled.details`
-  /* details[open] > summary {
-    list-style-type: none;
-  } */
-`;
-const Tree = styled.ul`
-  list-style: none;
   padding-left: 1rem;
+  border-left: 1px dashed #aaa;
+  &&[open] > summary {
+    list-style-type: "🔽";
+  }
+  && > summary {
+    list-style-type: "▶️";
+  }
 `;
 
 const ItemLabel = styled.summary<{ isSelected: boolean }>`
   cursor: pointer;
   color: ${(p) => (p.isSelected ? "purple" : "white")};
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
+
+  && > div {
+    padding-left: 0.1rem;
+    align-items: center;
+    display: inline-flex;
+    gap: 0.3em;
+  }
 `;
 
 interface TreeItemProps {
@@ -56,22 +61,20 @@ const TreeItem = ({
   );
 
   const handleSelection = (e: React.MouseEvent) => {
-    if (node) dispatch(materialSelectedEvent({ material: node }));
+    if (node) dispatch(materialSelectedEvent({ id: node.id }));
     e.stopPropagation();
   };
 
   if (!node) return null;
   return (
-    <Tree key={`${graphId}-${nodeId}`}>
-      <StyledTreeItem
-        key={nodeId}
-        onDoubleClick={
-          node.properties.Tipo?.value ? handleSelection : undefined
-        }
-      >
-        {(node.properties.Nome?.value || showHiddenNodes) && (
-          <ItemDetails>
-            <ItemLabel isSelected={node.id === selectedMaterial}>
+    <StyledTreeItem
+      key={nodeId}
+      onClick={node.properties.Tipo?.value ? handleSelection : undefined}
+    >
+      {(node.properties.Nome?.value || showHiddenNodes) && (
+        <ItemDetails>
+          <ItemLabel isSelected={node.id === selectedMaterial}>
+            <div>
               <span>{node.properties.Nome?.value ?? node.id}</span>
               {node.properties.Cor && (
                 <MaterialPreviewCircle
@@ -79,9 +82,10 @@ const TreeItem = ({
                   r={5}
                 />
               )}
-            </ItemLabel>
-            {children}
-            {/* {hasSubtree && (
+            </div>
+          </ItemLabel>
+          {children}
+          {/* {hasSubtree && (
           <StyledTreeItem key={nodeId}>
             {connection.outputs.map((edgeId: EdgeId) => {
               const children = filterChildren(edgeId) ?? [];
@@ -90,10 +94,9 @@ const TreeItem = ({
             })}
           </TreeItem>
         )} */}
-          </ItemDetails>
-        )}
-      </StyledTreeItem>
-    </Tree>
+        </ItemDetails>
+      )}
+    </StyledTreeItem>
   );
 };
 TreeItem.defaultProps = {

@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import styled from "styled-components";
 // kernel imports
-import Viewport, {
+import {
+  Viewport,
   ViewportProps,
 } from "@kernel/modules/LayoutManager/components/Viewport";
 import SettingsPanel from "@kernel/modules/LayoutManager/components/Sidepanels/SettingsPanel";
@@ -14,8 +15,10 @@ import useModule from "@kernel/hooks/useModule";
 import { ILayoutManagerModule } from "@kernel/modules/LayoutManager";
 import { IGraphModule } from "@kernel/modules/GraphsManager";
 
-import { Material } from "../../interfaces/Material";
-import { Composition } from "../../interfaces/Composition";
+import { IMouseManagerModule } from "@kernel/modules/MouseManager";
+import { Composition } from "modules/Composer/interfaces/Composition";
+import { Material } from "modules/Composer/interfaces/Material";
+import FloatingShortcutsContainer from "@kernel/modules/MouseManager/components/Shortcuts";
 import { CompositionGraphState } from "../../store/state";
 import { materialSelectedEvent } from "../../store/actions";
 import Proxies from "../SVGManager/proxies";
@@ -43,8 +46,14 @@ const ComposerViewport = ({
   const dispatch = useAppDispatch();
   const layoutManager = useModule<ILayoutManagerModule>("LayoutManager");
   const graphManager = useModule<IGraphModule>("GraphManager");
+  const mouseManager = useModule<IMouseManagerModule>("MouseManager");
 
   const viewport = layoutManager.hooks.useActiveViewport();
+  const floatingShortcuts = mouseManager.hooks.useFloatingShortcuts(
+    `${viewport.state.id}-shortcuts`
+  );
+  const floatingShortcutsManager =
+    mouseManager.hooks.useFloatingShortcutsManager();
 
   const graph = graphManager.hooks.useGraph<CompositionGraphState, string>(
     viewport.state.id,
@@ -55,18 +64,26 @@ const ComposerViewport = ({
     if (!graph.state) {
       dispatch(newGraph(viewport.state.id));
     }
+    if (!floatingShortcuts.state) {
+      floatingShortcutsManager.hooks.createShortcuts(
+        `${viewport.state.id}-shortcuts`
+      );
+    }
   }, []);
 
   useEffect(() => {
     if (!graph.state) {
-      console.log("creating graph");
       dispatch(newGraph(viewport.state.id));
     }
   }, [viewport.state.id]);
 
-  const onMaterialSelected = (material: Material | Composition) => {
-    console.log(material);
-    dispatch(materialSelectedEvent({ material }));
+  const onMaterialSelected = ({
+    selectedMaterial,
+  }: {
+    selectedMaterial: Material | Composition;
+    event: MouseEvent;
+  }) => {
+    dispatch(materialSelectedEvent({ id: selectedMaterial.id }));
   };
 
   return (
@@ -75,6 +92,11 @@ const ComposerViewport = ({
         <ComposerLeftPanelContent />
       </SettingsPanel>
       <StyledViewport>
+        <FloatingShortcutsContainer id={`${viewport.state.id}-shortcuts`}>
+          <div style={{ width: "300px", height: "500px" }}>
+            Viewport Shortcuts
+          </div>
+        </FloatingShortcutsContainer>
         <Viewport innerRef={null} id={viewport.state.id}>
           {graph.state ? (
             <SVGManager
@@ -85,7 +107,11 @@ const ComposerViewport = ({
             >
               <Proxies
                 graphId={viewport.state.id}
-                onMaterialSelected={onMaterialSelected}
+                onClick={({ event }) => {
+                  floatingShortcuts.hooks.showShortcuts(event);
+                  event.stopPropagation();
+                }}
+                onDblClick={onMaterialSelected}
               />
             </SVGManager>
           ) : undefined}

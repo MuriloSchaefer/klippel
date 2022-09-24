@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import ModulesContext from "@kernel/contexts/modules";
+import FloatingDocumentationContainer from "@kernel/modules/MouseManager/components/Documentation";
 
 import ViewportContentContext, {
   ViewportContentMap,
@@ -60,6 +61,7 @@ export default (): React.ReactElement => {
   return (
     <ThemeContext.Provider value={memoizedTheme}>
       <ViewportContentContext.Provider value={memoizedViewports}>
+        <FloatingDocumentationContainer />
         <RibbonMenu tabs={tabs} initialTab="composer" />
         <Content>
           <div id="settingsPanel" style={{ zIndex: 2 }} />
