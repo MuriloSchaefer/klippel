@@ -1,7 +1,6 @@
 import React, { ReactElement, useEffect, useState } from "react";
 import { useAppDispatch } from "@kernel/store/hooks";
 import { startSVGLoad, SVGLoaded } from "modules/Composer/store/actions";
-import { SvgLoader } from "react-svgmt";
 import useSVG from "../../hooks/loadSVG";
 
 interface UseModelProps {
@@ -10,6 +9,12 @@ interface UseModelProps {
   model: string;
   graphId: string;
   children: ReactElement;
+}
+
+const SVGLoader = (props: any): ReactElement => {
+  console.log(props)
+  return <></>
+
 }
 
 /** Hook that loads an SVG model */
@@ -33,7 +38,7 @@ const SVGManager = ({
   }, [mannequinSize, product, model]);
 
   return svgXML ? (
-    <SvgLoader
+    <SVGLoader
       svgXML={svgXML}
       onSVGReady={(svgRoot: SVGElement) =>
         dispatch(SVGLoaded({ graphId, svgRoot }))
@@ -46,7 +51,7 @@ const SVGManager = ({
       }}
     >
       {children}
-    </SvgLoader>
+    </SVGLoader>
   ) : (
     <div>Loading...</div>
   );

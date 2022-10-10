@@ -1,5 +1,4 @@
 import React from "react";
-import { SvgProxy } from "react-svgmt";
 import { CompositionGraphState } from "modules/Composer/store/state";
 import { Material } from "modules/Composer/interfaces/Material";
 
@@ -23,6 +22,10 @@ export interface ProxiesProps {
     selectedMaterial: Material | Composition;
     event: MouseEvent;
   }) => void;
+}
+
+const SVGProxy = (props: any) => {
+  return <></>
 }
 
 const Proxies = ({
@@ -79,7 +82,7 @@ const Proxies = ({
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           .filter(([_id, node]) => node.properties.Nome !== undefined) // only attach listener in nodes that have a name property (has metadata)
           .map(([id, node]) => (
-            <SvgProxy
+            <SVGProxy
               key={id}
               selector={`#${id}`}
               fill={node.properties.Cor?.value}
