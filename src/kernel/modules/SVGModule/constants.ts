@@ -1,3 +1,3 @@
-export const MODULE_NAME = "MouseManager";
+export const MODULE_NAME = "SVGModule";
 
 export default MODULE_NAME;
