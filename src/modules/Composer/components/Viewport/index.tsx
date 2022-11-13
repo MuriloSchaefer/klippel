@@ -26,6 +26,7 @@ import Proxies from "../SVGManager/proxies";
 import ComposerLeftPanelContent from "./LeftPanelContent";
 import SVGManager from "../SVGManager";
 import ComposerRightPanelContent from "./RightPanelContent";
+import SVGProxies from "../SVGManager/SVGProxies";
 
 const StyledViewport = styled.div`
   cursor: crosshair;
@@ -48,14 +49,17 @@ const ComposerViewport = ({
   const graphModule = useModule<IGraphModule>("GraphModule");
   const mouseModule = useModule<IMouseModule>("MouseModule");
 
-  const viewport = layoutModule.hooks.useActiveViewport();
-  const floatingShortcuts = mouseModule.hooks.useFloatingShortcuts(
+  const {useActiveViewport, } = layoutModule.hooks.module
+  const {useFloatingShortcuts,useFloatingShortcutsManager} = mouseModule.hooks.module
+
+  const viewport = useActiveViewport();
+  const floatingShortcuts = useFloatingShortcuts(
     `${viewport.state.id}-shortcuts`
   );
   const floatingShortcutsManager =
-    mouseModule.hooks.useFloatingShortcutsManager();
+    useFloatingShortcutsManager();
 
-  const graph = graphModule.hooks.useGraph<CompositionGraphState, string>(
+  const graph = graphModule.hooks.module.useGraph<CompositionGraphState, string>(
     viewport.state.id,
     (g) => g.id
   );
@@ -104,6 +108,7 @@ const ComposerViewport = ({
               mannequinSize={mannequinSize}
               product={product}
               model={model}
+              proxies={{}}
             >
               <Proxies
                 graphId={viewport.state.id}
@@ -114,6 +119,7 @@ const ComposerViewport = ({
                 onDblClick={onMaterialSelected}
               />
             </SVGManager>
+
           ) : undefined}
         </Viewport>
       </StyledViewport>

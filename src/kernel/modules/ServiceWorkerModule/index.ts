@@ -1,6 +1,8 @@
 import { IModule } from "../base";
+import afterModuleLoad from "./hooks/system/afterModuleLoad";
 
-export type IServiceWorkerModule = IModule;
+export interface IServiceWorkerModule extends IModule{
+}
 
 /**
  * SVG module handles any operation on SVG
@@ -14,7 +16,11 @@ const ServiceWorkerModule: IServiceWorkerModule = {
     middlewares: [],
     reducers: {},
   },
-  hooks: {},
+  hooks: {
+    system: {
+      afterModuleLoad: afterModuleLoad
+    }
+  },
   constants: {},
 };
 

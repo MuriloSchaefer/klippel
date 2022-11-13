@@ -4,12 +4,12 @@ import styled from "styled-components";
 import { floatingDocumentationCollapsed } from "../store/actions";
 
 const StyledFloatingDocumentation = styled.div<{
-  visible: boolean;
+  $visible: boolean;
   x: number;
   y: number;
 }>`
-  width: ${(p) => (p.visible ? "500px" : "0px")};
-  height: ${(p) => (p.visible ? "500px" : "0px")};
+  width: ${(p) => (p.$visible ? "500px" : "0px")};
+  height: ${(p) => (p.$visible ? "500px" : "0px")};
   margin: 0.5em;
   border-radius: 2%;
   position: absolute;
@@ -42,7 +42,7 @@ const FloatingDocumentationContainer = () => {
     <StyledFloatingDocumentation
       id="floating-documentation"
       ref={elemRef}
-      visible={documentation.visible}
+      $visible={documentation.visible}
       x={mousePosition.x}
       y={mousePosition.y}
     >

@@ -1,10 +1,10 @@
 import styled from "styled-components";
 
-export const SectionName = styled.div<{ hasDropdown: boolean }>`
+export const SectionName = styled.div<{ $hasdropdown: boolean }>`
   height: 20px;
   width: 100%;
   background-color: #eee;
-  cursor: ${(p) => (p.hasDropdown ? "pointer" : "default")};
+  cursor: ${(p) => (p.$hasdropdown ? "pointer" : "default")};
 `;
 
 export const SectionContent = styled.div`
@@ -16,8 +16,8 @@ export const SectionContent = styled.div`
   flex-direction: row;
 `;
 
-export const StyledSection = styled.section<{ width: string }>`
-  width: ${(p) => p.width};
+export const StyledSection = styled.section<{ width?: string }>`
+  width: ${(p) => p?.width ?? "100%"};
   height: 100%;
   border: 1px solid #aaa;
   display: flex;

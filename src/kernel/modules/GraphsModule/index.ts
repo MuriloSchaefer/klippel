@@ -37,7 +37,9 @@ export interface IGraphModule extends IModule {
     };
   };
   hooks: {
-    useGraph: typeof useGraph;
+    module: {
+      useGraph: typeof useGraph;
+    }
   };
 }
 
@@ -63,7 +65,9 @@ const GraphModule: IGraphModule = {
     selectors: { selectGraphById },
   },
   hooks: {
-    useGraph,
+    module: {
+      useGraph,
+    }
   },
 };
 

@@ -53,7 +53,7 @@ const TreeItem = ({
   const dispatch = useAppDispatch();
   const graphModule = useModule<IGraphModule>("GraphModule");
 
-  const { state: node } = graphModule.hooks.useGraph<
+  const { state: node } = graphModule.hooks.module.useGraph<
     CompositionGraphState,
     Composition | Material
   >(graphId, (g) => g.nodes[nodeId]);

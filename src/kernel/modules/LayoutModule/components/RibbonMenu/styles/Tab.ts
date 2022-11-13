@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 interface TabProps {
-  active?: boolean;
+  $active?: boolean;
   href: string;
 }
 
@@ -21,8 +21,8 @@ export const Tab = styled.li<TabProps>`
   border: 1px solid #aaa;
   border-bottom: none;
 
-  background: ${(p) => (p.active ? "white" : "#ddd")};
-  color: ${(p) => (p.active ? "#800747" : "black")};
+  background: ${(p) => (p.$active ? "white" : "#ddd")};
+  color: ${(p) => (p.$active ? "#800747" : "black")};
   :hover {
     color: #800747;
   }

@@ -8,7 +8,7 @@ interface TabProps {
   children: React.ReactNode;
 }
 interface StyledTabProps {
-  active?: boolean;
+  $active?: boolean;
 }
 
 /**
@@ -29,8 +29,8 @@ export const StyledViewportTab = styled.li<StyledTabProps>`
   border: 1px solid #aaa;
   border-bottom: none;
 
-  background: ${(p) => (p.active ? "white" : "#ddd")};
-  color: ${(p) => (p.active ? "#800747" : "black")};
+  background: ${(p) => (p.$active ? "white" : "#ddd")};
+  color: ${(p) => (p.$active ? "#800747" : "black")};
   :hover {
     color: #800747;
   }
@@ -52,13 +52,13 @@ export const ViewportTab = ({
   onClose,
   children,
 }: TabProps) => (
-  <StyledViewportTab active={active} onClick={onClick}>
+  <StyledViewportTab $active={active} onClick={onClick}>
     <CloseTabButton onClick={onClose}>x</CloseTabButton>
     {children}
   </StyledViewportTab>
 );
 
-const StyledAddViewportTab = styled.li<TabProps>`
+const StyledAddViewportTab = styled.li<StyledTabProps>`
   list-style: none;
   text-align: center;
   width: min-content;
@@ -70,8 +70,8 @@ const StyledAddViewportTab = styled.li<TabProps>`
   border: 1px solid #aaa;
   border-bottom: none;
 
-  background: ${(p) => (p.active ? "white" : "#ddd")};
-  color: ${(p) => (p.active ? "#800747" : "black")};
+  background: ${(p) => (p.$active ? "white" : "#ddd")};
+  color: ${(p) => (p.$active ? "#800747" : "black")};
   :hover {
     color: #800747;
   }
@@ -81,7 +81,9 @@ const StyledAddViewportTab = styled.li<TabProps>`
 `;
 
 export const AddViewportTab = ({ onClick }: { onClick: () => void }) => (
-  <StyledAddViewportTab onClick={onClick}>+</StyledAddViewportTab>
+  <StyledAddViewportTab $active={true} onClick={onClick}>
+    +
+  </StyledAddViewportTab>
 );
 
 export const TabsHeader = styled.ul`

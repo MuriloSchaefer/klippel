@@ -42,30 +42,32 @@ const RibbonMenuComponent = ({
   };
 
   return (
-    <RibbonMenu>
-      <TabsHeader>
-        <DropDownTab key="file-dropdown">Arquivo</DropDownTab>
+    <RibbonMenu role="ribbon-menu">
+      <TabsHeader role="tabs-header">
+        <DropDownTab role="file-tab" key="file-dropdown">Arquivo</DropDownTab>
 
         {Object.entries(tabs).map(([name, tab]) => (
           <Tab
             key={`${name}-tab`}
             href={`#${name}`}
-            active={name === activeTab}
+            role="tab"
+            $active={name === activeTab}
             onClick={() => handleTabchange(name)}
           >
             {tab.label}
           </Tab>
         ))}
       </TabsHeader>
-      <TabsContent>
+      <TabsContent role="tabs-content">
         {Object.entries(tabs).map(([name, tab]) =>
-          tab.sections.map((section) => (
+          tab.sections.map((section, idx) => (
             <TabContent
               key={`${name}-section-${(Math.random() + 1)
                 .toString(36)
                 .substring(7)}`}
-              id={`#${name}`}
-              active={name === activeTab}
+              id={`#${name}-${idx}`}
+              $active={name === activeTab}
+              role="section"
             >
               {section}
             </TabContent>

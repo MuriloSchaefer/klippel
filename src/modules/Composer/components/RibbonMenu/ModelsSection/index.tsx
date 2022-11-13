@@ -12,7 +12,7 @@ import ComposerViewport from "../../Viewport";
 
 export default () => {
   const layoutModule = useModule<ILayoutModule>("LayoutModule");
-  const viewportManager = layoutModule.hooks.useViewportManager();
+  const viewportManager = layoutModule.hooks.module.useViewportManager();
 
   /**
    * Add a new Model to the Composer

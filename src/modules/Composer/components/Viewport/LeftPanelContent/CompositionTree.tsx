@@ -22,7 +22,7 @@ const CompositionTree = ({
 }: CompositionTreeProps): React.ReactElement => {
   const graphModule = useModule<IGraphModule>("GraphModule");
 
-  const { state } = graphModule.hooks.useGraph<
+  const { state } = graphModule.hooks.module.useGraph<
     CompositionGraphState,
     { adjacencyList: AdjacencyList; edges: EdgesHashMap }
   >(graphId, (g) => ({ adjacencyList: g.adjacencyList, edges: g.edges }));

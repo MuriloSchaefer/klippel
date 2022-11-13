@@ -40,9 +40,11 @@ export interface ILayoutModule extends IModule {
     };
   };
   hooks: {
-    useViewportManager: typeof useViewportManager;
-    useViewport: typeof useViewport;
-    useActiveViewport: typeof useActiveViewport;
+    module: {
+      useViewportManager: typeof useViewportManager;
+      useViewport: typeof useViewport;
+      useActiveViewport: typeof useActiveViewport;
+    }    
   };
   constants: {
     SETTING_PANEL_ID: string;
@@ -73,9 +75,11 @@ const LayoutModule: ILayoutModule = {
     reducers: { LayoutModule: reducer },
   },
   hooks: {
-    useViewportManager,
-    useViewport,
-    useActiveViewport,
+    module: {
+      useViewportManager,
+      useViewport,
+      useActiveViewport,
+    }
   },
   constants: {
     SETTING_PANEL_ID,

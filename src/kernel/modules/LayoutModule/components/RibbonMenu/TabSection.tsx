@@ -34,7 +34,7 @@ export const TabSection = ({
       )}
       <SectionName
         onClick={handleDropDownToggle}
-        hasDropdown={dropdownContent !== null}
+        $hasdropdown={dropdownContent !== null}
       >
         {name}{" "}
         {dropdownContent && <DropdownSectionIcon open={isDropdownOpen} />}

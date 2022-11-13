@@ -1,0 +1,1 @@
+./src/kernel/modules/ServiceWorkerModule/sw.js

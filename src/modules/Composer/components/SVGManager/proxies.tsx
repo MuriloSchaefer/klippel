@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { CompositionGraphState } from "modules/Composer/store/state";
 import { Material } from "modules/Composer/interfaces/Material";
 
@@ -9,6 +9,7 @@ import { IGraphModule } from "@kernel/modules/GraphsModule";
 
 export interface ProxiesProps {
   graphId: string;
+  svgRoot?: SVGSVGElement;
   onPartsLoaded?: (svgRoot: SVGElement) => void;
   onClick?: (props: {
     selectedMaterial: Material | Composition;
@@ -24,12 +25,52 @@ export interface ProxiesProps {
   }) => void;
 }
 
-const SVGProxy = (props: any) => {
-  return <></>
+interface SVGProxyProps {
+  selector: string;
+  svgRoot?: SVGSVGElement;
+  attributes: {
+    [name: string]: any;
+  };
+  callbacks: {
+    [evtName: string]: (event: Event) => void;
+  };
 }
+const SVGProxy = ({
+  selector,
+  svgRoot,
+  attributes,
+  callbacks,
+}: SVGProxyProps) => {
+  console.log(selector);
+  const elem = useRef<SVGElement | null>(null);
+
+  useEffect(() => {
+    if (svgRoot) {
+      const ref = svgRoot.getElementById(selector) as SVGElement;
+
+      if (ref) {
+        console.log(ref, attributes, callbacks);
+        elem.current = ref;
+
+        Object.entries(attributes).forEach(([attr, value]) => {
+          ref.setAttribute(attr, value);
+        });
+
+        Object.entries(callbacks).forEach(([event, cb]) => {
+          console.log("adding", event, cb);
+          ref.addEventListener("click", (e) => console.log(e));
+          ref.onclick = cb;
+        });
+      }
+    }
+  }, [svgRoot]);
+
+  return <div role={`${selector}-proxy`}></div>;
+};
 
 const Proxies = ({
   graphId,
+  svgRoot,
   onPartsLoaded,
   onClick,
   onDblClick,
@@ -38,41 +79,22 @@ const Proxies = ({
   // const [parts, setParts] = React.useState<Material[]>([]);
   const graphModule = useModule<IGraphModule>("GraphModule");
 
-  const { state: nodes } = graphModule.hooks.useGraph<
+  const { state: nodes } = graphModule.hooks.module.useGraph<
     CompositionGraphState,
     NodesHashMap<Composition | Material>
   >(graphId, (g) => g.nodes);
 
   if (!nodes) return null;
 
-  /**
-   * Attach on click event to garment parts
-   * @param svgRoot SVG element
-   */
-  const attachMouseListeners = (svgRoot: SVGElement) => {
-    const listener = (
-      e: MouseEvent,
-      callback: CallableFunction | undefined
-    ) => {
-      if (e.target instanceof SVGElement && callback) {
-        callback({ selectedMaterial: nodes[svgRoot.id], event: e });
-        e.stopPropagation();
-      }
-    };
-
-    if (nodes[svgRoot.id].properties.Tipo !== undefined) {
-      svgRoot.addEventListener("dblclick", (e: MouseEvent) =>
-        listener(e, onDblClick)
-      );
-      svgRoot.addEventListener("click", (e: MouseEvent) =>
-        listener(e, onClick)
-      );
-      svgRoot.addEventListener("mousedown", (e: MouseEvent) =>
-        listener(e, onMouseDown)
-      );
+  const listener = (
+    e: MouseEvent,
+    svgRoot: SVGElement,
+    callback: CallableFunction | undefined
+  ) => {
+    if (e.target instanceof SVGElement && callback) {
+      callback({ selectedMaterial: nodes[svgRoot.id], event: e });
+      e.stopPropagation();
     }
-
-    if (onPartsLoaded) onPartsLoaded(svgRoot);
   };
 
   return (
@@ -83,10 +105,11 @@ const Proxies = ({
           .filter(([_id, node]) => node.properties.Nome !== undefined) // only attach listener in nodes that have a name property (has metadata)
           .map(([id, node]) => (
             <SVGProxy
+              svgRoot={svgRoot}
               key={id}
-              selector={`#${id}`}
-              fill={node.properties.Cor?.value}
-              onElementSelected={attachMouseListeners}
+              selector={`${id}`}
+              attributes={{ style: { fill: node.properties.Cor?.value } }}
+              callbacks={{ click: (e) => console.log("clicked", e) }}
             />
           ))}
 

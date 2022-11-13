@@ -16,7 +16,12 @@ export interface IModule {
     selectors?: { [key: string]: any }; // Selectors used by the module
     reducers: { [key: string]: Reducer<any, AnyAction> }; // Reducers used by the module
   };
-  hooks: { [name: string]: CallableFunction };
+  hooks: {
+    system?: { // methods called by the system
+      afterModuleLoad: ()=>void 
+    }, 
+    module?: { [name: string]: CallableFunction }
+  };
   constants?: {
     [key: string]: unknown;
   };

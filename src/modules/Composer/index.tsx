@@ -26,7 +26,9 @@ export interface IComposerModule extends IModule {
     ];
   };
   hooks: {
-    useModel: typeof useModel;
+    module: {
+      useModel: typeof useModel;
+    }
   };
 }
 
@@ -52,6 +54,6 @@ const ComposerModule: IComposerModule = {
       handleRightPanelClosedEvent,
     ],
   },
-  hooks: { useModel },
+  hooks: { module: {useModel} },
 };
 export default ComposerModule;

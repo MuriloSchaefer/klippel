@@ -24,9 +24,11 @@ export interface IMouseModule extends IModule {
     };
   };
   hooks: {
-    useFloatingShortcutsManager: typeof useFloatingShortcutsManager;
-    useFloatingShortcuts: typeof useFloatingShortcuts;
-    useFloatingDocumentation: typeof useFloatingDocumentation;
+    module: {
+      useFloatingShortcutsManager: typeof useFloatingShortcutsManager;
+      useFloatingShortcuts: typeof useFloatingShortcuts;
+      useFloatingDocumentation: typeof useFloatingDocumentation;
+    }
   };
 }
 
@@ -48,9 +50,11 @@ const MouseModule: IMouseModule = {
     },
   },
   hooks: {
-    useFloatingShortcutsManager,
-    useFloatingShortcuts,
-    useFloatingDocumentation,
+    module: {
+      useFloatingShortcutsManager,
+      useFloatingShortcuts,
+      useFloatingDocumentation,
+    }
   },
   constants: {},
 };
