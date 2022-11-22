@@ -19,6 +19,7 @@ const initialLayoutModule: LayoutModuleState = {
     tabs: [
       {
         id: "welcome",
+        viewportType: "Welcome",
         title: "Bem-vindo",
       },
     ],
@@ -69,14 +70,14 @@ export const LayoutModuleSlice = createSlice({
       .addCase(rightPanelClosed, (state: LayoutModuleState) => ({
         ...state,
         rightPanel: {
-          ...state.leftPanel,
+          ...state.rightPanel,
           isOpen: false,
         },
       }))
       .addCase(rightPanelOpened, (state: LayoutModuleState) => ({
         ...state,
         rightPanel: {
-          ...state.leftPanel,
+          ...state.rightPanel,
           isOpen: true,
         },
       }))

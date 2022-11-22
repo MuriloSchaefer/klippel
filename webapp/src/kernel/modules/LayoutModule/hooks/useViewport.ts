@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
 
 import ViewportContentContext from "../contexts/viewports";
-import { changeViewportTitle } from "../ations";
+import { changeViewportTitle, leftPanelTitleChanged, rightPanelTitleChanged } from "../ations";
 import { ViewportTabState } from "../state";
 
 export interface ViewportData {
@@ -12,6 +12,8 @@ export interface ViewportData {
   hooks: {
     setContent(content: React.ReactElement): void;
     setTitle(title: string): void;
+    setSettingsPanelTitle(title: string): void;
+    setDetailsPanelTitle(title: string): void;
   }; // hooks to manipulate the viewport data
 }
 
@@ -42,6 +44,12 @@ const useViewport = (id: string): ViewportData | undefined => {
       setTitle(title: string) {
         dispatch(changeViewportTitle(title));
       },
+      setSettingsPanelTitle(title: string) {
+        dispatch(leftPanelTitleChanged(title))
+      },
+      setDetailsPanelTitle(title: string) {
+        dispatch(rightPanelTitleChanged(title))
+      }
     },
   };
 };

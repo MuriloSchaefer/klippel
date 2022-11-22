@@ -68,4 +68,4 @@ const SettingsPanel = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default SettingsPanel;
+export default React.memo(SettingsPanel);

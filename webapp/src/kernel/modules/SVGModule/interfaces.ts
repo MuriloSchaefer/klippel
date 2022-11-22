@@ -3,3 +3,9 @@ export interface ISVGManager {
     actions: unknown;
   }
   
+
+export interface ISVGProxy {
+  id: string;
+  fill?: string;
+  stroke?: string;
+}

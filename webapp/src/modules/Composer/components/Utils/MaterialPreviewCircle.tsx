@@ -1,7 +1,7 @@
 import React from "react";
 
 const MaterialPreviewCircle = ({ color, r }: { color: string; r: number }) => (
-  <svg height={r * 2} width={r * 2}>
+  <svg height={r * 2} width={r * 2} role="material-preview">
     <circle r={r} cx={r} cy={r} fill={color} />
   </svg>
 );

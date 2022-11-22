@@ -6,30 +6,24 @@ import { MaterialSelectedEvent } from "../interfaces/events/PartSelected";
 // EVENTS
 
 export const garmentParseFinished = createAction<{
-  graphId: string;
-  svgRoot: SVGElement;
-}>(`[${MODULE_NAME}] Garment Parse Finished`);
+  viewportId: string;
+  svgDOMId: string;
+}>(`[${MODULE_NAME}:Event] Garment Parse Finished`);
 
 // UI EVENTS
 export const materialSelectedEvent = createAction<MaterialSelectedEvent>(
-  `[${MODULE_NAME}] Material selected`
+  `[${MODULE_NAME}:UI] Material selected`
 );
 export const materialUnSelectedEvent = createAction(
-  `[${MODULE_NAME}] Material unselected`
+  `[${MODULE_NAME}:UI] Material unselected`
 );
 export const materialPropertiesChanged = createAction<PropertiesChangedEvent>(
-  `[${MODULE_NAME}] Material properties changed`
+  `[${MODULE_NAME}:UI] Material properties changed`
 );
 
 // COMMANDS
+export const setSVGPath = createAction<{viewportId:string; svgPath: string}>(`[${MODULE_NAME}:Command] Set SVG Path`)
 export const parseGarment = createAction<{
-  graphId: string;
-  svgRoot: SVGElement;
-}>(`[${MODULE_NAME}] Parse Garment`);
-export const parseMannequin = createAction<{
-  graphId: string;
-  svgRoot: SVGElement;
-}>(`[${MODULE_NAME}] Parse Mannequin`);
-export const parseAnnotations = createAction(
-  `[${MODULE_NAME}] Parse Annotations`
-);
+  viewportId: string;
+  svgDOMId: string;
+}>(`[${MODULE_NAME}:Command] Parse Garment`);

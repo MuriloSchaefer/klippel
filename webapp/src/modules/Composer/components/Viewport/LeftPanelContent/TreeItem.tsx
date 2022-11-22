@@ -11,6 +11,7 @@ import { Material } from "modules/Composer/interfaces/Material";
 import { materialSelectedEvent } from "modules/Composer/store/actions";
 import { useComposerUIState } from "modules/Composer/hooks/useComposerUIState";
 import MaterialPreviewCircle from "../../Utils/MaterialPreviewCircle";
+import { ILayoutModule } from "@kernel/modules/LayoutModule";
 
 const ItemDetails = styled.details`
   padding-left: 1rem;
@@ -24,9 +25,9 @@ const ItemDetails = styled.details`
   }
 `;
 
-const ItemLabel = styled.summary<{ isSelected: boolean }>`
+const ItemLabel = styled.summary<{ $isselected: boolean }>`
   cursor: pointer;
-  color: ${(p) => (p.isSelected ? "purple" : "white")};
+  color: ${(p) => (p.$isselected ? "purple" : "white")};
   margin-bottom: 0.1rem;
 
   && > div {
@@ -40,55 +41,48 @@ const ItemLabel = styled.summary<{ isSelected: boolean }>`
 interface TreeItemProps {
   graphId: string;
   nodeId: string;
-  children: React.ReactNode;
   showHiddenNodes?: boolean;
 }
 
 const TreeItem = ({
   graphId,
   nodeId,
-  children,
   showHiddenNodes,
 }: TreeItemProps) => {
   const dispatch = useAppDispatch();
+  const layoutModule = useModule<ILayoutModule>("LayoutModule");
   const graphModule = useModule<IGraphModule>("GraphModule");
+
+  const { useActiveViewport } = layoutModule.hooks.module;
+  const viewport = useActiveViewport();
+  const selectedMaterial = useComposerUIState((ui) => ui.viewports[viewport.state.id].UI.detailsPanel.selectedMaterialId);
 
   const { state: node } = graphModule.hooks.module.useGraph<
     CompositionGraphState,
     Composition | Material
-  >(graphId, (g) => g.nodes[nodeId]);
-  const selectedMaterial = useComposerUIState(
-    (ui: UIState) => ui.rightPanel.selectedMaterialId
-  );
+  >(graphId, (g) => g && g.nodes[nodeId]);
 
   const handleSelection = (e: React.MouseEvent) => {
-    if (node) dispatch(materialSelectedEvent({ id: node.id }));
+    if (node) dispatch(materialSelectedEvent({ id: node.id, viewportId: viewport.state.id }));
     e.stopPropagation();
   };
 
   if (!node || !(node.properties.Nome?.value || showHiddenNodes)) return null;
   return (
     <ItemDetails
-      onClick={node.properties.Tipo?.value ? handleSelection : undefined}
+      onClick={node.properties.Tipo?.value ? handleSelection : undefined} role="item-details"
     >
-      <ItemLabel isSelected={node.id === selectedMaterial}>
+      <ItemLabel $isselected={node.id === selectedMaterial} role="item-summary">
         <div>
-          <span>{node.properties.Nome?.value ?? node.id}</span>
+          <span role="item-label">{node.properties.Nome?.value ?? node.id}</span>
           {node.properties.Cor && (
             <MaterialPreviewCircle color={node.properties.Cor.value} r={5} />
           )}
         </div>
       </ItemLabel>
-      {children}
-      {/* {hasSubtree && (
-          <StyledTreeItem key={nodeId}>
-            {connection.outputs.map((edgeId: EdgeId) => {
-              const children = filterChildren(edgeId) ?? [];
-
-              return children.map(([id]) => buildTree(id));
-            })}
-          </TreeItem>
-        )} */}
+      <div role="subtree">
+            {Object.values(node.outputs).map(out => (<TreeItem key={`${graphId}-${out.targetId}`} graphId={graphId} nodeId={out.targetId} />))}
+      </div>
     </ItemDetails>
   );
 };

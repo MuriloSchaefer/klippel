@@ -10,22 +10,12 @@ import {
   parseGarment,
   materialSelectedEvent,
   garmentParseFinished,
+  setSVGPath,
 } from "./actions";
-import { startSVGLoad, SVGLoaded } from "@kernel/modules/SVGModule/store/actions";
+import { loadSVG, SVGLoaded } from "@kernel/modules/SVGModule/store/actions";
 
 const UIInitialState: UIState = {
-  leftPanel: {},
-  rightPanel: {
-    selectedMaterialId: null,
-  },
-  viewport: {
-    loadingSVG: false,
-    parsing: {
-      garment: false,
-      mannequin: false,
-      annotations: false,
-    },
-    graphId: null,
+  viewports: {
   },
 };
 
@@ -37,66 +27,175 @@ export const composerSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(viewportAdded, (state: UIState, action) => ({
-        leftPanel: {},
-        rightPanel: {
-          selectedMaterialId: null,
-        },
-        viewport: {
-          ...state.viewport,
-          graphId: action.payload.id,
-        },
-      }))
-      .addCase(viewportSelected, (state: UIState, action) => ({
-        leftPanel: {},
-        rightPanel: {
-          selectedMaterialId: null,
-        },
-        viewport: {
-          ...state.viewport,
-          graphId: action.payload,
-        },
-      }))
-      .addCase(startSVGLoad, (state: UIState) => ({
         ...state,
-        viewport: {
-          ...state.viewport,
-          loadingSVG: true,
+        viewports: {
+          ...state.viewports,
+          [action.payload.id]: {
+            ...state.viewports[action.payload.id],
+
+            UI: {
+              settingsPanel: {},
+              detailsPanel: {
+                selectedMaterialId: null,
+              },
+              loaders: {
+                loadSVG: "not-started",
+                parseSVG: {
+                  garment: "not-started",
+                  mannequin: "not-started",
+                  annotations: "not-started",
+                }
+              }
+            },
+            viewportId: action.payload.id,
+            graphId: action.payload.id, // TODO: check if that is right
+          }
         },
       }))
-      .addCase(SVGLoaded, (state: UIState) => ({
+      .addCase(setSVGPath, (state: UIState, action) => ({
         ...state,
-        viewport: {
-          ...state.viewport,
-          loadingSVG: false,
-        },
+
+        viewports: {
+          ...state.viewports,
+          [action.payload.viewportId]: {
+            ...state.viewports[action.payload.viewportId],
+            svgPath: action.payload.svgPath
+          }
+        }
       }))
-      .addCase(parseGarment, (state: UIState) => ({
-        ...state,
-        viewport: {
-          ...state.viewport,
-          parsing: {
-            ...state.viewport.parsing,
-            garment: true,
+      .addCase(loadSVG, (state: UIState, action) => {
+        const viewports = Object.values(state.viewports).filter(vp => vp.svgPath === action.payload.path)
+        const updatedViewports = viewports.map(vp => ({
+          ...state.viewports[vp.viewportId],
+          UI: {
+            ...state.viewports[vp.viewportId].UI,
+            loaders: {
+              ...state.viewports[vp.viewportId].UI.loaders,
+              loadSVG: "started"
+            }
+          }
+        }))
+        return {
+          ...state,
+          viewports: {
+            ...state.viewports,
+            ...updatedViewports.reduce((acc, curr) => ({
+              ...acc,
+              [curr.viewportId]: curr
+            }), {})
           },
-        },
-      }))
-      .addCase(garmentParseFinished, (state: UIState) => ({
-        ...state,
-        viewport: {
-          ...state.viewport,
-          parsing: {
-            ...state.viewport.parsing,
-            garment: false,
+        }
+      })
+      .addCase(SVGLoaded, (state: UIState, action) => {
+        const viewports = Object.values(state.viewports).filter(vp => vp.svgPath === action.payload.path)
+        const updatedViewports = viewports.map(vp => ({
+          ...state.viewports[vp.viewportId],
+          UI: {
+            ...state.viewports[vp.viewportId].UI,
+            loaders: {
+              ...state.viewports[vp.viewportId].UI.loaders,
+              loadSVG: "finished"
+            }
+          }
+        }))
+        return {
+          ...state,
+          viewports: {
+            ...state.viewports,
+            ...updatedViewports.reduce((acc, curr) => ({
+              ...acc,
+              [curr.viewportId]: curr
+            }), {})
           },
-        },
+        }
+      })
+      .addCase(parseGarment, (state: UIState, action) => ({
+        ...state,
+        viewports: {
+          ...state.viewports,
+          [action.payload.viewportId]: {
+            ...state.viewports[action.payload.viewportId],
+            UI: {
+              ...state.viewports[action.payload.viewportId].UI,
+              loaders: {
+                ...state.viewports[action.payload.viewportId].UI.loaders,
+                parseSVG: {
+                  ...state.viewports[action.payload.viewportId].UI.loaders.parseSVG,
+                  garment: "started"
+                }
+              }
+            }
+          }
+        }
+      }))
+      .addCase(garmentParseFinished, (state: UIState, action) => ({
+        ...state,
+        viewports: {
+          ...state.viewports,
+          [action.payload.viewportId]: {
+            ...state.viewports[action.payload.viewportId],
+            UI: {
+              ...state.viewports[action.payload.viewportId].UI,
+              loaders: {
+                ...state.viewports[action.payload.viewportId].UI.loaders,
+                parseSVG: {
+                  ...state.viewports[action.payload.viewportId].UI.loaders.parseSVG,
+                  garment: "finished"
+                }
+              }
+            }
+          }
+        }
       }))
       .addCase(materialSelectedEvent, (state: UIState, action) => ({
         ...state,
-        rightPanel: {
-          ...state.rightPanel,
-          selectedMaterialId: action.payload.id,
-        },
-      }));
+        viewports: {
+          ...state.viewports,
+          [action.payload.viewportId]: {
+            ...state.viewports[action.payload.viewportId],
+            UI: {
+              ...state.viewports[action.payload.viewportId].UI,
+              detailsPanel: {
+                selectedMaterialId: action.payload.id
+              }
+            }
+          }
+        }
+      }))
+    // .addCase(SVGLoaded, (state: UIState) => ({
+    //   ...state,
+    //   viewport: {
+    //     ...state.viewports,
+    //     loadingSVG: false,
+    //   },
+    // }))
+    // .addCase(parseGarment, (state: UIState) => ({
+    //   ...state,
+    //   viewport: {
+    //     ...state.viewport,
+    //     parsing: {
+    //       ...state.viewport.parsing,
+    //       garment: true,
+    //     },
+    //   },
+    // }))
+    // .addCase(garmentParseFinished, (state: UIState) => ({
+    //   ...state,
+    //   viewport: {
+    //     ...state.viewport,
+    //     parsing: {
+    //       ...state.viewport.parsing,
+    //       garment: false,
+    //     },
+    //   },
+    // }))
+    // .addCase(materialSelectedEvent, (state: UIState, action) => ({
+    //   ...state,
+    //   rightPanel: {
+    //     ...state.rightPanel,
+    //     selectedMaterialId: action.payload.id,
+    //   },
+    // }));
   },
 });
 

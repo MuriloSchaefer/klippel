@@ -8,18 +8,31 @@ export interface CompositionGraphState extends GraphState {
   };
 }
 
-export interface UIState {
-  leftPanel: Record<string, never>;
-  rightPanel: {
-    selectedMaterialId: string | null; // null means no part is selected
-  };
-  viewport: {
-    loadingSVG: boolean;
-    parsing: {
-      garment: boolean;
-      mannequin: boolean;
-      annotations: boolean;
+type loadingStatus = "not-started" | "started" | "finished"
+
+export interface ComposerViewportUI {
+  UI: {
+    settingsPanel: Record<string, never>;
+    detailsPanel: {
+      selectedMaterialId: string | null; // null means no part is selected
     };
-    graphId: string | null; // null means no graph is available
+    loaders: {
+      loadSVG: loadingStatus,
+      parseSVG: {
+        garment: loadingStatus,
+        mannequin: loadingStatus,
+        annotations: loadingStatus,
+      }
+    }
+  }
+  viewportId: string;
+  svgPath: string;
+  graphId: string; 
+}
+
+export interface UIState {
+  
+  viewports: {
+    [id: string]: ComposerViewportUI
   };
 }

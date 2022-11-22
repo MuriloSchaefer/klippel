@@ -1,5 +1,6 @@
 export interface ViewportTabState {
   id: string;
+  viewportType: string;
   title: string;
 }
 

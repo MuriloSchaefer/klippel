@@ -3,12 +3,12 @@ import { useAppSelector } from "@kernel/store/hooks";
 import styled from "styled-components";
 import { useFloatingShortcuts } from "../hooks/useFloatingShortcuts";
 
-const StyledFloatingShortcuts = styled.div<{ visible: boolean }>`
+const StyledFloatingShortcuts = styled.div<{ $visible: boolean }>`
   position: fixed;
   height: fit-content;
   width: fit-content;
-  max-width: ${(p) => (p.visible ? "150px" : "0px")};
-  max-height: ${(p) => (p.visible ? "70px" : "0px")};
+  max-width: ${(p) => (p.$visible ? "150px" : "0px")};
+  max-height: ${(p) => (p.$visible ? "70px" : "0px")};
   margin: 0.5em;
   border-radius: 2%;
   z-index: 9999;
@@ -48,7 +48,7 @@ const FloatingShortcutsContainer = ({
   if (!state) return null;
 
   return (
-    <StyledFloatingShortcuts ref={elemRef} id={id} visible={state.visible}>
+    <StyledFloatingShortcuts ref={elemRef} id={id} $visible={state.visible}>
       {state.visible && children}
     </StyledFloatingShortcuts>
   );

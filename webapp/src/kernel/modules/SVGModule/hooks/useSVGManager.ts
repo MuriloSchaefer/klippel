@@ -1,12 +1,13 @@
 import { IManager } from "@kernel/modules/base";
 import { useAppDispatch } from "@kernel/store/hooks";
-import { startSVGLoad, storeSVG, SVGLoaded } from "../store/actions";
+import { ISVGProxy } from "../interfaces";
+import { loadSVG, storeSVG, SVGLoaded, syncProxy } from "../store/actions";
 
 
-interface ISVGManager extends IManager{
+interface ISVGManager extends IManager {
     methods: {
-        loadSVG: (path: string) => Promise<string>
-        storeSVG: (path: string, svgXML: string)=>void
+        loadSVG: (path: string) => void,
+        syncProxy: (path: string, proxy: ISVGProxy) => void
     }
 }
 
@@ -15,15 +16,11 @@ const useSVGManager = (): ISVGManager => {
 
     return {
         methods: {
-            loadSVG: async (path: string) => {
-                dispatch(startSVGLoad({path}))
-                const response = await fetch(path);
-                const blob = await response.blob();
-                dispatch(SVGLoaded({path}))
-                return blob.text();
-              },
-            storeSVG: (path:string, svgXML: string) => {
-                dispatch(storeSVG({path, raw:svgXML}))
+            loadSVG: (path: string) => {
+                dispatch(loadSVG({ path }))
+            },
+            syncProxy: (path: string, proxy: ISVGProxy) => {
+                dispatch(syncProxy({path, proxy}))
             }
         }
     }

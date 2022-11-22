@@ -5,6 +5,7 @@ import useSVGManager from "./hooks/useSVGManager";
 import { parseSVG, storeSVG } from "./store/actions";
 
 import reducer from "./store/slice"
+import middleware from './store/middlewares'
 import { SVGModuleState } from "./store/state";
 
 export interface ISVGModule extends IModule{
@@ -13,7 +14,9 @@ export interface ISVGModule extends IModule{
             storeSVG: typeof storeSVG,
             parseSVG: typeof parseSVG,
         },
-        middlewares: [],
+        middlewares: [
+            middleware: typeof middleware,
+        ],
         reducers: {
             SVGModule: Reducer<SVGModuleState, AnyAction>;
         }
@@ -37,7 +40,7 @@ const SVGModule: ISVGModule = {
             storeSVG,
             parseSVG,
         },
-        middlewares: [],
+        middlewares: [middleware],
         reducers: {
             SVGModule: reducer,
         },

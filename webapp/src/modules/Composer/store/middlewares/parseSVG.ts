@@ -1,46 +1,44 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 
-import { SVGLoaded } from "@kernel/modules/SVGModule/store/actions";
+import { SVGInjected, SVGLoaded } from "@kernel/modules/SVGModule/store/actions";
 import { addNode } from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
 import { GARMENT_ID } from "modules/Composer/constants";
 import { SVGNode } from "modules/Composer/interfaces/svg";
 import { parseGarment } from "../actions";
+import { UIState } from "../state";
 
 const middleware = createListenerMiddleware();
 
 middleware.startListening({
-  actionCreator: SVGLoaded,
+  actionCreator: SVGInjected,
   effect: (action: AnyAction, listenerApi) => {
-    const { dispatch } = listenerApi;
-    const { graphId, svgRoot }: { graphId: string; svgRoot: SVGElement } =
+    const { dispatch, getState } = listenerApi;
+    const { path, DOMId }: { path: string; raw: string, DOMId:string } =
       action.payload;
-    const root: SVGNode = {
-      id: `root`,
-      tag: "svg",
-      properties: {
-        Nome: { value: "Documento", type: "string" },
-      },
-      inputs: {},
-      outputs: {},
-    };
-    console.log(svgRoot);
-    dispatch(addNode({ graphId, node: root }));
 
-    // Find defs
-    // const svgDefinitions = svgRoot.querySelector<SVGElement>("defs");
-    // if (svgDefinitions) {
-    //   console.log(svgDefinitions);
-    // }
 
-    // Find parts
-    const garmentObject = svgRoot.querySelectorAll<SVGElement>(
-      `#${GARMENT_ID}`
-    );
+    // get all affected viewports
+    const {ComposerUI} = getState() as {ComposerUI: UIState}
+    const viewports = Object.values(ComposerUI.viewports).filter(vp => vp.svgPath === path)
 
-    if (garmentObject && garmentObject.length > 0) {
-      dispatch(parseGarment({ graphId, svgRoot: garmentObject[0] }));
-    }
+    // loop all them
+    viewports.forEach(vp => {
+      if(vp.UI.loaders.parseSVG.garment === "not-started"){
+        const root: SVGNode = {
+          id: `root`,
+          tag: "svg",
+          properties: {
+            Nome: { value: "Documento", type: "string" },
+          },
+          inputs: {},
+          outputs: {},
+        };
+        dispatch(addNode({ graphId: vp.graphId, node: root }));
+        dispatch(parseGarment({ viewportId: vp.viewportId, svgDOMId: DOMId }));
+      }
+      
+    })
   },
 });
 

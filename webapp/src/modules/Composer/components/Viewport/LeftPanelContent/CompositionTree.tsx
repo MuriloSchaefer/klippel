@@ -22,28 +22,32 @@ const CompositionTree = ({
 }: CompositionTreeProps): React.ReactElement => {
   const graphModule = useModule<IGraphModule>("GraphModule");
 
+
+  const selectInfo = (g: CompositionGraphState | undefined) => g && ({ adjacencyList: g.adjacencyList, edges: g.edges })
+
   const { state } = graphModule.hooks.module.useGraph<
     CompositionGraphState,
     { adjacencyList: AdjacencyList; edges: EdgesHashMap }
-  >(graphId, (g) => ({ adjacencyList: g.adjacencyList, edges: g.edges }));
+  >(graphId, selectInfo);
 
-  const { adjacencyList, edges } = state || {};
+  if (!state) return <></>;
 
-  const buildTree = (id: string) => {
-    const children: string[] =
-      (adjacencyList && adjacencyList[id].outputs) ?? [];
-    return (
-      <TreeItem key={`${graphId}-${id}`} graphId={graphId} nodeId={id}>
-        {children.map((c) => (edges ? buildTree(edges[c].targetId) : null))}
-      </TreeItem>
-    );
-  };
-  // eslint-disable-next-line react/jsx-no-useless-fragment
-  return <>{adjacencyList && adjacencyList[rootId] && buildTree(rootId)}</>;
+  const { adjacencyList, edges } = state ;
+
+  // const buildTree = (id: string) => {
+  //   const children = adjacencyList[id].outputs
+  //   return (
+  //     <TreeItem key={`${graphId}-${id}`} graphId={graphId} nodeId={id}>
+  //       {children.map((c) => (edges ? buildTree(edges[c].targetId) : null))}
+  //     </TreeItem>
+  //   );
+  // };
+  return <TreeItem key={`${graphId}-${rootId}`} graphId={graphId} nodeId={rootId} />
+  // return <>{adjacencyList && adjacencyList[rootId] && buildTree(rootId)}</>;
 };
 
 CompositionTree.defaultProps = {
   rootId: "root",
 };
 
-export default CompositionTree;
+export default React.memo(CompositionTree);

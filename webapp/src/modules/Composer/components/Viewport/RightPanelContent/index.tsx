@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/GraphsModule";
@@ -10,23 +10,32 @@ import { Material } from "../../../interfaces/Material";
 import { Composition } from "../../../interfaces/Composition";
 import { materialPropertiesChanged } from "../../../store/actions";
 import { CompositionGraphState } from "../../../store/state";
+import { ILayoutModule } from "@kernel/modules/LayoutModule";
 
 const ComposerRightPanelContent = () => {
   const dispatch = useAppDispatch();
   const graphModule = useModule<IGraphModule>("GraphModule");
-  const selectedMaterialId = useComposerUIState(
-    (ui) => ui.rightPanel.selectedMaterialId
-  );
-  const graphId = useComposerUIState((ui) => ui.viewport.graphId);
+  const layoutModule = useModule<ILayoutModule>("LayoutModule");
+
+  const { useActiveViewport } = layoutModule.hooks.module;
+  const viewport = useActiveViewport();
+  const selectedMaterialId = useComposerUIState((ui) => ui.viewports[viewport.state.id].UI.detailsPanel.selectedMaterialId);
+  const graphId = useComposerUIState((ui) => ui.viewports[viewport.state.id].graphId);
 
   const { state: node } = graphModule.hooks.module.useGraph<
     CompositionGraphState,
     Composition | Material
-  >(graphId ?? "", (g) => g.nodes[selectedMaterialId ?? ""]);
+  >(graphId ?? "", (g) => g && g.nodes[selectedMaterialId ?? ""]);
+
+
+  useEffect(()=>{
+    viewport.hooks.setDetailsPanelTitle(`Detalhes`)
+  }, [])
 
   if (!node || !graphId || !selectedMaterialId) {
     return null;
   }
+
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(

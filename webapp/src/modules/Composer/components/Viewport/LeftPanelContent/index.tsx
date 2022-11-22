@@ -17,19 +17,20 @@ const ComposerLeftPanelContent = ({
 }: ComposerLeftPanelContentProps) => {
   const layoutModule = useModule<ILayoutModule>("LayoutModule");
 
-  const { leftPanelTitleChanged } = layoutModule.store.actions;
+  const { useActiveViewport } = layoutModule.hooks.module;
 
-  const dispatch = useAppDispatch();
-  const graphId = useComposerUIState((ui) => ui.viewport.graphId);
+  const viewport = useActiveViewport();
+  const composerViewport = useComposerUIState((ui) => ui.viewports[viewport.state.id]);
 
-  useEffect(() => {
-    dispatch(leftPanelTitleChanged("Detalhes"));
-  }, [graphId]);
 
-  if (!graphId) return null;
+  useEffect(()=>{
+    viewport.hooks.setSettingsPanelTitle(`Configurações`)
+  }, [])
+
+  if (!composerViewport.graphId) return null;
   return (
     <AccordionSection title="Árvore de composição">
-      <CompositionTree graphId={graphId} rootId={rootId} />
+      <CompositionTree graphId={composerViewport.graphId} rootId={rootId} />
     </AccordionSection>
   );
 };

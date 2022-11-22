@@ -10,7 +10,7 @@ import { viewportAdded, viewportClosed, viewportSelected } from "../ations";
 export interface ViewportManagerData {
   state: ViewportManagerState;
   hooks: {
-    addViewport(title: string, content: React.ReactElement): void;
+    addViewport(title: string, type: string, content: React.ReactElement): void;
     removeViewport(id: string): void;
     selectViewport(id: string): void;
   }; // hooks to manipulate the viewports
@@ -32,9 +32,9 @@ export const useViewportManager = (): ViewportManagerData => {
   return {
     state: viewportManager,
     hooks: {
-      addViewport(title: string, content: React.ReactElement) {
+      addViewport(title: string, type: string, content: React.ReactElement) {
         const id = _.uniqueId("viewport_");
-        dispatch(viewportAdded({ id, title }));
+        dispatch(viewportAdded({ id, viewportType: type, title }));
         setViewports({
           ...viewports,
           [id]: React.cloneElement(content, { id }), // inject the id in the content (viewport)

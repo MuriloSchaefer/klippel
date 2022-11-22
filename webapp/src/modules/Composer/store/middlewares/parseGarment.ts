@@ -9,6 +9,8 @@ import { addNode } from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
 import { Garment } from "modules/Composer/interfaces/Garment";
 import { Material, Properties } from "../../interfaces/Material";
 import { garmentParseFinished, parseGarment } from "../actions";
+import { UIState } from "../state";
+import { GARMENT_ID } from "modules/Composer/constants";
 
 const middleware = createListenerMiddleware();
 
@@ -72,16 +74,23 @@ const parseNode = (
 middleware.startListening({
   actionCreator: parseGarment,
   effect: (action: AnyAction, listenerApi) => {
-    const { graphId, svgRoot } = action.payload;
-    const { dispatch } = listenerApi;
-    const children = Array.from<SVGAElement>(svgRoot.children);
-    // const garmentProperties = children.filter((c) => c.tagName === "metadata");
-    const garmentParts = children.filter((c) => c.tagName !== "metadata");
+    const { viewportId, svgDOMId } = action.payload;
+    const { dispatch, getState } = listenerApi;
 
-    const garmentRoot: Garment = {
+    const {ComposerUI:{viewports}} = getState() as {ComposerUI: UIState} 
+    const composerViewport = viewports[viewportId]
+    const [root] = [...document.querySelectorAll(`#${svgDOMId}>div>svg`)] as [SVGElement]
+    const garmentRoot = root.querySelector(`g[id="${GARMENT_ID}"]`)
+    if (!garmentRoot) return
+    const children = Array.from<any>(garmentRoot.children); // TODO: fix typing
+    // const garmentProperties = children.filter((c) => c.tagName === "metadata");
+    const garmentParts = children.filter((c) => !["metadata", "defs"].includes(c.tagName));
+
+
+    const garmentRootNode: Garment = {
       id: `garmentRoot`,
       type: "Garment",
-      properties: xdom2properties(svgRoot),
+      properties: xdom2properties(garmentRoot),
       baseProperties: {},
       inputs: {
         root: {
@@ -93,20 +102,20 @@ middleware.startListening({
       outputs: {},
     };
 
-    dispatch(addNode({ graphId, node: garmentRoot }));
+    dispatch(addNode({ graphId:composerViewport.graphId, node: garmentRootNode }));
 
     // group element, recurse
     garmentParts.forEach((part) =>
       parseNode(
         part,
-        garmentRoot,
-        garmentRoot.baseProperties,
-        graphId,
+        garmentRootNode,
+        garmentRootNode.baseProperties,
+        composerViewport.graphId,
         dispatch
       )
     );
 
-    dispatch(garmentParseFinished({ graphId, svgRoot }));
+    dispatch(garmentParseFinished({ viewportId: composerViewport.viewportId, svgDOMId }));
   },
 });
 

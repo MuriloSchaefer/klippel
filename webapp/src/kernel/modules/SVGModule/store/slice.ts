@@ -2,6 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import _ from "lodash";
 import {
   storeSVG,
+  createProxy,
+  updateProxy,
 } from "./actions";
 import { SVGModuleState } from "./state";
 
@@ -9,7 +11,7 @@ const initialState: SVGModuleState = {
   svgs: {},
 };
 
-export const MouseModuleSlice = createSlice({
+export const SVGModuleSlice = createSlice({
   name: "SVGModule",
   initialState: initialState,
   reducers: {},
@@ -23,8 +25,42 @@ export const MouseModuleSlice = createSlice({
           svgs: {
             ...state.svgs,
             [path]: {
+              path,
+              DOMid: _.uniqueId("svg_"),
+              proxies: {},
               raw,
-              DOMid: _.uniqueId("svg_")
+            }
+          },
+        })
+      )
+      .addCase(
+        createProxy,
+        (state: SVGModuleState, { payload: { path, proxy } }) => ({
+          ...state,
+          svgs: {
+            ...state.svgs,
+            [path]: {
+              ...state.svgs[path],
+              proxies: {
+              ...state.svgs[path].proxies,
+              [proxy.id]: proxy
+              },
+            }
+          },
+        })
+      )
+      .addCase(
+        updateProxy,
+        (state: SVGModuleState, { payload: { path, proxy } }) => ({
+          ...state,
+          svgs: {
+            ...state.svgs,
+            [path]: {
+              ...state.svgs[path],
+              proxies: {
+              ...state.svgs[path].proxies,
+              [proxy.id]: proxy
+              },
             }
           },
         })
@@ -32,4 +68,4 @@ export const MouseModuleSlice = createSlice({
   },
 });
 
-export default MouseModuleSlice.reducer;
+export default SVGModuleSlice.reducer;

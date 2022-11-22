@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 // kernel imports
 import {
@@ -20,8 +20,8 @@ import { Composition } from "modules/Composer/interfaces/Composition";
 import { Material } from "modules/Composer/interfaces/Material";
 import FloatingShortcutsContainer from "@kernel/modules/MouseModule/components/Shortcuts";
 import { CompositionGraphState } from "../../store/state";
-import { materialSelectedEvent } from "../../store/actions";
-import Proxies from "../SVGManager/proxies";
+import { materialSelectedEvent, parseGarment, setSVGPath } from "../../store/actions";
+import Proxies from "./proxies";
 
 import ComposerLeftPanelContent from "./LeftPanelContent";
 import SVGManager from "../SVGManager";
@@ -29,6 +29,9 @@ import ComposerRightPanelContent from "./RightPanelContent";
 import SVGProxies from "../SVGManager/SVGProxies";
 import { ISVGModule } from "@kernel/modules/SVGModule";
 import SVGViewer from "@kernel/modules/SVGModule/components/SVGViewer";
+import { GARMENT_ID } from "modules/Composer/constants";
+import useComposerUIState from "modules/Composer/hooks/useComposerUIState";
+import { parseSVG, SVGInjected } from "@kernel/modules/SVGModule/store/actions";
 
 const StyledViewport = styled.div`
   cursor: crosshair;
@@ -47,15 +50,18 @@ const ComposerViewport = ({
 }: ComposerViewportProps) => {
   // Hooks
   const dispatch = useAppDispatch();
+
   const layoutModule = useModule<ILayoutModule>("LayoutModule");
   const graphModule = useModule<IGraphModule>("GraphModule");
   const mouseModule = useModule<IMouseModule>("MouseModule");
-  const SVGModule = useModule<ISVGModule>("SVGModule");
+  // const SVGModule = useModule<ISVGModule>("SVGModule");
 
-  const {useActiveViewport, } = layoutModule.hooks.module
-  const {useFloatingShortcuts,useFloatingShortcutsManager} = mouseModule.hooks.module
+  const { useActiveViewport, } = layoutModule.hooks.module
+  const { useFloatingShortcuts, useFloatingShortcutsManager } = mouseModule.hooks.module
 
   const viewport = useActiveViewport();
+  const composerUI = useComposerUIState(ui => ui.viewports[viewport.state.id])
+  
   const floatingShortcuts = useFloatingShortcuts(
     `${viewport.state.id}-shortcuts`
   );
@@ -65,13 +71,14 @@ const ComposerViewport = ({
   const selectId = (g: any) => g && g.id
 
   const graph = graphModule.hooks.module.useGraph<CompositionGraphState, string>(
-    viewport.state.id,
+    composerUI.graphId,
     selectId
   );
 
+  const svgPath = useMemo(()=>`/catalog/${product}/${model}.svg`, [product, model])
+
   useEffect(() => {
-    console.log(graph.state)
-    if (!graph.state) {
+    if(!graph.state){
       dispatch(newGraph(viewport.state.id));
     }
     if (!floatingShortcuts.state) {
@@ -79,35 +86,25 @@ const ComposerViewport = ({
         `${viewport.state.id}-shortcuts`
       );
     }
-  }, [graph.id]);
-
-  // useEffect(() => {
-  //   if (!graph.state) {
-  //     dispatch(newGraph(viewport.state.id));
-  //   }
-  // }, [viewport.state.id]);
-
-  const onMaterialSelected = ({
-    selectedMaterial,
-  }: {
-    selectedMaterial: Material | Composition;
-    event: MouseEvent;
-  }) => {
-    dispatch(materialSelectedEvent({ id: selectedMaterial.id }));
-  };
+    dispatch(setSVGPath({viewportId: viewport.state.id, svgPath}))
+  }, []);
 
   const injectProxy = (svg: SVGElement) => {
     const nodes = [...svg.querySelectorAll('g>metadata')]
     nodes.forEach(node => {
       const group = node.closest('g')
-      group?.addEventListener('click', (evt)=>{
-        console.log(group)
-
-        // select element
-        dispatch(materialSelectedEvent({ id: group.id }));
+      group?.addEventListener('click', (evt) => {
 
         // Add floating shortcuts
-        // floatingShortcuts.hooks.showShortcuts(evt);
+        floatingShortcuts.hooks.showShortcuts(evt);
+        evt.stopPropagation()
+      })
+
+      group?.addEventListener('dblclick', (evt) => {
+
+        // select element
+        dispatch(materialSelectedEvent({ id: group.id, viewportId: composerUI.viewportId }));
+
         evt.stopPropagation()
       })
     })
@@ -125,26 +122,10 @@ const ComposerViewport = ({
           </div>
         </FloatingShortcutsContainer>
         <Viewport innerRef={null} id={viewport.state.id}>
-          {graph.state ? (
-            <SVGViewer path={`/catalog/${product}/${model}.svg`} beforeInjection={injectProxy}/>
-            // <SVGManager
-            //   graphId={viewport.state.id}
-            //   mannequinSize={mannequinSize}
-            //   product={product}
-            //   model={model}
-            //   proxies={{}}
-            // >
-            //   <Proxies
-            //     graphId={viewport.state.id}
-            //     onClick={({ event }) => {
-            //       floatingShortcuts.hooks.showShortcuts(event);
-            //       event.stopPropagation();
-            //     }}
-            //     onDblClick={onMaterialSelected}
-            //   />
-            // </SVGManager>
-
-          ) : undefined}
+          <>
+          <SVGViewer path={svgPath} beforeInjection={injectProxy}/>
+          <Proxies  viewportId={viewport.state.id}/>
+          </>
         </Viewport>
       </StyledViewport>
       <DetailsPanel>
