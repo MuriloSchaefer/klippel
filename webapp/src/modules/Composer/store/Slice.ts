@@ -13,6 +13,7 @@ import {
   setSVGPath,
 } from "./actions";
 import { loadSVG, SVGLoaded } from "@kernel/modules/SVGModule/store/actions";
+import { floatingShortcutsOpened } from "@kernel/modules/MouseModule/store/actions";
 
 const UIInitialState: UIState = {
   viewports: {
@@ -45,6 +46,10 @@ export const composerSlice = createSlice({
                   mannequin: "not-started",
                   annotations: "not-started",
                 }
+              },
+              shortcuts: {
+                id: `${action.payload.id}-shortcuts`,
+                nodeId: undefined
               }
             },
             viewportId: action.payload.id,
@@ -162,6 +167,33 @@ export const composerSlice = createSlice({
           }
         }
       }))
+      .addCase(floatingShortcutsOpened, (state: UIState, action) => {
+        if (
+          action.payload.extra_state && 
+          'viewportId' in action.payload.extra_state &&
+          action.payload.extra_state.viewportId in state.viewports
+          ){
+            const {viewportId, nodeId} = action.payload.extra_state
+            return {
+              ...state,
+              viewports: {
+                ...state.viewports,
+                [viewportId]: {
+                  ...state.viewports[viewportId],
+                  UI: {
+                    ...state.viewports[viewportId].UI,
+                    shortcuts: {
+                      ...state.viewports[viewportId].UI.shortcuts,
+                      nodeId: nodeId
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+        return state
+      })
     // .addCase(SVGLoaded, (state: UIState) => ({
     //   ...state,
     //   viewport: {

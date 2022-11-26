@@ -19,6 +19,7 @@ import ServiceWorkerModule from "./modules/ServiceWorkerModule";
 // Internal imports
 
 const App = (): React.ReactElement => {
+  const [afterModuleLoad, setAfterModuleLoad] = useState(false)
   const memoizedModules = useMemo(
     () => ({
       modules: {
@@ -26,25 +27,23 @@ const App = (): React.ReactElement => {
         [MouseManagerModule.name]: MouseManagerModule,
         [LayoutModule.name]: LayoutModule,
         [GraphModule.name]: GraphModule,
-        [ComposerModule.name]: ComposerModule,
         [SVGModule.name]: SVGModule,
+        [ComposerModule.name]: ComposerModule,
       },
     }),
-    [LayoutModule, GraphModule, ComposerModule]
+    []
   );
-  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(()=>{
-      console.log(memoizedModules.modules, isLoaded)
       Object.entries(memoizedModules.modules).forEach(([name, module]) => {
-        if (!isLoaded && 'system' in module.hooks){
+        if ('system' in module.hooks && !afterModuleLoad){
           console.log( name)
+          setAfterModuleLoad(true)
           module.hooks.system?.afterModuleLoad()
         }
       });
-      setIsLoaded(true)
 
-  }, [memoizedModules.modules])
+  }, [])
 
   return (
     <ModulesContext.Provider value={memoizedModules}>

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
+
+
 // kernel imports
 import {
   Viewport,
@@ -7,31 +9,25 @@ import {
 } from "@kernel/modules/LayoutModule/components/Viewport";
 import SettingsPanel from "@kernel/modules/LayoutModule/components/Sidepanels/SettingsPanel";
 import DetailsPanel from "@kernel/modules/LayoutModule/components/Sidepanels/DetailsPanel";
-import { useAppDispatch } from "@kernel/store/hooks";
 import { newGraph } from "@kernel/modules/GraphsModule/store/graphsManagerSlice";
+import FloatingShortcutsContainer from "@kernel/modules/MouseModule/components/Shortcuts";
+import SVGViewer from "@kernel/modules/SVGModule/components/SVGViewer";
 
-// internal imports
+import { useAppDispatch } from "@kernel/store/hooks";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/LayoutModule";
 import { IGraphModule } from "@kernel/modules/GraphsModule";
-
 import { IMouseModule } from "@kernel/modules/MouseModule";
-import { Composition } from "modules/Composer/interfaces/Composition";
-import { Material } from "modules/Composer/interfaces/Material";
-import FloatingShortcutsContainer from "@kernel/modules/MouseModule/components/Shortcuts";
-import { CompositionGraphState } from "../../store/state";
-import { materialSelectedEvent, parseGarment, setSVGPath } from "../../store/actions";
+
+// internal imports
+import ComposerRightPanelContent from "./RightPanelContent";
+import ComposerLeftPanelContent from "./LeftPanelContent";
 import Proxies from "./proxies";
 
-import ComposerLeftPanelContent from "./LeftPanelContent";
-import SVGManager from "../SVGManager";
-import ComposerRightPanelContent from "./RightPanelContent";
-import SVGProxies from "../SVGManager/SVGProxies";
-import { ISVGModule } from "@kernel/modules/SVGModule";
-import SVGViewer from "@kernel/modules/SVGModule/components/SVGViewer";
-import { GARMENT_ID } from "modules/Composer/constants";
-import useComposerUIState from "modules/Composer/hooks/useComposerUIState";
-import { parseSVG, SVGInjected } from "@kernel/modules/SVGModule/store/actions";
+import { CompositionGraphState } from "../../store/state";
+import { materialSelectedEvent, setSVGPath } from "../../store/actions";
+import useComposerUIState from "../../hooks/useComposerUIState";
+import Shortcuts from "./shortcuts";
 
 const StyledViewport = styled.div`
   cursor: crosshair;
@@ -54,7 +50,6 @@ const ComposerViewport = ({
   const layoutModule = useModule<ILayoutModule>("LayoutModule");
   const graphModule = useModule<IGraphModule>("GraphModule");
   const mouseModule = useModule<IMouseModule>("MouseModule");
-  // const SVGModule = useModule<ISVGModule>("SVGModule");
 
   const { useActiveViewport, } = layoutModule.hooks.module
   const { useFloatingShortcuts, useFloatingShortcutsManager } = mouseModule.hooks.module
@@ -96,7 +91,7 @@ const ComposerViewport = ({
       group?.addEventListener('click', (evt) => {
 
         // Add floating shortcuts
-        floatingShortcuts.hooks.showShortcuts(evt);
+        floatingShortcuts.hooks.showShortcuts<{viewportId: string, nodeId: string}>(evt, {viewportId: viewport.state.id, nodeId: group.id});
         evt.stopPropagation()
       })
 
@@ -116,10 +111,8 @@ const ComposerViewport = ({
         <ComposerLeftPanelContent />
       </SettingsPanel>
       <StyledViewport>
-        <FloatingShortcutsContainer id={`${viewport.state.id}-shortcuts`}>
-          <div style={{ width: "300px", height: "500px" }}>
-            Viewport Shortcuts
-          </div>
+        <FloatingShortcutsContainer id={composerUI.UI.shortcuts.id}>
+          <Shortcuts viewportId={viewport.state.id}/>
         </FloatingShortcutsContainer>
         <Viewport innerRef={null} id={viewport.state.id}>
           <>

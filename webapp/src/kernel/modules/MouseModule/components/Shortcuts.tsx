@@ -9,7 +9,7 @@ const StyledFloatingShortcuts = styled.div<{ $visible: boolean }>`
   width: fit-content;
   max-width: ${(p) => (p.$visible ? "150px" : "0px")};
   max-height: ${(p) => (p.$visible ? "70px" : "0px")};
-  margin: 0.5em;
+  margin: 0.2em;
   border-radius: 2%;
   z-index: 9999;
   background-color: red;

@@ -26,6 +26,7 @@ export const floatingShortcutsOpened = createAction<{
   id: string;
   x: number;
   y: number;
+  extra_state?: any
 }>(`[${MODULE_NAME}:UI] Floating Shortcuts Opened`);
 
 export const floatingShortcutsClosed = createAction<{

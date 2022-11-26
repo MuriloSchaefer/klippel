@@ -24,7 +24,7 @@ const Proxy = ({viewportId, nodeId}: ProxyProps) => {
     const {state: node} = useGraph<CompositionGraphState, Composition | Material | undefined>(composerUI.graphId, proxySelector)
     useEffect(()=>{
         if (!node) return 
-        SVGManager.methods.syncProxy(composerUI.svgPath, {id:node.id, fill: node.properties?.Cor?.value ?? "gray"})
+        SVGManager.methods.syncProxy(composerUI.svgPath, {id:node.id, fill: node.properties?.Cor?.value ?? "ffffff"})
     }, [node])
 
 

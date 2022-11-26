@@ -8,6 +8,11 @@ export interface CompositionGraphState extends GraphState {
   };
 }
 
+export interface ShortcutsState {
+  id: string;
+  nodeId?: string;
+}
+
 type loadingStatus = "not-started" | "started" | "finished"
 
 export interface ComposerViewportUI {
@@ -24,6 +29,7 @@ export interface ComposerViewportUI {
         annotations: loadingStatus,
       }
     }
+    shortcuts: ShortcutsState
   }
   viewportId: string;
   svgPath: string;

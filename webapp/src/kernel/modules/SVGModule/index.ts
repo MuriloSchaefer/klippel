@@ -7,6 +7,7 @@ import { parseSVG, storeSVG } from "./store/actions";
 import reducer from "./store/slice"
 import middleware from './store/middlewares'
 import { SVGModuleState } from "./store/state";
+import MODULE_NAME from "./constants";
 
 export interface ISVGModule extends IModule{
     store: {
@@ -33,7 +34,7 @@ export interface ISVGModule extends IModule{
  * such as loading, parsing, and serializing
  */
 const SVGModule: ISVGModule = {
-    name: "SVGModule",
+    name: MODULE_NAME,
     components: {},
     store: {
         actions: {

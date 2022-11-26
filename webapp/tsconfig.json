@@ -22,5 +22,5 @@
       "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"]
     }
   },
-  "include": ["src", "sw.js"]
+  "include": ["src", "sw.js", "public/sw.js"]
 }

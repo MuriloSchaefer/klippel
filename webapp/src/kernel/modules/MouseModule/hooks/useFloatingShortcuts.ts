@@ -1,34 +1,33 @@
 import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
-import { FloatingShortcuts } from "../store/state";
+import { FloatingShortcuts, MouseModuleState } from "../store/state";
 import {
   floatingShortcutsClosed,
   floatingShortcutsOpened,
 } from "../store/actions";
+import { createSelector } from "reselect";
 
-export interface ShortcutsData {
-  state: FloatingShortcuts | undefined;
+export interface ShortcutsData <R> {
+  state: R;
   hooks: {
-    showShortcuts(e: MouseEvent): void;
+    showShortcuts<S = unknown>(e: MouseEvent, extra_state?: S): void;
     closeShortcuts(): void;
   }; // hooks to manipulate the shortcut element
 }
 
 /**
  * Retrieves the viewport manager.
- * @returns {ShortcutData} The shortcut state and hooks.
+ * @returns {ShortcutsData} The shortcut state and hooks.
  */
-export const useFloatingShortcuts = (id: string): ShortcutsData => {
+export const useFloatingShortcuts = (id: string): ShortcutsData<FloatingShortcuts | undefined>  => {
   const dispatch = useAppDispatch();
 
-  const shortcuts = useAppSelector<FloatingShortcuts | undefined>(
-    (state) => state.MouseModule.shortcuts[id]
-  );
+  const shortcuts = useAppSelector<FloatingShortcuts | undefined>((state: {MouseModule: MouseModuleState}) => state.MouseModule.shortcuts[id]);
 
   return {
     state: shortcuts,
     hooks: {
-      showShortcuts(e: MouseEvent) {
-        dispatch(floatingShortcutsOpened({ id, x: e.pageX, y: e.pageY }));
+      showShortcuts<S = unknown>(e: MouseEvent, extra_state?: S) {
+        dispatch(floatingShortcutsOpened({ id, x: e.pageX, y: e.pageY, extra_state }));
       },
       closeShortcuts() {
         dispatch(floatingShortcutsClosed({ id }));

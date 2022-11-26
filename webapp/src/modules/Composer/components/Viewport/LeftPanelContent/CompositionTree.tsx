@@ -32,18 +32,7 @@ const CompositionTree = ({
 
   if (!state) return <></>;
 
-  const { adjacencyList, edges } = state ;
-
-  // const buildTree = (id: string) => {
-  //   const children = adjacencyList[id].outputs
-  //   return (
-  //     <TreeItem key={`${graphId}-${id}`} graphId={graphId} nodeId={id}>
-  //       {children.map((c) => (edges ? buildTree(edges[c].targetId) : null))}
-  //     </TreeItem>
-  //   );
-  // };
   return <TreeItem key={`${graphId}-${rootId}`} graphId={graphId} nodeId={rootId} />
-  // return <>{adjacencyList && adjacencyList[rootId] && buildTree(rootId)}</>;
 };
 
 CompositionTree.defaultProps = {
