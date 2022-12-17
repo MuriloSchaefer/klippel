@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useAppSelector } from "@kernel/store/hooks";
+import { useAppSelector } from "@kernel/store (deprecated)/hooks";
 import styled from "styled-components";
 import { useFloatingShortcuts } from "../hooks/useFloatingShortcuts";
 

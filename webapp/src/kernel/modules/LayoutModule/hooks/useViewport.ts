@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
+import { useAppDispatch, useAppSelector } from "@kernel/store (deprecated)/hooks";
 
 import ViewportContentContext from "../contexts/viewports";
 import { changeViewportTitle, leftPanelTitleChanged, rightPanelTitleChanged } from "../ations";

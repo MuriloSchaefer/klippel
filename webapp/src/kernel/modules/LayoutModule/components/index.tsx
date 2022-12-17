@@ -42,7 +42,7 @@ export default (): React.ReactElement => {
     if (!loadModules) return;
 
     Object.values(modules).forEach((module) => {
-      if (module?.components.ribbonTabs) {
+      if (module?.components?.ribbonTabs) {
         // If modules has some ribbonTabs, add the tab if it does not exists or extend it if it does exist
         Object.entries(module.components.ribbonTabs).forEach(
           ([tabName, tabValues]) => {

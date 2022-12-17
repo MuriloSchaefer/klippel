@@ -1,5 +1,5 @@
 import useModule from "@kernel/hooks/useModule"
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks"
+import { useAppDispatch, useAppSelector } from "@kernel/store (deprecated)/hooks"
 import React, { useEffect, useMemo } from "react"
 import { ReactSVG } from "react-svg"
 import { createSelector } from "reselect"

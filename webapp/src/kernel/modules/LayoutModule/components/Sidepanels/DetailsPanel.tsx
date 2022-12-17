@@ -6,7 +6,7 @@ import {
 } from "@kernel/modules/LayoutModule/contexts/ThemeContext";
 import styled from "styled-components";
 
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
+import { useAppDispatch, useAppSelector } from "@kernel/store (deprecated)/hooks";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/LayoutModule";
 

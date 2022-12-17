@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
+import { useAppDispatch, useAppSelector } from "@kernel/store (deprecated)/hooks";
 import styled from "styled-components";
 import { floatingDocumentationCollapsed } from "../store/actions";
 

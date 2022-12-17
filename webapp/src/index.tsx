@@ -7,11 +7,12 @@ import * as serviceWorker from "./sw.js";
 
 const root = createRoot(document.getElementById("root")!);
 root.render(
-  <React.StrictMode>
+  // TODO: activate StrictMode later on
+  //<React.StrictMode>
     <App />
-  </React.StrictMode>
+  //</React.StrictMode>
 );
-serviceWorker.default()
+// serviceWorker.default()
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

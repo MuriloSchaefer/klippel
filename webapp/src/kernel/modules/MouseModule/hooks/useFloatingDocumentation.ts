@@ -1,4 +1,4 @@
-import { useAppDispatch } from "@kernel/store/hooks";
+import { useAppDispatch } from "@kernel/store (deprecated)/hooks";
 import { IDocumentationManager } from "../interfaces";
 import {
   floatingDocumentationCollapsed,

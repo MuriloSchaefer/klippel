@@ -1,5 +1,5 @@
 import { IManager } from "@kernel/modules/base";
-import { useAppDispatch } from "@kernel/store/hooks";
+import { useAppDispatch } from "@kernel/store (deprecated)/hooks";
 import { ISVGProxy } from "../interfaces";
 import { loadSVG, storeSVG, SVGLoaded, syncProxy } from "../store/actions";
 

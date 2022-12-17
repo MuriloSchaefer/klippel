@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector } from "@kernel/store/hooks";
+import { useAppDispatch, useAppSelector } from "@kernel/store (deprecated)/hooks";
 import { FloatingShortcutsHashMap } from "../store/state";
 import {
   floatingShortcutsCreated,
