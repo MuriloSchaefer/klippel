@@ -8,7 +8,7 @@ import {
   updateNode,
   addEdge,
   removeEdge,
-} from "@kernel/modules/Graphs/store/graphsManagerSlice";
+} from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { createSelector } from "reselect";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
@@ -55,7 +55,7 @@ const useGraph = <G = GraphState, R = G>(
         dispatch(removeNode({ graphId, nodeId: id }));
       },
       updateNode: (node) => {
-        dispatch(updateNode({ graphId, node }));
+        dispatch(updateNode({ graphId, nodeId: node.id, changes: node }));
       },
       addEdge: (edge) => {
         dispatch(addEdge({ graphId, edge }));

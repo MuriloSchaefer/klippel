@@ -8,9 +8,9 @@ import * as serviceWorker from "./sw.js";
 const root = createRoot(document.getElementById("root")!);
 root.render(
   // TODO: activate StrictMode later on
-  //<React.StrictMode>
+  <React.StrictMode>
     <App />
-  //</React.StrictMode>
+  </React.StrictMode>
 );
 // serviceWorker.default()
 

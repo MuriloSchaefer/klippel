@@ -5,6 +5,8 @@ import storeModule from "@kernel/modules/Store";
 
 import ModulesContext from "../context";
 import {ModuleAlreadyLoaded, ModuleNotLoaded} from "../exceptions";
+import { moduleStarted, startModule } from "../store/actions";
+import { modulesCount as modulesCountSelector } from "../store/selectors";
 
 export interface ModulesManager extends Manager {
     modulesLoaded: number,
@@ -21,25 +23,28 @@ export interface ModulesManager extends Manager {
  * i.e. loading, unloading, or restarting a module
  */
 export const useModulesManager = (): ModulesManager => {
-
-    const modules = useContext(ModulesContext)
-
+    const dispatch = storeModule.hooks.useAppDispatch()
+    
     const storeManager = storeModule.managers.store()
-    const [modulesLoaded, setModulesLoaded] = useState(0) 
+    const useAppSelector = storeModule.hooks.useAppSelector
+    
+    const modules = useContext(ModulesContext)
+    const modulesCount = useAppSelector(modulesCountSelector)
 
     const manager: ModulesManager = {
-        modulesLoaded: modulesLoaded,
+        modulesLoaded: modulesCount,
         functions: {
             isModuleLoaded: (moduleName: string) => moduleName in modules,
             loadModule(module){
-                console.log('loading module: ', module)
+                dispatch(startModule(module.name))
+                
                 if (module.name in modules) throw new ModuleAlreadyLoaded(`${module.name} is not registered. Consider using restartModule instead.`)
                 modules[module.name] = module
 
                 module.kernelCalls.startModule(storeManager)
 
-                // force manager update
-                setModulesLoaded(modulesLoaded+1)
+                // emit event
+                dispatch(moduleStarted(module.name))
 
             },
             unloadModule(moduleName){

@@ -13,7 +13,7 @@ export interface ShortcutsState {
   nodeId?: string;
 }
 
-type loadingStatus = "not-started" | "started" | "finished"
+type LoadingStatus = "not-started" | "started" | "finished"
 
 export interface ComposerViewportUI {
   UI: {
@@ -22,11 +22,11 @@ export interface ComposerViewportUI {
       selectedMaterialId: string | null; // null means no part is selected
     };
     loaders: {
-      loadSVG: loadingStatus,
+      loadSVG: LoadingStatus,
       parseSVG: {
-        garment: loadingStatus,
-        mannequin: loadingStatus,
-        annotations: loadingStatus,
+        garment: LoadingStatus,
+        mannequin: LoadingStatus,
+        annotations: LoadingStatus,
       }
     }
     shortcuts: ShortcutsState

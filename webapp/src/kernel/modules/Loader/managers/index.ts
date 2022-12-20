@@ -1,2 +1,2 @@
-export type { ModulesManager } from "./modules"
-export {useModulesManager} from "./modules"
+export type { ModulesManager } from "./useModulesManager"
+export {useModulesManager} from "./useModulesManager"

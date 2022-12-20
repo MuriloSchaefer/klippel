@@ -1,15 +1,17 @@
 import { StoreManager } from "@kernel/modules/Store/manager";
 
 // graphs manager
-import slice from "../store/graphsManager/slice"
-import middlewares from "../store/graphsManager/middlewares"
 import { MODULE_NAME } from "../constants";
 
-export const startModule = (storeManager: StoreManager) => {
-    console.group('Starting graphs module')
-    console.log('[Graph Module] Loading graphs manager ')
-    storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
-    storeManager.functions.registerMiddleware( middlewares)
+import managerSlice from "../store/graphsManager/slice"
+import managerMiddlewares from "../store/graphsManager/middlewares"
 
-    console.groupEnd()
+import instanceSlice from "../store/graphInstance/slice"
+import instanceMiddlewares from "../store/graphInstance/middlewares"
+
+export const startModule = (storeManager: StoreManager) => {
+    storeManager.functions.loadReducer(MODULE_NAME, managerSlice.reducer)
+    storeManager.functions.registerMiddleware(managerMiddlewares)
+    storeManager.functions.registerMiddleware(instanceMiddlewares)
+
 }

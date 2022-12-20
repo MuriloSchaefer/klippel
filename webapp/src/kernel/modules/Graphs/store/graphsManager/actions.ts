@@ -9,18 +9,18 @@ export const graphsModuleLoaded = createAction(
 );
 
 export const graphCreated = createAction<{ graphId: string }>(
-    `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Graph created`
+    `[${MODULE_NAME}:GraphsManager:${ACTION_TYPES.EVENT}] Graph created`
 );
 export const graphDestroyed = createAction<{ graphId: string }>(
-    `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Graph destroyed`
+    `[${MODULE_NAME}:GraphsManager:${ACTION_TYPES.EVENT}] Graph destroyed`
 );
 
 
 // Commands
 export const createGraph = createAction<{ graphId: string }>(
-    `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Create graph`
+    `[${MODULE_NAME}:GraphsManager:${ACTION_TYPES.COMMAND}] Create graph`
 );
 
 export const destroyGraph = createAction<{ graphId: string }>(
-    `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Destroy graph`
+    `[${MODULE_NAME}:GraphsManager:${ACTION_TYPES.COMMAND}] Destroy graph`
 );

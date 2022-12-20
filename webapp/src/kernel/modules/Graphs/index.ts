@@ -27,6 +27,9 @@ export interface IGraphModule extends IModule {
   managers: {
     graphs: typeof useGraphsManager
   },
+  hooks: {
+    useGraph: typeof useGraph
+  }
 }
   // store: {
   //   actions: {
@@ -63,6 +66,9 @@ const GraphModule: IGraphModule = {
   depends_on: ['Store'],
   managers: {
     graphs: useGraphsManager
+  },
+  hooks: {
+    useGraph
   },
   kernelCalls: {
     startModule: startModule,

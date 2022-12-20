@@ -14,7 +14,7 @@ import SVGModule from "@kernel/modules/SVGModule";
 
 import ServiceWorkerModule from "./modules/ServiceWorkerModule";
 import ModulesProvider from "./modules/Loader/components/ModulesProvider";
-import StoreProvider from "./modules/Store/components/provider";
+import DynamicStore from "./modules/Store/components/DynamicStore";
 
 // Internal imports
 
@@ -47,11 +47,11 @@ const App = (): React.ReactElement => {
 
   return (
     // First initialize store and then load modules, since the loader requires the store to be already up
-    <StoreProvider> 
+    <DynamicStore> 
       <ModulesProvider >
         <div>app</div>
       </ModulesProvider>
-    </StoreProvider>
+    </DynamicStore>
     // <ModulesContext.Provider value={memoizedModules}>
       
     // </ModulesContext.Provider>

@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { MODULE_NAME } from "../../constants";
 import {
   graphsManagerInitialState,
   newGraphState,
@@ -6,9 +7,11 @@ import {
 } from "../state";
 import { createGraph, destroyGraph } from "./actions";
 
+import instanceSlice from "../graphInstance/slice"
+
 
 const slice = createSlice({
-    name: "StoreModule",
+    name: MODULE_NAME,
     initialState: graphsManagerInitialState,
     reducers: {},
     extraReducers: (builder) => {
@@ -30,6 +33,7 @@ const slice = createSlice({
           return state
         }
       )
+      builder.addDefaultCase(instanceSlice.reducer)
     }
 })
 
