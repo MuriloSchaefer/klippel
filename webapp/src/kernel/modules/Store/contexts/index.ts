@@ -6,16 +6,14 @@ export type ReducersMap = {[key: string]: Reducer<any, AnyAction>}
 
 export type CurrentReducersContextType = {
     currentReducers: ReducersMap,  
-    setCurrentReducers: (next: ReducersMap)=>void,
+    loadReducers: (next: ReducersMap)=>void,
     registerMiddleware: (middleware: ListenerMiddlewareInstance)=>void,
-    unRegisterMiddleware: (middleware: ListenerMiddlewareInstance)=>void
 };
 
 const CurrentReducersContext = createContext<CurrentReducersContextType>({
     currentReducers: {},
-    setCurrentReducers: (next) => null,
-    registerMiddleware: (middleware) => null,
-    unRegisterMiddleware: (middleware) => null
+    loadReducers: (next) => null,
+    registerMiddleware: (middleware) => null
 });
 
 export default CurrentReducersContext;

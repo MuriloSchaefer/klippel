@@ -1,4 +1,4 @@
-import { Reducer } from "react";
+import React, { Reducer } from "react";
 import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 import { Tabs } from "./LayoutModule/components/RibbonMenu";
 import { StoreManager } from "./Store/manager";
@@ -23,11 +23,7 @@ export interface IModule {
   version: string;
   depends_on: string[];
   components?: {
-    /**
-     * Components exported
-     */
-    ribbonTabs?: Tabs; // Ribon tabs used by the module
-    viewport?: any; // Viewport component
+    [name: string]: React.FunctionComponent
   };
   store?: {
     actions?: { 

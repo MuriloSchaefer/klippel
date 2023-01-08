@@ -1,59 +1,28 @@
 // External imports
-import React, { useEffect, useMemo, useState } from "react";
-import { Provider } from "react-redux";
+import React from "react";
 
 // Kernel imports
-import ModulesContext from "@kernel/contexts/modules";
-import Layout from "@kernel/modules/LayoutModule/components";
 
 // Modules imports
-import LayoutModule from "@kernel/modules/LayoutModule";
-import GraphModule from "@kernel/modules/Graphs";
-import MouseManagerModule from "@kernel/modules/MouseModule";
-import SVGModule from "@kernel/modules/SVGModule";
-
-import ServiceWorkerModule from "./modules/ServiceWorkerModule";
-import ModulesProvider from "./modules/Loader/components/ModulesProvider";
+import ModulesProvider from "./modules/Loader/components/Provider";
 import DynamicStore from "./modules/Store/components/DynamicStore";
+
+import Layout from './modules/Layout/components/Layout'
 
 // Internal imports
 
 const App = (): React.ReactElement => {
-  // const [afterModuleLoad, setAfterModuleLoad] = useState(false)
-  // const memoizedModules = useMemo(
-  //   () => ({
-  //     modules: {
-  //       [ServiceWorkerModule.name]: ServiceWorkerModule,
-  //       [MouseManagerModule.name]: MouseManagerModule,
-  //       [LayoutModule.name]: LayoutModule,
-  //       [GraphModule.name]: GraphModule,
-  //       [SVGModule.name]: SVGModule,
-  //       [ComposerModule.name]: ComposerModule,
-  //     },
-  //   }),
-  //   []
-  // );
-
-  // useEffect(()=>{
-  //     Object.entries(memoizedModules.modules).forEach(([name, module]) => {
-  //       if ('system' in module.hooks && !afterModuleLoad){
-  //         console.log( name)
-  //         setAfterModuleLoad(true)
-  //         module.hooks.system?.afterModuleLoad()
-  //       }
-  //     });
-
-  // }, [])
 
   return (
     // First initialize store and then load modules, since the loader requires the store to be already up
-    <DynamicStore> 
+    <DynamicStore>
       <ModulesProvider >
-        <div>app</div>
+        {/* [Authz Component here] */}
+        <Layout />
       </ModulesProvider>
     </DynamicStore>
     // <ModulesContext.Provider value={memoizedModules}>
-      
+
     // </ModulesContext.Provider>
   );
 };

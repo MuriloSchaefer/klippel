@@ -11,7 +11,6 @@ export interface StoreManager extends Manager {
         loadReducer: (key: string, reducer: Reducer<any, AnyAction>) => void
         //unloadReducer: (moduleName: string) => void
         registerMiddleware: (middleware: ListenerMiddlewareInstance) => void,
-        unRegisterMiddleware: (middleware: ListenerMiddlewareInstance) => void,
     }
 }
 
@@ -22,19 +21,17 @@ export interface StoreManager extends Manager {
  */
 export const useStoreManager = (): StoreManager => {
 
-    const { currentReducers, setCurrentReducers, registerMiddleware, unRegisterMiddleware } = useContext(CurrentReducersContext)
-
+    const { loadReducers, registerMiddleware } = useContext(CurrentReducersContext)
 
     const manager: StoreManager = {
         functions: {
             loadReducer: (key, reducer) => {
-                setCurrentReducers({...currentReducers, [key]: reducer })
+                console.log('loading reducer', key)
+                loadReducers({[key]: reducer })
             },
             registerMiddleware: (middleware: ListenerMiddlewareInstance) => {
                 registerMiddleware(middleware)
-            },
-            unRegisterMiddleware: (middleware: ListenerMiddlewareInstance) => {
-                unRegisterMiddleware(middleware)
+                
             }
         }
     }

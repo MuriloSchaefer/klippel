@@ -1,52 +1,53 @@
-import { configureStore, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
-import React, { useCallback, useState } from "react";
+import { configureStore, ListenerMiddlewareInstance, ListenerMiddleware } from "@reduxjs/toolkit";
+import React, { Reducer, useCallback, useMemo, useState } from "react";
 import { Provider as ReduxProvider } from "react-redux";
-import { combineReducers } from "redux";
+import { AnyAction, combineReducers, compose, MiddlewareAPI, Store, StoreEnhancer, StoreEnhancerStoreCreator } from "redux";
 import CurrentReducersContext, { ReducersMap } from "../contexts";
 import slice from "../slice";
 
 import dynamicMiddlewares from 'redux-dynamic-middlewares'
-import { addMiddleware, removeMiddleware } from 'redux-dynamic-middlewares'
+import { addMiddleware } from 'redux-dynamic-middlewares'
 
+export interface DynamicStore extends Store {
+    registerMiddleware: (listener: ListenerMiddlewareInstance)=>void
+}
 
-const DynamicStore = ({ children }: { children: React.ReactNode }) => {
+const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [currentReducers, setCurrentReducers] = useState<ReducersMap>({ [slice.name]: slice.reducer })
 
-    const [store, setStore] = useState(configureStore({
-        reducer: combineReducers({ [slice.name]: slice.reducer }),
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ serializableCheck: true }).concat(dynamicMiddlewares),
-        enhancers: []
-    }))
-
-
-    const handleSetReducers = useCallback((next: ReducersMap) => {
-        setCurrentReducers({ ...currentReducers, ...next })
-        store.replaceReducer(combineReducers({ ...currentReducers, ...next }))
-    }, [])
+    const store = useMemo(() => configureStore({
+        reducer: combineReducers<{ [name: string]: Reducer<any, AnyAction> }>({ [slice.name]: slice.reducer }),
+        middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(dynamicMiddlewares),
+    }), [])
 
     const registerMiddleware = (listener: ListenerMiddlewareInstance) => {
+        console.log('registering middleware', listener.middleware)
         addMiddleware(listener.middleware)
-
     }
 
-    const unRegisterMiddleware = (listener: ListenerMiddlewareInstance) => {
-        removeMiddleware(listener.middleware)
-    }
+    const loadReducers = useCallback((map: ReducersMap) => {
+        const next = { ...currentReducers, ...map }
+        console.log(currentReducers, map)
+        console.log(next)
+        setCurrentReducers(next)
+        store.replaceReducer(combineReducers(next))
+    }, [currentReducers])
+
+
+
 
     return <ReduxProvider store={store}>
         <CurrentReducersContext.Provider value={{
-            currentReducers,
-            setCurrentReducers: handleSetReducers,
-            registerMiddleware,
-            unRegisterMiddleware
+        currentReducers,
+        loadReducers,
+        registerMiddleware
 
-        }}>
+    }}>
             {children}
         </CurrentReducersContext.Provider>
     </ReduxProvider >
 }
 
 
-export default React.memo(DynamicStore)
+export default React.memo(DynamicStoreProvider)

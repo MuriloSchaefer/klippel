@@ -1,13 +1,4 @@
-import { IModule } from "@kernel/modules/base";
-import ModulesContext from "@kernel/contexts/modules";
-import { useContext } from "react";
+import useModule from "@kernel/modules/Loader/hooks/useModule";
 
-
-const useModule = <T extends IModule = IModule>(name: string): T => {
-  const { modules } = useContext(ModulesContext);
-  const module = modules[name];
-  if (!module) throw Error(`Module ${name} not found`);
-  return module as unknown as T;
-};
-
+// This is a shortcut to allow other modules to import useModule from '@kernel/hooks/useModule'
 export default useModule;

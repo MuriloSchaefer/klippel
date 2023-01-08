@@ -6,7 +6,7 @@ import { ModulesManager, useModulesManager } from "./managers";
 /**
  * The loader module
  */
-interface Loader extends IModule {
+export interface Loader extends IModule {
     name: typeof MODULE_NAME,
     version: typeof MODULE_VERSION,
     managers: {

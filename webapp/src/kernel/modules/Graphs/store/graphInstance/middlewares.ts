@@ -10,7 +10,7 @@ middlewares.startListening({
   actionCreator: addNode,
   effect: async ({payload: {graphId, node}}: PayloadAction<{ graphId: string; node: Node }>, listenerApi) => {
     const { dispatch} = listenerApi;
-    
+    console.log('middleware call')
     dispatch(nodeAdded({graphId, node})) // dispatch event
   },
 });

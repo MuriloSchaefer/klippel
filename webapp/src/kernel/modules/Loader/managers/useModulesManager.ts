@@ -13,7 +13,7 @@ export interface ModulesManager extends Manager {
     functions: {
         isModuleLoaded: (moduleName: string) => boolean
         loadModule: (module: IModule) => void,
-        unloadModule: (moduleName: string) => void
+        unloadModule: (moduleName: string) => void,
         reloadModule: (moduleName: string) => void
     }
 }
@@ -23,12 +23,12 @@ export interface ModulesManager extends Manager {
  * i.e. loading, unloading, or restarting a module
  */
 export const useModulesManager = (): ModulesManager => {
-    const dispatch = storeModule.hooks.useAppDispatch()
-    
+    const {modules, setModules} = useContext(ModulesContext)
+
     const storeManager = storeModule.managers.store()
+    const dispatch = storeModule.hooks.useAppDispatch()
     const useAppSelector = storeModule.hooks.useAppSelector
-    
-    const modules = useContext(ModulesContext)
+
     const modulesCount = useAppSelector(modulesCountSelector)
 
     const manager: ModulesManager = {
@@ -39,7 +39,7 @@ export const useModulesManager = (): ModulesManager => {
                 dispatch(startModule(module.name))
                 
                 if (module.name in modules) throw new ModuleAlreadyLoaded(`${module.name} is not registered. Consider using restartModule instead.`)
-                modules[module.name] = module
+                setModules({...modules, [module.name]: module})
 
                 module.kernelCalls.startModule(storeManager)
 
@@ -54,11 +54,13 @@ export const useModulesManager = (): ModulesManager => {
 
                 module.kernelCalls.shutdownModule(storeManager)
                 delete modules[moduleName]
+                setModules(modules)
             },
             reloadModule(moduleName){
                 console.log('reloading module: ', moduleName)
                 if (!(moduleName in modules)) throw new ModuleNotLoaded(`${moduleName} is not registered.`)
                 const module = modules[moduleName]
+                setModules(modules)
 
                 module.kernelCalls.restartModule(storeManager)
             }

@@ -11,8 +11,15 @@ import RibbonMenu, { Tabs } from "./RibbonMenu";
 
 import ViewportManager from "./ViewportManager";
 import Content from "./Content";
+import useModule from "@kernel/hooks/useModule";
+import { Loader } from "@kernel/modules/Loader";
 
 export default (): React.ReactElement => {
+
+  const loaderModule = useModule<Loader>('Loader')
+
+  const moduleManager = loaderModule.managers.modules()
+
   const [theme, setTheme] = useState<Theme>(Theme.Light);
   const [tabs, setTabs] = useState<Tabs>({});
   const [viewports, setViewports] = useState<ViewportContentMap>({});

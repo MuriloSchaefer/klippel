@@ -1,19 +1,14 @@
 import { IModule } from "../base";
-
-import useGraph from "./hooks/useGraph";
-
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
 import { startModule } from "./kernelCalls";
-import useGraphsManager from "./hooks/useGraphsManager";
 
-export interface IGraphModule extends IModule {
+import Layout from './components/Layout'
+
+export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
   version: typeof MODULE_VERSION,
-  managers: {
-    graphs: typeof useGraphsManager
-  },
-  hooks: {
-    useGraph: typeof useGraph
+  components: {
+    Layout: typeof Layout
   }
 }
 
@@ -25,21 +20,18 @@ export interface IGraphModule extends IModule {
  * ui state management,
  * etc.
  */
-const GraphModule: IGraphModule = {
+const LayoutModule: ILayoutModule = {
   name: MODULE_NAME,
   version: MODULE_VERSION,
-  depends_on: ['Store'],
-  managers: {
-    graphs: useGraphsManager
-  },
-  hooks: {
-    useGraph
+  depends_on: [],
+  components: {
+    Layout
   },
   kernelCalls: {
-    startModule: startModule,
+    startModule,
     restartModule(){},
     shutdownModule(){}
   }
 }
 
-export default GraphModule;
+export default LayoutModule;
