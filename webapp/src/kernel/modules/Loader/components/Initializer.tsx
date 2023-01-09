@@ -35,15 +35,11 @@ const Initializer = ({ children }: { children: React.ReactNode | React.ReactNode
             // all builtin modules already loaded
             // so now we create the modules graph and add builtin
             // nodes
-            console.group('creating graph')
-            console.log('validation', counter, staticModules.length)
             const graph = graphsManager.functions.createGraph(GRAPH_NAME)
             const rootNode = { id: 'root', inputs: {}, outputs: {} }
 
-            console.log('creating root node')
             graph.actions.addNode(rootNode)
 
-            console.log('creating static module nodes')
             staticModules.forEach(mod =>
                 graph.actions.addNode({
                     id: mod.name,
@@ -55,15 +51,12 @@ const Initializer = ({ children }: { children: React.ReactNode | React.ReactNode
                     }, outputs: {}
                 })
             )
-            console.groupEnd()
 
         }
 
     }, [counter])
 
-    return <div role="module-initializer">
-        {children}
-    </div>
+    return children
 }
 
 export default Initializer

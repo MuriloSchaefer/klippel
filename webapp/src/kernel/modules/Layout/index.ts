@@ -2,7 +2,7 @@ import { IModule } from "../base";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
 import { startModule } from "./kernelCalls";
 
-import Layout from './components/Layout'
+import Layout from './components/WideLayout'
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,

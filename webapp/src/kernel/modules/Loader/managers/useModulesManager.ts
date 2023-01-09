@@ -48,7 +48,6 @@ export const useModulesManager = (): ModulesManager => {
 
             },
             unloadModule(moduleName){
-                console.log('unloading module: ', moduleName)
                 if (!(moduleName in modules)) throw new ModuleNotLoaded(`${moduleName} is not registered.`)
                 const module = modules[moduleName]
 
@@ -57,7 +56,6 @@ export const useModulesManager = (): ModulesManager => {
                 setModules(modules)
             },
             reloadModule(moduleName){
-                console.log('reloading module: ', moduleName)
                 if (!(moduleName in modules)) throw new ModuleNotLoaded(`${moduleName} is not registered.`)
                 const module = modules[moduleName]
                 setModules(modules)

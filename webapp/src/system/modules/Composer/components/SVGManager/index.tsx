@@ -62,7 +62,6 @@ const SVGLoader = ({
   };
   const handleBeforeInjection = (svg: SVGElement | undefined) => {
     if (proxies && svg) {
-      console.log("adding proxies");
       Object.entries(proxies).forEach(([id, { attributes, callbacks }]) => {
         const [element] = [...svg?.querySelectorAll(`#${id}`)];
         Object.entries(attributes).forEach(([attr, value]) => {
@@ -70,7 +69,6 @@ const SVGLoader = ({
         });
 
         Object.entries(callbacks).forEach(([event, cb]) => {
-          console.log("adding", event, cb);
           element.addEventListener(event, cb);
         });
       });

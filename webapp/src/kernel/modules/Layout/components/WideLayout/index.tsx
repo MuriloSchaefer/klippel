@@ -1,16 +1,15 @@
 import useModule from "@kernel/hooks/useModule"
 import { Store } from "@kernel/modules/Store"
-import { selectTheme } from "../store/selectors"
+import { selectTheme } from "../../store/selectors"
 
-const LayoutProvider = () => {
+const Layout = () => {
 
     const storeModule = useModule<Store>('Store')
     const {useAppSelector} = storeModule.hooks
 
     const theme = useAppSelector(selectTheme)
     console.log(theme)
-
-    return <div>{theme}</div>
+    return <div role='layout-root'>{theme}</div>
 }
 
-export default LayoutProvider
+export default Layout

@@ -1,5 +1,5 @@
 import { createSelector } from "reselect";
-import { LayoutState } from "./typings";
+import { LayoutState } from "./state";
 
 
 export const selectTheme = createSelector(

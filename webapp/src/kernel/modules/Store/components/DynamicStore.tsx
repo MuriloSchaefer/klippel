@@ -22,14 +22,11 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
     }), [])
 
     const registerMiddleware = (listener: ListenerMiddlewareInstance) => {
-        console.log('registering middleware', listener.middleware)
         addMiddleware(listener.middleware)
     }
 
     const loadReducers = useCallback((map: ReducersMap) => {
         const next = { ...currentReducers, ...map }
-        console.log(currentReducers, map)
-        console.log(next)
         setCurrentReducers(next)
         store.replaceReducer(combineReducers(next))
     }, [currentReducers])

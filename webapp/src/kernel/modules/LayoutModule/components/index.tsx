@@ -71,9 +71,9 @@ export default (): React.ReactElement => {
         <FloatingDocumentationContainer />
         <RibbonMenu tabs={tabs} initialTab="composer" />
         <Content>
-          <div id="settingsPanel" style={{ zIndex: 2 }} />
+          <div id="settingsPanel" role='settings-panel' style={{ zIndex: 2 }} />
           <ViewportManager />
-          <div id="detailsPanel" />
+          <div id="detailsPanel" role='details-panel' />
         </Content>
       </ViewportContentContext.Provider>
     </ThemeContext.Provider>

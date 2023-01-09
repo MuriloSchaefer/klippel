@@ -41,7 +41,6 @@ const SVGProxy = ({
   attributes,
   callbacks,
 }: SVGProxyProps) => {
-  console.log(selector);
   const elem = useRef<SVGElement | null>(null);
 
   useEffect(() => {
@@ -49,7 +48,6 @@ const SVGProxy = ({
       const ref = svgRoot.getElementById(selector) as SVGElement;
 
       if (ref) {
-        console.log(ref, attributes, callbacks);
         elem.current = ref;
 
         Object.entries(attributes).forEach(([attr, value]) => {
@@ -57,7 +55,6 @@ const SVGProxy = ({
         });
 
         Object.entries(callbacks).forEach(([event, cb]) => {
-          console.log("adding", event, cb);
           ref.addEventListener("click", (e) => console.log(e));
           ref.onclick = cb;
         });

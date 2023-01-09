@@ -7,7 +7,7 @@ import React from "react";
 import ModulesProvider from "./modules/Loader/components/Provider";
 import DynamicStore from "./modules/Store/components/DynamicStore";
 
-import Layout from './modules/Layout/components/Layout'
+import Layout from './modules/Layout/components/WideLayout'
 
 // Internal imports
 

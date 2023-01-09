@@ -26,7 +26,6 @@ export const useStoreManager = (): StoreManager => {
     const manager: StoreManager = {
         functions: {
             loadReducer: (key, reducer) => {
-                console.log('loading reducer', key)
                 loadReducers({[key]: reducer })
             },
             registerMiddleware: (middleware: ListenerMiddlewareInstance) => {
