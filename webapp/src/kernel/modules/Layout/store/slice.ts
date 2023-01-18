@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
+import { switchTheme } from "./actions";
 import {
-  layoutInitialState
+  layoutInitialState,LayoutState
 } from "./state";
 
 
@@ -10,6 +11,9 @@ const slice = createSlice({
     initialState: layoutInitialState,
     reducers: {},
     extraReducers: (builder) => {
+      builder.addCase(
+        switchTheme,
+        (state: LayoutState, { payload: { theme } }) => ({...state, theme}))
     }
 })
 

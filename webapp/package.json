@@ -3,7 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/lab": "^5.0.0-alpha.115",
+    "@mui/material": "^5.11.5",
     "@reduxjs/toolkit": "^1.8.1",
+    "babel-plugin-direct-import": "^1.0.0",
     "install-peerdeps": "^3.0.3",
     "lodash": "^4.17.21",
     "react": "^18.0.0",
