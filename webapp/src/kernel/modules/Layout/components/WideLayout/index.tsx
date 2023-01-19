@@ -1,11 +1,12 @@
 import { Box, ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import grey from '@mui/material/colors/grey'
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 
 import { selectTheme } from "../../store/selectors";
 import RibbonMenu from "../RibbonMenu";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import ViewportManager from "../ViewportManager";
 import SystemTray from "../SystemTray";
 
@@ -46,7 +47,6 @@ const Layout = () => {
       fontSize: 12,
       fontFamily: 'Raleway, Arial',
     },
-    
   }), [selectedTheme])
 
   const commonCSSPanels = {
@@ -99,4 +99,4 @@ const Layout = () => {
   );
 };
 
-export default Layout;
+export default React.memo(Layout);

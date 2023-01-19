@@ -32,7 +32,7 @@ export interface IModule {
      }; // Actions used by the module
     middlewares?: ListenerMiddlewareInstance[]; // Middlewares used by the module
     selectors?: { [key: string]: any }; // Selectors used by the module
-    reducers: { [key: string]: Reducer<any, AnyAction> }; // Reducers used by the module
+    reducers?: { [key: string]: Reducer<any, AnyAction> }; // Reducers used by the module
   };
   kernelCalls: KernelCalls,
   managers?: ManagersMap,

@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
 import { switchTheme } from "./actions";
+import viewportManagerSlice from "./viewports/slice";
 import {
   layoutInitialState,LayoutState
 } from "./state";
@@ -14,6 +15,10 @@ const slice = createSlice({
       builder.addCase(
         switchTheme,
         (state: LayoutState, { payload: { theme } }) => ({...state, theme}))
+      builder.addDefaultCase((state, action)=>({
+        ...state, 
+        viewportManager: viewportManagerSlice.reducer(state.viewportManager, action)
+      }))
     }
 })
 

@@ -6,23 +6,19 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 
-import { switchTheme } from "../../store/actions";
 import { selectTheme } from "../../store/selectors";
+import useLayoutManager from "../../hooks/useLayoutManager";
 
 const SystemTray = () => {
   const storeModule = useModule<Store>("Store");
-  const { useAppSelector, useAppDispatch } = storeModule.hooks;
+  const { useAppSelector } = storeModule.hooks;
 
-  const dispatch = useAppDispatch();
   const selectedTheme = useAppSelector(selectTheme);
-  console.log(selectedTheme);
+
+  const layoutManager = useLayoutManager()
 
   const handleThemeSwitch = useCallback(() => {
-    // TODO: move to a theme manager
-    console.log(selectedTheme);
-    dispatch(
-      switchTheme({ theme: selectedTheme == "dark" ? "light" : "dark" })
-    );
+    layoutManager.functions.setTheme(selectedTheme == "dark" ? "light" : "dark")
   }, [selectedTheme]);
 
   return (

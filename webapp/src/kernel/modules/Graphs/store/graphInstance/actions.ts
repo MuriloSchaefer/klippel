@@ -24,6 +24,9 @@ export const edgeRemoved = createAction<{ graphId: string; edgeId: string }>(
 );
 
 // Commands
+export const resetGraph = createAction<{ graphId: string }>(
+    `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Reset Graph`
+);
 export const addNode = createAction<{ graphId: string; node: Node }>(
     `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Add node`
 );

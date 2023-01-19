@@ -6,7 +6,7 @@ import ModulesContext, { ModulesContextType } from "../context"
 import Initializer from "./Initializer"
 
 
-const ModulesProvider = ({ children }: { children: React.ReactNode | React.ReactNode[] }) => {
+const ModulesProvider = ({ children }: { children: React.ReactElement }) => {
 
     const [modules, setModules] = useState<ModulesContextType>({
         Store: storeModule
@@ -17,7 +17,7 @@ const ModulesProvider = ({ children }: { children: React.ReactNode | React.React
 
 
     return <ModulesContext.Provider value={values}>
-        <Initializer >{children}</Initializer>
+        <Initializer afterLoadComponent={children}/>
     </ModulesContext.Provider>
 }
 

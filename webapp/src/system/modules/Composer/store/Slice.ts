@@ -194,41 +194,7 @@ export const composerSlice = createSlice({
 
         return state
       })
-    // .addCase(SVGLoaded, (state: UIState) => ({
-    //   ...state,
-    //   viewport: {
-    //     ...state.viewports,
-    //     loadingSVG: false,
-    //   },
-    // }))
-    // .addCase(parseGarment, (state: UIState) => ({
-    //   ...state,
-    //   viewport: {
-    //     ...state.viewport,
-    //     parsing: {
-    //       ...state.viewport.parsing,
-    //       garment: true,
-    //     },
-    //   },
-    // }))
-    // .addCase(garmentParseFinished, (state: UIState) => ({
-    //   ...state,
-    //   viewport: {
-    //     ...state.viewport,
-    //     parsing: {
-    //       ...state.viewport.parsing,
-    //       garment: false,
-    //     },
-    //   },
-    // }))
-    // .addCase(materialSelectedEvent, (state: UIState, action) => ({
-    //   ...state,
-    //   rightPanel: {
-    //     ...state.rightPanel,
-    //     selectedMaterialId: action.payload.id,
-    //   },
-    // }));
   },
 });
 
-export default composerSlice.reducer;
+export default composerSlice;

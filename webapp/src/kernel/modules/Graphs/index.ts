@@ -5,6 +5,7 @@ import useGraph from "./hooks/useGraph";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
 import { startModule } from "./kernelCalls";
 import useGraphsManager from "./hooks/useGraphsManager";
+import { getGraphState } from "./store/graphsManager/selectors";
 
 export interface IGraphModule extends IModule {
   name: typeof MODULE_NAME,
@@ -14,6 +15,11 @@ export interface IGraphModule extends IModule {
   },
   hooks: {
     useGraph: typeof useGraph
+  }
+  store: {
+    selectors: {
+      getGraphState: typeof getGraphState
+    }
   }
 }
 
@@ -34,6 +40,9 @@ const GraphModule: IGraphModule = {
   },
   hooks: {
     useGraph
+  },
+  store: {
+    selectors: {getGraphState}
   },
   kernelCalls: {
     startModule: startModule,

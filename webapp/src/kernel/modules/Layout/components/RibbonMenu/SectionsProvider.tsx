@@ -19,7 +19,6 @@ export const SectionsProvider = ({
   children: React.ReactNode | React.ReactNode[];
   default_sections?: SectionsMap
 }) => {
-  console.log(default_sections)
   const [currentSections, setSections] = useState<SectionsMap>(default_sections ?? {});
 
   const memoizedValue = useMemo(()=>({ sections: currentSections, setSections: handleSetSections }), [currentSections])

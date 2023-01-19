@@ -1,4 +1,4 @@
-import {PaletteMode} from '@mui/material'
+import {PaletteColor, PaletteMode} from '@mui/material'
 
 export type Theme = PaletteMode
 
@@ -14,11 +14,30 @@ export interface Panels {
   settings: PanelState,
   details: PanelState
 }
+export interface ViewportState {
+  name: string
+  title: string;
+  type: string;
+  group?: string
+}
+export interface ViewportGroupState {
+  name: string;
+  color: string;
+}
+export interface ViewportGroups {
+  [name: string]: ViewportGroupState
+}
+export interface viewportManagerState {
+  groups: ViewportGroups
+  viewports: {[name: string]: ViewportState}
+}
 export interface LayoutState {
     theme: Theme;
     activeTab: string
     tabs: Tabs
     panels:Panels
+    activeViewport: string;
+    viewportManager: viewportManagerState
   }
 
 export interface RibbonTab {
@@ -45,5 +64,16 @@ export const layoutInitialState: LayoutState = {
   panels: {
     settings: {open: true, title: 'Configurações'},
     details: {open: false, title: 'Detalhes'}
+  },
+  activeViewport: 'home',
+  viewportManager: {
+    groups: {},
+    viewports: {
+      home: {
+        name: 'home',
+        title: "",
+        type: 'home'
+      }
+    }
   }
 };
