@@ -2,6 +2,7 @@ import { useContext, useMemo, useState } from "react";
 
 import { IModule, Manager } from "@kernel/modules/base";
 import storeModule from "@kernel/modules/Store";
+import layoutModule from "@kernel/modules/Layout";
 
 import ModulesContext from "../context";
 import {ModuleAlreadyLoaded, ModuleNotLoaded} from "../exceptions";
@@ -29,6 +30,9 @@ export const useModulesManager = (): ModulesManager => {
     const dispatch = storeModule.hooks.useAppDispatch()
     const useAppSelector = storeModule.hooks.useAppSelector
 
+    // managers propagated to the start module method
+    const {useLayoutManager, useViewportManager, useRibbonMenuManager} = layoutModule.hooks
+
     const modulesCount = useAppSelector(modulesCountSelector)
 
     const manager: ModulesManager = {
@@ -36,11 +40,12 @@ export const useModulesManager = (): ModulesManager => {
         functions: {
             isModuleLoaded: (moduleName: string) => moduleName in modules,
             loadModule(module){
-                dispatch(startModule(module.name))
                 
                 if (module.name in modules) throw new ModuleAlreadyLoaded(`${module.name} is not registered. Consider using restartModule instead.`)
                 setModules({...modules, [module.name]: module})
 
+                dispatch(startModule(module.name))
+                
                 module.kernelCalls.startModule(storeManager)
 
                 // emit event

@@ -7,7 +7,7 @@ import { Store } from "@kernel/modules/Store"
 
 import { ViewportState } from "../store/state"
 import {ViewportType, ViewportTypeContext} from '../components/ViewportManager/ViewportTypeProvider'
-import { addViewport, closeViewport, selectViewport } from "../store/viewports/actions"
+import { addViewport, closeViewport, renameViewport, selectViewport } from "../store/viewports/actions"
 import { PaletteColor } from "@mui/material"
 
 
@@ -18,6 +18,7 @@ export interface ViewportManager extends Manager {
         addViewport(title: string, type: string, group?: string, namePrefix?: string):ViewportState;
         selectViewport(name: string):void;
         closeViewport(name: string):void;
+        renameViewport(oldName: string, newName: string): void;
 
         createGroup(name: string, color: PaletteColor): void;
         addToGroup(viewportName: string, groupName: string): void;
@@ -51,6 +52,9 @@ export function useViewportManager():ViewportManager{
 
                 dispatch(addViewport({name, title, type, group}))
             },
+            renameViewport(oldName, newName){
+                dispatch(renameViewport({oldName, newName}))
+            },
             selectViewport(name){
                 dispatch(selectViewport({name}))
             },
@@ -58,7 +62,7 @@ export function useViewportManager():ViewportManager{
                 dispatch(closeViewport({name}))
             },
 
-            
+
         }
     } as ViewportManager
 }

@@ -15,6 +15,9 @@ export const selectViewport = createAction<{name: string}>(
 export const closeViewport = createAction<{name: string}>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Close viewport`
 );
+export const renameViewport = createAction<{oldName: string, newName: string}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Rename viewport`
+);
 
 // Events
 export const viewportAdded = createAction<ViewportState>(
@@ -25,4 +28,7 @@ export const viewportSelected = createAction<ViewportState>(
 );
 export const viewportClosed = createAction<ViewportState>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport closed`
+);
+export const viewportRenamed = createAction<{oldName: string, newName: string}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport renamed`
 );

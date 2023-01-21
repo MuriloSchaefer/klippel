@@ -3,7 +3,7 @@ import { Box, IconButton, Tab, Tabs } from "@mui/material";
 import HomeSharpIcon from "@mui/icons-material/HomeSharp";
 import NotificationsSharpIcon from "@mui/icons-material/NotificationsSharp";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
-import React, { MouseEvent, useCallback, useMemo } from "react";
+import React, { FormEvent, useCallback, useMemo } from "react";
 import ViewportTypeProvider from "./ViewportTypeProvider";
 import ViewportLoader from "./ViewportLoader";
 import HomeViewport from "./HomeViewport";
@@ -49,7 +49,7 @@ const ViewportManagerContent = () => {
   );
 
   const {
-    functions: { addViewport, closeViewport },
+    functions: { addViewport, closeViewport, renameViewport },
   } = useViewportManager();
 
   const handleAddViewport = useCallback(() => {
@@ -77,7 +77,6 @@ const ViewportManagerContent = () => {
             id={"home-viewport"}
             sx={{ width: "fit-content", minWidth: 0, p: 1 }}
             //   label={<div>test</div>}
-            wrapped
           />
           {Object.entries(adaptedState).map(([groupName, groupedViewports]) => {
             if (groupName === "notGrouped")
@@ -88,8 +87,8 @@ const ViewportManagerContent = () => {
                   id={vp.name}
                   sx={{ width: "fit-content", p: 1 }}
                   label={
-                    <span>
-                      {vp.title}
+                    <span >
+                      <span >{vp.title}</span>
                       <IconButton size="small" component="span" data-vp-id={vp.name} onClick={()=>handleCloseViewport(vp.name)}>
                         <CloseSharpIcon />
                       </IconButton>
@@ -114,13 +113,13 @@ const ViewportManagerContent = () => {
                   sx={{ width: "fit-content", p: 1 }}
                   label={
                     <span>
-                      {vp.title}
+                    <span >{vp.title}</span>
                       <IconButton size="small" component="span" onClick={()=>handleCloseViewport(vp.name)}>
                         <CloseSharpIcon />
                       </IconButton>
                     </span>
                   }
-                  draggable
+                  draggable="true"
                   wrapped
                 />
               ))}
@@ -129,13 +128,18 @@ const ViewportManagerContent = () => {
           })}
 
           
-          <IconButton
-            color="primary"
-            aria-label="create viewport"
+          <Tab
+            value="new"
+            key="new"
+            icon={<AddBoxOutlinedIcon />}
+            iconPosition="start"
+            role={"add viewport"}
+            aria-label="Add viewport"
+            id={"new-viewport"}
             onClick={handleAddViewport}
-          >
-            <AddBoxOutlinedIcon />
-          </IconButton>
+            sx={{ width: "fit-content", minWidth: 0, p: 1 }}
+            //   label={<div>test</div>}
+          />
         </Tabs>
         <Box
           role="viewport-notifications"

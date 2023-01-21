@@ -1,7 +1,7 @@
 import React, { Reducer } from "react";
 import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
-import { Tabs } from "./LayoutModule/components/RibbonMenu";
 import { StoreManager } from "./Store/manager";
+import { ILayoutModule } from "./Layout";
 
 export interface Manager {
   functions: {

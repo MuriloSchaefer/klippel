@@ -4,9 +4,13 @@ import storeModule from "@kernel/modules/Store"
 
 import ModulesContext, { ModulesContextType } from "../context"
 import Initializer from "./Initializer"
+import { IModule } from "@kernel/modules/base"
 
-
-const ModulesProvider = ({ children }: { children: React.ReactElement }) => {
+export interface ModulesMap {
+    kernel: IModule[], //e.g. SVG: "./kernel/modules/SVG "
+    system: IModule[],
+  }
+const ModulesProvider = ({ children, loadModules }: { children: React.ReactElement, loadModules: ModulesMap }) => {
 
     const [modules, setModules] = useState<ModulesContextType>({
         Store: storeModule
@@ -15,9 +19,11 @@ const ModulesProvider = ({ children }: { children: React.ReactElement }) => {
         modules, setModules,
     }), [])
 
+    //const pathsToLoad = useMemo(()=>([...Object.values(loadModules.kernel), ...Object.values(loadModules.system)]), [loadModules])
+
 
     return <ModulesContext.Provider value={values}>
-        <Initializer afterLoadComponent={children}/>
+        <Initializer extraModules={loadModules} afterLoadComponent={children}/>
     </ModulesContext.Provider>
 }
 

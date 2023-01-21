@@ -10,10 +10,8 @@ import instanceMiddlewares from "../store/graphInstance/middlewares"
 
 
 export const startModule = (storeManager: StoreManager) => {
-    console.group(`starting ${MODULE_NAME}`)
     storeManager.functions.loadReducer(MODULE_NAME, managerSlice.reducer)
     storeManager.functions.registerMiddleware(managerMiddlewares)
     storeManager.functions.registerMiddleware(instanceMiddlewares)
-    console.groupEnd()
 
 }
