@@ -2,7 +2,7 @@ import { Manager } from "@kernel/modules/base";
 import { AnyAction } from "redux";
 import { ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 import { Reducer, useContext } from "react";
-import CurrentReducersContext from "./contexts";
+import CurrentReducersContext from "../contexts";
 
 export type AppAction = AnyAction
 

@@ -26,12 +26,19 @@ export interface ModulesManager extends Manager {
 export const useModulesManager = (): ModulesManager => {
     const {modules, setModules} = useContext(ModulesContext)
 
-    const storeManager = storeModule.managers.store()
+    // get managers available at start time
+    // CHALLENGE: try to make it easier to add new managers here without increasing coupling
+    const {useLayoutManager, useRibbonMenuManager, useViewportManager} = layoutModule.hooks
+    const {store, componentRegistry} = storeModule.managers
+    
+    const layoutManager = useLayoutManager()
+    const ribbonMenuManager = useRibbonMenuManager()
+    const viewportManager = useViewportManager()
+    const storeManager = store()
+    const componentRegistryManager = componentRegistry()
+
     const dispatch = storeModule.hooks.useAppDispatch()
     const useAppSelector = storeModule.hooks.useAppSelector
-
-    // managers propagated to the start module method
-    const {useLayoutManager, useViewportManager, useRibbonMenuManager} = layoutModule.hooks
 
     const modulesCount = useAppSelector(modulesCountSelector)
 
@@ -46,7 +53,15 @@ export const useModulesManager = (): ModulesManager => {
 
                 dispatch(startModule(module.name))
                 
-                module.kernelCalls.startModule(storeManager)
+                module.kernelCalls.startModule({
+                    managers: {
+                        storeManager,
+                        componentRegistryManager,
+                        layoutManager,
+                        ribbonMenuManager,
+                        viewportManager
+                    }
+                })
 
                 // emit event
                 dispatch(moduleStarted(module.name))

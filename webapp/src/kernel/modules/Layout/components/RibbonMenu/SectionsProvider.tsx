@@ -20,12 +20,19 @@ export const SectionsProvider = ({
   default_sections?: SectionsMap
 }) => {
   const [currentSections, setSections] = useState<SectionsMap>(default_sections ?? {});
+  console.log('state: ',currentSections)
 
-  const memoizedValue = useMemo(()=>({ sections: currentSections, setSections: handleSetSections }), [currentSections])
+  
 
   function handleSetSections (tabName: string, sections: React.ReactNode[]){
+    console.log(currentSections, tabName, sections)
     setSections({...currentSections, [tabName]: sections})
   }
+
+  const memoizedValue = useMemo(()=>({ 
+    sections: currentSections, 
+    setSections: handleSetSections 
+  }), [currentSections])
 
   return (
     <SectionsContext.Provider value={memoizedValue}>

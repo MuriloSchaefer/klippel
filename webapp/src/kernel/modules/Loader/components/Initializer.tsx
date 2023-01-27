@@ -34,11 +34,6 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
     const graphsManager = graphModule.managers.graphs()
     const {createGraph,resetGraph} = graphsManager.functions
 
-    // useEffect(()=>{
-    //     const mod = staticModules[0]
-    //     if (!moduleManager.functions.isModuleLoaded(mod.name)) loadStaticModule(mod)
-    // }, [])
-
     useEffect(() => {
         // initialization logic (we may separate it in a custom hook)
         const mod = staticModules[staticModulesLoaded]
@@ -107,6 +102,7 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
                 inputs: dependencies, outputs: {}
             })
         })
+        setIsInitializing(false)
     }, [graphInitialized])
 
     function loadStaticModule(mod: IModule){

@@ -1,7 +1,11 @@
 import React, { Reducer } from "react";
 import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
-import { StoreManager } from "./Store/manager";
-import { ILayoutModule } from "./Layout";
+import { StoreManager } from "./Store/hooks/useStoreManager";
+import { ModulesContextType } from "./Loader/context";
+import { LayoutManager } from "./Layout/hooks/useLayoutManager";
+import { RibbonMenuManager } from "./Layout/hooks/useRibbonMenuManager";
+import { ViewportManager } from "./Layout/hooks/useViewportManager";
+import { ComponentRegistryManager } from "./Store/hooks/useComponentRegistryManager";
 
 export interface Manager {
   functions: {
@@ -9,8 +13,18 @@ export interface Manager {
   }
 }
 
+export interface StartModuleProps {
+  managers: {
+    storeManager: StoreManager
+    componentRegistryManager: ComponentRegistryManager
+    layoutManager: LayoutManager
+    ribbonMenuManager: RibbonMenuManager
+    viewportManager: ViewportManager
+  }
+}
+
 export interface KernelCalls {
-  startModule: (storeManager: StoreManager) => void,
+  startModule: (props: StartModuleProps) => void,
   restartModule: (storeManager: StoreManager) => void,
   shutdownModule: (storeManager: StoreManager) => void
 }

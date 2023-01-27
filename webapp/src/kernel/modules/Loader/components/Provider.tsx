@@ -17,7 +17,7 @@ const ModulesProvider = ({ children, loadModules }: { children: React.ReactEleme
     })
     const values = useMemo(() => ({
         modules, setModules,
-    }), [])
+    }), [modules])
 
     //const pathsToLoad = useMemo(()=>([...Object.values(loadModules.kernel), ...Object.values(loadModules.system)]), [loadModules])
 

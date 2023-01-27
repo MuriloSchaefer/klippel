@@ -17,7 +17,7 @@ export interface ILayoutModule extends IModule {
     useLayoutManager: typeof useLayoutManager
     useRibbonMenuManager: typeof useRibbonMenuManager
     useViewportManager: typeof useViewportManager
-  }
+  },  
 }
 
 /**

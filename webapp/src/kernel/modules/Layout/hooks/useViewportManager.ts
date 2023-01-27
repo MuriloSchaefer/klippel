@@ -5,15 +5,16 @@ import useModule from "@kernel/hooks/useModule"
 import { Manager } from "@kernel/modules/base"
 import { Store } from "@kernel/modules/Store"
 
-import { ViewportState } from "../store/state"
+import { ViewportState } from "../store/viewports/state"
 import {ViewportType, ViewportTypeContext} from '../components/ViewportManager/ViewportTypeProvider'
 import { addViewport, closeViewport, renameViewport, selectViewport } from "../store/viewports/actions"
 import { PaletteColor } from "@mui/material"
+import { VIEWPORT_TYPE_REGISTRY_NAME } from "../constants"
 
 
 export interface ViewportManager extends Manager {
     functions: {
-        registerViewportType(name: string, component: ViewportType): void;
+        registerViewportTypes(components: {[name: string]: ViewportType}): void;
         getViewportTypeComponent(name: string): ViewportType;
         addViewport(title: string, type: string, group?: string, namePrefix?: string):ViewportState;
         selectViewport(name: string):void;
@@ -31,15 +32,17 @@ export function useViewportManager():ViewportManager{
 
     const storeModule = useModule<Store>("Store");
     const { useAppDispatch } = storeModule.hooks;
+    const {componentRegistry} = storeModule.managers;
     const dispatch = useAppDispatch()
 
-    const {types, addType} = useContext(ViewportTypeContext)
+    const {types, addTypes} = useContext(ViewportTypeContext)
+    const componentRegistryManager = componentRegistry()
     
     return {
         functions: {
-            registerViewportType(name, component){
-                if ((name in types)) throw Error('viewport type already exists')
-                addType(name, component)
+            registerViewportTypes(components){
+                // if ((name in types)) throw Error('viewport type already exists')
+                componentRegistryManager.functions.registerComponents(VIEWPORT_TYPE_REGISTRY_NAME, components)
             },
             getViewportTypeComponent(name){
                 if (!(name in types)) throw Error('Unknown viewport type')

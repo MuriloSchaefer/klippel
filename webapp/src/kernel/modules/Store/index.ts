@@ -1,7 +1,8 @@
 import { IModule, KernelCalls } from "../base";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
-import useStoreManager, { StoreManager } from "./manager";
+import useStoreManager, { StoreManager } from "./hooks/useStoreManager";
 import { useAppDispatch, useAppSelector } from "./hooks";
+import useComponentRegistryManager from "./hooks/useComponentRegistryManager";
 
 
 export interface Store extends IModule {
@@ -12,7 +13,8 @@ export interface Store extends IModule {
         useAppSelector: typeof useAppSelector
     },
     managers: {
-        store: () => StoreManager
+        store: typeof useStoreManager
+        componentRegistry: typeof useComponentRegistryManager
     },
     kernelCalls: KernelCalls
 }
@@ -22,7 +24,8 @@ const module: Store = {
     version: MODULE_VERSION,
     depends_on: [],
     managers: {
-        store: useStoreManager
+        store: useStoreManager,
+        componentRegistry: useComponentRegistryManager
     },
     hooks: {
         useAppDispatch, 
