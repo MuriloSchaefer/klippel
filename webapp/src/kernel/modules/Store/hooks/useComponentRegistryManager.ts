@@ -9,7 +9,7 @@ export interface ComponentRegistryManager extends Manager {
     functions: {
         createRegistry: (name: string) => void,
         createRegistries: (registries: ComponentRegistries)=> void
-        registerComponents: <T=any>(components: {registry: {[name: string]: ComponentType<T>}}) => void,
+        registerComponents: <T=any>(components: {[registry:string]: {[name: string]: ComponentType<T>}}) => void,
         getComponent: <T=any>(registryName: string, componentName: string)=> ComponentType<T>
     }
 }

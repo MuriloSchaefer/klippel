@@ -17,7 +17,6 @@ export interface LayoutState {
   theme: Theme;
   ribbonMenu: RibbonMenuState;
   panels: Panels;
-  activeViewport: string;
   viewportManager: viewportManagerState;
 }
 
@@ -40,8 +39,8 @@ export const layoutInitialState: LayoutState = {
     settings: { open: true, title: "Configurações" },
     details: { open: false, title: "Detalhes" },
   },
-  activeViewport: "home",
   viewportManager: {
+    activeViewport: "home",
     groups: {},
     viewports: {
       home: {

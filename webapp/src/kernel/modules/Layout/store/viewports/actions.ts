@@ -3,7 +3,7 @@ import { createAction } from "@reduxjs/toolkit";
 import { ACTION_TYPES } from "@kernel/contants";
 
 import { MODULE_NAME } from "../../constants";
-import { ViewportState } from "../state";
+import { ViewportState } from "./state";
 
 // Commands
 export const addViewport = createAction<ViewportState>(

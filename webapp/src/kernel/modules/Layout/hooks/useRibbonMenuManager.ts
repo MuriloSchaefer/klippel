@@ -13,13 +13,13 @@ import { RibbonTab, RibbonTabState } from "../store/ribbonMenu/state"
 interface AddTabProps {
     label: string
     type: "dropdown" | "base"
-    sections: ComponentTypeMap
+    sectionNames: string[] // component name in the Registry
 }
 export interface RibbonMenuManager extends Manager {
     functions: {
         tabExists: (tabName: string) => boolean
         addNewTab: (tab: AddTabProps) => void
-        addSectionToTab: (tabName: string, section: React.ReactNode) => void
+        addSectionToTab: (tabName: string, sectionName: string) => void
         removeTab: (tabName: string) => void
         removeSection: (tabName: string) => void
         selectTab: (tabName: string) => void
@@ -36,7 +36,6 @@ export function useRibbonMenuManager():RibbonMenuManager{
     const tabs = useAppSelector(selectTabs);
     // const activeTab = useAppSelector(selectActiveTab);
     const {sections, setSections} = useContext(SectionsContext)
-    console.log(sections)
 
     const componentRegistryManager = componentRegistry()
     
@@ -56,12 +55,6 @@ export function useRibbonMenuManager():RibbonMenuManager{
                     active: false
                 } as RibbonTabState
 
-                const sections = Object.entries(tab.sections).reduce((components, [name, comp], idx) =>{
-                    return {...components, [`${name}-${idx}`]: comp}
-                }, {})
-                componentRegistryManager.functions.registerComponents(SECTIONS_REGISTRY_NAME, sections)
-                newTab.sectionNames = Object.keys(sections)
-                delete newTab.sections
                 dispatch(addRibbonTab({tab: newTab}))
 
 

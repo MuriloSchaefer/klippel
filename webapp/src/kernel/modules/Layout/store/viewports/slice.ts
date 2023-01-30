@@ -2,14 +2,15 @@ import { createSlice, SliceCaseReducers } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import {
   viewportManagerState, ViewportState
-} from "../state";
-import { addViewport, closeViewport, renameViewport } from "./actions";
+} from "./state";
+import { addViewport, closeViewport, renameViewport, selectViewport } from "./actions";
 
 
 const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManagerState>, string>({
     name: `${MODULE_NAME}Viewports`,
     initialState: {
       groups: {},
+      activeViewport: 'home',
       viewports: {}
     },
     reducers: {},
@@ -22,11 +23,16 @@ const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManage
 
         return {
           ...state,
+          activeViewport: 'home',
           viewports: Object.entries(state.viewports).reduce((newState, [name, vp])=>{
             if (name === payload.name) return newState
             return {...newState, [name]: vp}
           }, {})
         }
+      })
+      builder.addCase(selectViewport, (state:viewportManagerState,{ payload }) => {
+
+        return {...state, activeViewport: payload.name}
       })
       builder.addCase(renameViewport, (state:viewportManagerState,{ payload: {oldName, newName} }) => {
         console.log(state.viewports, oldName, newName)

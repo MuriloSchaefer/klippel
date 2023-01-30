@@ -35,21 +35,22 @@ export function useViewportManager():ViewportManager{
     const {componentRegistry} = storeModule.managers;
     const dispatch = useAppDispatch()
 
-    const {types, addTypes} = useContext(ViewportTypeContext)
     const componentRegistryManager = componentRegistry()
     
     return {
         functions: {
             registerViewportTypes(components){
                 // if ((name in types)) throw Error('viewport type already exists')
-                componentRegistryManager.functions.registerComponents(VIEWPORT_TYPE_REGISTRY_NAME, components)
+                componentRegistryManager.functions.registerComponents({[VIEWPORT_TYPE_REGISTRY_NAME]: components})
             },
             getViewportTypeComponent(name){
-                if (!(name in types)) throw Error('Unknown viewport type')
-                return types[name]
+                const comp = componentRegistryManager.functions.getComponent(VIEWPORT_TYPE_REGISTRY_NAME, name)
+                if (!comp) throw Error('Unknown viewport type')
+                return comp
             },
             addViewport(title, type, group, namePrefix="viewport"){
-                if (!(type in types)) throw Error('Unknown viewport type')
+                const comp = componentRegistryManager.functions.getComponent(VIEWPORT_TYPE_REGISTRY_NAME, type)
+                if (!comp) throw Error('Unknown viewport type')
                 
                 const name = _.uniqueId(namePrefix);
 

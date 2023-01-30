@@ -71,7 +71,7 @@ const RibbonMenu = ({systemTray}: {systemTray?: React.ReactNode}) => {
             <TabPanel value={name} key={`ribbon-panel-${name}`}>
               {tab.sectionNames && tab.sectionNames.map((sectionName)=>{
                 const comp = componentRegistryManager.functions.getComponent(SECTIONS_REGISTRY_NAME, sectionName) 
-                return createElement(comp, {}, [])
+                return createElement(comp, {key: `ribbon-panel-${name}-section-${sectionName}`}, [])
               })}
             </TabPanel>
           ))}

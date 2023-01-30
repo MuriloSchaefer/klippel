@@ -6,6 +6,7 @@ import viewportMiddleware from "../store/viewports/middlewares";
 
 import slice from "../store/slice";
 import { StartModuleProps } from "@kernel/modules/base";
+import HomeViewport from "../components/ViewportManager/HomeViewport";
 
 export const startModule = ({
   managers: { storeManager, componentRegistryManager },
@@ -17,6 +18,8 @@ export const startModule = ({
 
   componentRegistryManager.functions.createRegistries({
     [SECTIONS_REGISTRY_NAME]: {},
-    [VIEWPORT_TYPE_REGISTRY_NAME]: {},
+    [VIEWPORT_TYPE_REGISTRY_NAME]: {
+      home: HomeViewport,
+    },
   })
 };

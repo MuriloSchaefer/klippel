@@ -1,21 +1,25 @@
+import React, { useCallback, useMemo } from "react";
+
+// UI
 import { TabContext } from "@mui/lab";
 import { Box, IconButton, Tab, Tabs } from "@mui/material";
 import HomeSharpIcon from "@mui/icons-material/HomeSharp";
 import NotificationsSharpIcon from "@mui/icons-material/NotificationsSharp";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
-import React, { FormEvent, useCallback, useMemo } from "react";
-import ViewportTypeProvider from "./ViewportTypeProvider";
-import ViewportLoader from "./ViewportLoader";
-import HomeViewport from "./HomeViewport";
+import CloseSharpIcon from "@mui/icons-material/CloseSharp";
+
+// Kernel
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
+
+// Internals
 import {
   selectActiveViewport,
   selectViewportStates,
 } from "../../store/viewports/selectors";
-import CloseSharpIcon from "@mui/icons-material/CloseSharp";
+import ViewportLoader from "./ViewportLoader";
 import useViewportManager from "../../hooks/useViewportManager";
-import { ViewportState } from "../../store/state";
+import { ViewportState } from "../../store/viewports/state";
 
 type GroupedViewports = {
   notGrouped: ViewportState[];
@@ -49,19 +53,20 @@ const ViewportManagerContent = () => {
   );
 
   const {
-    functions: { addViewport, closeViewport, renameViewport },
+    functions: { addViewport, closeViewport, selectViewport },
   } = useViewportManager();
 
   const handleAddViewport = useCallback(() => {
     addViewport("Nova aba", "home", 'group');
   }, []);
+  
   const handleCloseViewport = useCallback((name: string)=>{
     console.log(name)
     closeViewport(name)
   }, [])
 
   return (
-    <TabContext value={selectedViewport}>
+    <>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Tabs
           value={selectedViewport}
@@ -74,7 +79,8 @@ const ViewportManagerContent = () => {
             key="home"
             icon={<HomeSharpIcon />}
             iconPosition="start"
-            id={"home-viewport"}
+            onClick={()=>selectViewport('home')}
+            id={"home"}
             sx={{ width: "fit-content", minWidth: 0, p: 1 }}
             //   label={<div>test</div>}
           />
@@ -86,10 +92,14 @@ const ViewportManagerContent = () => {
                   key={`${vp.name}-tab`}
                   id={vp.name}
                   sx={{ width: "fit-content", p: 1 }}
+                  onClick={()=>selectViewport(vp.name)}
                   label={
                     <span >
                       <span >{vp.title}</span>
-                      <IconButton size="small" component="span" data-vp-id={vp.name} onClick={()=>handleCloseViewport(vp.name)}>
+                      <IconButton size="small" component="span" data-vp-id={vp.name} onClick={(e)=>{
+                        e.stopPropagation()
+                        handleCloseViewport(vp.name)
+                      }}>
                         <CloseSharpIcon />
                       </IconButton>
                     </span>
@@ -103,7 +113,7 @@ const ViewportManagerContent = () => {
                 role="grouped-tab-container"
                 key={groupName}
                 id={`vp-group-${groupName}`}
-                sx={{ borderTop: 1, borderTopColor: "#ff0000" }}
+                sx={{ borderTop: 2, borderTopColor: "#ff0000" }}
               >
                 {groupedViewports.map((vp) => (
                 <Tab
@@ -111,10 +121,14 @@ const ViewportManagerContent = () => {
                   key={`${vp.name}-tab`}
                   id={vp.name}
                   sx={{ width: "fit-content", p: 1 }}
+                  onClick={()=>selectViewport(vp.name)}
                   label={
                     <span>
-                    <span >{vp.title}</span>
-                      <IconButton size="small" component="span" onClick={()=>handleCloseViewport(vp.name)}>
+                      <span >{vp.title}</span>
+                      <IconButton size="small" component="span" onClick={(e)=>{
+                        e.stopPropagation()
+                        handleCloseViewport(vp.name)
+                      }}>
                         <CloseSharpIcon />
                       </IconButton>
                     </span>
@@ -160,22 +174,15 @@ const ViewportManagerContent = () => {
       >
         <ViewportLoader />
       </Box>
-    </TabContext>
+      </>
   );
 };
 
 const ViewportManager = () => {
-  const defaultViewportTypes = useMemo(() => {
-    return {
-      home: HomeViewport,
-    };
-  }, []);
 
   return (
     <Box role="viewport-manager" sx={{ width: "100%" }}>
-      <ViewportTypeProvider default_types={defaultViewportTypes}>
         <ViewportManagerContent />
-      </ViewportTypeProvider>
     </Box>
   );
 };

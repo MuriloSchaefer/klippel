@@ -13,7 +13,7 @@ export type ComponentRegistryType = {
   ) => ComponentType<T>;
 
   registerComponents: <T = any>(
-    components: {registry: {[name: string]: ComponentType<T>}}
+    components: {[registry:string]: {[name: string]: ComponentType<T>}}
   ) => void;
 };
 

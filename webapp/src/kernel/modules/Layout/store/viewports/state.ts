@@ -13,5 +13,6 @@ export interface ViewportState {
   }
   export interface viewportManagerState {
     groups: ViewportGroups
+    activeViewport: string;
     viewports: {[name: string]: ViewportState}
   }

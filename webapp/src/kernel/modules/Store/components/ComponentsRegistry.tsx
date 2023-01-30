@@ -41,13 +41,15 @@ export const ComponentsRegistryProvider = ({
       return currentRegistries[registryName][componentName];
     }
     function registerComponents<T = any>(
-      components: {registry: {[name: string]: ComponentType<T>}}
+      components: {[registry: string]: {[name: string]: ComponentType<T>}}
     ) {
       const curr = currentRegistries
-      const newValues = Object.entries(components).reduce((curr, [registry, comp]) => ({
-        ...curr,
-        [registry]: {...curr[registry], ...comp}
-      }), {})
+      const newValues = Object.entries(components).reduce((curr, [registry, comp]) => {
+        if (registry in curr) return {...curr, [registry]: {...curr[registry], ...comp}}
+        return curr 
+      }, curr)
+
+      console.log(curr, components, newValues)
 
       setRegistries(newValues);
     }
