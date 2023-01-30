@@ -2,16 +2,18 @@ import { IModule } from "../base";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
 import { startModule } from "./kernelCalls";
 
-import Layout from './components/WideLayout'
 import useLayoutManager from "./hooks/useLayoutManager";
 import useRibbonMenuManager from "./hooks/useRibbonMenuManager";
 import useViewportManager from "./hooks/useViewportManager";
+import SettingsPanel from "./components/Panels/SettingsPanel";
+import DetailsPanel from "./components/Panels/DetailsPanel";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
   version: typeof MODULE_VERSION,
   components: {
-    Layout: typeof Layout
+    SettingsPanel: typeof SettingsPanel,
+    DetailsPanel: typeof DetailsPanel,
   },
   hooks: {
     useLayoutManager: typeof useLayoutManager
@@ -33,7 +35,8 @@ const LayoutModule: ILayoutModule = {
   version: MODULE_VERSION,
   depends_on: [],
   components: {
-    Layout
+    SettingsPanel,
+    DetailsPanel
   },
   hooks: {
     useLayoutManager,

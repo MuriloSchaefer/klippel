@@ -1,4 +1,4 @@
-import React, { Reducer } from "react";
+import React, { ComponentType, ReactPortal, Reducer } from "react";
 import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 import { StoreManager } from "./Store/hooks/useStoreManager";
 import { ModulesContextType } from "./Loader/context";
@@ -32,12 +32,12 @@ export interface KernelCalls {
 interface ManagersMap {
   [name: string]: <Args>(args: Args) => Manager
 }
-export interface IModule {
+export interface IModule{
   name: string;
   version: string;
   depends_on: string[];
   components?: {
-    [name: string]: React.FunctionComponent
+    [name: string]: React.FunctionComponent<any>
   };
   store?: {
     actions?: { 

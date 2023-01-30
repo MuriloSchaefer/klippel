@@ -9,6 +9,7 @@ import RibbonMenu from "../RibbonMenu";
 import React, { useMemo } from "react";
 import ViewportManager from "../ViewportManager";
 import SystemTray from "../SystemTray";
+import { DETAILS_PANEL_ID, SETTINGS_PANEL_ID } from "../../constants";
 
 declare module "@mui/material/styles" {
   interface Theme {
@@ -75,17 +76,19 @@ const Layout = () => {
             justifyContent:"space-between",
             height:"100%",
         }}>
-            <Box role="settings-panel" aria-label="settings panel" sx={{
+            <Box role="settings-panel" id={SETTINGS_PANEL_ID} aria-label="settings panel" sx={{
                 borderRight: 1, left: 0,
-                minWidth: '10vh', width: 'min(10vh, 30vh)',
+                minWidth: '10vh', 
+                overflow: 'hidden',
                 '&:hover': {
                     width: '30vh',
                 },
                 ...commonCSSPanels,
-            }}><div style={{width:'20vh'}}/></Box>
+            }} />
             
             <ViewportManager />
-            <Box role="details-panel" aria-label="details panel" sx={{
+
+            <Box role="details-panel" id={DETAILS_PANEL_ID} aria-label="details panel" sx={{
                 borderLeft: 1, right: 0,
                 minWidth: '1vh', width: 'min(1vh, 30vh)',
                 '&:hover': {

@@ -1,6 +1,8 @@
 import useModule from "@kernel/hooks/useModule";
 import { Manager } from "@kernel/modules/base";
 import { ILayoutModule } from "@kernel/modules/Layout";
+import { Store } from "@kernel/modules/Store";
+import { newComposition } from "../store/actions";
 
 
 interface CompositionsManager extends Manager {
@@ -11,17 +13,19 @@ interface CompositionsManager extends Manager {
 
 export const useCompositionsManager = (): CompositionsManager => {
 
-    // const storeModule = useModule<Store>("Store");
-    // const { useAppDispatch } = storeModule.hooks;
-    // const dispatch = useAppDispatch()
+    const storeModule = useModule<Store>("Store");
+    const { useAppDispatch } = storeModule.hooks;
+    const dispatch = useAppDispatch()
+
     const layoutModule = useModule<ILayoutModule>('Layout')
     const viewportManager = layoutModule.hooks.useViewportManager()
 
     return {
         functions: {
-            newComposition(compositionName, modelPath){
+            newComposition(name, modelPath){
                 // dispatch
-                viewportManager.functions.addViewport(compositionName, 'Composer', undefined, 'composition-')
+                viewportManager.functions.addViewport(name, 'Composer', undefined, 'composition-')
+                dispatch(newComposition({name: name, svgPath: modelPath}))
             }
         }
     }
