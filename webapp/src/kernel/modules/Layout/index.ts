@@ -7,6 +7,7 @@ import useRibbonMenuManager from "./hooks/useRibbonMenuManager";
 import useViewportManager from "./hooks/useViewportManager";
 import SettingsPanel from "./components/Panels/SettingsPanel";
 import DetailsPanel from "./components/Panels/DetailsPanel";
+import { Accordion } from "./components/Panels/Accordion";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -14,6 +15,7 @@ export interface ILayoutModule extends IModule {
   components: {
     SettingsPanel: typeof SettingsPanel,
     DetailsPanel: typeof DetailsPanel,
+    Accordion: typeof Accordion,
   },
   hooks: {
     useLayoutManager: typeof useLayoutManager
@@ -36,7 +38,8 @@ const LayoutModule: ILayoutModule = {
   depends_on: [],
   components: {
     SettingsPanel,
-    DetailsPanel
+    DetailsPanel,
+    Accordion
   },
   hooks: {
     useLayoutManager,

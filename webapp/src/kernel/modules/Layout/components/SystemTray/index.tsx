@@ -22,7 +22,7 @@ const SystemTray = () => {
   }, [selectedTheme]);
 
   return (
-    <Box >
+    <Box role="system-tray-container">
       <IconButton
         color="primary"
         aria-label="switch theme button"

@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from "react";
 
 // UI
 import { TabContext } from "@mui/lab";
-import { Box, IconButton, Tab, Tabs } from "@mui/material";
+import { Box, BoxProps, IconButton, Tab, Tabs } from "@mui/material";
 import HomeSharpIcon from "@mui/icons-material/HomeSharp";
 import NotificationsSharpIcon from "@mui/icons-material/NotificationsSharp";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
@@ -20,6 +20,7 @@ import {
 import ViewportLoader from "./ViewportLoader";
 import useViewportManager from "../../hooks/useViewportManager";
 import { ViewportState } from "../../store/viewports/state";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
 
 type GroupedViewports = {
   notGrouped: ViewportState[];
@@ -72,7 +73,7 @@ const ViewportManagerContent = () => {
           value={selectedViewport}
           aria-label="viewport tabs"
           role="viewport-tabs"
-          sx={{ minWidth: 0 }}
+          sx={{ minWidth: 0, overflow:'scroll' }}
         >
           <Tab
             value="home"
@@ -178,10 +179,11 @@ const ViewportManagerContent = () => {
   );
 };
 
-const ViewportManager = () => {
+
+const ViewportManager = ({sx, ...props}: BoxProps) => {
 
   return (
-    <Box role="viewport-manager" sx={{ width: "100%" }}>
+    <Box role="viewport-manager" sx={{ ...sx }} {...props}>
         <ViewportManagerContent />
     </Box>
   );

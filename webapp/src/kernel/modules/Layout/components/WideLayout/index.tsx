@@ -1,5 +1,11 @@
-import { Box, ThemeProvider, createTheme, CssBaseline } from "@mui/material";
-import grey from '@mui/material/colors/grey'
+import {
+  Box,
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
+  styled,
+} from "@mui/material";
+import grey from "@mui/material/colors/grey";
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
@@ -25,78 +31,85 @@ declare module "@mui/material/styles" {
   }
 }
 
+const StyledContent = styled(Box)`
+  display: grid;
+  grid-auto-columns: min-content;
+  grid-template-columns: 1fr auto 1fr;
+  height: 100%;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "ribbon ribbon ribbon"
+    "settings viewport details";
+
+
+  @media (orientation: portrait) {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: 
+    "ribbon ribbon"
+    "settings viewport"
+    "details details"
+    ;
+  }
+`;
+
 const Layout = () => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
   const selectedTheme = useAppSelector(selectTheme);
-  
-  const theme = useMemo(()=> createTheme({
-    palette: {
-      mode: selectedTheme ?? 'dark',
-      // Used by `getContrastText()` to maximize the contrast between
-      // the background and the text.
-      contrastThreshold: 3,
-      // Used by the functions below to shift a color's luminance by approximately
-      // two indexes within its tonal palette.
-      // E.g., shift from Red 500 to Red 300 or Red 700.
-      tonalOffset: 0.2,
-    },
-    typography: {
-      // In Chinese and Japanese the characters are usually larger,
-      // so a smaller fontsize may be appropriate.
-      fontSize: 12,
-      fontFamily: 'Raleway, Arial',
-    },
-  }), [selectedTheme])
 
-  const commonCSSPanels = {
-    position: 'sticky',
-    borderColor: "divider", 
-    height: '100%',
-    transition: 'width 0.5s cubic-bezier(0.075, 0.82, 0.165, 1)',
-    padding: 1
-  }
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: selectedTheme ?? "dark",
+          // Used by `getContrastText()` to maximize the contrast between
+          // the background and the text.
+          contrastThreshold: 3,
+          // Used by the functions below to shift a color's luminance by approximately
+          // two indexes within its tonal palette.
+          // E.g., shift from Red 500 to Red 300 or Red 700.
+          tonalOffset: 0.2,
+        },
+        typography: {
+          // In Chinese and Japanese the characters are usually larger,
+          // so a smaller fontsize may be appropriate.
+          fontSize: 12,
+          fontFamily: "Raleway, Arial",
+        },
+      }),
+    [selectedTheme]
+  );
 
   return (
     <ThemeProvider theme={theme}>
-        <CssBaseline />
-      <Box
-        role="layout-root"
-        sx={{
-          height: "100vh",
-          display: "stiky",
-          top: 0,
-        }}
-      >
+      <CssBaseline />
+      <Box role="layout-root" sx={{height: '100vh'}} >
         {/* <FloatingDocumentationContainer /> */}
-        <RibbonMenu ><SystemTray /></RibbonMenu>
-        <Box role="content" sx={{
-            display: "flex",
-            justifyContent:"space-between",
-            height:"100%",
-        }}>
-            <Box role="settings-panel" id={SETTINGS_PANEL_ID} aria-label="settings panel" sx={{
-                borderRight: 1, left: 0,
-                minWidth: '10vh', 
-                overflow: 'hidden',
-                '&:hover': {
-                    width: '30vh',
-                },
-                ...commonCSSPanels,
-            }} />
-            
-            <ViewportManager />
+        <StyledContent
+          role="content"
+        >
+          <Box sx={{ gridArea: "ribbon", width: "100%" }}>
+            <RibbonMenu>
+              <SystemTray />
+            </RibbonMenu>
+          </Box>
 
-            <Box role="details-panel" id={DETAILS_PANEL_ID} aria-label="details panel" sx={{
-                borderLeft: 1, right: 0,
-                minWidth: '1vh', width: 'min(1vh, 30vh)',
-                '&:hover': {
-                    width: '30vh',
-                },
-                ...commonCSSPanels,
-            }}/>
-        </Box>
+          <Box
+            id={SETTINGS_PANEL_ID}
+            role="settings-panel-container"
+            sx={{ gridArea: "settings", width: 'fit-content' }}
+          />
+
+          <ViewportManager sx={{ gridArea: "viewport" }} />
+
+          <Box
+            id={DETAILS_PANEL_ID}
+            role="details-panel-container"
+            sx={{ gridArea: "details" }}
+          />
+        </StyledContent>
       </Box>
     </ThemeProvider>
   );

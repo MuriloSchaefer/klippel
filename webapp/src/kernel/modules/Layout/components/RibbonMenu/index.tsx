@@ -1,5 +1,5 @@
 import React, { createElement, useCallback, useContext, useMemo } from "react";
-import { Tabs, Tab, Box } from "@mui/material";
+import { Tabs, Tab, Box, BoxProps } from "@mui/material";
 import { TabPanel, TabContext } from "@mui/lab";
 
 import useModule from "@kernel/hooks/useModule";
@@ -10,29 +10,37 @@ import SectionsProvider, { SectionsContext } from "./SectionsProvider";
 import useRibbonMenuManager from "../../hooks/useRibbonMenuManager";
 import { SECTIONS_REGISTRY_NAME } from "../../constants";
 
-const RibbonMenu = ({systemTray}: {systemTray?: React.ReactNode}) => {
+interface RibbonMenuProps extends BoxProps {
+  systemTray?: React.ReactNode;
+}
+
+const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
   const { componentRegistry } = storeModule.managers;
 
-  const componentRegistryManager = componentRegistry()
+  const componentRegistryManager = componentRegistry();
 
-  const ribbonMenuManager = useRibbonMenuManager()
-  const {selectTab} = ribbonMenuManager.functions
+  const ribbonMenuManager = useRibbonMenuManager();
+  const { selectTab } = ribbonMenuManager.functions;
 
   const tabs = useAppSelector(selectTabs);
   const activeTab = useAppSelector(selectActiveTab);
 
-  const handleTabSelection = useCallback((name: string)=>{
-    selectTab(name)
+  const handleTabSelection = useCallback((name: string) => {
+    selectTab(name);
     //setSections(name, [<div>testing</div>])
-  }, [])
+  }, []);
 
   if (!activeTab || !tabs) return <></>;
 
   return (
     <TabContext value={activeTab}>
-      <Box sx={{ display: "flex", justifyContent: 'space-between'  }}>
+      <Box
+        sx={{ display: "flex", justifyContent: "space-between"}}
+        role="ribbon-menu-tabs"
+        aria-label="ribbon menu tabs"
+      >
         <Tabs
           value={activeTab}
           aria-label="ribbon menu tabs"
@@ -51,7 +59,11 @@ const RibbonMenu = ({systemTray}: {systemTray?: React.ReactNode}) => {
             />
           ))}
         </Tabs>
-        <Box role="system-tray" aria-label="system tray" sx={{display: "flex", p:1, alignItems: "center"}}>
+        <Box
+          role="system-tray"
+          aria-label="system tray"
+          sx={{ display: "flex", p: 1, alignItems: "center" }}
+        >
           {systemTray}
         </Box>
       </Box>
@@ -62,17 +74,23 @@ const RibbonMenu = ({systemTray}: {systemTray?: React.ReactNode}) => {
         sx={{
           borderBottom: 1,
           borderColor: "divider",
-          minHeight: "15vmin",
-          maxHeight: "25vmin",
         }}
       >
         {tabs &&
           Object.entries(tabs).map(([name, tab]) => (
             <TabPanel value={name} key={`ribbon-panel-${name}`}>
-              {tab.sectionNames && tab.sectionNames.map((sectionName)=>{
-                const comp = componentRegistryManager.functions.getComponent(SECTIONS_REGISTRY_NAME, sectionName) 
-                return createElement(comp, {key: `ribbon-panel-${name}-section-${sectionName}`}, [])
-              })}
+              {tab.sectionNames &&
+                tab.sectionNames.map((sectionName) => {
+                  const comp = componentRegistryManager.functions.getComponent(
+                    SECTIONS_REGISTRY_NAME,
+                    sectionName
+                  );
+                  return createElement(
+                    comp,
+                    { key: `ribbon-panel-${name}-section-${sectionName}` },
+                    []
+                  );
+                })}
             </TabPanel>
           ))}
       </Box>
@@ -80,12 +98,15 @@ const RibbonMenu = ({systemTray}: {systemTray?: React.ReactNode}) => {
   );
 };
 
-export const RibbonMenuProvider = ({children}: {children?: React.ReactNode}) => {
-
-  const default_sections = useMemo(()=>({ file: [<div key="test">test</div>] }), [])
+export const RibbonMenuProvider = ({children, ...props}: RibbonMenuProps) => {
+  const default_sections = useMemo(
+    () => ({ file: [<div key="test">test</div>] }),
+    []
+  );
+  console.log(children)
   return (
     <SectionsProvider default_sections={default_sections}>
-      <RibbonMenu systemTray={children}/>
+      <RibbonMenu {...props} systemTray={children}/>
     </SectionsProvider>
   );
 };
