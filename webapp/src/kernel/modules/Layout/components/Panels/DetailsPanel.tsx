@@ -33,6 +33,7 @@ export const DetailsPanel = ({
         borderColor: 'divider',
         padding: 1,
         gap: 1,
+        minWidth: '15vw',
         '@media (orientation: portrait)': {
           borderLeft: 0,
           borderTop: 1,

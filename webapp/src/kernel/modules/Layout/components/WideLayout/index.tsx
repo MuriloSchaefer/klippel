@@ -33,22 +33,21 @@ declare module "@mui/material/styles" {
 
 const StyledContent = styled(Box)`
   display: grid;
-  grid-auto-columns: min-content;
-  grid-template-columns: 1fr auto 1fr;
-  height: 100%;
-  grid-template-rows: auto 1fr;
+  min-height: 100%;
+  min-width: 100%;
+
+  grid-template-rows: auto  1fr;
   grid-template-areas:
     "ribbon ribbon ribbon"
     "settings viewport details";
 
 
   @media (orientation: portrait) {
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto  2fr 2fr;
     grid-template-areas: 
     "ribbon ribbon"
-    "settings viewport"
-    "details details"
+    "viewport viewport"
+    "settings details"
     ;
   }
 `;
@@ -89,6 +88,9 @@ const Layout = () => {
         {/* <FloatingDocumentationContainer /> */}
         <StyledContent
           role="content"
+          sx={{
+            gridTemplateColumns: `auto minmax(auto, 4fr) auto`
+          }}
         >
           <Box sx={{ gridArea: "ribbon", width: "100%" }}>
             <RibbonMenu>
@@ -102,7 +104,7 @@ const Layout = () => {
             sx={{ gridArea: "settings", width: 'fit-content' }}
           />
 
-          <ViewportManager sx={{ gridArea: "viewport" }} />
+          <ViewportManager sx={{ gridArea: "viewport", }} />
 
           <Box
             id={DETAILS_PANEL_ID}

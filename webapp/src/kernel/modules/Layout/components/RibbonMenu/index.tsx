@@ -74,6 +74,7 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
         sx={{
           borderBottom: 1,
           borderColor: "divider",
+          minHeight: "10vh"
         }}
       >
         {tabs &&

@@ -30,6 +30,13 @@ export const SettingsPanel = ({
         display: "flex",
         flexDirection: "column",
         gap: 1,
+
+        '@media (orientation: portrait)': {
+          borderRight: 1,
+          borderTop: 1,
+          borderColor: 'divider',
+          height: 'max-content'
+        }
       }}
     >
       <Box

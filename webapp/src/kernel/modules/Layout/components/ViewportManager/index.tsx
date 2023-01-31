@@ -37,11 +37,12 @@ const ViewportManagerContent = () => {
     () =>
       Object.entries(viewports).reduce(
         (map, [name, state]) => {
-          if (name === 'home') return map
+          if (name === "home") return map;
           if (state.group)
             return {
               ...map,
-              [state.group]: state.group in map ? [...map[state.group], state] : [state],
+              [state.group]:
+                state.group in map ? [...map[state.group], state] : [state],
             };
           return {
             ...map,
@@ -58,13 +59,13 @@ const ViewportManagerContent = () => {
   } = useViewportManager();
 
   const handleAddViewport = useCallback(() => {
-    addViewport("Nova aba", "home", 'group');
+    addViewport("Nova aba", "home", "group");
   }, []);
-  
-  const handleCloseViewport = useCallback((name: string)=>{
-    console.log(name)
-    closeViewport(name)
-  }, [])
+
+  const handleCloseViewport = useCallback((name: string) => {
+    console.log(name);
+    closeViewport(name);
+  }, []);
 
   return (
     <>
@@ -73,14 +74,14 @@ const ViewportManagerContent = () => {
           value={selectedViewport}
           aria-label="viewport tabs"
           role="viewport-tabs"
-          sx={{ minWidth: 0, overflow:'scroll' }}
+          sx={{ maxWidth: "100%" }}
         >
           <Tab
             value="home"
             key="home"
             icon={<HomeSharpIcon />}
             iconPosition="start"
-            onClick={()=>selectViewport('home')}
+            onClick={() => selectViewport("home")}
             id={"home"}
             sx={{ width: "fit-content", minWidth: 0, p: 1 }}
             //   label={<div>test</div>}
@@ -93,17 +94,24 @@ const ViewportManagerContent = () => {
                   key={`${vp.name}-tab`}
                   id={vp.name}
                   sx={{ width: "fit-content", p: 1 }}
-                  onClick={()=>selectViewport(vp.name)}
+                  onClick={() => selectViewport(vp.name)}
                   label={
-                    <span >
-                      <span >{vp.title}</span>
-                      <IconButton size="small" component="span" data-vp-id={vp.name} onClick={(e)=>{
-                        e.stopPropagation()
-                        handleCloseViewport(vp.name)
-                      }}>
-                        <CloseSharpIcon />
-                      </IconButton>
-                    </span>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>{vp.title}</span>
+                      <CloseSharpIcon
+                        sx={{ width: 0.3, marginLeft: 1, alignItems: 'center' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCloseViewport(vp.name);
+                        }}
+                      />
+                    </Box>
                   }
                   draggable
                   wrapped
@@ -117,32 +125,34 @@ const ViewportManagerContent = () => {
                 sx={{ borderTop: 2, borderTopColor: "#ff0000" }}
               >
                 {groupedViewports.map((vp) => (
-                <Tab
-                  value={vp.name}
-                  key={`${vp.name}-tab`}
-                  id={vp.name}
-                  sx={{ width: "fit-content", p: 1 }}
-                  onClick={()=>selectViewport(vp.name)}
-                  label={
-                    <span>
-                      <span >{vp.title}</span>
-                      <IconButton size="small" component="span" onClick={(e)=>{
-                        e.stopPropagation()
-                        handleCloseViewport(vp.name)
-                      }}>
-                        <CloseSharpIcon />
-                      </IconButton>
-                    </span>
-                  }
-                  draggable="true"
-                  wrapped
-                />
-              ))}
+                  <Tab
+                    value={vp.name}
+                    key={`${vp.name}-tab`}
+                    id={vp.name}
+                    sx={{ width: "fit-content", p: 1 }}
+                    onClick={() => selectViewport(vp.name)}
+                    label={
+                      <Box sx={{ display: "flex" }}>
+                        <span>{vp.title}</span>
+                        <IconButton size="small" component="span">
+                          <CloseSharpIcon
+                            sx={{ width: 0.5, marginLeft: 1 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCloseViewport(vp.name);
+                            }}
+                          />
+                        </IconButton>
+                      </Box>
+                    }
+                    draggable="true"
+                    wrapped
+                  />
+                ))}
               </Box>
             );
           })}
 
-          
           <Tab
             value="new"
             key="new"
@@ -175,16 +185,14 @@ const ViewportManagerContent = () => {
       >
         <ViewportLoader />
       </Box>
-      </>
+    </>
   );
 };
 
-
-const ViewportManager = ({sx, ...props}: BoxProps) => {
-
+const ViewportManager = ({ sx, ...props }: BoxProps) => {
   return (
     <Box role="viewport-manager" sx={{ ...sx }} {...props}>
-        <ViewportManagerContent />
+      <ViewportManagerContent />
     </Box>
   );
 };
