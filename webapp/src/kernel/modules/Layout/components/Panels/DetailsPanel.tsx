@@ -1,8 +1,12 @@
+import useModule from "@kernel/hooks/useModule";
+import { Store } from "@kernel/modules/Store";
 import CloseSharp from "@mui/icons-material/CloseSharp";
 import { Box, IconButton, styled } from "@mui/material";
-import React from "react";
+import React, { MouseEvent, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { DETAILS_PANEL_ID } from "../../constants";
+import usePanelsManager from "../../hooks/usePanelsManager";
+import { selectDetailsPanel } from "../../store/panels/selectors";
 
 
 const StyledPanel = styled(Box)`
@@ -20,14 +24,29 @@ export const DetailsPanel = ({
   display?: boolean
   children: React.ReactElement;
 }) => {
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
+
+  const panelsManager = usePanelsManager();
+  const panelState = useAppSelector(selectDetailsPanel);
+
   const ref = document.getElementById(DETAILS_PANEL_ID);
 
-  if (!ref) return null;
+  const handleToggle = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      if (panelState && panelState.state === "opened")
+        panelsManager.functions.closeDetails();
+    },
+    [panelState?.state]
+  );
+
+  if (!ref || !panelState) return null;
   return createPortal(
     <StyledPanel
       role="details-panel"
       aria-label="details panel"
-      display={display ? 'flex' : 'none'}
+      display={panelState.state === 'opened' ? 'flex' : 'none'}
       sx={{
         borderLeft: 1,
         borderColor: 'divider',
@@ -53,12 +72,9 @@ export const DetailsPanel = ({
         <IconButton
           size="small"
           component="span"
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log(e);
-          }}
+          onClick={handleToggle}
         >
-          <CloseSharp />
+          {panelState.state === "opened" && <CloseSharp />}
         </IconButton>
         <span>{title ?? "Detalhes"}</span>
       </Box>

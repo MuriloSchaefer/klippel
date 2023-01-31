@@ -1,22 +1,14 @@
 import { PaletteMode } from "@mui/material";
+import {initialState as panelsInitialState, PanelsState} from "./panels/state";
 import { RibbonMenuState, Tabs } from "./ribbonMenu/state";
 import { viewportManagerState } from "./viewports/state";
 
 export type Theme = PaletteMode;
 
-export interface PanelState {
-  open: boolean;
-  title: string;
-}
-export interface Panels {
-  settings: PanelState;
-  details: PanelState;
-}
-
 export interface LayoutState {
   theme: Theme;
   ribbonMenu: RibbonMenuState;
-  panels: Panels;
+  panels: PanelsState;
   viewportManager: viewportManagerState;
 }
 
@@ -35,10 +27,7 @@ export const layoutInitialState: LayoutState = {
       },
     },
   },
-  panels: {
-    settings: { open: true, title: "Configurações" },
-    details: { open: false, title: "Detalhes" },
-  },
+  panels: panelsInitialState,
   viewportManager: {
     activeViewport: "home",
     groups: {},

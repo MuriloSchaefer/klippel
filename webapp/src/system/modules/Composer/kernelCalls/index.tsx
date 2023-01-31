@@ -19,6 +19,7 @@ export function startModule({
     
 
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
+    
     componentRegistryManager.functions.registerComponents({
       ribbonMenuSections: {
         ModelSelector: React.memo(ModelSection),

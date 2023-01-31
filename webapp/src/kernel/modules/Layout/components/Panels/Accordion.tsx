@@ -10,6 +10,7 @@ import {
 import ExpandMoreSharp from "@mui/icons-material/ExpandMoreSharp";
 import { OverridableComponent } from "@mui/material/OverridableComponent";
 import SettingsInputCompositeSharp from "@mui/icons-material/SettingsInputCompositeSharp";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 interface AccordionProps extends MUIAccordionProps {
   name: string;
@@ -27,6 +28,7 @@ export const Accordion = ({
   sx,
   ...otherProps
 }: AccordionProps) => {
+  const biggerThan1024 = useMediaQuery('(min-width:1024px)')
   return (
     <MUIAccordion
       expanded={expanded ?? false}
@@ -48,7 +50,7 @@ export const Accordion = ({
         >
           {icon ?? <SettingsInputCompositeSharp />}
           <Typography sx={{ width: "33%", flexShrink: 0 }}>{name}</Typography>
-          {summary && (
+          {summary && biggerThan1024 && (
             <Typography sx={{ color: "text.secondary" }}>{summary}</Typography>
           )}
         </Box>

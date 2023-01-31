@@ -44,6 +44,7 @@ const StyledContent = styled(Box)`
 
   @media (orientation: portrait) {
     grid-template-rows: auto  2fr 2fr;
+    grid-template-columns: auto  auto;
     grid-template-areas: 
     "ribbon ribbon"
     "viewport viewport"
