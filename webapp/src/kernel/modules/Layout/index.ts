@@ -8,6 +8,7 @@ import useViewportManager from "./hooks/useViewportManager";
 import SettingsPanel from "./components/Panels/SettingsPanel";
 import DetailsPanel from "./components/Panels/DetailsPanel";
 import { Accordion } from "./components/Panels/Accordion";
+import usePanelsManager from "./hooks/usePanelsManager";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -21,6 +22,7 @@ export interface ILayoutModule extends IModule {
     useLayoutManager: typeof useLayoutManager
     useRibbonMenuManager: typeof useRibbonMenuManager
     useViewportManager: typeof useViewportManager
+    usePanelsManager: typeof usePanelsManager
   },  
 }
 
@@ -44,7 +46,8 @@ const LayoutModule: ILayoutModule = {
   hooks: {
     useLayoutManager,
     useRibbonMenuManager,
-    useViewportManager
+    useViewportManager,
+    usePanelsManager
   },
   kernelCalls: {
     startModule,

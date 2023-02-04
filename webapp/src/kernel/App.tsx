@@ -4,10 +4,12 @@ import React from "react";
 // Internal imports
 import ModulesProvider, { ModulesMap } from "./modules/Loader/components/Provider";
 import DynamicStore from "./modules/Store/components/DynamicStore";
-
 import Layout from "./modules/Layout/components/WideLayout";
 
+// Kernel modules
+import SVG from "./modules/SVG";
 
+// System modules
 import composerModule from "@system/modules/Composer";
 
 export interface InitializationConfig {
@@ -17,7 +19,7 @@ export interface InitializationConfig {
 const App = (): React.ReactElement => {
 
   const builtInModules: ModulesMap = {
-    kernel: [],
+    kernel: [SVG],
     system: [composerModule]
   }
   

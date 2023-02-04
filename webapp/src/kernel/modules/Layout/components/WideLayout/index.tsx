@@ -36,20 +36,17 @@ const StyledContent = styled(Box)`
   min-height: 100%;
   min-width: 100%;
 
-  grid-template-rows: auto  1fr;
+  grid-template-rows: auto 1fr;
   grid-template-areas:
     "ribbon ribbon ribbon"
     "settings viewport details";
 
-
   @media (orientation: portrait) {
-    grid-template-rows: auto  2fr 2fr;
-    grid-template-columns: auto  auto;
-    grid-template-areas: 
-    "ribbon ribbon"
-    "viewport viewport"
-    "settings details"
-    ;
+    grid-template-rows: auto 2fr 2fr;
+    grid-template-areas:
+      "ribbon ribbon"
+      "viewport viewport"
+      "settings details";
   }
 `;
 
@@ -85,15 +82,20 @@ const Layout = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box role="layout-root" sx={{height: '100vh'}} >
+      <Box role="layout-root" sx={{ height: "100vh" }}>
         {/* <FloatingDocumentationContainer /> */}
         <StyledContent
           role="content"
           sx={{
-            gridTemplateColumns: `auto minmax(auto, 4fr) auto`
+            gridTemplateColumns: `auto minmax(auto, 4fr) auto`,
           }}
         >
-          <Box sx={{ gridArea: "ribbon", width: "100%" }}>
+          <Box
+            sx={{
+              gridArea: "ribbon",
+              width: "100%",
+            }}
+          >
             <RibbonMenu>
               <SystemTray />
             </RibbonMenu>
@@ -102,15 +104,36 @@ const Layout = () => {
           <Box
             id={SETTINGS_PANEL_ID}
             role="settings-panel-container"
-            sx={{ gridArea: "settings", width: 'fit-content' }}
+            sx={{ gridArea: "settings", 
+            minHeight: "100%",
+            borderTop: 0,
+            borderRight: 1,
+            borderColor: "divider",
+            '@media (orientation: portrait)': {
+              borderTop: 1,
+              borderColor: "divider",
+            }
+           }}
           />
 
-          <ViewportManager sx={{ gridArea: "viewport", }} />
+          <ViewportManager sx={{ gridArea: "viewport" }} />
 
           <Box
             id={DETAILS_PANEL_ID}
             role="details-panel-container"
-            sx={{ gridArea: "details" }}
+            sx={{
+              gridArea: "details",
+              width: "100%",
+              minHeight: "100%",
+              borderLeft: 1,
+              borderColor: "divider",
+              '@media (orientation: portrait)': {
+                borderLeft: 0,
+                borderTop: 1,
+                borderColor: 'divider',
+                height: 'max-content'
+              }
+            }}
           />
         </StyledContent>
       </Box>

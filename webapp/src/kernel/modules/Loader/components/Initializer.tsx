@@ -21,9 +21,10 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
 
     const [isInitializing, setIsInitializing] = useState(true)
     const [graphInitialized, setGraphInitialized] = useState(false)
-    const [extraModulesLoaded, setExtraModulesLoaded] = useState(0)
     const [staticModulesLoaded, setStaticModulesLoaded] = useState(0)
-    // TODO: Find a better way to load initial modules. This current way forces an
+    const [kernelModulesLoaded, setKernelModulesLoaded] = useState(0)
+    const [extraModulesLoaded, setExtraModulesLoaded] = useState(0)
+    // CHALLENGE: Find a better way to load initial modules. This current way forces an
     // app rerender for each new module added.
     const staticModules = useMemo(() => ([
         module,
@@ -34,6 +35,7 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
     const graphsManager = graphModule.managers.graphs()
     const {createGraph,resetGraph} = graphsManager.functions
 
+    // LOAD STATIC MODULES
     useEffect(() => {
         // initialization logic (we may separate it in a custom hook)
         const mod = staticModules[staticModulesLoaded]
@@ -41,22 +43,35 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
         
     }, [staticModulesLoaded])
 
-
+    // LOAD KERNEL MODULES
     useEffect(() => {
         if (staticModulesLoaded === staticModules.length){
-            // all static modules are loaded and we can now load the extra ones
+            // all static modules are loaded and we can now load the kernel ones
+
+            const mod = extraModules.kernel[kernelModulesLoaded]
+            if (mod && !moduleManager.functions.isModuleLoaded(mod.name)) loadKernelModule(mod)
+        }   
+    }, [staticModulesLoaded, kernelModulesLoaded])
+
+
+    // LOAD EXTRA MODULES
+    useEffect(() => {
+        if (kernelModulesLoaded === extraModules.kernel.length){
+            // all kernel modules are loaded and we can now load the extra ones
 
             const mod = extraModules.system[extraModulesLoaded]
             if (mod && !moduleManager.functions.isModuleLoaded(mod.name)) loadExtraSystemModule(mod)
         }
 
         
-    }, [staticModulesLoaded, extraModulesLoaded])
+    }, [kernelModulesLoaded, extraModulesLoaded])
 
+    // SET INITIALIZATION COMPLETE
     useEffect(()=>{
         if(extraModulesLoaded === extraModules.system.length) setIsInitializing(false)
     }, [extraModulesLoaded])
 
+    // CREATE GRAPH
     useEffect(()=>{
         if (!isInitializing && !graph.state) {
             createGraph(GRAPH_NAME)
@@ -64,6 +79,7 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
         }
     }, [isInitializing])
 
+    // POPULATE GRAPH
     useEffect(()=>{
         // once all modules are loaded 
         //  now we create the modules graph and add all loaded modules as nodes
@@ -88,6 +104,21 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
                 }, outputs: {}
             })
         )
+        extraModules.kernel.forEach(mod =>{
+            mod.depends_on.push('Loader') // all modules depends on the loader
+            const dependencies = mod.depends_on.reduce((inputs, dependency)=>{
+                const dependencyEdge = {
+                    id: `${dependency}->${mod.name}`,
+                    sourceId: dependency, targedId: mod.name
+                }
+                return {...inputs, [dependency]: dependencyEdge}
+            }, {})
+            graph.actions.addNode({
+                id: mod.name,
+                inputs: dependencies, outputs: {}
+            })
+        })
+        
         extraModules.system.forEach(mod =>{
             mod.depends_on.push('Loader') // all modules depends on the loader
             const dependencies = mod.depends_on.reduce((inputs, dependency)=>{
@@ -105,9 +136,14 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
         setIsInitializing(false)
     }, [graphInitialized])
 
+    // HELPERS
     function loadStaticModule(mod: IModule){
         moduleManager.functions.loadModule(mod)
         setStaticModulesLoaded(staticModulesLoaded+1)
+    }
+    function loadKernelModule(mod: IModule){
+        moduleManager.functions.loadModule(mod)
+        setKernelModulesLoaded(kernelModulesLoaded+1)
     }
     function loadExtraSystemModule(mod: IModule){
         moduleManager.functions.loadModule(mod)

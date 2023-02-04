@@ -1,11 +1,10 @@
-import { PaletteMode } from "@mui/material";
 import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
-import { newComposition, compositionCreated } from "./actions";
+import { createComposition, compositionCreated } from "./actions";
 import { ComposerState } from "./state";
 
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
-  actionCreator: newComposition,
+  actionCreator: createComposition,
   effect: async (
     { payload }: PayloadAction<{ name: string; svgPath: string }>,
     listenerApi
@@ -18,8 +17,8 @@ middlewares.startListening({
     dispatch(
       compositionCreated(compositionsManager.compositions[payload.name])
     ); // dispatch event
-    // TODO: dispath fetcher and parser
   },
 });
+
 
 export default middlewares;

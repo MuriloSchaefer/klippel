@@ -20,7 +20,6 @@ export const SectionsProvider = ({
   default_sections?: SectionsMap
 }) => {
   const [currentSections, setSections] = useState<SectionsMap>(default_sections ?? {});
-  console.log('state: ',currentSections)
 
   
 

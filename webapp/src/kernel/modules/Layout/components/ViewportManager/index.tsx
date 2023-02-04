@@ -27,6 +27,7 @@ type GroupedViewports = {
   [name: string]: ViewportState[];
 };
 
+
 const ViewportManagerContent = () => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
@@ -105,7 +106,7 @@ const ViewportManagerContent = () => {
                     >
                       <span>{vp.title}</span>
                       <CloseSharpIcon
-                        sx={{ width: 0.3, marginLeft: 1, alignItems: 'center' }}
+                        sx={{ width: 0.3, marginLeft: 1, alignItems: "center" }}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleCloseViewport(vp.name);
@@ -117,40 +118,42 @@ const ViewportManagerContent = () => {
                   wrapped
                 />
               ));
-            return (
-              <Box
-                role="grouped-tab-container"
-                key={groupName}
-                id={`vp-group-${groupName}`}
-                sx={{ borderTop: 2, borderTopColor: "#ff0000" }}
-              >
-                {groupedViewports.map((vp) => (
-                  <Tab
-                    value={vp.name}
-                    key={`${vp.name}-tab`}
-                    id={vp.name}
-                    sx={{ width: "fit-content", p: 1 }}
-                    onClick={() => selectViewport(vp.name)}
-                    label={
-                      <Box sx={{ display: "flex" }}>
-                        <span>{vp.title}</span>
-                        <IconButton size="small" component="span">
-                          <CloseSharpIcon
-                            sx={{ width: 0.5, marginLeft: 1 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCloseViewport(vp.name);
-                            }}
-                          />
-                        </IconButton>
-                      </Box>
-                    }
-                    draggable="true"
-                    wrapped
-                  />
-                ))}
-              </Box>
-            );
+            return groupedViewports.map((vp) => (
+              <Tab
+                value={vp.name}
+                key={`${vp.name}-tab`}
+                id={vp.name}
+                sx={{
+                  width: "fit-content",
+                  p: 1,
+                  borderTop: 2,
+                  borderColor: "red",
+                }}
+                onClick={() => selectViewport(vp.name)}
+                label={
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span>{vp.title}</span>
+                    <IconButton size="small" component="span">
+                      <CloseSharpIcon
+                        sx={{ width: 0.5, marginLeft: 1 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCloseViewport(vp.name);
+                        }}
+                      />
+                    </IconButton>
+                  </Box>
+                }
+                draggable="true"
+                wrapped
+              />
+            ));
           })}
 
           <Tab

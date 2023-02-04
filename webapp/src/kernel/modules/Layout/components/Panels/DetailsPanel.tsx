@@ -1,7 +1,7 @@
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import CloseSharp from "@mui/icons-material/CloseSharp";
-import { Box, IconButton, styled } from "@mui/material";
+import { Box, IconButton, styled, useMediaQuery } from "@mui/material";
 import React, { MouseEvent, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { DETAILS_PANEL_ID } from "../../constants";
@@ -22,15 +22,17 @@ export const DetailsPanel = ({
 }: {
   title?: string;
   display?: boolean
-  children: React.ReactElement;
+  children: React.ReactElement | React.ReactElement[];
 }) => {
+  const ref = document.getElementById(DETAILS_PANEL_ID);
+  const isPortrait = useMediaQuery('(orientation: portrait)')
+
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
   const panelsManager = usePanelsManager();
   const panelState = useAppSelector(selectDetailsPanel);
 
-  const ref = document.getElementById(DETAILS_PANEL_ID);
 
   const handleToggle = useCallback(
     (e: MouseEvent) => {
@@ -48,17 +50,10 @@ export const DetailsPanel = ({
       aria-label="details panel"
       display={panelState.state === 'opened' ? 'flex' : 'none'}
       sx={{
-        borderLeft: 1,
-        borderColor: 'divider',
         padding: 1,
         gap: 1,
         minWidth: '15vw',
-        '@media (orientation: portrait)': {
-          borderLeft: 0,
-          borderTop: 1,
-          borderColor: 'divider',
-          height: 'max-content'
-        }
+        
       }}
     >
       <Box
@@ -69,13 +64,13 @@ export const DetailsPanel = ({
           gap: 2
         }}
       >
-        <IconButton
+        { !isPortrait && <IconButton
           size="small"
           component="span"
           onClick={handleToggle}
         >
           {panelState.state === "opened" && <CloseSharp />}
-        </IconButton>
+        </IconButton>}
         <span>{title ?? "Detalhes"}</span>
       </Box>
       <Box role="panel-content">{children}</Box>

@@ -1,16 +1,10 @@
 import { StartModuleProps } from "@kernel/modules/base";
-import { ILayoutModule } from "@kernel/modules/Layout";
-import { ModulesContextType } from "@kernel/modules/Loader/context";
-import { StoreManager } from "@kernel/modules/Store/hooks/useStoreManager";
-import { Button } from "@mui/material";
 import React from "react";
 import Composerviewport from "../components/ComposerViewport";
 import ModelSection from "../components/ModelSection";
 import { MODULE_NAME } from "../constants";
+import middlewares from "../store/middlewares";
 import slice from "../store/slice";
-
-//import slice from "../store/Slice";
-const testSection2 = React.memo(()=><>test my custom section 2</>)
 
 
 export function startModule({
@@ -19,11 +13,11 @@ export function startModule({
     
 
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
+    storeManager.functions.registerMiddleware(middlewares)
     
     componentRegistryManager.functions.registerComponents({
       ribbonMenuSections: {
         ModelSelector: React.memo(ModelSection),
-        PrinterSection: testSection2
       },
       viewportTypes: {
         Composer: React.memo(Composerviewport)
@@ -31,17 +25,9 @@ export function startModule({
     })
     ribbonMenuManager.functions.addNewTab({
       label: "Compositor",
-      sectionNames: ['ModelSelector', 'PrinterSection'],
+      sectionNames: ['ModelSelector'],
       type: "base"
     })
-    // viewportManager.functions.registerViewportTypes({
-    //   Composer: composerComp
-    // })
-    
-    
-
-    
-
 
     //storeManager.functions.registerMiddleware(middleware)
 }

@@ -1,13 +1,18 @@
-import { IModule } from "@kernel/modules/base";
+import { IModule } from "../base";
+import SVGViewer from "./components/SVGViewer";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
+import useSVGManager from "./hooks/useSVGManager";
 import { startModule } from "./kernelCalls";
 
-
-export interface IComposerModule extends IModule {
+export interface ISVGModule extends IModule {
   name: typeof MODULE_NAME,
   version: typeof MODULE_VERSION,
   components: {
-  }
+    SVGViewer: typeof SVGViewer
+  },
+  hooks: {
+    useSVGManager: typeof useSVGManager
+  },  
 }
 
 /**
@@ -18,11 +23,15 @@ export interface IComposerModule extends IModule {
  * ui state management,
  * etc.
  */
-const module: IComposerModule = {
+const module: ISVGModule = {
   name: MODULE_NAME,
   version: MODULE_VERSION,
-  depends_on: ['Layout', 'Graph', 'SVG'],
+  depends_on: [],
   components: {
+    SVGViewer
+  },
+  hooks: {
+    useSVGManager
   },
   kernelCalls: {
     startModule,

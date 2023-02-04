@@ -12,7 +12,7 @@ export const ModelSection = () => {
 
     const handleModelSelection = useCallback((e: MouseEvent)=>{
         console.log(e)
-        compositionsManager.functions.newComposition('Test', 'camisa-polo/processed.svg')
+        compositionsManager.functions.createComposition('Test', 'camisa-polo/processed.svg')
     }, [])
 
     return <Button onClick={handleModelSelection}>Model</Button>

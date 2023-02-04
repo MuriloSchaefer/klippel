@@ -104,7 +104,7 @@ export const RibbonMenuProvider = ({children, ...props}: RibbonMenuProps) => {
     () => ({ file: [<div key="test">test</div>] }),
     []
   );
-  console.log(children)
+  
   return (
     <SectionsProvider default_sections={default_sections}>
       <RibbonMenu {...props} systemTray={children}/>

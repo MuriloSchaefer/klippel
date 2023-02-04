@@ -18,7 +18,7 @@ export const SettingsPanel = ({
   children,
 }: {
   title?: string;
-  children: React.ReactElement;
+  children: React.ReactElement[];
 }) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
@@ -46,9 +46,7 @@ export const SettingsPanel = ({
       role="settings-panel"
       aria-label="settings panel"
       sx={{
-        borderRight: 1,
         overflow: "hidden",
-        borderColor: "divider",
         height: "100%",
         padding: 1,
         maxWidth: panelState.state === "collapsed" ? "6vw" : "100%",
@@ -58,11 +56,7 @@ export const SettingsPanel = ({
         gap: 1,
 
         "@media (orientation: portrait)": {
-          borderRight: 1,
-          borderTop: 1,
           maxWidth: panelState.state === "collapsed" ? "8vw" : "100%",
-          borderColor: "divider",
-          height: "max-content",
         },
       }}
     >
