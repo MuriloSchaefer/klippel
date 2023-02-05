@@ -1,5 +1,6 @@
 import useModule from "@kernel/hooks/useModule";
 import { Manager } from "@kernel/modules/base";
+import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
 import { ISVGModule } from "@kernel/modules/SVG";
@@ -15,6 +16,7 @@ interface CompositionsManager extends Manager {
 export const useCompositionsManager = (): CompositionsManager => {
 
     const storeModule = useModule<Store>("Store");
+    const graphModule = useModule<IGraphModule>("Graph");
     const layoutModule = useModule<ILayoutModule>('Layout')
     const svgModule = useModule<ISVGModule>("SVG");
 
@@ -23,15 +25,17 @@ export const useCompositionsManager = (): CompositionsManager => {
 
     const viewportManager = layoutModule.hooks.useViewportManager()
     const svgManager = svgModule.hooks.useSVGManager()
+    const graphManager = graphModule.managers.graphs()
 
     return {
         functions: {
             createComposition(name, modelPath){
                 // dispatch
-                viewportManager.functions.addViewport(name, 'Composer', undefined, 'composition-')
+                const vpName = viewportManager.functions.addViewport(name, 'Composer', undefined, 'composition-')
                 
                 const path = `catalog/${modelPath}`
-                dispatch(createComposition({name: name, svgPath: path}))
+                graphManager.functions.createGraph(vpName)
+                dispatch(createComposition({name: name, svgPath: path, graphId: vpName}))
                 svgManager.functions.loadSVG(path)
             }
         }

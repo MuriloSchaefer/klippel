@@ -16,7 +16,7 @@ export interface ViewportManager extends Manager {
     functions: {
         registerViewportTypes(components: {[name: string]: ViewportType}): void;
         getViewportTypeComponent(name: string): ViewportType;
-        addViewport(title: string, type: string, group?: string, namePrefix?: string):ViewportState;
+        addViewport(title: string, type: string, group?: string, namePrefix?: string):string;
         selectViewport(name: string):void;
         closeViewport(name: string):void;
         renameViewport(oldName: string, newName: string): void;
@@ -55,6 +55,7 @@ export function useViewportManager():ViewportManager{
                 const name = _.uniqueId(namePrefix);
 
                 dispatch(addViewport({name, title, type, group}))
+                return name
             },
             renameViewport(oldName, newName){
                 dispatch(renameViewport({oldName, newName}))
