@@ -9,6 +9,7 @@ import { ILayoutModule } from "@kernel/modules/Layout";
 
 const ComposerSettingsPanel = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
+
   const { SettingsPanel, Accordion } = layoutModule.components;
 
   return (
@@ -17,7 +18,6 @@ const ComposerSettingsPanel = () => {
         name="Composição"
         icon={<AccountTreeSharpIcon />}
         summary="composição da peça"
-        expanded={true}
       >
         <CompositionTree />
       </Accordion>

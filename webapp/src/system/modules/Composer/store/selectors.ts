@@ -11,6 +11,13 @@ export const selectCompositionState = (name: string) =>
       state && state.compositionsManager.compositions[name]
   );
 
+  export const selectCompositionSettingsUIState = (name: string) =>
+  createSelector(
+    selectComposerModule,
+    (state: ComposerState | undefined) =>
+      state && state.compositionsManager.compositions[name].UI.settingsPanel
+  );
+
 
 export const selectCompositionStateByViewportName = <O=CompositionState | undefined>(
   viewport: string,

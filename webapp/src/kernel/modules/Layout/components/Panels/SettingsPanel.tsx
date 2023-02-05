@@ -1,4 +1,4 @@
-import React, { MouseEvent, useCallback } from "react";
+import React, { cloneElement, MouseEvent, useCallback } from "react";
 import { createPortal } from "react-dom";
 
 import { Box, IconButton } from "@mui/material";
@@ -47,8 +47,8 @@ export const SettingsPanel = ({
       aria-label="settings panel"
       sx={{
         overflowX: "hidden",
-        '&::-webkit-scrollbar': {
-          width: '0.4em'
+        "&::-webkit-scrollbar": {
+          width: "0.4em",
         },
 
         height: "100%",
@@ -73,9 +73,11 @@ export const SettingsPanel = ({
           gap: panelState.state === "collapsed" ? 1 : 4,
         }}
       >
-        <TuneSharp />
         {panelState.state === "expanded" && (
-          <span>{title ?? "Configurações"}</span>
+          <>
+            <TuneSharp />
+            <span>{title ?? "Configurações"}</span>
+          </>
         )}
         <IconButton
           size="small"
@@ -89,7 +91,20 @@ export const SettingsPanel = ({
           )}
         </IconButton>
       </Box>
-      <Box role="panel-content">{children}</Box>
+      <Box
+        role="panel-content"
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          placeSelf: "center",
+          gap: panelState.state === "collapsed" ? 2 : 0,
+          marginTop: 4,
+        }}
+      >
+        {children.map((child) =>
+          cloneElement(child, { state: panelState.state })
+        )}
+      </Box>
     </Box>,
     ref
   );

@@ -7,6 +7,7 @@ import HomeSharpIcon from "@mui/icons-material/HomeSharp";
 import NotificationsSharpIcon from "@mui/icons-material/NotificationsSharp";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
+import CastSharpIcon from '@mui/icons-material/CastSharp';
 
 // Kernel
 import useModule from "@kernel/hooks/useModule";
@@ -172,9 +173,10 @@ const ViewportManagerContent = () => {
         <Box
           role="viewport-notifications"
           aria-label="viewport notifications"
-          sx={{ display: "flex", p: 1, alignItems: "center" }}
+          sx={{ display: "flex", p: 1, gap: 2, alignItems: "center" }}
         >
-          <NotificationsSharpIcon />
+          <CastSharpIcon fontSize="small"/>
+          <NotificationsSharpIcon  fontSize="small"/>
         </Box>
       </Box>
 

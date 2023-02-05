@@ -1,11 +1,12 @@
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
-import { Box } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import { useCallback } from "react";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { Store } from "@kernel/modules/Store";
 import { selectCompositionStateByViewportName } from "../store/selectors";
 import ComposerSettingsPanel from "./SettingsPanel";
+import FloatingButtons from "./FloatingButtons";
 
 export const Composerviewport = () => {
   const storeModule = useModule<Store>("Store");
@@ -35,9 +36,9 @@ export const Composerviewport = () => {
   if (!compositionState) return null
   
   return (
-    <Box role="composer-viewport" sx={{padding: 1, height: '100%'}}>
+    <Box role="composer-viewport" sx={{padding: 1, height: '100%', position: 'relative', cursor: 'crosshair'}}>
+      <FloatingButtons />
       <SVGViewer path={compositionState.svgPath} beforeInjection={beforeInjectionHandle}/>
-      
       
       <ComposerSettingsPanel />
 
