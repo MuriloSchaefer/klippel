@@ -33,10 +33,10 @@ declare module "@mui/material/styles" {
 
 const StyledContent = styled(Box)`
   display: grid;
-  min-height: 100%;
-  min-width: 100%;
+  height: 100vh;
 
-  grid-template-rows: auto 1fr;
+  grid-template-rows: min-content auto;
+  overflow: hidden;
   grid-template-areas:
     "ribbon ribbon ribbon"
     "settings viewport details";
@@ -82,7 +82,7 @@ const Layout = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box role="layout-root" sx={{ height: "100vh" }}>
+      <Box role="layout-root" sx={{ minHeight: "100vh" }}>
         {/* <FloatingDocumentationContainer /> */}
         <StyledContent
           role="content"
@@ -109,6 +109,7 @@ const Layout = () => {
             borderTop: 0,
             borderRight: 1,
             borderColor: "divider",
+            overflow: 'auto',
             '@media (orientation: portrait)': {
               borderTop: 1,
               borderColor: "divider",
@@ -127,6 +128,7 @@ const Layout = () => {
               minHeight: "100%",
               borderLeft: 1,
               borderColor: "divider",
+              overflowY: 'auto',
               '@media (orientation: portrait)': {
                 borderLeft: 0,
                 borderTop: 1,

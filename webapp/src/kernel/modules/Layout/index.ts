@@ -9,6 +9,7 @@ import SettingsPanel from "./components/Panels/SettingsPanel";
 import DetailsPanel from "./components/Panels/DetailsPanel";
 import { Accordion } from "./components/Panels/Accordion";
 import usePanelsManager from "./hooks/usePanelsManager";
+import { getViewportState, selectActiveViewport } from "./store/viewports/selectors";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -23,7 +24,13 @@ export interface ILayoutModule extends IModule {
     useRibbonMenuManager: typeof useRibbonMenuManager
     useViewportManager: typeof useViewportManager
     usePanelsManager: typeof usePanelsManager
-  },  
+  },
+  store: {
+    selectors: {
+      selectActiveViewport: typeof selectActiveViewport,
+      getViewportState: typeof getViewportState
+    }
+  }
 }
 
 /**
@@ -48,6 +55,12 @@ const LayoutModule: ILayoutModule = {
     useRibbonMenuManager,
     useViewportManager,
     usePanelsManager
+  },
+  store: {
+    selectors: {
+      selectActiveViewport,
+      getViewportState
+    }
   },
   kernelCalls: {
     startModule,

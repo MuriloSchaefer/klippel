@@ -35,7 +35,7 @@ export const useCompositionsManager = (): CompositionsManager => {
                 
                 const path = `catalog/${modelPath}`
                 graphManager.functions.createGraph(vpName)
-                dispatch(createComposition({name: name, svgPath: path, graphId: vpName}))
+                dispatch(createComposition({name: name, viewportName: vpName, svgPath: path, graphId: vpName}))
                 svgManager.functions.loadSVG(path)
             }
         }

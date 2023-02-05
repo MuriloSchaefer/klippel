@@ -5,7 +5,7 @@ import { CompositionState } from "./state";
 
 
 // Commands
-export const createComposition = createAction<{name: string, svgPath: string, graphId: string}>(
+export const createComposition = createAction<{name: string, viewportName: string, svgPath: string, graphId: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Create composition`
 );
 export const parseSVG = createAction<{compositionName: string, svgContent: string}>(

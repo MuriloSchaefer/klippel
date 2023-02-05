@@ -1,6 +1,6 @@
 import { Edge } from "@kernel/modules/Graphs/interfaces/Edge";
 import { Node } from "@kernel/modules/Graphs/interfaces/Node";
-import { GraphsManagerState, GraphState } from "@kernel/modules/Graphs/store/state";
+import { GraphState } from "@kernel/modules/Graphs/store/state";
 
 import {
   addNode,

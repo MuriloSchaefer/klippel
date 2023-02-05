@@ -2,6 +2,7 @@
 type Loader = 'not-started' | 'started' | 'completed'
 export interface CompositionState {
     name: string
+    viewportName: string
     svgPath: string
     graphId: string
     loading: {
@@ -20,7 +21,7 @@ export interface ComposerState {
     compositionsManager: CompositionsManagerState
 }
 
-export const newCompositionState: Omit<CompositionState, 'name' | 'svgPath' | 'graphId'> = {
+export const newCompositionState: Omit<CompositionState, 'name' | 'viewportName' | 'svgPath' | 'graphId'> = {
     loading: {
         loadSVG: 'not-started',
         parseSVG: 'not-started'

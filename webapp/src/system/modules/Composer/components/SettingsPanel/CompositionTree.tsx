@@ -1,12 +1,21 @@
-import * as React from 'react';
-import SvgIcon, { SvgIconProps } from '@mui/material/SvgIcon';
-import { alpha, styled } from '@mui/material/styles';
-import TreeView from '@mui/lab/TreeView';
-import TreeItem, { TreeItemProps, treeItemClasses } from '@mui/lab/TreeItem';
-import Collapse from '@mui/material/Collapse';
+import * as React from "react";
+import SvgIcon, { SvgIconProps } from "@mui/material/SvgIcon";
+import { alpha, styled } from "@mui/material/styles";
+import TreeView from "@mui/lab/TreeView";
+import TreeItem, { TreeItemProps, treeItemClasses } from "@mui/lab/TreeItem";
+import Collapse from "@mui/material/Collapse";
 // web.cjs is required for IE11 support
-import { animated, useSpring } from '@react-spring/web'
-import { TransitionProps } from '@mui/material/transitions';
+import { animated, useSpring } from "@react-spring/web";
+import { TransitionProps } from "@mui/material/transitions";
+import { ILayoutModule } from "@kernel/modules/Layout";
+import { IGraphModule } from "@kernel/modules/Graphs";
+import useModule from "@kernel/hooks/useModule";
+import { selectCompositionStateByViewportName } from "../../store/selectors";
+import { Store } from "@kernel/modules/Store";
+import Part from "../../interfaces";
+import { Graph } from "@kernel/modules/Graphs/hooks/useGraph";
+import Node from "@kernel/modules/Graphs/interfaces/Node";
+import { GraphState } from "@kernel/modules/Graphs/store/state";
 
 function MinusSquare(props: SvgIconProps) {
   return (
@@ -44,7 +53,7 @@ function TransitionComponent(props: TransitionProps) {
   const style = useSpring({
     from: {
       opacity: 0,
-      transform: 'translate3d(20px,0,0)',
+      transform: "translate3d(20px,0,0)",
     },
     to: {
       opacity: props.in ? 1 : 0,
@@ -63,7 +72,7 @@ const StyledTreeItem = styled((props: TreeItemProps) => (
   <TreeItem {...props} TransitionComponent={TransitionComponent} />
 ))(({ theme }) => ({
   [`& .${treeItemClasses.iconContainer}`]: {
-    '& .close': {
+    "& .close": {
       opacity: 0.3,
     },
   },
@@ -74,17 +83,85 @@ const StyledTreeItem = styled((props: TreeItemProps) => (
   },
 }));
 
-export default function CustomizedTreeView() {
+function Subtree({ graphId, nodeId }: { graphId: string; nodeId: string }) {
+  const graphModule = useModule<IGraphModule>("Graph");
+  const { useGraph } = graphModule.hooks;
+  const node = useGraph<GraphState<Part>, Part>(
+    graphId,
+    (g) => g?.nodes[nodeId]
+  );
+
+  // QUESTION: is there a better way to filter nodes that
+  // do not have a name property without creating dependency with all children?
+  const children = useGraph<GraphState<Part>, Part[]>(
+    graphId,
+    (g) => 
+    Object.values(g?.nodes ?? {})
+    .filter(n => Object.values(node?.state?.outputs ?? {})
+    .map(o => o.targetId).includes(n.id) && 'Nome' in n.properties)
+  );
+  console.log(children)
+
+  if (!node.state) return null;
+  
+  const label = node.state.properties?.Nome ? node.state.properties.Nome.value : node.state.id
+  if (children?.state?.length === 0){
+    return (
+      <StyledTreeItem
+        nodeId={node.state.id}
+        label={label}
+      />
+    );
+  }
+
+  return (
+    <StyledTreeItem
+      nodeId={node.state.id}
+      label={label}
+    >
+      {children?.state && children.state.map((child) => (
+        <Subtree
+          key={`${graphId}-${child.id}`}
+          graphId={graphId}
+          nodeId={child.id}
+        />
+      ))}
+    </StyledTreeItem>
+  );
+}
+
+export default function CompositionTree() {
+  const storeModule = useModule<Store>("Store");
+  const layoutModule = useModule<ILayoutModule>("Layout");
+  const graphModule = useModule<IGraphModule>("Graph");
+
+  const { useAppSelector } = storeModule.hooks;
+  const { useGraph } = graphModule.hooks;
+  const { selectActiveViewport } = layoutModule.store.selectors;
+  const activeViewport = useAppSelector(selectActiveViewport);
+  const graphId = useAppSelector(
+    selectCompositionStateByViewportName(
+      activeViewport!,
+      (state) => state?.graphId
+    )
+  ) as string; // TODO: fix graphId typing
+
+  const adjacencyList = useGraph(graphId, (g) => g?.adjacencyList);
+  if (!adjacencyList.state) return null;
+
+  console.log(adjacencyList);
+
   return (
     <TreeView
-      aria-label="customized"
-      defaultExpanded={['1']}
+      aria-label="composition tree"
+      defaultExpanded={["root"]}
       defaultCollapseIcon={<MinusSquare />}
       defaultExpandIcon={<PlusSquare />}
       defaultEndIcon={<CloseSquare />}
-      sx={{ height: 264, flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}
+      sx={{ height: 264, flexGrow: 1, maxWidth: 400, overflowY: "auto" }}
     >
-      <StyledTreeItem nodeId="1" label="Main">
+      <Subtree nodeId="root" graphId={graphId} />
+      {/* <StyledTreeItem nodeId="root" label="Main">
         <StyledTreeItem nodeId="2" label="Hello" />
         <StyledTreeItem nodeId="3" label="Subtree with children">
           <StyledTreeItem nodeId="6" label="Hello" />
@@ -97,7 +174,7 @@ export default function CustomizedTreeView() {
         </StyledTreeItem>
         <StyledTreeItem nodeId="4" label="World" />
         <StyledTreeItem nodeId="5" label="Something something" />
-      </StyledTreeItem>
+      </StyledTreeItem> */}
     </TreeView>
   );
 }

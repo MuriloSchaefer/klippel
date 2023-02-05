@@ -4,7 +4,7 @@ import { ViewportState } from "./state";
 
 export const selectActiveViewport = createSelector(
   (state: { Layout: LayoutState }) => state.Layout.viewportManager,
-  (state) => state && state.activeViewport
+  (state): string | undefined => state && state.activeViewport
 );
 
 const getViewportManagerState = (state: { Layout: LayoutState }) =>

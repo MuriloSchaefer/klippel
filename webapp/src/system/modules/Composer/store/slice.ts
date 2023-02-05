@@ -12,7 +12,7 @@ const slice = createSlice({
         
       builder.addCase(
         createComposition,
-        (state: ComposerState, { payload: { name, svgPath, graphId } }) => ({
+        (state: ComposerState, { payload: { name, viewportName, svgPath, graphId } }) => ({
             ...state, 
             compositionsManager: {
                 ...state.compositionsManager,
@@ -20,7 +20,7 @@ const slice = createSlice({
                     ...state.compositionsManager.compositions,
                     [name]: {
                         ...newCompositionState,
-                        name, svgPath, graphId
+                        name, svgPath, graphId, viewportName
                     }
                 }
             }

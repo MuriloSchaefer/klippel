@@ -16,9 +16,9 @@ export interface EdgesHashMap {
 export interface NodesHashMap<NT = Node> {
   [id: string]: NT;
 }
-export interface GraphState {
+export interface GraphState<NT = Node> {
   id: GraphId;
-  nodes: NodesHashMap;
+  nodes: NodesHashMap<NT>;
   edges: EdgesHashMap;
   adjacencyList: AdjacencyList;
 }

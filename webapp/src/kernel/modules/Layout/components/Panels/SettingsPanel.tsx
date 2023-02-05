@@ -46,7 +46,11 @@ export const SettingsPanel = ({
       role="settings-panel"
       aria-label="settings panel"
       sx={{
-        overflow: "hidden",
+        overflowX: "hidden",
+        '&::-webkit-scrollbar': {
+          width: '0.4em'
+        },
+
         height: "100%",
         padding: 1,
         maxWidth: panelState.state === "collapsed" ? "6vw" : "100%",
