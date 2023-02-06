@@ -185,7 +185,8 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
         aria-label="viewport content"
         sx={{
           width: "100%",
-          flexGrow: 1
+          flexGrow: 1,
+          overflow: 'auto'
 
         }}
       >

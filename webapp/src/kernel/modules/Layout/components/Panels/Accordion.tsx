@@ -35,22 +35,13 @@ export const Accordion = ({
 }: AccordionProps) => {
   const biggerThan1024 = useMediaQuery('(min-width:1024px)')
 
-  const [isExpanded, setIsExpanded] = useState(expanded)
-
-  const handleToggle = useCallback(()=> {
-    // panelsManager.functions.
-    setIsExpanded(!isExpanded)
-  }, [isExpanded])
-  
   if (state === 'collapsed')
     return <SvgIcon >{icon ?? <SettingsInputCompositeSharp />}</SvgIcon>
 
   return (
     <MUIAccordion
-      expanded={isExpanded}
       role={`accordion-${name}`}
       aria-label={`accordion ${name}`}
-      onChange={handleToggle}
       sx={{width: 'max-content', minWidth: '100%', ...sx}}
       {...otherProps}
     >
