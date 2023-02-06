@@ -1,8 +1,8 @@
-import { Box } from "@mui/material"
+import { Box, ButtonGroup, Button } from "@mui/material"
 import SplitButton from "./SplitButton"
 
 const FloatingButtons = () => {
-    return <Box sx={{position: 'absolute', bottom: 70, right: 10}}>
+    return <Box sx={{position: 'absolute', bottom: 10, right: 10}}>
     <SplitButton />
     </Box>
 }

@@ -5,6 +5,7 @@ export interface CompositionState {
     viewportName: string
     svgPath: string
     graphId: string
+    selectedPart?: string
     loading: {
         loadSVG: Loader
         parseSVG: Loader

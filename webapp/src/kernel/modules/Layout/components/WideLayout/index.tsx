@@ -104,20 +104,30 @@ const Layout = () => {
           <Box
             id={SETTINGS_PANEL_ID}
             role="settings-panel-container"
-            sx={{ gridArea: "settings", 
-            minHeight: "100%",
-            borderTop: 0,
-            borderRight: 1,
-            borderColor: "divider",
-            overflow: 'auto',
-            '@media (orientation: portrait)': {
-              borderTop: 1,
+            sx={{
+              gridArea: "settings",
+              minHeight: "100%",
+              borderTop: 0,
+              borderRight: 1,
               borderColor: "divider",
-            }
-           }}
+              overflow: "auto",
+              "@media (orientation: portrait)": {
+                borderTop: 1,
+                borderColor: "divider",
+              },
+            }}
           />
 
-          <ViewportManager sx={{ gridArea: "viewport" }} />
+          <ViewportManager
+            sx={{
+              gridArea: "viewport",
+              position: 'relative',
+              overflow: "auto",
+              "&::-webkit-scrollbar": {
+                width: "0.4em",
+              },
+            }}
+          />
 
           <Box
             id={DETAILS_PANEL_ID}
@@ -128,13 +138,13 @@ const Layout = () => {
               minHeight: "100%",
               borderLeft: 1,
               borderColor: "divider",
-              overflowY: 'auto',
-              '@media (orientation: portrait)': {
+              overflowY: "auto",
+              "@media (orientation: portrait)": {
                 borderLeft: 0,
                 borderTop: 1,
-                borderColor: 'divider',
-                height: 'max-content'
-              }
+                borderColor: "divider",
+                height: "max-content",
+              },
             }}
           />
         </StyledContent>

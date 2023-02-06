@@ -43,7 +43,7 @@ export const Accordion = ({
   }, [isExpanded])
   
   if (state === 'collapsed')
-    return <SvgIcon >{icon}</SvgIcon>
+    return <SvgIcon >{icon ?? <SettingsInputCompositeSharp />}</SvgIcon>
 
   return (
     <MUIAccordion

@@ -29,7 +29,7 @@ type GroupedViewports = {
 };
 
 
-const ViewportManagerContent = () => {
+const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
   const selectedViewport = useAppSelector(selectActiveViewport);
@@ -70,7 +70,7 @@ const ViewportManagerContent = () => {
   }, []);
 
   return (
-    <>
+    <Box role="viewport-manager" sx={{ ...sx, height: '100%', display: 'flex', flexDirection: 'column' }} {...props}>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Tabs
           value={selectedViewport}
@@ -185,21 +185,14 @@ const ViewportManagerContent = () => {
         aria-label="viewport content"
         sx={{
           width: "100%",
-          height: "100%",
+          flexGrow: 1
+
         }}
       >
         <ViewportLoader />
       </Box>
-    </>
-  );
-};
-
-const ViewportManager = ({ sx, ...props }: BoxProps) => {
-  return (
-    <Box role="viewport-manager" sx={{ ...sx }} {...props}>
-      <ViewportManagerContent />
     </Box>
   );
 };
 
-export default React.memo(ViewportManager);
+export default React.memo(ViewportManagerContent);

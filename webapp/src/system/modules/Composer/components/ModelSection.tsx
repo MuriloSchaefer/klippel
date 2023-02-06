@@ -2,7 +2,7 @@ import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import { Button } from "@mui/material"
 import { MouseEvent, useCallback } from "react";
-import useCompositionsManager from "../hooks/compositionsManager";
+import useCompositionsManager from "../hooks/useCompositionsManager";
 
 
 export const ModelSection = () => {

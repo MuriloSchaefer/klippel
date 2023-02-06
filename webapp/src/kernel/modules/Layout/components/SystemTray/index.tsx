@@ -29,9 +29,9 @@ const SystemTray = () => {
         onClick={handleThemeSwitch}
       >
         {selectedTheme === "light" ? (
-          <DarkModeOutlinedIcon />
+          <DarkModeOutlinedIcon fontSize="small" />
         ) : (
-          <LightModeOutlinedIcon />
+          <LightModeOutlinedIcon fontSize="small" />
         )}
       </IconButton>
     </Box>
