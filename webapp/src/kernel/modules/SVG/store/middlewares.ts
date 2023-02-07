@@ -18,7 +18,6 @@ middlewares.startListening({
     // logic to load the SVG file
     const response = await fetch(payload.path);
     const raw = await (await response.blob()).text();
-    console.log(raw);
 
     dispatch(SVGFetched({ path: payload.path, content: raw })); // dispatch event
   },

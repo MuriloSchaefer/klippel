@@ -4,6 +4,7 @@ import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
 import { ISVGModule } from "@kernel/modules/SVG";
+import _ from "lodash";
 import { createComposition } from "../store/actions";
 
 
@@ -29,9 +30,10 @@ export const useCompositionsManager = (): CompositionsManager => {
 
     return {
         functions: {
-            createComposition(name, modelPath){
+            createComposition(title, modelPath){
                 // dispatch
-                const vpName = viewportManager.functions.addViewport(name, 'Composer', undefined, 'composition-')
+                const name = _.uniqueId('composition-')
+                const vpName = viewportManager.functions.addViewport(title, 'Composer', undefined, 'composition-')
                 
                 const path = `catalog/${modelPath}`
                 graphManager.functions.createGraph(vpName)

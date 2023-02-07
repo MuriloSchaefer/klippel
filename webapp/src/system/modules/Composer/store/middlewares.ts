@@ -104,7 +104,6 @@ middlewares.startListening({
 
     const parser = new DOMParser()
     const document = parser.parseFromString(payload.svgContent, 'image/svg+xml')
-    console.log(document)
 
     // tree root
     const [garment] = [...document.querySelectorAll(`#peca`)] as [SVGElement]

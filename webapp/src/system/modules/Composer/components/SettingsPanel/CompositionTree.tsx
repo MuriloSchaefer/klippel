@@ -100,7 +100,6 @@ function Subtree({ graphId, nodeId }: { graphId: string; nodeId: string }) {
     .filter(n => Object.values(node?.state?.outputs ?? {})
     .map(o => o.targetId).includes(n.id) && 'Nome' in n.properties)
   );
-  console.log(children)
 
   if (!node.state) return null;
   
@@ -149,7 +148,6 @@ export default function CompositionTree() {
   const adjacencyList = useGraph(graphId, (g) => g?.adjacencyList);
   if (!adjacencyList.state) return null;
 
-  console.log(adjacencyList);
 
   return (
     <TreeView

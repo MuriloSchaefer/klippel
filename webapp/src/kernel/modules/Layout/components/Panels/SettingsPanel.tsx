@@ -101,8 +101,8 @@ export const SettingsPanel = ({
           marginTop: 4,
         }}
       >
-        {children.map((child) =>
-          cloneElement(child, { state: panelState.state })
+        {children.map((child, idx) =>
+          cloneElement(child, { state: panelState.state, key: idx })
         )}
       </Box>
     </Box>,

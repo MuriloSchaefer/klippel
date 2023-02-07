@@ -15,7 +15,7 @@ export const Composerviewport = () => {
   const {
     components: { SVGViewer },
   } = useModule<ISVGModule>("SVG");
-  const { SettingsPanel, DetailsPanel, Accordion } = layoutModule.components;
+  const { DetailsPanel } = layoutModule.components;
 
   const { useAppSelector } = storeModule.hooks;
   const panelsManager = layoutModule.hooks.usePanelsManager();
@@ -26,7 +26,6 @@ export const Composerviewport = () => {
     selectCompositionStateByViewportName(activeViewport!)
   );
 
-  console.log(compositionState);
   const beforeInjectionHandle = useCallback((svg: SVGSVGElement) => {
     // e.stopPropagation()
     svg.addEventListener("click", () => {
