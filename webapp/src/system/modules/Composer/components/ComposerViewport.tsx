@@ -1,12 +1,18 @@
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Box, Paper } from "@mui/material";
-import { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { Store } from "@kernel/modules/Store";
 import { selectCompositionStateByViewportName } from "../store/selectors";
 import ComposerSettingsPanel from "./SettingsPanel";
+import ComposerDetailsPanel from "./DetailsPanel";
 import FloatingButtons from "./FloatingButtons";
+import useComposition from "../hooks/useComposition";
+import useGraph from "@kernel/modules/Graphs/hooks/useGraph";
+import _ from "lodash";
+import Part from "../interfaces";
+import { CompositionState } from "../store/state";
 
 export const Composerviewport = () => {
   const storeModule = useModule<Store>("Store");
@@ -14,26 +20,50 @@ export const Composerviewport = () => {
 
   const {
     components: { SVGViewer },
+    hooks: { useSVG },
   } = useModule<ISVGModule>("SVG");
   const { DetailsPanel } = layoutModule.components;
 
   const { useAppSelector } = storeModule.hooks;
-  const panelsManager = layoutModule.hooks.usePanelsManager();
 
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
-  const compositionState = useAppSelector(
-    selectCompositionStateByViewportName(activeViewport!)
+
+
+  const selector = useCallback((c: CompositionState | undefined) => ({
+    svgPath: c?.svgPath,
+    graphId: c?.graphId,
+  }), [])
+
+  const composition = useComposition(activeViewport!, selector);
+
+
+  useEffect(()=>{
+    console.log('ComposerViewport', composition)
+  }, [composition])
+
+  const nodes = useGraph(composition.state?.graphId!, (g) =>
+    Object.values(g?.nodes ?? {}).filter((n: Part) => !_.isEmpty(n.properties))
   );
 
-  const beforeInjectionHandle = useCallback((svg: SVGSVGElement) => {
-    // e.stopPropagation()
-    svg.addEventListener("click", () => {
-      panelsManager.functions.openDetails();
+  const beforeInjectionHandle = useCallback((svgRoot: SVGSVGElement) => {
+    // const [element] = [...svg?.querySelectorAll(`#${id}`)];
+    // inject proxies
+    nodes.state?.forEach((node: Part) => {
+      const elem = svgRoot.getElementById(node.id);
+      if (elem)
+        elem.addEventListener("click", (e) => {
+          e.stopPropagation();
+          composition.actions.selectPart(node.id);
+        });
     });
+
+    // inject handlers
+    // svgRoot.addEventListener("click", (e: MouseEvent) => {
+    // });
   }, []);
 
-  if (!compositionState) return null;
+  if (!composition.state?.svgPath) return null;
 
   return (
     <>
@@ -47,19 +77,17 @@ export const Composerviewport = () => {
         }}
       >
         <SVGViewer
-          path={compositionState.svgPath}
+          path={composition.state.svgPath}
           beforeInjection={beforeInjectionHandle}
         />
 
         <ComposerSettingsPanel />
 
-        <DetailsPanel display={true}>
-          <>Detalhes</>
-        </DetailsPanel>
+        <ComposerDetailsPanel />
       </Box>
       <FloatingButtons />
     </>
   );
 };
 
-export default Composerviewport;
+export default React.memo(Composerviewport);

@@ -1,6 +1,7 @@
 import { IModule } from "../base";
 import SVGViewer from "./components/SVGViewer";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
+import useSVG from "./hooks/useSVG";
 import useSVGManager from "./hooks/useSVGManager";
 import { startModule } from "./kernelCalls";
 
@@ -11,7 +12,8 @@ export interface ISVGModule extends IModule {
     SVGViewer: typeof SVGViewer
   },
   hooks: {
-    useSVGManager: typeof useSVGManager
+    useSVGManager: typeof useSVGManager,
+    useSVG: typeof useSVG
   },  
 }
 
@@ -31,7 +33,8 @@ const module: ISVGModule = {
     SVGViewer
   },
   hooks: {
-    useSVGManager
+    useSVGManager,
+    useSVG
   },
   kernelCalls: {
     startModule,

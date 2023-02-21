@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Creator: CorelDRAW (Versão de avaliação) -->
+
 <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="161.445mm" height="94.6692mm" version="1.1"
   style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
-  viewBox="0 0 14010.02 8215.28" xmlns:xlink="http://www.w3.org/1999/xlink"
-  xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
+  viewBox="0 0 14010.02 8215.28" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <font id="FontID0" horiz-adv-x="722" font-variant="normal" style="fill-rule:nonzero" font-weight="700">
       <font-face font-family="Arial">
@@ -18,292 +17,36 @@
       <glyph unicode="G" horiz-adv-x="777"
         d="M406.03 262.932l0 121.059 310.989 0 0 -285.583c-30.15,-29.5378 -74.0741,-55.4025 -131.466,-77.9002 -57.3921,-22.3447 -115.549,-33.517 -174.625,-33.517 -74.6863,0 -139.884,15.6107 -195.592,47.138 -55.5556,31.5274 -97.337,76.6758 -125.344,135.139 -28.0073,58.6165 -41.9345,122.436 -41.9345,191.307 0,74.5332 15.6107,140.955 46.832,199.112 31.2213,58.0043 76.9819,102.694 137.129,133.609 45.9137,23.8751 103,35.6596 171.258,35.6596 88.9195,0 158.402,-18.6716 208.448,-56.0147 49.7398,-37.4962 81.8794,-88.9195 96.2657,-154.882l-144.016 -27.0891c-9.94796,35.2005 -28.9256,63.0548 -56.7799,83.5629 -27.7013,20.3551 -62.2896,30.4561 -104.071,30.4561 -62.9017,0 -113.101,-20.049 -150.291,-60.1469 -37.1901,-40.251 -55.8616,-99.6327 -55.8616,-178.451 0,-85.2464 18.8246,-149.066 56.4738,-191.613 37.9553,-42.3936 87.236,-63.82 148.454,-63.82 30.15,0 60.453,5.96878 90.756,17.9063 30.4561,11.7845 56.4738,26.3238 78.3594,43.3119l0 90.756 -164.983 0z" />
     </font>
-    <!-- <style type="text/css">
-      <![CDATA[
 
-      .str7 {
-        stroke: #F58634;
-        stroke-width: 45.92;
-        stroke-miterlimit: 22.9256
-      }
-
-      .str5 {
-        stroke: #FEFEFE;
-        stroke-width: 17.36;
-        stroke-miterlimit: 22.9256
-      }
-
-      .str10 {
-        stroke: #96989A;
-        stroke-width: 17.36;
-        stroke-miterlimit: 22.9256
-      }
-
-      .str0 {
-        stroke: #373435;
-        stroke-width: 17.36;
-        stroke-miterlimit: 22.9256
-      }
-
-      .str14 {
-        stroke: #201E1E;
-        stroke-width: 8.68;
-        stroke-miterlimit: 22.9256
-      }
-
-      .str15 {
-        stroke: #201E1E;
-        stroke-width: 6.61;
-        stroke-miterlimit: 22.9256
-      }
-
-      .str13 {
-        stroke: #FEFEFE;
-        stroke-width: 17.36;
-        stroke-linejoin: round;
-        stroke-miterlimit: 22.9256
-      }
-
-      .str8 {
-        stroke: #FEFEFE;
-        stroke-width: 8.66;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10
-      }
-
-      .str1 {
-        stroke: #373435;
-        stroke-width: 8.66;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10
-      }
-
-      .str12 {
-        stroke: #1D1D1B;
-        stroke-width: 8.66;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10
-      }
-
-      .str11 {
-        stroke: #ffffff;
-        stroke-width: 17.36;
-        stroke-miterlimit: 22.9256;
-        stroke-dasharray: 34.711507 17.355753
-      }
-
-      .str6 {
-        stroke: #ffffff;
-        stroke-width: 17.36;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10;
-        stroke-dasharray: 34.711507 17.355753
-      }
-
-      .str9 {
-        stroke: #ffffff;
-        stroke-width: 17.36;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10;
-        stroke-dasharray: 34.711507 52.067260
-      }
-
-      .str4 {
-        stroke: #ffffff;
-        stroke-width: 8.66;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10;
-        stroke-dasharray: 8.660521 8.660521
-      }
-
-      .str3 {
-        stroke: #ffffff;
-        stroke-width: 8.66;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10;
-        stroke-dasharray: 17.321042 8.660521
-      }
-
-      .str2 {
-        stroke: #ffffff;
-        stroke-width: 8.66;
-        stroke-linejoin: round;
-        stroke-miterlimit: 10;
-        stroke-dasharray: 17.321042 25.981563
-      }
-
-      .fil7 {
-        fill: none
-      }
-
-      .fil2 {
-        fill: none;
-        fill-rule: nonzero
-      }
-
-      .fil12 {
-        fill: #FEFEFE;
-        fill-rule: nonzero
-      }
-
-      .fil8 {
-        fill: white;
-        fill-rule: nonzero
-      }
-      ]]>
-    </style> -->
   </defs>
-  <g id="modelo">
-    <metadata id="CorelCorpID_0Corel-Layer" />
     <g id="peca">
-      <metadata id="CorelCorpID_1">
-        <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-        <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-        <xodm:odm xodm:name="Nome" xodm:value="Camisa polo feminina" xodm:type="0" />
-        <xodm:odm xodm:name="Tipo" xodm:value="peça" xodm:type="0" />
-      </metadata>
       <g id="manga-direita">
-        <!-- <metadata>
-          <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-            xmlns:custom="http://www.w3.org/1999/08/29-svg-connections-in-RDF#">
-            <rdf:Description about="Materials">
-              <connect:ends rdf:resource="#socket1" />
-              <connect:ends rdf:resource="#ComputerA" />
-            </rdf:Description>
-            <rdf:Description about="#CableB">
-              <connect:ends rdf:resource="#socket2" />
-              <connect:ends rdf:resource="#ComputerB" />
-            </rdf:Description>
-            <rdf:Description about="#CableN">
-              <connect:ends rdf:resource="#socket5" />
-              <connect:ends>Everything</connect:ends>
-            </rdf:Description>
-            <rdf:Description about="#Hub">
-              <connect:ends rdf:resource="#socket1" />
-              <connect:ends rdf:resource="#socket2" />
-              <connect:ends rdf:resource="#socket3" />
-              <connect:ends rdf:resource="#socket4" />
-              <connect:ends rdf:resource="#socket5" />
-            </rdf:Description>
-          </rdf:RDF>
-        </metadata> -->
-        <!-- <metadata id="manga-direita-meta" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-          xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#">
-
-          
-
-
-
-          <xodm:odm xodm:name="Nome" xodm:value="Manga direita" xodm:type="0" />
-          <xodm:odm xodm:name="Tipo" xodm:value="parte" xodm:type="0" />
-
-          <xodm:odm xodm:name="Materiais" xodm:value="" xodm:type="0">
-            <xodm:odm xodm:name="Nome" xodm:value="Tecido primario" xodm:type="Tecido" />
-            <xodm:odm xodm:name="Cor" xodm:value="branco" xodm:type="cor" xodm:editable="false" xodm:proxy="#tecido"
-              xodm:proxyProperty="fill" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="numero" xodm:editable="false" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="unidade" xodm:editable="false" />
-          </xodm:odm>
-          <xodm:odm xodm:name="Nome" xodm:value="Tecido secundario" xodm:type="Malha" />
-          <xodm:odm xodm:name="Quantidade" xodm:value="0.5" xodm:type="numero" xodm:editable="false" />
-          <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="unidade" xodm:editable="false" />
-          </xodm:odm>
-          </xodm:odm>
-
-          <xodm:odm xodm:name="Processos" xodm:value="" xodm:type="0">
-            <xodm:odm xodm:name="Nome" xodm:value="Corte" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" xodm:editable="false" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" xodm:editable="false" />
-          </xodm:odm>
-          <xodm:odm xodm:name="Nome" xodm:value="Costura" xodm:type="0" />
-          <xodm:odm xodm:name="Quantidade" xodm:value="0.5" xodm:type="0" />
-          <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-          </xodm:odm>
-          </xodm:odm>
-
-
-
-        </metadata> -->
         <g id="secundario">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Tecido secundario" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,3" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M12840.94 1906.58c91.73,-430.86 268.56,-723.98 443.37,-901.59 320.54,211.64 345.71,370.68 407.58,623.99 20.25,82.93 118.67,164.17 132.72,209.49 29.57,95.37 -18.71,179.48 37.71,255.58 79.36,107.03 -21.01,233.11 136.41,459.02 -49.19,48.64 -130.91,100.9 -181.95,145.96 -232,204.86 -454.04,316.71 -802.24,362.15 -76.31,9.96 -271.53,34.75 -352.27,38.49 3.15,-43.47 8.41,-45.65 12.17,-91.77l2.59 -79.83c215.55,-243.74 295.53,-755.11 163.92,-1021.5z" />
           <path class="str0"
             d="M1150.98 1823.35c-91.73,-430.86 -251.23,-668.16 -426.04,-845.77 -320.54,211.64 -360.49,394.51 -422.38,647.84 -20.26,82.94 -96.83,128.34 -110.89,173.67 -29.58,95.38 -6.94,200.49 -56.99,280.94 -72.63,116.76 34.03,226.17 -123.39,452.08 49.19,48.64 103.63,90.28 154.68,135.36 232.01,204.87 468.29,334.23 816.49,379.69 76.33,9.96 151.32,29.36 232.06,33.09 -3.15,-43.47 -3.37,-87.54 -0.47,-132.27l-5.49 1.12c-136.15,-356.62 -189.2,-859.36 -57.59,-1125.75z" />
         </g>
         <g id="primario_3">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Tecido primario" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,3" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M12840.94 1906.58c131.62,266.38 68.07,690.88 -164.77,1047.5 0.16,-467.21 11.06,-272.44 28.5,-513.68 15.13,-209.12 76.74,-324.3 136.27,-533.82z" />
           <path class="str0"
             d="M1214.06 2947.98c8.24,-127.43 41.83,-260.15 105.45,-399.13 14.9,-276.59 -116.54,-481.28 -168.53,-725.5 -131.62,266.38 -78.56,769.13 57.59,1125.75l5.49 -1.12z" />
         </g>
         <g id="barra">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Barra" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="parte" xodm:type="0" />
-          </metadata>
           <g id="barra_6">
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Tecido" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-              <xodm:odm xodm:name="Materiais" xodm:type="object">
-                <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0">
-                  <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-                  <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-                  <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-                </xodm:odm>
-                <xodm:odm xodm:name="Agulha" xodm:value="Costureira" xodm:type="0">
-                  <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-                </xodm:odm>
-              </xodm:odm>
-
-
-            </metadata>
-            <path class=""
+            <path
               d="M13937.59 2453.72c28.56,69.18 61.73,99.91 61.73,99.91 0,0 -357.27,310.24 -597.47,411.08 -229.52,96.35 -733.89,133.75 -733.89,133.75 0,0 9.52,-44.43 3.38,-126.37 484.74,-35.17 810.39,-151.23 1266.25,-518.37z" />
-            <path class=""
+            <path
               d="M73.06 2432.19c-28.56,69.18 -61.73,99.91 -61.73,99.91 0,0 371.6,339.85 600.63,424.3 228.9,84.41 602.57,123.85 602.57,123.85 0,0 -9.52,-44.43 -3.38,-126.37 -484.74,-35.17 -682.22,-154.54 -1138.09,-521.69z" />
           </g>
           <g id="detalhe">
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Detalhe" xodm:type="0" />
-              <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-              <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-              <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-              <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-            </metadata>
-            <path class="str1"
+            <path
               d="M13940.05 2448.64c5.01,12.13 10.16,23.08 15.24,32.88 -218.01,177.37 -346.71,243.06 -493.09,329.94 -94.42,56.05 -414.05,164.37 -789.21,194.35 -0.16,-9.58 -0.67,-20.75 -1.64,-33.71 484.74,-35.17 812.84,-156.31 1268.71,-523.46z" />
-            <path class="str1"
+            <path
               d="M73.06 2432.19c-5.01,12.13 -10.16,23.08 -15.24,32.88 218.01,177.37 357.74,287.27 508.13,367.06 98.63,52.33 263.75,137.42 643.55,155.46 0.16,-9.58 0.67,-20.75 1.64,-33.71 -484.74,-35.17 -682.22,-154.54 -1138.09,-521.69z" />
           </g>
           <g id="costura">
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Costura" xodm:type="0" />
-              <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-              <xodm:odm xodm:name="Unidade" xodm:value="m" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="linha" xodm:type="0" />
-              <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-              <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-            </metadata>
             <g id="visualizacao-costa_11">
               <path class="fil2 str2" d="M12663 2926.91c515.7,-17.46 834.16,-177.15 1259.84,-513.68" />
               <path class="fil2 str2" d="M12680.88 3010.05c477.71,-28.17 809.27,-152.16 1274.41,-528.53" />
@@ -334,83 +77,32 @@
         </g>
       </g>
       <g id="manga-esquerda">
-        <metadata id="CorelCorpID_1">
-          <xodm:odm xodm:name="Nome" xodm:value="Manga esquerda" xodm:type="0" />
-          <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-          <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-          <xodm:odm xodm:name="Tipo" xodm:value="parte" xodm:type="0" />
-        </metadata>
         <g id="secundario_18">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Tecido secundario" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,3" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M8142.3 1096.56c250.49,278.98 379.12,542.91 490.24,829.32l-0.01 0c-54.12,466.05 -4.4,840.08 233.17,1047.54l0.6 -0.12c2.52,39.3 4.42,78.78 5.71,118.42 -410.3,10.19 -618.38,-87.75 -785.34,-168.32 -285.69,-137.85 -484.47,-268.43 -563.09,-453.2 82.3,-73.35 125.59,-206.48 147.05,-373.06 44.29,-178.69 102.65,-350.39 163.98,-515.1 71.43,-191.87 101.77,-314.31 307.7,-485.48z" />
           <path class="str0"
             d="M5406.16 1848.17c117.65,-317.24 272.67,-574.63 451.16,-778.67 136.2,103.74 229.83,228.1 281.02,373.89 97.5,277.75 182.16,557.67 248.34,842.36 16.48,70.9 60.2,125.11 100.27,162.59 -89.44,191.95 -276.73,315.84 -513.91,431.22 -186.71,90.83 -315.91,186.77 -718.75,200.69 -7.8,-173.93 -52.72,-331.96 -127.38,-477.27 -15.95,-217.06 139.69,-378.53 279.25,-754.83z" />
         </g>
         <g id="primario_21">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Tecido primario" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,3" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M8632.54 1925.88c10.55,27.21 20.96,54.63 31.28,82.27 115.36,308.76 181.11,630.95 202.47,965.14l-0.6 0.12c-237.57,-207.46 -287.28,-581.49 -233.17,-1047.54l0.01 0z" />
           <path class="str0"
             d="M5234.65 2912.84c172.92,-390.56 235.14,-747.01 171.51,-1064.67 -139.56,376.3 -295.2,537.77 -279.25,754.83 49.98,97.26 86.63,200.22 107.74,309.84z" />
         </g>
         <g id="barra_24">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Barra" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="parte" xodm:type="0" />
-          </metadata>
           <g id="barra_25">
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Tecido" xodm:type="0" />
-              <xodm:odm xodm:name="Quantidade" xodm:value="0,3" xodm:type="0" />
-              <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-              <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-              <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-            </metadata>
             <path
               d="M7584.2 2390.32c-28.56,69.19 -60.31,79.88 -60.31,79.88 69.22,184.27 335.8,362.27 562.4,453.03 126.51,50.67 249.25,160.83 786.18,169.14 0,0 -9.19,-36.93 -3.05,-118.87 -407.53,-48.73 -484.16,-79.31 -710.19,-174.01 -254.24,-106.55 -470.98,-253 -575.02,-409.17z" />
             <path class=" str1"
               d="M6426.8 2368.16c20.06,31.49 41.58,56.55 60.16,80.19 -115.93,282.88 -460.24,392.61 -652.4,502.39 -192.28,109.73 -580.25,129.53 -580.25,129.53 0,0 -1.26,-55.36 -14.28,-135.65 143.39,-9.48 345.26,-55.21 495.65,-124.43 152.22,-70.13 525.08,-193.34 691.12,-452.02z" />
           </g>
           <g id="detalhe_28">
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Detalhe" xodm:type="0" />
-              <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-              <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-              <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-              <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-            </metadata>
             <path class="str1"
               d="M7585.53 2392.36c-5.02,12.13 -17.07,18.76 -22.15,28.58 148.55,248.39 504.31,358.94 654.69,438.72 98.62,52.32 270.02,121.84 649.83,139.89 0.16,-9.58 0.56,-13.08 1.53,-26.04 -402.13,-40.77 -471.41,-76.29 -691.51,-165.89 -261.85,-106.6 -483.44,-254.55 -592.37,-415.25z" />
             <path class="str1"
               d="M6426.8 2368.16c6.53,10.25 13.23,19.83 19.92,28.89 -79.86,199.81 -505.14,371.78 -641.06,438.55 -185.88,91.31 -329.4,114.38 -560.43,144.14 -1.48,-11.03 -3.2,-22.79 -5.2,-35.12 143.39,-9.48 345.26,-55.21 495.65,-124.43 152.22,-70.13 525.08,-193.34 691.12,-452.02z" />
           </g>
           <g id="costura_31">
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Costura" xodm:type="0" />
-              <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-              <xodm:odm xodm:name="Unidade" xodm:value="m" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="linha" xodm:type="0" />
-              <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            </metadata>
             <path class="fil2 str3"
               d="M5256.59 2982.8c143.39,-9.48 345.26,-55.21 495.65,-124.43 152.22,-70.13 525.08,-193.34 691.12,-452.02" />
             <path class="fil2 str3"
@@ -439,62 +131,25 @@
         </g>
       </g>
       <g id="costas">
-        <metadata id="CorelCorpID_1">
-          <xodm:odm xodm:name="Nome" xodm:value="Costas" xodm:type="0" />
-          <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-          <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-          <xodm:odm xodm:name="Tipo" xodm:value="parte" xodm:type="0" />
-        </metadata>
         <g id="ombro-esquerdo-costas">
-          <metadata id="CorelCorpID_1">>
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Nome" xodm:value="Ombro esquerdo" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,2" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M3704.38 729.62c-106.87,-34.28 -315.14,-65.26 -500.83,-57.19l-4.45 -306.12c247.84,0.95 579.79,9.42 809.32,21.93 -32.13,155.33 -137.7,250.32 -304.03,341.38z" />
           <path class="str0"
             d="M8142.3 1096.56c203.34,225.27 370.98,494.38 489.59,823.76 476.76,-776.33 1322.86,-1127.18 2121.16,-1157.12l3.3 -253.87 -1219.65 -36.66c-288.87,180.73 -667.36,277.48 -999.74,402.32 -154.75,58.12 -273.78,80.04 -394.65,221.58z" />
         </g>
         <g id="ombro-direito-costas">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Ombro direito" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,2" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M2826.53 734.74c106.87,-34.28 235.13,-56.06 378.62,-62.39l5.33 -306.19c-247.84,0.95 -489.35,5.87 -718.88,18.37 32.13,155.33 154.15,267.03 334.93,350.2z" />
           <path class="str0"
             d="M13283.43 1004.53c-203.34,225.27 -322.85,408.25 -441.46,898.38 -476.76,-776.33 -1292.74,-1109.77 -2091.05,-1139.71l-4.07 -253.87 1190.01 -60.15c277.83,252.19 1250.91,443.33 1346.57,555.35z" />
         </g>
         <g id="primario_37">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str1"
             d="M8727.25 7226.74c2.89,-53.15 -15.99,-378.38 7.96,-470.79 23.53,-92.21 55.92,-136.23 47.36,-176.28 -8.61,-39.83 12.37,-399.7 171.44,-872.09 86.51,-256.88 61.11,-640.25 46.11,-699.01 -15.12,-58.74 -92.64,-436.33 -75.32,-620.95 17.06,-184.67 -28.09,-348.62 -43.81,-478.91 -6.18,-51.06 33.09,-359.08 6.05,-626.93 -27.07,-267.85 -24.59,-538.38 -40.89,-599.53 -10.52,-134.7 -78.01,-269.03 -156.03,-583.26 -14.68,-59.16 -32.1,-118.26 -52.9,-177.83 426.94,-738.16 1322.17,-1154.83 2113.7,-1157.96 690.42,-2.73 1581.2,344.25 2091.73,1137.28 -25.11,88.92 -52.15,178.6 -86.3,267.04 -71.27,184.74 -34.53,227.92 -67.69,412.42 -19.24,107.11 3.24,328.78 -26.96,519.76 -30.19,191.05 -0.08,411.47 0,676.54 4.61,254.11 -61.41,392.06 -29.66,630.17 31.75,238.09 -41.89,528.51 -89.1,870.8 -23.15,168.57 130.37,864.6 130.37,864.6 0,0 92.21,317.8 134.1,608.01 12.37,85.51 10.67,215.89 -0.53,332.42 -11.39,116.59 85.78,239.22 30.03,366.43 0,0 0,49.34 31.87,111.63 48.43,95.01 74.59,323.34 60.39,352.04 -10.52,21.58 -361.14,156.51 -831.48,180.06 -470.25,23.71 -1094.1,121.1 -1618.88,114.02 -534.49,-33.62 -767.7,-30.38 -1080.26,-55.89 -312.43,-25.65 -803.55,-141.9 -837.87,-178.22 -34.42,-36.4 -8.75,-318.99 18.32,-390.3 27.6,-71.25 145.14,-302.13 148.23,-355.28z" />
           <path class="str0"
             d="M2826.53 734.74c267.02,-82.93 576.95,-84.51 880.46,-7.88 -51.27,32.42 -97.51,65.56 -125.33,107.06 -5.09,5.08 -10.19,10.91 -15.27,17.29 -104.59,111.22 -189.77,230.74 -259.01,357.09 -60.6,-335.56 35.38,-333.52 -83.62,-349.8 -73.83,-10.1 -147.74,-11.24 -221.48,-30.29 -55.42,-32.79 -116.1,-62.46 -175.74,-93.47zm123.84 83.57c17.59,-1.15 34.82,1.82 51.62,9.85l-46.03 -8.76c-1.85,-0.64 -3.71,-1.07 -5.59,-1.09z" />
         </g>
         <g id="barra_39">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Barra" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str5"
             d="M8546.17 7805.99c-4.22,78.02 -1.25,149.06 14.85,166.08 34.31,36.29 525.39,152.57 837.87,178.19 312.52,25.51 545.73,22.32 1080.26,55.97 524.78,7.05 1148.63,-90.31 1618.88,-114.07 470.34,-23.57 820.96,-158.47 831.48,-180.08 7.95,-16.15 3.19,-95.5 -11.12,-178.69 -230.55,96.7 -467.82,154.31 -875.83,194.9 -364.53,36.33 -990.08,91.87 -1179.44,100.13 -289.16,12.68 -965.68,1.26 -1468.49,-34.83 -248.47,-17.82 -623.2,-110.46 -848.45,-187.6z" />
           <g id="filete">
@@ -534,67 +189,25 @@
         </g>
       </g>
       <g id="frente">
-        <metadata id="CorelCorpID_1">
-          <xodm:odm xodm:name="Nome" xodm:value="Frente" xodm:type="0" />
-          <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-          <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-          <xodm:odm xodm:name="Tipo" xodm:value="parte" xodm:type="0" />
-        </metadata>
         <g id="ombro-direito-frente">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Ombro direito" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,2" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M2179.66 959.73c-400.51,174.04 -737.12,461.74 -1028.68,863.62 -66.85,-330.99 -199.47,-609.32 -426.04,-845.77 100.3,-79.54 428.46,-153.21 640.45,-235.71 193.88,-75.45 407.56,-121.4 576.97,-238.11 49.86,171.1 130.03,322.4 237.3,455.97z" />
         </g>
         <g id="ombro-esquerdo-frente">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Ombro esquerdo" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,2" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str0"
             d="M4382.94 925.83c406.42,170.29 771.22,464.75 1020.41,928.81 220.04,-505.31 352.31,-675.52 464.96,-787.75 -147.74,-143.81 -467.56,-233.11 -679.53,-315.61 -193.87,-75.44 -472.13,-140.1 -641.54,-256.8 -49.86,171.1 -73.42,268.18 -164.3,431.35z" />
         </g>
         <g id="frente-tecido-principal">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,2" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str1"
             d="M5273.48 7222.98c-2.89,-53.33 15.92,-379.87 -7.95,-472.61 -23.5,-92.56 -55.87,-136.72 -47.29,-176.97 8.6,-39.9 -12.34,-401.2 -171.11,-875.36 -86.35,-257.88 -60.99,-642.67 -46.03,-701.64 15.07,-58.97 54.32,-438.01 37.08,-623.35 -17.02,-185.35 28.06,-349.9 43.75,-480.74 12.41,-103.9 -20.11,-167.49 88.85,-421.79 67.74,-157.93 83.36,-392.58 83.36,-392.58 0,0 -6.02,-269.12 -131.78,-480.42 10.51,-135.24 55.48,-241.24 188.16,-521.77 34.03,-71.99 65.26,-146.47 97.83,-223.65 -244.2,-438.41 -596.06,-733.82 -1025.42,-926.26 -200.34,-95.66 -497.91,-105.48 -782.02,-107.7 -137.47,87.71 -273.95,727.74 -375.4,727.7 -125.17,-0.04 -185.38,-728.55 -275.54,-727.57 -212.6,2.33 -74.71,-111.35 -279.04,-52.38 -168.32,48.58 -334.07,114.95 -497.55,196.66 -455.79,228.31 -795.22,517.73 -1020.69,867.02 28.88,104.53 59.11,210.59 99.18,314.95 71.17,185.42 68.11,310.72 67.58,414.02 -146.61,324.66 -105.05,519.41 -105.05,519.41 0,0 36.29,208.3 94.35,369.12 61.86,171.46 53.46,274.19 37.04,362.63 -4.61,255.09 99.95,343.19 68.28,582.27 -31.67,238.96 3.69,530.5 50.87,874.07 23.03,169.21 -130.14,867.87 -130.14,867.87 0,0 -92.06,318.98 -133.87,610.33 -12.34,85.86 -10.62,216.68 0.54,333.68 11.38,117 -85.6,240.17 -29.97,367.84 0,0 0,49.53 -31.82,112.09 -48.35,95.34 -74.44,324.47 -60.23,353.29 10.47,21.76 360.41,157.18 829.91,180.83 469.37,23.75 1092.01,121.57 1615.83,114.44 533.51,-33.77 766.26,-30.54 1078.2,-56.15 311.9,-25.74 802.04,-142.4 836.3,-178.88 34.37,-36.56 8.71,-320.17 -18.28,-391.75 -27.52,-71.55 -144.87,-303.27 -147.91,-356.65z" />
         </g>
         <g id="filete_46">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Filete" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,2" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="fil7 str7" d="M4382.94 925.83c451.21,191.04 819.9,535.91 1019.88,962.02" />
           <path class="fil7 str7" d="M1139.91 1854.22c270.22,-394.18 617.9,-700.41 1025.78,-887.81" />
           <path class="fil7 str7" d="M5246.28 2909.08c159.8,-375.11 215.81,-718.23 154.34,-1025.14" />
           <path class="fil7 str7" d="M1140.89 1845.06c-117.77,305.18 -92.71,702.44 62.13,1139.8" />
         </g>
         <g id="barra_49">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Barra" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str8"
             d="M5454.19 7804.44c4.23,78.35 1.25,149.59 -14.81,166.73 -34.26,36.44 -524.4,153.13 -836.3,178.87 -311.94,25.63 -544.69,22.4 -1078.2,56.12 -523.82,7.08 -1146.44,-90.65 -1615.83,-114.44 -469.46,-23.65 -819.44,-159.15 -829.91,-180.74 -8.04,-16.25 -3.19,-95.87 11.08,-179.42 230.08,97.06 466.9,154.86 874.15,195.63 363.84,36.48 988.22,92.21 1177.26,100.48 288.6,12.76 963.82,1.29 1465.71,-34.96 247.99,-17.85 622.06,-110.86 846.86,-188.27z" />
           <g id="costura_51">
@@ -604,13 +217,6 @@
               d="M1097.73 7775.97c230.08,97.06 466.9,154.86 874.15,195.63 363.84,36.48 988.22,92.21 1177.26,100.48 288.6,12.76 963.82,1.29 1465.71,-34.96 247.99,-17.85 622.06,-110.86 846.86,-188.27" />
           </g>
           <g id="etiqueta">
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Etiqueta" xodm:type="0" />
-              <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-              <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="etiqueta" xodm:type="0" />
-              <xodm:odm xodm:name="Material" xodm:value="Etiqueta G4" xodm:type="0" />
-            </metadata>
             <path class="fil9 str10"
               d="M4740.77 8190.94l-27.24 -210.89 201.88 -35.29 29.01 210.32c-65.94,28.3 -129.27,36 -203.65,35.87z" />
             <path class="fil10"
@@ -646,21 +252,7 @@
         </g>
       </g>
       <g id="gola">
-        <metadata id="CorelCorpID_1">
-          <xodm:odm xodm:name="Nome" xodm:value="Gola" xodm:type="0" />
-          <xodm:odm xodm:name="Quantidade" xodm:value="1" xodm:type="0" />
-          <xodm:odm xodm:name="Unidade" xodm:value="un" xodm:type="0" />
-          <xodm:odm xodm:name="Tipo" xodm:value="parte" xodm:type="0" />
-        </metadata>
         <g id="lapela-externa">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Lapela Externa" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class=" str5"
             d="M3443.08 1328.77c-174.65,148.82 -289.57,327.69 -359.16,529.39l-8.24 364.77 352.1 0.22c5.1,-298.12 -16.92,-593.35 15.3,-894.37z" />
           <path class=" str11"
@@ -669,26 +261,9 @@
             d="M3427.78 2223.13c-117.59,7.13 -235.19,8.03 -352.78,1.57 -14.56,49.56 -15.14,102.91 0.68,160.68 108.96,15.09 227.22,14.98 354.55,0 10.71,-65.96 7.82,-117.91 -2.45,-162.25z" />
         </g>
         <g id="lapela-interna">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Lapela Interna" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str5"
             d="M3002.27 828.21l-57.44 -10.93c54.69,285.22 98.18,653.5 139.09,1040.87l223.65 -648.77c-61.01,-336.67 35.32,-334.58 -83.81,-350.88 -73.83,-10.1 -147.74,-11.24 -221.49,-30.29z" />
           <g id="botoes">
-
-            <metadata id="CorelCorpID_1">
-              <xodm:odm xodm:name="Nome" xodm:value="Botões" xodm:type="0" />
-              <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-              <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-              <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-              <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-              <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-            </metadata>
             <g id="botao-1">
               <path class="fil12"
                 d="M3232.18 1929.78c10.85,-0.36 21.59,-1.79 32.26,-3.31l15.79 -2.72c1.08,-0.18 2.78,-0.77 2.78,-0.77 -0.34,0.23 -1.07,0.72 -1.15,2.29 0.62,2.72 1.32,2.09 1.18,2.3 0.5,0.23 -0.16,0.05 -0.16,0.05l-1.71 -0.22 -7.84 -0.32c-10.91,-0.19 -21.83,-0.3 -32.84,-1.92l-8.03 -1.19c-1.52,-0.36 -1.15,0.23 -5.25,-0.89 -0.66,-0.45 -2.99,-1.12 -3.58,-4.53 -0.36,-2.91 1.4,-4.6 1.81,-5.04 1.54,-1.45 2.29,-1.61 3.25,-2.12 6.72,-2.58 12.12,-2.63 17.83,-2.99 11.57,-0.53 21.79,1.4 32.05,0.29 2.46,-0.2 5.18,-0.59 6.76,-1.12 0.12,0.22 0.75,-0.84 -0.92,1.24 -1.26,5.4 2.03,5.28 1.07,5.1 -0.36,-0.25 -1.68,-0.64 -2.71,-0.92 -4.8,-1.16 -10.16,-1.6 -15.39,-2.4 -10.56,-1.48 -21.52,-1.86 -32.77,-5.45 -0.66,-0.18 -1.71,-0.84 -2.45,-1.34 -1.55,-0.67 -2.38,-4.33 -0.24,-5.62 2.08,-1.26 3.43,-1.28 4.91,-1.6 2.91,-0.36 5.68,-0.36 8.4,-0.32 5.53,0.12 10.96,0.65 16.35,1.41 -5.46,0.2 -10.87,0.56 -16.12,1.41 -2.65,0.44 -5.3,0.87 -7.71,1.7 -1.12,0.29 -2.41,0.94 -2.66,1.21 0.88,-0.32 0.49,-2.62 0.16,-2.45l1.21 0.39c9.69,2.07 20.66,1.65 31.59,2.02 5.56,0.12 10.94,0.69 16.83,1.79 1.52,0.39 2.87,0.62 4.95,1.61 0.1,0.41 5.02,1.2 3.2,8 -2.4,3.33 -3.23,2.63 -4.3,3.43 -3.54,1.19 -6.21,1.51 -9.12,1.87 -11.39,1.4 -22.71,0.43 -32.82,0.29 -5.01,0 -10.61,0.41 -14.08,1.65 -0.31,0.03 -0.8,0.42 -0.18,-0.07 0,0 1.19,-1.01 0.89,-3.32 -0.55,-2.67 -2.09,-2.87 -2.22,-3.12 -1.51,-0.36 1.64,0.13 2.74,0.26l7.97 1.5 31.79 4.22 8.32 0.96 2.31 0.52c0.6,0.2 0.65,0.06 1.74,0.65 0.15,0.33 1.18,-0.12 1.9,2.99 -0.03,1.88 -1.21,2.59 -1.77,3 -2.41,1.12 -3.4,1.02 -4.99,1.35 -5.56,0.83 -10.96,0.89 -16.42,1.08 -10.93,0.12 -21.81,0.18 -32.63,-0.83z" />
@@ -799,14 +374,6 @@
         </g>
 
         <g id="gola-interna">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Gola Interna" xodm:type="0" />
-            <xodm:odm xodm:name="Quantida#183324625de" xodm:value="0,1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str5"
             d="M3981.58 51.21c-490.27,34.1 -970.91,38.1 -1438.09,0l-104.39 5.71 -77.99 78.8 130.49 248.82c478.85,-27.18 988.1,-22.94 1520.88,3.91l96.09 -134.13 8.66 -162.43 -135.65 -40.67z" />
         </g>
@@ -826,14 +393,6 @@
           </g>
         </g>
         <g id="gola-externa">
-          <metadata id="CorelCorpID_1">
-            <xodm:odm xodm:name="Nome" xodm:value="Gola Externa" xodm:type="0" />
-            <xodm:odm xodm:name="Quantidade" xodm:value="0,1" xodm:type="0" />
-            <xodm:odm xodm:name="Unidade" xodm:value="m2" xodm:type="0" />
-            <xodm:odm xodm:name="Tipo" xodm:value="tecido" xodm:type="0" />
-            <xodm:odm xodm:name="Material" xodm:value="Poliviscose mundial" xodm:type="0" />
-            <xodm:odm xodm:name="Cor" xodm:value="gray" xodm:type="0" />
-          </metadata>
           <path class="str13"
             d="M2269.85 195.51c-92.48,91.22 -223.26,173.03 -332.73,263.15 32.57,246.84 286.12,569.72 470.53,852.57 211.07,-135.64 425.06,-566.12 595.4,-482.56 -143.29,-84.91 -322.08,-148.9 -426.81,-268.76 -68.7,-78.63 -92.13,-219.52 -138.33,-317.45 -48.54,-102.9 -22.69,-179.83 105.58,-191.24 -181.3,7.06 -125.65,-1.68 -273.65,144.3z" />
           <path class="str13"
@@ -843,5 +402,4 @@
         </g>
       </g>
     </g>
-  </g>
 </svg>

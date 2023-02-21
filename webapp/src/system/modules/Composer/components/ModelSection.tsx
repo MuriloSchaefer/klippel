@@ -1,7 +1,5 @@
-import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
 import { Button } from "@mui/material"
-import { MouseEvent, useCallback } from "react";
+import { useCallback } from "react";
 import useCompositionsManager from "../hooks/useCompositionsManager";
 
 
@@ -10,12 +8,14 @@ export const ModelSection = () => {
 
     const compositionsManager = useCompositionsManager()
 
-    const handleModelSelection = useCallback((e: MouseEvent)=>{
-        console.log(e)
-        compositionsManager.functions.createComposition('Test', 'camisa-polo/processed.svg')
+    const handleModelSelection = useCallback((name:string, path:string)=>{
+        compositionsManager.functions.createComposition(name, path)
     }, [])
 
-    return <Button onClick={handleModelSelection}>Model</Button>
+    return <>
+        <Button onClick={()=>handleModelSelection('Original', 'camisa-polo/processed.svg')}>Original</Button>
+        <Button onClick={()=>handleModelSelection('Decorated', 'camisa-polo/decorated.svg')}>Decorado</Button>
+    </>
 }
 
 export default ModelSection

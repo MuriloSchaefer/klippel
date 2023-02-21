@@ -1,0 +1,227 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ns0: <#> .
+
+<#Proxy>
+  a rdf:Class ;
+  rdf:label "SVG Proxy" .
+
+<#Editable>
+  a rdf:Class ;
+  rdf:label "Editable" .
+
+<#RestrictedBy> a rdf:Class .
+<#Restriction>
+  a rdf:Class ;
+  rdf:label "Restriction" .
+
+<#Malha>
+  a rdf:Class, rdf:MaterialType ;
+  rdf:label "Malha" .
+
+<#Tecido>
+  a rdf:Class, rdf:MaterialType ;
+  rdf:label "Tecido" .
+
+<#Linha>
+  a rdf:Class, rdf:MaterialType ;
+  rdf:label "Linha" .
+
+<#Cor>
+  a rdf:Class, rdf:Color ;
+  rdf:label "cor" .
+
+<#MalhaPV>
+  a <#Malha> ;
+  ns0:Editable "Color" ;
+  rdf:colorAvailable ns0:MalhaPVVerde, ns0:MalhaPVVermelha ;
+  ns0:Color ns0:ColorRestriction ;
+  rdf:label "Malha PV" .
+
+ns0:ColorRestriction
+  a ns0:Restriction ;
+  rdf:allowAny "colorAvailable" ;
+  rdf:label "Permitido qualquer cor na paleta do material" .
+
+ns0:MalhaPVVerde
+  a ns0:Material ;
+  ns0:Material ns0:MalhaPV ;
+  ns0:Color ns0:Verde ;
+  rdf:emEstoque "0" ;
+  rdf:unidadeEstoque "kg" ;
+  rdf:custo "10" ;
+  rdf:unidadeCusto "R$/kg" ;
+  rdf:prazoEntrega "15" ;
+  rdf:unidadePrazoEntrega "dias" ;
+  rdf:label "Malha PV verde" .
+
+ns0:Verde
+  a ns0:Color ;
+  ns0:hex "0x00ff00" .
+
+ns0:MalhaPVVermelha
+  a ns0:Material ;
+  ns0:Material ns0:MalhaPV ;
+  ns0:Color ns0:Vermelha ;
+  rdf:emEstoque "5" ;
+  rdf:unidadeEstoque "kg" ;
+  rdf:custo "15" ;
+  rdf:unidadeCusto "R$/kg" ;
+  rdf:prazoEntrega "10" ;
+  rdf:unidadePrazoEntrega "dias" ;
+  rdf:label "Malha PV vermelha" .
+
+ns0:Vermelha
+  a ns0:Color ;
+  ns0:hex "0xff0000" .
+
+ns0:LinhaBranca
+  a ns0:Material, ns0:Linha ;
+  ns0:Color ns0:Branca ;
+  rdf:emEstoque "1" ;
+  rdf:unidadeEstoque "kg" ;
+  rdf:custo "15" ;
+  rdf:unidadeCusto "R$/kg" ;
+  rdf:prazoEntrega "10" ;
+  rdf:unidadePrazoEntrega "dias" ;
+  rdf:label "Linha branca" .
+
+ns0:Branca
+  a ns0:Color ;
+  ns0:hex "0xffffff" .
+
+ns0:Corte
+  a ns0:Process ;
+  rdf:label "Corte" .
+
+ns0:Costura
+  a ns0:Process, ns0:Operation, ns0:Costura ;
+  rdf:label "Costura", "Costura barra manga direita" ;
+  rdf:material ns0:MaterialMangaDireita ;
+  rdf:quantidade "1" ;
+  rdf:unidadeQuantidade "m2" ;
+  rdf:tempo "10" ;
+  rdf:unidadeTempo "min" ;
+  rdf:custo "0,20" ;
+  rdf:unidadeCusto "R$/h" .
+
+ns0:Bordado
+  a ns0:Process ;
+  rdf:label "Bordado" .
+
+ns0:MangaDireita
+  a ns0:Part ;
+  ns0:processNeeded ns0:CorteMalhaPVVerdeMangaDireitaPrimario, ns0:CorteMalhaPVVerdeMangaDireitaSecundario ;
+  ns0:composedOf ns0:MaterialPrimarioMangaDireita, ns0:MaterialSecundarioMangaDireita, ns0:BarraMangaDireita .
+
+ns0:CorteMalhaPVVerdeMangaDireitaPrimario
+  a ns0:Operation, ns0:Corte ;
+  rdf:material ns0:MaterialPrimarioMangaDireita ;
+  rdf:quantidade "1" ;
+  rdf:unidadeQuantidade "m2" ;
+  rdf:tempo "10" ;
+  rdf:unidadeTempo "min" ;
+  rdf:custo "0,20" ;
+  rdf:unidadeCusto "R$/h" ;
+  rdf:label "Corte Manga direita" .
+
+ns0:CorteMalhaPVVerdeMangaDireitaSecundario
+  a ns0:Operation, ns0:Corte ;
+  rdf:material ns0:MaterialSecundarioMangaDireita ;
+  rdf:quantidade "0,5" ;
+  rdf:unidadeQuantidade "m2" ;
+  rdf:tempo "10" ;
+  rdf:unidadeTempo "min" ;
+  rdf:custo "0,20" ;
+  rdf:unidadeCusto "R$/h" ;
+  rdf:label "Corte Manga direita" .
+
+ns0:MaterialPrimarioMangaDireita
+  a ns0:MaterialUsage ;
+  ns0:Editable "MaterialType", "Material" ;
+  ns0:MaterialType ns0:MangaDireitaMaterialTypeRestriction, ns0:Malha ;
+  ns0:Material ns0:MalhaPVVerde ;
+  rdf:label "Material primario manga direita" ;
+  ns0:Proxy "#tecido-primario-manga-direita", "fill" .
+
+ns0:MangaDireitaMaterialTypeRestriction
+  a ns0:Restriction ;
+  rdf:allowOnly ns0:Tecido, ns0:Malha ;
+  rdf:label "Permitido apenas Tecidos e Malhas", "Ser do mesmo tipo que o tecido primario" ;
+  rdf:sameAs ns0:MaterialPrimarioMangaDireita .
+
+ns0:MaterialSecundarioMangaDireita
+  a ns0:MaterialUsage ;
+  ns0:Editable "MaterialType", "Material" ;
+  ns0:MaterialType ns0:MangaDireitaMaterialTypeRestriction, ns0:Malha ;
+  ns0:Material ns0:MalhaPVVermelha ;
+  rdf:label "Material secundario manga direita" ;
+  ns0:Proxy "#tecido-secundario-manga-direita", "fill" .
+
+ns0:BarraMangaDireita
+  a ns0:Part ;
+  ns0:processNeeded ns0:CosturaBarraMangaDireita ;
+  ns0:composedOf ns0:LinhaBarraMangaDireita, ns0:DetalheBarraMangaDireita .
+
+ns0:CosturaBarraMangaDireita
+  a ns0:Operation, ns0:Costura ;
+
+  rdf:material ns0:LinhaBarraMangaDireita ;
+  rdf:quantidade "0,1" ;
+  rdf:unidadeQuantidade "m2" ;
+  rdf:tempo "1" ;
+  rdf:unidadeTempo "min" ;
+  rdf:custo "0,01" ;
+  rdf:unidadeCusto "R$/h" ;
+
+  rdf:label "Costura barra manga direita" .
+
+ns0:CosturaDetalhe
+  a ns0:Operation, ns0:Costura ;
+  rdf:material ns0:MaterialDetalheBarraMangaDireita ;
+  rdf:quantidade "0,5" ;
+  rdf:unidadeQuantidade "m2" ;
+  rdf:tempo "10" ;
+  rdf:unidadeTempo "min" ;
+  rdf:custo "0,20" ;
+  rdf:unidadeCusto "R$/h" ;
+  rdf:label "Costura detalhe manga direita" .
+
+ns0:LinhaBarraMangaDireita
+  a ns0:MaterialUsage ;
+  ns0:Editable "Material" ;
+  ns0:MaterialType ns0:LinhaBarraMangaDireitaRestriction, ns0:Linha ;
+  ns0:Material ns0:LinhaBranca ;
+  rdf:label "Linha barra da manga direita" ;
+  ns0:Proxy "#costura", "stroke" .
+
+ns0:MaterialDetalheBarraMangaDireita
+  a ns0:MaterialUsage ;
+  ns0:Editable "Material" ;
+  ns0:MaterialType ns0:MaterialBarraMangaDireitaTypeRestriction, ns0:Linha ;
+  ns0:Material ns0:LinhaBranca ;
+
+  rdf:quantidade "0,1" ;
+  rdf:unidadeQuantidade "m2" ;
+  rdf:tempo "2" ;
+  rdf:unidadeTempo "min" ;
+  rdf:custo "0,05" ;
+  rdf:unidadeCusto "R$/kg" ;
+
+  rdf:label "Linha barra da manga direita" ;
+  ns0:Proxy "#detalhe", "fill" .
+
+ns0:LinhaBarraMangaDireitaRestriction
+  a ns0:Restriction ;
+  rdf:allowOnly ns0:Linha ;
+  rdf:label "Permitido apenas Linhas" .
+
+ns0:DetalheBarraMangaDireita
+  a ns0:Part ;
+  ns0:processNeeded ns0:CosturaDetalhe ;
+  ns0:composedOf ns0:LinhaDetalheBarraMangaDireita, ns0:MaterialDetalheBarraMangaDireita ;
+  ns0:Include "true" .
+
+ns0:DetalheBarraMangaDireitaTypeRestriction
+  a ns0:Restriction ;
+  rdf:sameAs ns0:MaterialPrimarioMangaDireita ;
+  rdf:label "Mesmo material primario da manga" .

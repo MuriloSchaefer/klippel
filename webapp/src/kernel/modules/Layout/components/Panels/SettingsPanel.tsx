@@ -70,7 +70,6 @@ export const SettingsPanel = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: panelState.state === "collapsed" ? 1 : 4,
         }}
       >
         {panelState.state === "expanded" && (

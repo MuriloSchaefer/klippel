@@ -1,6 +1,6 @@
 import { Edge } from "@kernel/modules/Graphs/interfaces/Edge";
 import { Node } from "@kernel/modules/Graphs/interfaces/Node";
-import { GraphState } from "@kernel/modules/Graphs/store/state";
+import { GraphsManagerState, GraphState } from "@kernel/modules/Graphs/store/state";
 
 import {
   addNode,
@@ -33,14 +33,14 @@ export interface Graph<T = GraphState> {
  */
 const useGraph = <G = GraphState, R = G>(
   graphId: string,
-  graphSelector: (g: G | undefined) => R | undefined
+  graphSelector: (g: GraphState<any> | undefined) => R | undefined
 ): Graph<R> => {
   const storeModule = useModule<Store>("Store")
   const dispatch = storeModule.hooks.useAppDispatch()
   const useAppSelector = storeModule.hooks.useAppSelector
 
   const selector = createSelector(
-    (state: {Graph: any} | undefined) =>state && state.Graph && state.Graph.graphs[graphId],
+    (state: {Graph: GraphsManagerState} | undefined) =>state && state.Graph && state.Graph.graphs[graphId],
     graphSelector
   );
   const graphState = useAppSelector<R | undefined>(selector);

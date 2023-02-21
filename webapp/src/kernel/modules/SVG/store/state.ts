@@ -1,9 +1,14 @@
+import { CSSProperties } from "react";
 
 type Loader = 'not-started' | 'started' | 'completed'
 
+interface Proxies {
+    [id: string]: CSSProperties
+} 
 export interface SVGState {
     progress: Loader
     path: string;
+    proxies: Proxies;
     content: string | undefined;
 }
 
@@ -17,7 +22,8 @@ export interface SVGModuleState{
 
 export const newSVGState: Omit<SVGState, 'path'> = {
     progress: 'not-started',
-    content: undefined
+    proxies: {},
+    content: undefined,
 }
 
 export const initialState = {

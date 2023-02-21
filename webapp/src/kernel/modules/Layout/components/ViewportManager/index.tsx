@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { MouseEvent, useCallback, useMemo } from "react";
 
 // UI
 import { TabContext } from "@mui/lab";
@@ -65,7 +65,6 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   }, []);
 
   const handleCloseViewport = useCallback((name: string) => {
-    console.log(name);
     closeViewport(name);
   }, []);
 
@@ -96,7 +95,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                   key={`${vp.name}-tab`}
                   id={vp.name}
                   sx={{ width: "fit-content", p: 1 }}
-                  onClick={() => selectViewport(vp.name)}
+                  onClick={(e: MouseEvent) => e.button != 2 ? selectViewport(vp.name) : handleCloseViewport(vp.name)}
                   label={
                     <Box
                       sx={{

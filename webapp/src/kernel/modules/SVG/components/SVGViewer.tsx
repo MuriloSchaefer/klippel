@@ -1,7 +1,7 @@
 import { BeforeEach } from '@tanem/svg-injector';
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { ReactSVG } from "react-svg";
 import { selectSVGState } from "../store/selectors";
 
@@ -18,6 +18,16 @@ const SVGViewer = ({ path, beforeInjection }: SVGViewerProps) => {
 
   const handleBeforeInjection = useCallback((svg: SVGSVGElement)=> {
     // TODO: inject proxies here
+    svg.setAttribute('id',`${path}-root`)
+
+    Object.entries(svgState?.proxies ?? {}).forEach(([id, styles]) => {
+      const elem = svg.getElementById(id) as SVGSVGElement
+      if (elem){
+        elem.setAttribute('class', "")
+        elem.setAttribute('fill', styles.fill ?? "white")
+        elem.setAttribute('stroke', styles.stroke ?? "black")
+      }
+    })
 
     if (beforeInjection) beforeInjection(svg)
   }, [beforeInjection, svgState?.content])
@@ -49,4 +59,4 @@ const SVGViewer = ({ path, beforeInjection }: SVGViewerProps) => {
   );
 };
 
-export default SVGViewer;
+export default React.memo(SVGViewer);

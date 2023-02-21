@@ -32,12 +32,11 @@ export const useCompositionsManager = (): CompositionsManager => {
         functions: {
             createComposition(title, modelPath){
                 // dispatch
-                const name = _.uniqueId('composition-')
                 const vpName = viewportManager.functions.addViewport(title, 'Composer', undefined, 'composition-')
                 
                 const path = `catalog/${modelPath}`
                 graphManager.functions.createGraph(vpName)
-                dispatch(createComposition({name: name, viewportName: vpName, svgPath: path, graphId: vpName}))
+                dispatch(createComposition({name: vpName, viewportName: vpName, svgPath: path, graphId: vpName}))
                 svgManager.functions.loadSVG(path)
             }
         }

@@ -16,6 +16,7 @@ import Part from "../../interfaces";
 import { Graph } from "@kernel/modules/Graphs/hooks/useGraph";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+import useComposition from "../../hooks/useComposition";
 
 function MinusSquare(props: SvgIconProps) {
   return (
@@ -88,8 +89,9 @@ function Subtree({ graphId, nodeId }: { graphId: string; nodeId: string }) {
   const { useGraph } = graphModule.hooks;
   const node = useGraph<GraphState<Part>, Part>(
     graphId,
-    (g) => g?.nodes[nodeId]
+    (g: GraphState<Part> | undefined) => g?.nodes[nodeId]
   );
+  const selectedNode = useComposition(graphId, c => c?.selectedPart)
 
   // QUESTION: is there a better way to filter nodes that
   // do not have a name property without creating dependency with all children?
@@ -105,10 +107,15 @@ function Subtree({ graphId, nodeId }: { graphId: string; nodeId: string }) {
   
   const label = node.state.properties?.Nome ? node.state.properties.Nome.value : node.state.id
   if (children?.state?.length === 0){
+    console.log(nodeId, selectedNode.state, nodeId === selectedNode.state ? 'pink' : undefined)
     return (
       <StyledTreeItem
         nodeId={node.state.id}
         label={label}
+        onClick={()=>selectedNode.actions.selectPart(nodeId)}
+        sx={{
+          color: nodeId === selectedNode.state ? 'secondary.main' : 'none'
+        }}
       />
     );
   }
@@ -117,9 +124,13 @@ function Subtree({ graphId, nodeId }: { graphId: string; nodeId: string }) {
     <StyledTreeItem
       nodeId={node.state.id}
       label={label}
+      onClick={()=>selectedNode.actions.selectPart(nodeId)}
+      sx={{
+        color: nodeId === selectedNode.state ? 'secondary.main' : undefined
+      }}
     >
       {children?.state && children.state.map((child) => (
-        <Subtree
+        <MemoizedSubTree
           key={`${graphId}-${child.id}`}
           graphId={graphId}
           nodeId={child.id}
@@ -128,6 +139,8 @@ function Subtree({ graphId, nodeId }: { graphId: string; nodeId: string }) {
     </StyledTreeItem>
   );
 }
+
+const MemoizedSubTree = React.memo(Subtree)
 
 export default function CompositionTree() {
   const storeModule = useModule<Store>("Store");
@@ -158,7 +171,7 @@ export default function CompositionTree() {
       defaultEndIcon={<CloseSquare />}
       sx={{ flexGrow: 1, maxWidth: '100%', overflowY: "auto" }}
     >
-      <Subtree nodeId="root" graphId={graphId} />
+      <MemoizedSubTree nodeId="root" graphId={graphId} />
     </TreeView>
   );
 }

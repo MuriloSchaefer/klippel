@@ -1,4 +1,5 @@
 import { Box, ButtonGroup, Button } from "@mui/material"
+import React from "react"
 import SplitButton from "./SplitButton"
 
 const FloatingButtons = () => {
@@ -7,4 +8,4 @@ const FloatingButtons = () => {
     </Box>
 }
 
-export default FloatingButtons
+export default React.memo(FloatingButtons)
