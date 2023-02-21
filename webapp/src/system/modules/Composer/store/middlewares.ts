@@ -20,6 +20,7 @@ import {
   parseSVG,
   SVGParsed,
   modelExtracted,
+  extractModel,
 } from "./actions";
 import { ComposerState } from "./state";
 
@@ -55,7 +56,7 @@ middlewares.startListening({
     if (!composition || !payload.content) return;
 
     dispatch(
-      parseSVG({
+      extractModel({
         compositionName: composition.name,
         svgContent: payload.content,
       })
@@ -64,7 +65,7 @@ middlewares.startListening({
 });
 
 middlewares.startListening({
-  actionCreator: parseSVG,
+  actionCreator: extractModel,
   effect: async (
     { payload }: PayloadAction<{ compositionName: string; svgContent: string }>,
     listenerApi

@@ -1,36 +1,78 @@
-import { BeforeEach } from '@tanem/svg-injector';
+import { BeforeEach } from "@tanem/svg-injector";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import React, { useCallback, useMemo } from "react";
 import { ReactSVG } from "react-svg";
 import { selectSVGState } from "../store/selectors";
+import { Box } from "@mui/material";
 
+type A4cm = [21, 29.7];
+interface SVGViewerPreferences {
+  layout?: {
+    showRulers?: {
+      unit: "px" | "mm" | "cm" | "mt";
+      x: boolean;
+      y: boolean;
+    };
+    gridLines?: {
+      unit: "px" | "mm" | "cm" | "mt";
+      size: [number, number];
+    };
+  };
+}
 interface SVGViewerProps {
   path: string;
-  beforeInjection?: BeforeEach
+  beforeInjection?: BeforeEach;
+  preferences?: SVGViewerPreferences;
 }
 
-const SVGViewer = ({ path, beforeInjection }: SVGViewerProps) => {
+const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
   const svgState = useAppSelector(selectSVGState(path));
 
-  const handleBeforeInjection = useCallback((svg: SVGSVGElement)=> {
-    // TODO: inject proxies here
-    svg.setAttribute('id',`${path}-root`)
+  const handleZoom = (svg: SVGSVGElement, delta: number) => {
+    const originalViewbox = svg.viewBox;
+    const nextViewbox = `${originalViewbox.baseVal.x} ${
+      originalViewbox.baseVal.y
+    } ${originalViewbox.baseVal.width + delta} ${
+      originalViewbox.baseVal.height
+    }`;
+    svg.setAttribute("viewBox", nextViewbox);
+  };
 
-    Object.entries(svgState?.proxies ?? {}).forEach(([id, styles]) => {
-      const elem = svg.getElementById(id) as SVGSVGElement
-      if (elem){
-        elem.setAttribute('class', "")
-        elem.setAttribute('fill', styles.fill ?? "white")
-        elem.setAttribute('stroke', styles.stroke ?? "black")
-      }
-    })
+  const handleBeforeInjection = useCallback(
+    (svg: SVGSVGElement) => {
+      // TODO: inject proxies here
+      svg.setAttribute("id", `${path}-root`);
+      svg.setAttribute("width", "100%");
+      svg.setAttribute("height", "100%");
 
-    if (beforeInjection) beforeInjection(svg)
-  }, [beforeInjection, svgState?.content])
+      // set zoom and pam
+      // TODO: make event configurable (mouse commands should be configurable)
+      // QUESTION: how to handle pen / multi-touch events (on tablet)
+
+      svg.addEventListener("wheel", (e: WheelEvent) => {
+        console.log(e.x, e.y);
+        handleZoom(svg, e.deltaY);
+      });
+      // svg.setAttribute("height", `100%`);
+      // svg.setAttribute("viewBox", `100%`);
+
+      Object.entries(svgState?.proxies ?? {}).forEach(([id, styles]) => {
+        const elem = svg.getElementById(id) as SVGSVGElement;
+        if (elem) {
+          elem.setAttribute("class", "");
+          elem.setAttribute("fill", styles.fill ?? "white");
+          elem.setAttribute("stroke", styles.stroke ?? "black");
+        }
+      });
+
+      if (beforeInjection) beforeInjection(svg);
+    },
+    [beforeInjection, svgState?.content]
+  );
 
   const objURL = useMemo(
     () =>
@@ -43,19 +85,30 @@ const SVGViewer = ({ path, beforeInjection }: SVGViewerProps) => {
   if (!svgState || !objURL) return null;
 
   return (
+    <Box
+      role="svg-viewport"
+      id={path}
+      aria-label="SVG viewer"
+      sx={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "top",
+        justifyContent: "center",
+      }}
+    >
       <ReactSVG
-        src={objURL}
-        beforeInjection={handleBeforeInjection}
-        id={path}
-        aria-label="SVG viewer"
         style={{
           width: "100%",
+          overflow: 'hidden',
           height: "100%",
-          display: "flex",
-          alignItems: "top",
-          justifyContent: 'center'
         }}
+        src={objURL}
+        height="100%"
+        width="100%"
+        beforeInjection={handleBeforeInjection}
       />
+    </Box>
   );
 };
 
