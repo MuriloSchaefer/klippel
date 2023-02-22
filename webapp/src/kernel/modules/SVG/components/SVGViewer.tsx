@@ -32,14 +32,28 @@ const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
 
   const svgState = useAppSelector(selectSVGState(path));
 
-  const handleZoom = (svg: SVGSVGElement, delta: number) => {
+  const handleZoom = (
+    svg: SVGSVGElement,
+    delta: number,
+    center: [number, number]
+  ) => {
+    console.group('zoom')
     const originalViewbox = svg.viewBox;
-    const nextViewbox = `${originalViewbox.baseVal.x} ${
-      originalViewbox.baseVal.y
-    } ${originalViewbox.baseVal.width + delta} ${
-      originalViewbox.baseVal.height
-    }`;
+
+    // invert op
+    center[0] = delta < 0 ? -center[0] : center[0]
+    center[1] = delta < 1 ? -center[1] : center[1]
+    const nextViewbox = `
+    ${originalViewbox.baseVal.x } 
+    ${originalViewbox.baseVal.y } 
+    ${originalViewbox.baseVal.width + delta*5} 
+    ${originalViewbox.baseVal.height}`;
+
+    console.log(originalViewbox.baseVal)
+    console.log(center, nextViewbox)
     svg.setAttribute("viewBox", nextViewbox);
+
+    console.groupEnd()
   };
 
   const handleBeforeInjection = useCallback(
@@ -54,8 +68,7 @@ const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
       // QUESTION: how to handle pen / multi-touch events (on tablet)
 
       svg.addEventListener("wheel", (e: WheelEvent) => {
-        console.log(e.x, e.y);
-        handleZoom(svg, e.deltaY);
+        handleZoom(svg, e.deltaY, [e.x, e.y]);
       });
       // svg.setAttribute("height", `100%`);
       // svg.setAttribute("viewBox", `100%`);
@@ -100,7 +113,7 @@ const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
       <ReactSVG
         style={{
           width: "100%",
-          overflow: 'hidden',
+          overflow: "hidden",
           height: "100%",
         }}
         src={objURL}
