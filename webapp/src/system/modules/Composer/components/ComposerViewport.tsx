@@ -1,7 +1,7 @@
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Box, Paper } from "@mui/material";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { Store } from "@kernel/modules/Store";
 import { selectCompositionStateByViewportName } from "../store/selectors";
@@ -13,57 +13,74 @@ import useGraph from "@kernel/modules/Graphs/hooks/useGraph";
 import _ from "lodash";
 import Part from "../interfaces";
 import { CompositionState } from "../store/state";
+import useRDFInterpreter from "../hooks/useRDFInterpreter";
+import { RDF, SELF } from "../constants";
+import { IndexedFormula, literal } from "rdflib";
 
-export const Composerviewport = () => {
+export const ComposerViewportLoader = () => {
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
-
-  const {
-    components: { SVGViewer },
-    hooks: { useSVG },
-  } = useModule<ISVGModule>("SVG");
-  const { DetailsPanel } = layoutModule.components;
 
   const { useAppSelector } = storeModule.hooks;
 
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
 
-
   const selector = useCallback((c: CompositionState | undefined) => ({
     svgPath: c?.svgPath,
+    model: c?.model,
     graphId: c?.graphId,
   }), [])
 
   const composition = useComposition(activeViewport!, selector);
+  const interpreter = useMemo(() => useRDFInterpreter(composition.state?.model), [composition.state?.model])
 
+  if (!composition.state?.svgPath || !interpreter) return null;
 
-  useEffect(()=>{
-    console.log('ComposerViewport', composition)
-  }, [composition])
+  return <ComposerViewport svgPath={composition.state.svgPath} selectPart={composition.actions.selectPart} interpreter={interpreter} />
+};
 
-  const nodes = useGraph(composition.state?.graphId!, (g) =>
-    Object.values(g?.nodes ?? {}).filter((n: Part) => !_.isEmpty(n.properties))
-  );
+export const ComposerViewport = ({ svgPath, selectPart, interpreter }: { svgPath: string, selectPart: (partName: string) => void, interpreter: IndexedFormula }) => {
+  const {
+    components: { SVGViewer },
+    hooks: { useSVG },
+  } = useModule<ISVGModule>("SVG");
+  const svgManager = useSVG(svgPath, svg => svg)
+
+  const proxiedElements = useMemo(() => interpreter.statementsMatching(undefined, SELF('ProxyElement'), undefined), [interpreter])
+  const parts = useMemo(() => interpreter.statementsMatching(undefined, SELF('type'), literal('Part')), [interpreter])
+
+  //console.log(proxiedElements)
+  useEffect(() => {
+    proxiedElements.forEach(proxiedElements => {
+      // console.log(proxiedElements.subject.value)
+      svgManager.actions.addProxy(proxiedElements.object.value.replace('#', ''), { fill: 'grey' })
+    })
+
+  }, [])
 
   const beforeInjectionHandle = useCallback((svgRoot: SVGSVGElement) => {
-    // const [element] = [...svg?.querySelectorAll(`#${id}`)];
     // inject proxies
-    nodes.state?.forEach((node: Part) => {
-      const elem = svgRoot.getElementById(node.id);
-      if (elem)
-        elem.addEventListener("click", (e) => {
-          e.stopPropagation();
-          composition.actions.selectPart(node.id);
-        });
-    });
+    const proxies = svgManager.state?.proxies
+    if (proxies) {
+      Object.entries(proxies).forEach(([id, style]) => {
+        const [element] = [...svgRoot?.querySelectorAll(`#${id}`)];
+        element.setAttribute('fill', style.fill ?? 'green')
 
-    // inject handlers
-    // svgRoot.addEventListener("click", (e: MouseEvent) => {
-    // });
+      })
+    }
+
+    parts.forEach(part => {
+      const domId = interpreter.any(part.subject, SELF('DOMId'), undefined)
+      const [element] = [...svgRoot?.querySelectorAll(`#${domId}`)];
+      element.addEventListener('click', (e) => {
+        e.stopPropagation()
+        selectPart(part.subject.value)
+      })
+    })
+
+
   }, []);
-
-  if (!composition.state?.svgPath) return null;
 
   return (
     <>
@@ -77,7 +94,7 @@ export const Composerviewport = () => {
         }}
       >
         <SVGViewer
-          path={composition.state.svgPath}
+          path={svgPath}
           beforeInjection={beforeInjectionHandle}
         />
 
@@ -88,6 +105,7 @@ export const Composerviewport = () => {
       <FloatingButtons />
     </>
   );
-};
 
-export default React.memo(Composerviewport);
+}
+
+export default React.memo(ComposerViewportLoader);

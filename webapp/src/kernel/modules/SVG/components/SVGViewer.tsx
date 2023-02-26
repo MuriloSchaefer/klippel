@@ -49,8 +49,6 @@ const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
     ${originalViewbox.baseVal.width + delta*5} 
     ${originalViewbox.baseVal.height}`;
 
-    console.log(originalViewbox.baseVal)
-    console.log(center, nextViewbox)
     svg.setAttribute("viewBox", nextViewbox);
 
     console.groupEnd()

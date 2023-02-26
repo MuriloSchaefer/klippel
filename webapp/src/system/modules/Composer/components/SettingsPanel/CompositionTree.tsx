@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useCallback, useMemo } from "react";
 import SvgIcon, { SvgIconProps } from "@mui/material/SvgIcon";
 import { alpha, styled } from "@mui/material/styles";
 import TreeView from "@mui/lab/TreeView";
@@ -17,6 +17,10 @@ import { Graph } from "@kernel/modules/Graphs/hooks/useGraph";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
 import useComposition from "../../hooks/useComposition";
+import useRDFInterpreter from "../../hooks/useRDFInterpreter";
+import { CompositionState } from "../../store/state";
+import { IndexedFormula, literal } from "rdflib";
+import { RDF, SELF } from "../../constants";
 
 function MinusSquare(props: SvgIconProps) {
   return (
@@ -84,56 +88,29 @@ const StyledTreeItem = styled((props: TreeItemProps) => (
   },
 }));
 
-function Subtree({ graphId, nodeId }: { graphId: string; nodeId: string }) {
-  const graphModule = useModule<IGraphModule>("Graph");
-  const { useGraph } = graphModule.hooks;
-  const node = useGraph<GraphState<Part>, Part>(
-    graphId,
-    (g: GraphState<Part> | undefined) => g?.nodes[nodeId]
-  );
-  const selectedNode = useComposition(graphId, c => c?.selectedPart)
+function Subtree({ interpreter, selectedPart, selectPart, nodeId }: { interpreter: IndexedFormula, selectedPart: string | undefined, selectPart: (partName: string) => void, nodeId: string }) {
 
-  // QUESTION: is there a better way to filter nodes that
-  // do not have a name property without creating dependency with all children?
-  const children = useGraph<GraphState<Part>, Part[]>(
-    graphId,
-    (g) => 
-    Object.values(g?.nodes ?? {})
-    .filter(n => Object.values(node?.state?.outputs ?? {})
-    .map(o => o.targetId).includes(n.id) && 'Nome' in n.properties)
-  );
-
-  if (!node.state) return null;
-  
-  const label = node.state.properties?.Nome ? node.state.properties.Nome.value : node.state.id
-  if (children?.state?.length === 0){
-    console.log(nodeId, selectedNode.state, nodeId === selectedNode.state ? 'pink' : undefined)
-    return (
-      <StyledTreeItem
-        nodeId={node.state.id}
-        label={label}
-        onClick={()=>selectedNode.actions.selectPart(nodeId)}
-        sx={{
-          color: nodeId === selectedNode.state ? 'secondary.main' : 'none'
-        }}
-      />
-    );
-  }
+  const label = interpreter.any(SELF(nodeId), RDF('label'), undefined)
+  const children = interpreter.statementsMatching(
+    SELF(nodeId), SELF('composedOf'), undefined
+  )
 
   return (
     <StyledTreeItem
-      nodeId={node.state.id}
-      label={label}
-      onClick={()=>selectedNode.actions.selectPart(nodeId)}
+      nodeId={nodeId}
+      label={label?.value}
+      onClick={() => selectPart(nodeId)}
       sx={{
-        color: nodeId === selectedNode.state ? 'secondary.main' : undefined
+        color: nodeId === selectedPart ? 'secondary.main' : undefined
       }}
     >
-      {children?.state && children.state.map((child) => (
+      {children.map((child) => (
         <MemoizedSubTree
-          key={`${graphId}-${child.id}`}
-          graphId={graphId}
-          nodeId={child.id}
+          key={`${nodeId}-${child.object.value.replace('_:#', '')}`}
+          interpreter={interpreter}
+          selectPart={selectPart}
+          selectedPart={selectedPart}
+          nodeId={child.object.value.replace('_:#', '')}
         />
       ))}
     </StyledTreeItem>
@@ -145,22 +122,21 @@ const MemoizedSubTree = React.memo(Subtree)
 export default function CompositionTree() {
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
-  const graphModule = useModule<IGraphModule>("Graph");
 
   const { useAppSelector } = storeModule.hooks;
-  const { useGraph } = graphModule.hooks;
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
-  const graphId = useAppSelector(
-    selectCompositionStateByViewportName(
-      activeViewport!,
-      (state) => state?.graphId
-    )
-  ) as string; // TODO: fix graphId typing
 
-  const adjacencyList = useGraph(graphId, (g) => g?.adjacencyList);
-  if (!adjacencyList.state) return null;
 
+  const selector = useCallback((c: CompositionState | undefined) => ({
+    svgPath: c?.svgPath,
+    model: c?.model,
+    selectedPart: c?.selectedPart
+  }), [])
+  const composition = useComposition(activeViewport!, selector);
+  const interpreter = useMemo(() => useRDFInterpreter(composition.state?.model), [composition.state?.model])
+
+  if (!composition.state?.svgPath || !interpreter) return null;
 
   return (
     <TreeView
@@ -171,7 +147,7 @@ export default function CompositionTree() {
       defaultEndIcon={<CloseSquare />}
       sx={{ flexGrow: 1, maxWidth: '100%', overflowY: "auto" }}
     >
-      <MemoizedSubTree nodeId="root" graphId={graphId} />
+      <MemoizedSubTree nodeId="peca" interpreter={interpreter} selectPart={composition.actions.selectPart} selectedPart={composition.state.selectedPart} />
     </TreeView>
   );
 }

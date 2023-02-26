@@ -34,7 +34,6 @@ const useSVG = <S = SVG, R = S>(
     actions: {
       addProxy(id, styles) {
         dispatch(addProxy({ path, id, styles }));
-        
       },
     },
   };

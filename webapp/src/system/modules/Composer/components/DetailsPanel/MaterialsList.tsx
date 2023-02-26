@@ -14,133 +14,40 @@ import {
   Paper,
   Select,
 } from "@mui/material";
+import { IndexedFormula } from "rdflib";
+import { RDF, SELF } from "../../constants";
+import EditableFields from "../editableFields";
 
 
-export default function SwitchListSecondary() {
-  const [checked, setChecked] = React.useState(["wifi"]);
+export default function MaterialsList({ selectedPart, interpreter }: { selectedPart: string, interpreter: IndexedFormula }) {
 
-  const handleToggle = (value: string) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
-
-    if (currentIndex === -1) {
-      newChecked.push(value);
-    } else {
-      newChecked.splice(currentIndex, 1);
-    }
-
-    setChecked(newChecked);
-  };
+  const materials = interpreter.statementsMatching(
+    SELF(selectedPart), SELF('madeOf'), undefined
+  )
 
   return (
     <List sx={{ width: "100%" }}>
-      <Paper variant="outlined" square sx={{ width: "100%", paddin: 1, '&:div + div': {
-        borderTop: 0
-      } }}>
-        <ListItem>
-          <ListItemText
-            primary="Tecido externo"
-            secondary={
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'space-between' }}>
-                <FormControl sx={{ m: 1, minWidth: 120 }}>
-                  <InputLabel htmlFor="grouped-native-select">Nome</InputLabel>
-                  <Select
-                    native
-                    defaultValue=""
-                    id="grouped-native-select"
-                    label="Grouping"
-                  >
-                    <option aria-label="None" value="" />
-                    <optgroup label="Mundial">
-                      <option value={1}>PV</option>
-                      <option value={2}>PV 2</option>
-                    </optgroup>
-                    <optgroup label="Similares">
-                      <option value={3}>Malha PV</option>
-                      <option value={4}>Santanense PV</option>
-                    </optgroup>
-                  </Select>
-                </FormControl>
-
-                <FormControl sx={{ m: 1, minWidth: 120 }}>
-                  <InputLabel htmlFor="grouped-native-select">Cor</InputLabel>
-                  <Select
-                    native
-                    defaultValue={1}
-                    id="grouped-native-select"
-                    label="Grouping"
-                  >
-                    <option value={1}>Chumbo</option>
-                    <option value={1}>Mescla</option>
-                  </Select>
-                </FormControl>
-
-                <Switch
-                  edge="end"
-                  onChange={handleToggle("wifi")}
-                  checked={checked.indexOf("wifi") !== -1}
-                  inputProps={{
-                    "aria-labelledby": "switch-list-label-wifi",
-                  }}
-                />
-              </Box>
-            }
-          />
-        </ListItem>
-      </Paper>
-      
-      <Paper variant="outlined" square sx={{ width: "100%", paddin: 1 }}>
-        <ListItem>
-          <ListItemText
-            primary="Tecido interno"
-            secondary={
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <FormControl sx={{ m: 1, minWidth: 120 }}>
-                  <InputLabel htmlFor="grouped-native-select">Nome</InputLabel>
-                  <Select
-                    native
-                    defaultValue=""
-                    id="grouped-native-select"
-                    label="Grouping"
-                  >
-                    <option aria-label="None" value="" />
-                    <optgroup label="Mundial">
-                      <option value={1}>PV</option>
-                      <option value={2}>PV 2</option>
-                    </optgroup>
-                    <optgroup label="Similares">
-                      <option value={3}>Malha PV</option>
-                      <option value={4}>Santanense PV</option>
-                    </optgroup>
-                  </Select>
-                </FormControl>
-
-                <FormControl sx={{ m: 1, minWidth: 120 }}>
-                  <InputLabel htmlFor="grouped-native-select">Cor</InputLabel>
-                  <Select
-                    native
-                    defaultValue={1}
-                    id="grouped-native-select"
-                    label="Grouping"
-                  >
-                    <option value={1}>Chumbo</option>
-                    <option value={1}>Mescla</option>
-                  </Select>
-                </FormControl>
-
-                <Switch
-                  edge="end"
-                  onChange={handleToggle("wifi")}
-                  checked={checked.indexOf("wifi") !== -1}
-                  inputProps={{
-                    "aria-labelledby": "switch-list-label-wifi",
-                  }}
-                />
-              </Box>
-            }
-          />
-        </ListItem>
-      </Paper>
+      {materials.map(material => {
+        const subject = material.object.value.replace('_:#', '')
+        const label = interpreter.any(SELF(subject), RDF('label'), undefined)
+        // console.log(editableFields)
+        return <Paper variant="outlined" square sx={{
+          width: "100%", paddin: 1, '&:div + div': {
+            borderTop: 0
+          }
+        }}>
+          <ListItem>
+            <ListItemText
+              primary={label?.value}
+              secondary={
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'space-between' }}>
+                  <EditableFields subject={subject} interpreter={interpreter} />
+                </Box>
+              }
+            />
+          </ListItem>
+        </Paper>
+      })}
     </List>
   );
 }

@@ -50,17 +50,20 @@ middlewares.startListening({
       Composer: { compositionsManager },
     } = getState() as { Composer: ComposerState };
 
-    const composition = Object.values(compositionsManager.compositions).find(
+    const compositions = Object.values(compositionsManager.compositions).filter(
       (comp) => comp.svgPath === payload.path
     );
-    if (!composition || !payload.content) return;
-
-    dispatch(
-      extractModel({
-        compositionName: composition.name,
-        svgContent: payload.content,
-      })
-    );
+    
+    compositions.forEach(comp => {
+      if (!payload.content) return;
+      
+      dispatch(
+        extractModel({
+          compositionName: comp.name,
+          svgContent: payload.content,
+        })
+      );
+    })
   },
 });
 
@@ -137,45 +140,9 @@ middlewares.startListening({
 
     // tree root
     const [meta] = [...document.querySelectorAll(`#model`)] as [SVGDefsElement];
-    console.log("meta", meta);
     const model = await rdf2jsonld(meta);
-    console.log("expanded", model);
     dispatch(modelExtracted({compositionName: composition.name, model}))
 
-    const g = graph();
-    //parse(JSON.stringify(model), g, '_:', 'application/ld+json;')
-    const adaptedModel = model
-    console.log('adapted', adaptedModel)
-    jsonParser.parseJSON(
-      adaptedModel,
-      "_:",
-      g
-    );
-    console.log("g", g);
-
-    // const [garment] = [...document.querySelectorAll(`#peca`)] as [SVGElement]
-    // const root: Part = {
-    //   id: `root`,
-    //   type: 'Part',
-    //   properties: {
-    //     //...xdom2properties(garment),
-    //   },
-    //   inputs: {},
-    //   outputs: {},
-    // };
-    // dispatch(addNode({ graphId: composition.graphId, node: root }));
-
-    // const children = Array.from<any>(garment.children);
-    // const garmentParts = children.filter((c) => !["metadata", "defs"].includes(c.tagName));
-    // garmentParts.forEach((part) =>
-    //   parseNode(
-    //     part,
-    //     root,
-    //     {},
-    //     composition.graphId,
-    //     dispatch
-    //   )
-    // );
 
     dispatch(
       SVGParsed(compositionsManager.compositions[payload.compositionName])
