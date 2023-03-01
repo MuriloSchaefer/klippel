@@ -74,9 +74,11 @@ const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
       Object.entries(svgState?.proxies ?? {}).forEach(([id, styles]) => {
         const elem = svg.getElementById(id) as SVGSVGElement;
         if (elem) {
-          elem.setAttribute("class", "");
-          elem.setAttribute("fill", styles.fill ?? "white");
-          elem.setAttribute("stroke", styles.stroke ?? "black");
+          if ('fill' in styles)
+            elem.setAttribute("fill", styles.fill!);
+
+          if ('stroke' in styles)
+            elem.setAttribute("stroke", styles.stroke!);
         }
       });
 

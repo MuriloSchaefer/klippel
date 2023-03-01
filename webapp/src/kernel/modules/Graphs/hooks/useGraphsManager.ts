@@ -4,7 +4,7 @@ import { addEdge, addNode, removeEdge, removeNode, resetGraph, updateNode } from
 
 import {createGraph as createGraphAction} from "../store/graphsManager/actions"
 import { newGraphState } from "../store/state";
-import { Graph, GraphActions } from "./useGraph";
+import { DEFAULT_EDGES, Graph, GraphActions } from "./useGraph";
 
 export interface GraphsManager extends Manager {
     functions: {
@@ -20,8 +20,8 @@ const useGraphsManager = (): GraphsManager => {
 
     const buildGraphActions = (graphId:string):GraphActions=>{
       return {
-        addNode: (node) => {
-          dispatch(addNode({ graphId, node }));
+        addNode: (node, edges) => {
+          dispatch(addNode({ graphId, node, edges: edges ?? DEFAULT_EDGES }));
         },
         removeNode: (id) => {
           dispatch(removeNode({ graphId, nodeId: id }));

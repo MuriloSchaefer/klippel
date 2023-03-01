@@ -89,20 +89,20 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
         if (!graphInitialized) return
         resetGraph(GRAPH_NAME)
         
-        const rootNode = { id: 'root', inputs: {}, outputs: {} }
+        const rootNode = { id: 'root', type: 'ROOT' }
 
         graph.actions.addNode(rootNode)
 
         staticModules.forEach(mod =>
             graph.actions.addNode({
                 id: mod.name,
-                inputs: {
-                    root: {
-                        id: `root->${mod.name}`,
-                        sourceId: 'root', targetId: mod.name
-                    }
-                }, outputs: {}
-            })
+                type: 'STATIC_MODULE'
+            }, {inputs: {
+                root: {
+                    id: `root->${mod.name}`,
+                    sourceId: 'root', targetId: mod.name
+                }
+            }, outputs: {}})
         )
         extraModules.kernel.forEach(mod =>{
             mod.depends_on.push('Loader') // all modules depends on the loader
@@ -115,8 +115,8 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
             }, {})
             graph.actions.addNode({
                 id: mod.name,
-                inputs: dependencies, outputs: {}
-            })
+                type: 'EXTRA_KERNEL_MODULE'
+            }, {inputs: dependencies, outputs: {}})
         })
         
         extraModules.system.forEach(mod =>{
@@ -130,8 +130,8 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
             }, {})
             graph.actions.addNode({
                 id: mod.name,
-                inputs: dependencies, outputs: {}
-            })
+                type: 'EXTRA_SYSTEM_MODULE'
+            }, {inputs: dependencies, outputs: {}})
         })
         setIsInitializing(false)
     }, [graphInitialized])

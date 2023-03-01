@@ -1,26 +1,21 @@
-import Edge from "@kernel/modules/Graphs/interfaces/Edge";
-import Node from "@kernel/modules/Graphs/interfaces/Node";
-import { addNode } from "@kernel/modules/Graphs/store/graphInstance/actions";
+import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { addProxy, SVGLoaded } from "@kernel/modules/SVG/store/actions";
 import { SVGState } from "@kernel/modules/SVG/store/state";
 import {
-  AnyAction,
   createListenerMiddleware,
   PayloadAction,
-  ThunkDispatch,
 } from "@reduxjs/toolkit";
-import { compact, flatten } from "jsonld";
-import _, { isEmpty } from "lodash";
-import { graph, parse, serialize, jsonParser } from "rdflib";
-import Part, { Properties } from "../interfaces";
-import { xdom2properties, rdf2jsonld } from "../utils";
+import { SELF } from "../constants";
+import { rdfxml2interpreter, interpreter2jsonld } from "../utils";
 import {
   createComposition,
   compositionCreated,
   parseSVG,
   SVGParsed,
-  modelExtracted,
-  extractModel,
+  modelFetched,
+  fetchModel,
+  storeModel,
+  modelStored,
 } from "./actions";
 import { ComposerState } from "./state";
 
@@ -53,14 +48,24 @@ middlewares.startListening({
     const compositions = Object.values(compositionsManager.compositions).filter(
       (comp) => comp.svgPath === payload.path
     );
+
+    if (!payload.content) return;
+    
+    const parser = new DOMParser();
+    const document = parser.parseFromString(
+      payload.content,
+      "image/svg+xml"
+    );
+
+    const modelPath = document.getElementsByTagName('modelPath').item(0)?.innerHTML
+    if (!modelPath) return
     
     compositions.forEach(comp => {
-      if (!payload.content) return;
       
       dispatch(
-        extractModel({
+        fetchModel({
           compositionName: comp.name,
-          svgContent: payload.content,
+          modelPath,
         })
       );
     })
@@ -68,9 +73,34 @@ middlewares.startListening({
 });
 
 middlewares.startListening({
-  actionCreator: extractModel,
+  actionCreator: fetchModel,
   effect: async (
-    { payload }: PayloadAction<{ compositionName: string; svgContent: string }>,
+    { payload }: PayloadAction<{ compositionName: string; modelPath: string }>,
+    listenerApi
+  ) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Composer: { compositionsManager },
+    } = getState() as { Composer: ComposerState };
+
+    const composition =
+      compositionsManager.compositions[payload.compositionName];
+    
+    const response = await fetch(payload.modelPath);
+    const model = await (await response.blob()).text();
+
+    // tree root
+    dispatch(modelFetched({compositionName: composition.name, model}))
+
+
+    
+  },
+});
+
+middlewares.startListening({
+  actionCreator: modelFetched,
+  effect: async (
+    { payload }: PayloadAction<{ compositionName: string; model: any }>,
     listenerApi
   ) => {
     const { dispatch, getState } = listenerApi;
@@ -81,73 +111,65 @@ middlewares.startListening({
     const composition =
       compositionsManager.compositions[payload.compositionName];
 
-    // Parser logic here
-    const parseNode = (
-      node: Element,
-      parent: Node,
-      baseProperties: Properties,
-      graphId: string,
-      dispatch: ThunkDispatch<unknown, unknown, AnyAction>
-    ): void => {
-      if (isEmpty(node.id)) {
-        node.setAttribute("id", _.uniqueId("random_"));
-      }
-      // group element, recurse
-      const children = Array.from(node.children);
-      const hasChildren = !isEmpty(children);
+    // add all proxies
+    // const proxiedElements = interpreter.statementsMatching(undefined, SELF('ProxyElement'), undefined)
+    // proxiedElements.forEach((proxiedElements: any) => {
+    //   // console.log(proxiedElements.subject.value)
+    //   const elem = proxiedElements.object.value
+    //   const node = proxiedElements.subject.value.replace('_:#', '')
+    //   const proxiedAttributes = interpreter.statementsMatching(SELF(node), SELF('ProxyAttribute'), undefined)
+      
+    //   const styles = proxiedAttributes.reduce((acc, curr)=> ({...acc, [curr.object.value]: 'grey'}), {})
 
-      // vector object, add material to graph
-      const part: Part = {
-        id: node.id,
-        type: "Part",
-        properties: { ...baseProperties, ...xdom2properties(node) },
-        inputs: {
-          [parent.id]: {
-            id: `${parent.id}-${node.id}`,
-            sourceId: parent.id,
-            targetId: node.id,
-          } as Edge,
-        },
-        outputs: {},
-      };
-      dispatch(addNode({ graphId, node: part }));
-      dispatch(
-        addProxy({
-          path: composition.svgPath,
-          id: part.id,
-          styles: {
-            fill: "grey",
-          },
-        })
-      );
-      if (hasChildren) {
-        // const properties = children.filter((c) => c.tagName === "metadata");
-        const parts = children.filter(
-          (c) => !["metadata", "defs"].includes(c.tagName)
-        );
-
-        parts.forEach((innerPart) =>
-          parseNode(innerPart, part, {}, graphId, dispatch)
-        );
-      }
-    };
-
-    const parser = new DOMParser();
-    const document = parser.parseFromString(
-      payload.svgContent,
-      "image/svg+xml"
-    );
-
-    // tree root
-    const [meta] = [...document.querySelectorAll(`#model`)] as [SVGDefsElement];
-    const model = await rdf2jsonld(meta);
-    dispatch(modelExtracted({compositionName: composition.name, model}))
-
+    //   const proxy = {path: composition.svgPath, id: elem.replace('#', ''), styles }
+    //   dispatch(addProxy(proxy))
+    // })
 
     dispatch(
-      SVGParsed(compositionsManager.compositions[payload.compositionName])
+      storeModel({compositionName: composition.name, model: payload.model})
     );
-  },
-});
+  }
+})
+
+middlewares.startListening({
+  actionCreator: storeModel,
+  effect: async (
+    { payload }: PayloadAction<{ compositionName: string; model: any }>,
+    listenerApi
+  ) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Composer: { compositionsManager },
+    } = getState() as { Composer: ComposerState };
+
+    const composition =
+      compositionsManager.compositions[payload.compositionName];
+
+    // add all proxies
+    // const proxiedElements = interpreter.statementsMatching(undefined, SELF('ProxyElement'), undefined)
+    // proxiedElements.forEach((proxiedElements: any) => {
+    //   // console.log(proxiedElements.subject.value)
+    //   const elem = proxiedElements.object.value
+    //   const node = proxiedElements.subject.value.replace('_:#', '')
+    //   const proxiedAttributes = interpreter.statementsMatching(SELF(node), SELF('ProxyAttribute'), undefined)
+      
+    //   const styles = proxiedAttributes.reduce((acc, curr)=> ({...acc, [curr.object.value]: 'grey'}), {})
+
+    //   const proxy = {path: composition.svgPath, id: elem.replace('#', ''), styles }
+    //   dispatch(addProxy(proxy))
+    // })
+    const graph = JSON.parse(payload.model)
+    dispatch(
+      loadGraph({graphId: composition.graphId, graph})
+    )
+    // dispatch(
+    //   addProxies({graphId: composition.graphId, graph})
+    // )
+
+    dispatch(
+      modelStored({compositionName: composition.name, model: payload.model})
+    );
+  }
+})
 
 export default middlewares;

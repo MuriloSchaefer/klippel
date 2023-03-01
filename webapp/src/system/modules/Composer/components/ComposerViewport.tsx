@@ -60,22 +60,14 @@ export const ComposerViewport = ({ svgPath, selectPart, interpreter }: { svgPath
   }, [])
 
   const beforeInjectionHandle = useCallback((svgRoot: SVGSVGElement) => {
-    // inject proxies
-    const proxies = svgManager.state?.proxies
-    if (proxies) {
-      Object.entries(proxies).forEach(([id, style]) => {
-        const [element] = [...svgRoot?.querySelectorAll(`#${id}`)];
-        element.setAttribute('fill', style.fill ?? 'green')
-
-      })
-    }
 
     parts.forEach(part => {
       const domId = interpreter.any(part.subject, SELF('DOMId'), undefined)
       const [element] = [...svgRoot?.querySelectorAll(`#${domId}`)];
       element.addEventListener('click', (e) => {
         e.stopPropagation()
-        selectPart(part.subject.value)
+        console.log(part.subject.value.replace('_:#', ''))
+        selectPart(part.subject.value.replace('_:#', ''))
       })
     })
 

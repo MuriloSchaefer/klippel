@@ -9,6 +9,7 @@ import {
 import {
   addEdge,
   addNode,
+  loadGraph,
   removeEdge,
   removeNode,
   resetGraph,
@@ -22,8 +23,15 @@ const slice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(
+        loadGraph,
+        (state: GraphsManagerState, { payload: { graphId, graph } }) => {
+          return {...state, graphs: {...state.graphs, [graphId]: graph}};
+        }
+      )
+    builder
+      .addCase(
         addNode,
-        (state: GraphsManagerState, { payload: { graphId, node } }) => {
+        (state: GraphsManagerState, { payload: { graphId, node, edges } }) => {
           const graph = state.graphs[graphId];
           if (!graph) throw Error("Graph does not exist");
           const nodeState = graph.nodes[node.id];
@@ -31,13 +39,11 @@ const slice = createSlice({
 
           graph.nodes[node.id] = node;
 
-          Object.entries(node.inputs).forEach(
+          Object.entries(edges.inputs).forEach(
             ([sourceId, edge]: [string, Edge]) => {
               const sourceNode = graph.nodes[sourceId];
               if (!sourceNode) throw Error("Source node does not exist");
 
-              sourceNode.outputs[node.id] = edge;
-              graph.nodes[node.id].inputs[sourceId] = edge;
 
               graph.adjacencyList[sourceId] = {
                 inputs: graph.adjacencyList[sourceId]?.inputs ?? [],
@@ -58,13 +64,10 @@ const slice = createSlice({
             }
           );
 
-          Object.entries(node.outputs).forEach(
+          Object.entries(edges.outputs).forEach(
             ([targetId, edge]: [string, Edge]) => {
               const targetNode = graph.nodes[targetId];
               if (!targetNode) throw Error("Source node does not exist");
-
-              targetNode.outputs[node.id] = edge;
-              graph.nodes[node.id].outputs[targetId] = edge;
 
               graph.adjacencyList[targetId] = {
                 ...graph.adjacencyList[targetId],
@@ -142,9 +145,6 @@ const slice = createSlice({
           graph.edges[edge.id] = edge;
           graph.adjacencyList[edge.sourceId].outputs.push(edge.id);
           graph.adjacencyList[edge.targetId].inputs.push(edge.id);
-
-          graph.nodes[edge.sourceId].outputs[edge.targetId] = edge;
-          graph.nodes[edge.targetId].inputs[edge.sourceId] = edge;
 
           return state;
         }

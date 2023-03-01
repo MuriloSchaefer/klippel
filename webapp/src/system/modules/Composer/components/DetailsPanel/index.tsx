@@ -15,6 +15,7 @@ import ProcessesList from './ProcessesList'
 import { CompositionState } from "../../store/state";
 import useComposition from "../../hooks/useComposition";
 import useRDFInterpreter from "../../hooks/useRDFInterpreter";
+import { RDF, SELF } from "../../constants";
 
 const ComposerDetailsPanel = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -37,8 +38,10 @@ const ComposerDetailsPanel = () => {
 
   if (!composition.state?.selectedPart || !interpreter) return null;
 
+  const title = interpreter.any(SELF(composition.state.selectedPart), RDF('label'), undefined)
+
   return (
-    <DetailsPanel>
+    <DetailsPanel title={title?.value ?? composition.state.selectedPart}>
       <Accordion
         name="Materiais"
         icon={<ListSharpIcon />}

@@ -2,15 +2,23 @@ import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
 import Edge from "../../interfaces/Edge";
 
 import Node from "../../interfaces/Node";
+import { GraphState } from "../state";
 
-import { addNode, nodeAdded, removeNode, nodeRemoved, updateNode, nodeUpdated, addEdge, edgeAdded, removeEdge, edgeRemoved } from "./actions";
+import { addNode, nodeAdded, removeNode, nodeRemoved, updateNode, nodeUpdated, addEdge, edgeAdded, removeEdge, edgeRemoved, loadGraph, graphLoaded } from "./actions";
 
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
-  actionCreator: addNode,
-  effect: async ({payload: {graphId, node}}: PayloadAction<{ graphId: string; node: Node }>, listenerApi) => {
+  actionCreator: loadGraph,
+  effect: async ({payload: {graphId, graph}}: PayloadAction<{ graphId: string; graph: GraphState }>, listenerApi) => {
     const { dispatch} = listenerApi;
-    dispatch(nodeAdded({graphId, node})) // dispatch event
+    dispatch(graphLoaded({graphId, graph})) // dispatch event
+  },
+});
+middlewares.startListening({
+  actionCreator: addNode,
+  effect: async ({payload: {graphId, node, edges}}: PayloadAction<{ graphId: string; node: Node, edges: {inputs: {[name: string]: Edge}, outputs: {[name: string]: Edge}} }>, listenerApi) => {
+    const { dispatch} = listenerApi;
+    dispatch(nodeAdded({graphId, node, edges})) // dispatch event
   },
 });
 middlewares.startListening({

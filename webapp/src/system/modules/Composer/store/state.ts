@@ -6,10 +6,9 @@ export interface CompositionState {
     svgPath: string
     graphId: string
     selectedPart?: string
-    model: any; // TODO: add json-ld typing here
     loading: {
         loadSVG: Loader
-        parseSVG: Loader
+        loadModel: Loader
     }
 }
 
@@ -26,9 +25,8 @@ export interface ComposerState {
 export const newCompositionState: Omit<CompositionState, 'name' | 'viewportName' | 'svgPath' | 'graphId'> = {
     loading: {
         loadSVG: 'not-started',
-        parseSVG: 'not-started'
+        loadModel: 'not-started'
     },
-    model: undefined
 }
 
 export const initialState: ComposerState = {

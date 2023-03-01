@@ -1,7 +1,7 @@
 import { loadSVG, SVGLoaded } from "@kernel/modules/SVG/store/actions";
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { createComposition, modelExtracted, parseSVG, selectPart, SVGParsed } from "./actions";
+import { createComposition, storeModel, parseSVG, selectPart, SVGParsed, fetchModel, modelStored } from "./actions";
 import { initialState, ComposerState, newCompositionState } from "./state";
 
 const slice = createSlice({
@@ -80,7 +80,7 @@ const slice = createSlice({
     );
 
     builder.addCase(
-      parseSVG,
+      fetchModel,
       (state: ComposerState, { payload: { compositionName } }) => {
         return {
           ...state,
@@ -92,7 +92,7 @@ const slice = createSlice({
                 loading: {
                   ...state.compositionsManager.compositions[compositionName]
                     .loading,
-                  parseSVG: "started",
+                  loadModel: "started",
                 },
               },
             },
@@ -101,35 +101,35 @@ const slice = createSlice({
       }
     );
 
-    builder.addCase(
-      modelExtracted,
-      (state: ComposerState, { payload: {compositionName, model} }) => {
-        return {
-          ...state,
-          compositionsManager: {
-            compositions: {
-              ...state.compositionsManager.compositions,
-              [compositionName]: {
-                ...state.compositionsManager.compositions[compositionName],
-                model: model
-              },
-            },
-          },
-        };
-      }
-    );
+    // builder.addCase(
+    //   storeModel,
+    //   (state: ComposerState, { payload: {compositionName, model} }) => {
+    //     return {
+    //       ...state,
+    //       compositionsManager: {
+    //         compositions: {
+    //           ...state.compositionsManager.compositions,
+    //           [compositionName]: {
+    //             ...state.compositionsManager.compositions[compositionName],
+    //             model: model
+    //           },
+    //         },
+    //       },
+    //     };
+    //   }
+    // );
 
-    builder.addCase(SVGParsed, (state: ComposerState, { payload }) => {
+    builder.addCase(modelStored, (state: ComposerState, { payload }) => {
       return {
         ...state,
         compositionsManager: {
           compositions: {
             ...state.compositionsManager.compositions,
-            [payload.name]: {
-              ...state.compositionsManager.compositions[payload.name],
+            [payload.compositionName]: {
+              ...state.compositionsManager.compositions[payload.compositionName],
               loading: {
-                ...state.compositionsManager.compositions[payload.name].loading,
-                parseSVG: "completed",
+                ...state.compositionsManager.compositions[payload.compositionName].loading,
+                loadModel: "completed",
               },
             },
           },

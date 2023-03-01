@@ -13,8 +13,12 @@ import { createSelector } from "reselect";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 
+export interface EdgeMap {
+  inputs: {[name: string]: Edge}, outputs: {[name: string]: Edge}
+}
+
 export interface GraphActions {
-  addNode(node: Node): void;
+  addNode(node: Node, edges?: EdgeMap): void;
   removeNode(id: string): void;
   updateNode(node: Node): void;
   addEdge(edge: Edge): void;
@@ -25,6 +29,8 @@ export interface Graph<T = GraphState> {
   state: T | undefined;
   actions: GraphActions;
 }
+
+export const DEFAULT_EDGES: EdgeMap = {inputs: {}, outputs: {}}
 
 /**
  * Retrieves an existing graph.
@@ -49,8 +55,8 @@ const useGraph = <G = GraphState, R = G>(
     id: graphId,
     state: graphState,
     actions: {
-      addNode: (node) => {
-        dispatch(addNode({ graphId, node }));
+      addNode: (node, edges) => {
+        dispatch(addNode({ graphId, node, edges: edges ?? DEFAULT_EDGES }));
       },
       removeNode: (id) => {
         dispatch(removeNode({ graphId, nodeId: id }));

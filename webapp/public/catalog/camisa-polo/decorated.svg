@@ -46,19 +46,21 @@
       <!-- Materials definition -->
       <rdf:Description rdf:about="#MalhaPV">
         <rdf:type rdf:resource="#Malha" />
+        <self:type rdf:resource="#Malha" />
         <self:Editable>Color</self:Editable>
         <rdf:colorAvailable rdf:resource="#MalhaPVVerde" />
         <rdf:colorAvailable rdf:resource="#MalhaPVVermelha" />
 
-        <self:Color>
-          <self:Restriction rdf:about="#ColorRestriction">
-            <rdf:allowAny>colorAvailable</rdf:allowAny>
-            <rdf:label>Permitido qualquer cor na paleta do material</rdf:label>
-          </self:Restriction>
-        </self:Color>
+        <self:ColorRestriction rdf:resource="#ColorRestrictionMalhaPV" />
+          
 
         <rdf:label>Malha PV</rdf:label>
       </rdf:Description>
+
+      <self:Restriction rdf:about="#ColorRestrictionMalhaPV">
+        <rdf:allowAny>colorAvailable</rdf:allowAny>
+        <rdf:label>Permitido qualquer cor na paleta do material</rdf:label>
+      </self:Restriction>
 
       <self:Material rdf:about="#MalhaPVVerde">
         <self:Material rdf:resource="#MalhaPV" />
@@ -94,7 +96,25 @@
         <rdf:label>Malha PV vermelha</rdf:label>
       </self:Material>
 
-      <self:Material rdf:about="#LinhaBranca">
+      <rdf:Description rdf:about="#LinhaNylon">
+        <rdf:type rdf:resource="#Linha" />
+        <self:type rdf:resource="#Linha" />
+        <self:Editable>Color</self:Editable>
+        <rdf:colorAvailable rdf:resource="#LinhaNylonBranca" />
+
+        <self:ColorRestriction rdf:resource="#ColorRestrictionLinhaNylon" />
+          
+
+        <rdf:label>Linha de nylon</rdf:label>
+      </rdf:Description>
+
+      <self:Restriction rdf:about="#ColorRestrictionLinhaNylon">
+        <rdf:allowAny>colorAvailable</rdf:allowAny>
+        <rdf:label>Permitido qualquer cor na paleta do material</rdf:label>
+      </self:Restriction>
+
+      <self:Material rdf:about="#LinhaNylonBranca">
+        <self:Material rdf:resource="#Linha" />
         <self:Color>
           <self:Color rdf:about="#Branca">
             <self:hex>0xffffff</self:hex>
@@ -107,8 +127,10 @@
         <self:unidadeCusto>R$/kg</self:unidadeCusto>
         <self:prazoEntrega>10</self:prazoEntrega>
         <self:unidadePrazoEntrega>dias</self:unidadePrazoEntrega>
-        <rdf:label>Linha branca</rdf:label>
+        <rdf:label>branca</rdf:label>
       </self:Material>
+
+
 
       <!-- Processes definition -->
       <self:Process rdf:about="#Corte">
@@ -448,6 +470,9 @@
 
     </rdf:RDF>
   </defs>
+  <metadata>
+    <modelPath>catalog/camisa-polo/model.json</modelPath>
+  </metadata>
   <g id="peca">
     <g id="manga-direita">
       <g id="tecido-secundario-manga-direita">
@@ -475,7 +500,7 @@
           <path
             d="M73.06 2432.19c-5.01,12.13 -10.16,23.08 -15.24,32.88 218.01,177.37 357.74,287.27 508.13,367.06 98.63,52.33 263.75,137.42 643.55,155.46 0.16,-9.58 0.67,-20.75 1.64,-33.71 -484.74,-35.17 -682.22,-154.54 -1138.09,-521.69z" />
         </g>
-        <g id="costura-manga-direita">
+        <g id="costura-manga-direita" fill="none">
           <g id="visualizacao-costa_11">
             <path class="fil2 str2" d="M12663 2926.91c515.7,-17.46 834.16,-177.15 1259.84,-513.68" />
             <path class="fil2 str2" d="M12680.88 3010.05c477.71,-28.17 809.27,-152.16 1274.41,-528.53" />
@@ -532,7 +557,7 @@
           <path class="str1"
             d="M6426.8 2368.16c6.53,10.25 13.23,19.83 19.92,28.89 -79.86,199.81 -505.14,371.78 -641.06,438.55 -185.88,91.31 -329.4,114.38 -560.43,144.14 -1.48,-11.03 -3.2,-22.79 -5.2,-35.12 143.39,-9.48 345.26,-55.21 495.65,-124.43 152.22,-70.13 525.08,-193.34 691.12,-452.02z" />
         </g>
-        <g id="costura-manga-esquerda">
+        <g id="costura-manga-esquerda" fill="none">
           <path class="fil2 str3"
             d="M5256.59 2982.8c143.39,-9.48 345.26,-55.21 495.65,-124.43 152.22,-70.13 525.08,-193.34 691.12,-452.02" />
           <path class="fil2 str3"

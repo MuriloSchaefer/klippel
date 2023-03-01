@@ -1,0 +1,285 @@
+{
+  "id": "camisa-polo-fem",
+  "nodes": {
+    "corte": {
+      "id": "corte",
+      "type": "PROCESS",
+      "label": "Corte"
+    },
+    "malha": {
+      "id": "malha",
+      "type": "MATERIAL_TYPE",
+      "label": "Malha"
+    },
+    "tecido": {
+      "id": "tecido",
+      "type": "MATERIAL_TYPE",
+      "label": "Tecido"
+    },
+    "malhaPV": {
+      "id": "malhaPV",
+      "type": "MATERIAL_COLLECTION",
+      "supplier": "Santanense",
+      "materialType": "malha",
+      "availableColors": ["malhaPVVerde", "malhaPVVermelha"]
+    },
+    "malhaPVVerde": {
+      "id": "malhaPVVerde",
+      "type": "MATERIAL",
+      "label": "Malha PV Verde",
+      "color": {
+        "hex": "0x00ff00",
+        "label": "Verde"
+      },
+
+      "storage": {
+        "amount": 1,
+        "unit": "kg"
+      },
+      "cost": {
+        "amount": 15,
+        "unit": "R$/kg"
+      },
+      "delivery": {
+        "amount": 10,
+        "unit": "days"
+      }
+    },
+    "malhaPVVermelha": {
+      "id": "malhaPVVermelha",
+      "type": "MATERIAL",
+      "label": "Malha PV Vermelha",
+      "color": {
+        "hex": "0xff0000",
+        "label": "Vermelha"
+      },
+      "storage": {
+        "amount": 5,
+        "unit": "kg"
+      },
+      "cost": {
+        "amount": 15,
+        "unit": "R$/kg"
+      },
+      "delivery": {
+        "amount": 10,
+        "unit": "days"
+      }
+    },
+    "garment": {
+      "id": "garment",
+      "type": "GARMENT",
+      "domId": "peca",
+      "label": "Camisa polo feminina"
+    },
+    "mangaDireita": {
+      "id": "mangaDireita",
+      "type": "PART",
+      "domId": "manga-direita",
+      "label": "Manga direita"
+    },
+    "Material1MangaDireita": {
+      "id": "Material1MangaDireita",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "material"],
+      "materialType": "malha",
+      "material": "malhaPVVerde",
+      "proxies": [{ "elem": "#tecido-primario-manga-direita", "attr": "fill" }]
+    },
+    "Material1MangaDireitaRestriction1": {
+      "id": "Material1MangaDireitaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+
+    "Material2MangaDireita": {
+      "id": "Material2MangaDireita",
+      "type": "MATERIAL_USAGE",
+      "label": "Material secundario",
+      "editableAttributes": ["materialType", "material"],
+      "materialType": "malha",
+      "material": "malhaPVVermelha",
+      "proxies": [
+        { "elem": "#tecido-secundario-manga-direita", "attr": "fill" }
+      ]
+    },
+    "Material2MangaDireitaRestriction1": {
+      "id": "Material2MangaDireitaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "Material2MangaDireitaRestriction2": {
+      "id": "Material2MangaDireitaRestriction2",
+      "type": "RESTRICTION",
+      "sameAs": "Material1MangaDireita",
+      "label": "Ser do mesmo tipo que o tecido primario"
+    },
+
+    "corteMaterial1MangaDireita": {
+      "id": "corteMaterial1MangaDireita",
+      "type": "OPERATION",
+      "label": "Corte Material 1",
+      "time_taken": {
+        "amount": 10,
+        "unit": "min"
+      },
+      "cost": {
+        "amount": 0.2,
+        "unit": "R$/h"
+      }
+    },
+    "corteMaterial2MangaDireita": {
+      "id": "corteMaterial2MangaDireita",
+      "type": "OPERATION",
+      "label": "Corte Material 2",
+      "time_taken": {
+        "amount": 10,
+        "unit": "min"
+      },
+      "cost": {
+        "amount": 0.2,
+        "unit": "R$/h"
+      }
+    },
+
+    "barraMangaDireita": {
+      "id": "barraMangaDireita",
+      "type": "PART",
+      "domId": "barra-manga-direita",
+      "label": "Barra manga direita"
+    },
+    "mangaEsquerda": {
+      "id": "mangaEsquerda",
+      "type": "PART",
+      "attributes": {}
+    }
+  },
+  "edges": {
+    "garment->mangaEsquerda": {
+      "type": "COMPOSED_OF",
+      "sourceId": "GARMENT",
+      "targetId": "mangaEsquerda",
+      "id": "garment->mangaEsquerda"
+    },
+    "garment->mangaDireita": {
+      "type": "COMPOSED_OF",
+      "sourceId": "GARMENT",
+      "targetId": "mangaDireita",
+      "id": "garment->mangaDireita"
+    },
+    "mangaDireita->barraMangaDireita": {
+      "type": "COMPOSED_OF",
+      "sourceId": "mangaDireita",
+      "targetId": "barraMangaDireita",
+      "id": "mangaDireita->barraMangaDireita"
+    },
+    "mangaDireita->Material1MangaDireita": {
+      "type": "MADE_OF",
+      "sourceId": "mangaDireita",
+      "targetId": "Material1MangaDireita",
+      "id": "mangaDireita->Material1MangaDireita"
+    },
+    "mangaDireita->Material2MangaDireita": {
+      "type": "MADE_OF",
+      "sourceId": "mangaDireita",
+      "targetId": "Material2MangaDireita",
+      "id": "mangaDireita->Material2MangaDireita"
+    },
+    "mangaDireita->corteMaterial1MangaDireita": {
+      "type": "PROCESS_NEEDED",
+      "sourceId": "mangaDireita",
+      "targetId": "corteMaterial1MangaDireita",
+      "id": "mangaDireita->corteMaterial1MangaDireita"
+    },
+    "corteMaterial1MangaDireita->Material1MangaDireita": {
+      "type": "CONSUMES",
+      "sourceId": "corteMaterial1MangaDireita",
+      "targetId": "Material1MangaDireita",
+      "id": "corteMaterial1MangaDireita->Material1MangaDireita",
+      "quantity": {
+        "amount": 1,
+        "unit": "m2"
+      }
+    },
+    "mangaDireita->corteMaterial2MangaDireita": {
+      "type": "PROCESS_NEEDED",
+      "sourceId": "mangaDireita",
+      "targetId": "corteMaterial2MangaDireita",
+      "id": "mangaDireita->corteMaterial2MangaDireita"
+    },
+    "corteMaterial2MangaDireita->Material2MangaDireita": {
+      "type": "CONSUMES",
+      "sourceId": "corteMaterial2MangaDireita",
+      "targetId": "Material2MangaDireita",
+      "id": "corteMaterial2MangaDireita->Material2MangaDireita",
+      "quantity": {
+        "amount": 0.5,
+        "unit": "m2"
+      }
+    },
+
+    "Material1MangaDireita->Material1MangaDireitaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material1MangaDireita",
+      "targetId": "Material1MangaDireitaRestriction1",
+      "id": "Material1MangaDireita->Material1MangaDireitaRestriction1"
+    },
+    "Material2MangaDireita->Material2MangaDireitaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material2MangaDireita",
+      "targetId": "Material2MangaDireitaRestriction1",
+      "id": "Material2MangaDireita->Material2MangaDireitaRestriction1"
+    },
+    "Material2MangaDireita->Material2MangaDireitaRestriction2": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material2MangaDireita",
+      "targetId": "Material2MangaDireitaRestriction2",
+      "id": "Material2MangaDireita->Material2MangaDireitaRestriction2"
+    }
+  },
+  "adjacencyList": {
+    "garment": {
+      "inputs": [],
+      "outputs": ["garment->mangaDireita", "garment->mangaEsquerda"]
+    },
+
+    "mangaDireita": {
+      "inputs": ["garment->mangaDireita"],
+      "outputs": [
+        "mangaDireita->barraMangaDireita",
+        "mangaDireita->Material1MangaDireita",
+        "mangaDireita->Material2MangaDireita",
+        "mangaDireita->corteMaterial1MangaDireita",
+        "mangaDireita->corteMaterial2MangaDireita"
+      ]
+    },
+    "Material1MangaDireita": {
+      "inputs": [
+        "mangaDireita->Material1MangaDireita",
+        "corteMaterial1MangaDireita->Material1MangaDireita"
+      ],
+      "outputs": ["Material1MangaDireita->Material1MangaDireitaRestriction1"]
+    },
+    "Material2MangaDireita": {
+      "inputs": [
+        "mangaDireita->Material2MangaDireita",
+        "corteMaterial2MangaDireita->Material2MangaDireita"
+      ],
+      "outputs": [
+        "Material2MangaDireita->Material2MangaDireitaRestriction1",
+        "Material2MangaDireita->Material2MangaDireitaRestriction2"
+      ]
+    },
+    "barraMangaDireita": {},
+    "mangaEsquerda": {
+      "inputs": ["garment->mangaEsquerda"],
+      "outputs": []
+    }
+  }
+}

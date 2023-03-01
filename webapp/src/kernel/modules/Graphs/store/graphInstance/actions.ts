@@ -3,10 +3,14 @@ import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import Edge from "../../interfaces/Edge";
 import Node from "../../interfaces/Node";
+import { GraphState } from "../state";
 
 
 // Events
-export const nodeAdded = createAction<{ graphId: string; node: Node }>(
+export const graphLoaded = createAction<{ graphId: string; graph: GraphState }>(
+    `[${MODULE_NAME}:Instance:${ACTION_TYPES.EVENT}] Graph loaded`
+);
+export const nodeAdded = createAction<{ graphId: string; node: Node, edges: {inputs: {[name: string]: Edge}, outputs: {[name: string]: Edge}} }>(
     `[${MODULE_NAME}:Instance:${ACTION_TYPES.EVENT}] Node added`
 );
 export const nodeRemoved = createAction<{ graphId: string; nodeId: string }>(
@@ -24,10 +28,13 @@ export const edgeRemoved = createAction<{ graphId: string; edgeId: string }>(
 );
 
 // Commands
+export const loadGraph = createAction<{graphId: string, graph: GraphState}>(
+    `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Load Graph`)
+
 export const resetGraph = createAction<{ graphId: string }>(
     `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Reset Graph`
 );
-export const addNode = createAction<{ graphId: string; node: Node }>(
+export const addNode = createAction<{ graphId: string; node: Node, edges: {inputs: {[name: string]: Edge}, outputs: {[name: string]: Edge}} }>(
     `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Add node`
 );
 export const removeNode = createAction<{ graphId: string; nodeId: string }>(
