@@ -11,7 +11,7 @@ import { ComposerState, CompositionState } from "../store/state";
 interface CompositionActions {
   selectPart(partName: string): void;
 }
-interface Composition<T = CompositionState> {
+export interface Composition<T = CompositionState> {
   state: T | undefined;
   actions: CompositionActions;
 }
