@@ -85,7 +85,7 @@
       "editableAttributes": ["materialType", "material"],
       "materialType": "malha",
       "material": "malhaPVVerde",
-      "proxies": [{ "elem": "#tecido-primario-manga-direita", "attr": "fill" }]
+      "proxies": [{ "elem": "tecido-primario-manga-direita", "attr": "fill" }]
     },
     "Material1MangaDireitaRestriction1": {
       "id": "Material1MangaDireitaRestriction1",
@@ -102,7 +102,7 @@
       "materialType": "malha",
       "material": "malhaPVVermelha",
       "proxies": [
-        { "elem": "#tecido-secundario-manga-direita", "attr": "fill" }
+        { "elem": "tecido-secundario-manga-direita", "attr": "fill" }
       ]
     },
     "Material2MangaDireitaRestriction1": {

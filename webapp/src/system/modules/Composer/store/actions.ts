@@ -27,7 +27,9 @@ export const fetchModel = createAction<{compositionName: string, modelPath: stri
 export const storeModel = createAction<{compositionName: string, model: any}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Store model`
 );
-
+export const loadProxies = createAction<{compositionName: string, model: any}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Load proxies`
+);
 
 // Events
 export const compositionCreated = createAction<CompositionState>(
@@ -48,6 +50,9 @@ export const partUnselected = createAction<Part>(
 
 export const modelFetched = createAction<{compositionName: string, model: any}>( 
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Model fetched`
+)
+export const proxiesLoaded = createAction<{compositionName: string, model: any}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Proxies loaded`
 )
 export const modelStored = createAction<{compositionName: string, model: any}>( 
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Model stored`

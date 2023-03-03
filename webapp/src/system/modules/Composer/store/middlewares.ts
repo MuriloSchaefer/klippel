@@ -1,12 +1,10 @@
 import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { destroyGraph } from "@kernel/modules/Graphs/store/graphsManager/actions";
 import { closeViewport } from "@kernel/modules/Layout/store/viewports/actions";
-import { SVGLoaded } from "@kernel/modules/SVG/store/actions";
+import { SVGLoaded, addProxy } from "@kernel/modules/SVG/store/actions";
 import { SVGState } from "@kernel/modules/SVG/store/state";
-import {
-  createListenerMiddleware,
-  PayloadAction,
-} from "@reduxjs/toolkit";
+import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
+import { CSSProperties } from "react";
 import {
   createComposition,
   compositionCreated,
@@ -16,6 +14,8 @@ import {
   modelStored,
   closeComposition,
   compositionClosed,
+  loadProxies,
+  proxiesLoaded,
 } from "./actions";
 import { ComposerState } from "./state";
 
@@ -39,38 +39,31 @@ middlewares.startListening({
 
 middlewares.startListening({
   actionCreator: closeViewport,
-  effect: async (
-    { payload }: PayloadAction<{ name: string}>,
-    listenerApi
-  ) => {
+  effect: async ({ payload }: PayloadAction<{ name: string }>, listenerApi) => {
     const { dispatch, getState } = listenerApi;
     const {
       Composer: { compositionsManager },
     } = getState() as { Composer: ComposerState };
 
     // check if viewport is associated with some composition
-    Object.values(compositionsManager.compositions).forEach(comp =>{
-      if (comp.viewportName === payload.name){
-        dispatch(
-          closeComposition({name: comp.name, graphId: comp.graphId})
-        ); // dispatch event
+    Object.values(compositionsManager.compositions).forEach((comp) => {
+      if (comp.viewportName === payload.name) {
+        dispatch(closeComposition({ name: comp.name, graphId: comp.graphId })); // dispatch event
       }
-    })
+    });
   },
 });
 middlewares.startListening({
   actionCreator: closeComposition,
   effect: async (
-    { payload }: PayloadAction<{ name: string, graphId: string}>,
+    { payload }: PayloadAction<{ name: string; graphId: string }>,
     listenerApi
   ) => {
     const { dispatch } = listenerApi;
 
-    dispatch(destroyGraph({graphId: payload.graphId}))
+    dispatch(destroyGraph({ graphId: payload.graphId }));
 
-    dispatch(
-      compositionClosed({name: payload.name})
-    ); // dispatch event
+    dispatch(compositionClosed({ name: payload.name })); // dispatch event
   },
 });
 
@@ -87,25 +80,23 @@ middlewares.startListening({
     );
 
     if (!payload.content) return;
-    
-    const parser = new DOMParser();
-    const document = parser.parseFromString(
-      payload.content,
-      "image/svg+xml"
-    );
 
-    const modelPath = document.getElementsByTagName('modelPath').item(0)?.innerHTML
-    if (!modelPath) return
-    
-    compositions.forEach(comp => {
-      
+    const parser = new DOMParser();
+    const document = parser.parseFromString(payload.content, "image/svg+xml");
+
+    const modelPath = document
+      .getElementsByTagName("modelPath")
+      .item(0)?.innerHTML;
+    if (!modelPath) return;
+
+    compositions.forEach((comp) => {
       dispatch(
         fetchModel({
           compositionName: comp.name,
           modelPath,
         })
       );
-    })
+    });
   },
 });
 
@@ -122,15 +113,12 @@ middlewares.startListening({
 
     const composition =
       compositionsManager.compositions[payload.compositionName];
-    
+
     const response = await fetch(payload.modelPath);
     const model = await (await response.blob()).text();
 
     // tree root
-    dispatch(modelFetched({compositionName: composition.name, model}))
-
-
-    
+    dispatch(modelFetched({ compositionName: composition.name, model: JSON.parse(model) }));
   },
 });
 
@@ -155,7 +143,7 @@ middlewares.startListening({
     //   const elem = proxiedElements.object.value
     //   const node = proxiedElements.subject.value.replace('_:#', '')
     //   const proxiedAttributes = interpreter.statementsMatching(SELF(node), SELF('ProxyAttribute'), undefined)
-      
+
     //   const styles = proxiedAttributes.reduce((acc, curr)=> ({...acc, [curr.object.value]: 'grey'}), {})
 
     //   const proxy = {path: composition.svgPath, id: elem.replace('#', ''), styles }
@@ -163,10 +151,53 @@ middlewares.startListening({
     // })
 
     dispatch(
-      storeModel({compositionName: composition.name, model: payload.model})
+      loadProxies({ compositionName: composition.name, model: payload.model })
     );
-  }
-})
+
+    dispatch(
+      storeModel({ compositionName: composition.name, model: payload.model })
+    );
+  },
+});
+
+middlewares.startListening({
+  actionCreator: loadProxies,
+  effect: async (
+    { payload }: PayloadAction<{ compositionName: string; model: any }>,
+    listenerApi
+  ) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Composer: { compositionsManager },
+    } = getState() as { Composer: ComposerState };
+
+    const composition =
+      compositionsManager.compositions[payload.compositionName];
+
+    // add all proxies
+    console.log(payload)
+    const nodes = payload.model.nodes;
+    Object.values(nodes).forEach((node: any) => {
+      if (!("proxies" in node)) return;
+      const proxies: { [id: string]: CSSProperties } = node.proxies.reduce(
+        (
+          acc: { [id: string]: CSSProperties },
+          curr: { elem: string; attr: string }
+        ) => ({ ...acc, [curr.elem]: {...acc[curr.elem], [curr.attr]: 'grey'} }),
+        {}
+      );
+      console.log(proxies)
+
+      Object.entries(proxies).forEach(([id, styles]) => {
+        dispatch(addProxy({path: composition.svgPath, id, styles}))
+      })
+    });
+
+    dispatch(
+      proxiesLoaded({ compositionName: composition.name, model: payload.model })
+    );
+  },
+});
 
 middlewares.startListening({
   actionCreator: storeModel,
@@ -189,24 +220,21 @@ middlewares.startListening({
     //   const elem = proxiedElements.object.value
     //   const node = proxiedElements.subject.value.replace('_:#', '')
     //   const proxiedAttributes = interpreter.statementsMatching(SELF(node), SELF('ProxyAttribute'), undefined)
-      
+
     //   const styles = proxiedAttributes.reduce((acc, curr)=> ({...acc, [curr.object.value]: 'grey'}), {})
 
     //   const proxy = {path: composition.svgPath, id: elem.replace('#', ''), styles }
     //   dispatch(addProxy(proxy))
     // })
-    const graph = JSON.parse(payload.model)
-    dispatch(
-      loadGraph({graphId: composition.graphId, graph})
-    )
+    dispatch(loadGraph({ graphId: composition.graphId, graph: payload.model }));
     // dispatch(
     //   addProxies({graphId: composition.graphId, graph})
     // )
 
     dispatch(
-      modelStored({compositionName: composition.name, model: payload.model})
+      modelStored({ compositionName: composition.name, model: payload.model })
     );
-  }
-})
+  },
+});
 
 export default middlewares;
