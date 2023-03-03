@@ -54,6 +54,7 @@ export const useModulesManager = (): ModulesManager => {
                 dispatch(startModule(module.name))
                 
                 module.kernelCalls.startModule({
+                    dispatch,
                     managers: {
                         storeManager,
                         componentRegistryManager,

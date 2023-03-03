@@ -9,6 +9,9 @@ import { CompositionState } from "./state";
 export const createComposition = createAction<{name: string, viewportName: string, svgPath: string, graphId: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Create composition`
 );
+export const closeComposition = createAction<{name: string, graphId: string}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Close composition`
+);
 export const parseSVG = createAction<{compositionName: string, svgContent: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Parse SVG`
 );
@@ -29,6 +32,9 @@ export const storeModel = createAction<{compositionName: string, model: any}>(
 // Events
 export const compositionCreated = createAction<CompositionState>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Composition created`
+);
+export const compositionClosed = createAction<{name: string}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Composition closed`
 );
 export const SVGParsed = createAction<CompositionState>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] SVG parsed`

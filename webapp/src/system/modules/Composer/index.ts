@@ -21,7 +21,7 @@ export interface IComposerModule extends IModule {
 const module: IComposerModule = {
   name: MODULE_NAME,
   version: MODULE_VERSION,
-  depends_on: ['Layout', 'Graph', 'SVG'],
+  depends_on: ['Layout', 'Graph', 'SVG', 'Materials'],
   components: {
   },
   kernelCalls: {

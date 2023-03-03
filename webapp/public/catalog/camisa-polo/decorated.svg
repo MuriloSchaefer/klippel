@@ -470,8 +470,145 @@
 
     </rdf:RDF>
   </defs>
+  <defs>
+  <style type="text/css">
+      <![CDATA[
+
+      .str7 {
+        stroke: #F58634;
+        stroke-width: 45.92;
+        stroke-miterlimit: 22.9256
+      }
+
+      .str5 {
+        stroke: #FEFEFE;
+        stroke-width: 17.36;
+        stroke-miterlimit: 22.9256
+      }
+
+      .str10 {
+        stroke: #96989A;
+        stroke-width: 17.36;
+        stroke-miterlimit: 22.9256
+      }
+
+      .str0 {
+        stroke: #373435;
+        stroke-width: 17.36;
+        stroke-miterlimit: 22.9256
+      }
+
+      .str14 {
+        stroke: #201E1E;
+        stroke-width: 8.68;
+        stroke-miterlimit: 22.9256
+      }
+
+      .str15 {
+        stroke: #201E1E;
+        stroke-width: 6.61;
+        stroke-miterlimit: 22.9256
+      }
+
+      .str13 {
+        stroke: #FEFEFE;
+        stroke-width: 17.36;
+        stroke-linejoin: round;
+        stroke-miterlimit: 22.9256
+      }
+
+      .str8 {
+        stroke: #FEFEFE;
+        stroke-width: 8.66;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10
+      }
+
+      .str1 {
+        stroke: #373435;
+        stroke-width: 8.66;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10
+      }
+
+      .str12 {
+        stroke: #1D1D1B;
+        stroke-width: 8.66;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10
+      }
+
+      .str11 {
+        stroke: #ffffff;
+        stroke-width: 17.36;
+        stroke-miterlimit: 22.9256;
+        stroke-dasharray: 34.711507 17.355753
+      }
+
+      .str6 {
+        stroke: #ffffff;
+        stroke-width: 17.36;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10;
+        stroke-dasharray: 34.711507 17.355753
+      }
+
+      .str9 {
+        stroke: #ffffff;
+        stroke-width: 17.36;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10;
+        stroke-dasharray: 34.711507 52.067260
+      }
+
+      .str4 {
+        stroke: #ffffff;
+        stroke-width: 8.66;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10;
+        stroke-dasharray: 8.660521 8.660521
+      }
+
+      .str3 {
+        stroke: #ffffff;
+        stroke-width: 8.66;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10;
+        stroke-dasharray: 17.321042 8.660521
+      }
+
+      .str2 {
+        stroke: #ffffff;
+        stroke-width: 8.66;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10;
+        stroke-dasharray: 17.321042 25.981563
+      }
+
+      .fil7 {
+        fill: none
+      }
+
+      .fil2 {
+        fill: none;
+        fill-rule: nonzero
+      }
+
+      .fil12 {
+        fill: #FEFEFE;
+        fill-rule: nonzero
+      }
+
+      .fil8 {
+        fill: white;
+        fill-rule: nonzero
+      }
+      ]]>
+    </style>
+  </defs>
   <metadata>
     <modelPath>catalog/camisa-polo/model.json</modelPath>
+    <audacesXML>catalog/camisa-polo/modelagem.xml</audacesXML>
   </metadata>
   <g id="peca">
     <g id="manga-direita">

@@ -14,6 +14,7 @@ export interface Manager {
 }
 
 export interface StartModuleProps {
+  dispatch: any,
   managers: {
     storeManager: StoreManager
     componentRegistryManager: ComponentRegistryManager

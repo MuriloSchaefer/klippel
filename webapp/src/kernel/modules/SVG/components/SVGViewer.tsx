@@ -125,4 +125,4 @@ const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
   );
 };
 
-export default React.memo(SVGViewer);
+export default SVGViewer;

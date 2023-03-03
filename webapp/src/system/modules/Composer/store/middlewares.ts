@@ -1,21 +1,21 @@
 import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
-import { addProxy, SVGLoaded } from "@kernel/modules/SVG/store/actions";
+import { destroyGraph } from "@kernel/modules/Graphs/store/graphsManager/actions";
+import { closeViewport } from "@kernel/modules/Layout/store/viewports/actions";
+import { SVGLoaded } from "@kernel/modules/SVG/store/actions";
 import { SVGState } from "@kernel/modules/SVG/store/state";
 import {
   createListenerMiddleware,
   PayloadAction,
 } from "@reduxjs/toolkit";
-import { SELF } from "../constants";
-import { rdfxml2interpreter, interpreter2jsonld } from "../utils";
 import {
   createComposition,
   compositionCreated,
-  parseSVG,
-  SVGParsed,
   modelFetched,
   fetchModel,
   storeModel,
   modelStored,
+  closeComposition,
+  compositionClosed,
 } from "./actions";
 import { ComposerState } from "./state";
 
@@ -33,6 +33,43 @@ middlewares.startListening({
 
     dispatch(
       compositionCreated(compositionsManager.compositions[payload.name])
+    ); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: closeViewport,
+  effect: async (
+    { payload }: PayloadAction<{ name: string}>,
+    listenerApi
+  ) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Composer: { compositionsManager },
+    } = getState() as { Composer: ComposerState };
+
+    // check if viewport is associated with some composition
+    Object.values(compositionsManager.compositions).forEach(comp =>{
+      if (comp.viewportName === payload.name){
+        dispatch(
+          closeComposition({name: comp.name, graphId: comp.graphId})
+        ); // dispatch event
+      }
+    })
+  },
+});
+middlewares.startListening({
+  actionCreator: closeComposition,
+  effect: async (
+    { payload }: PayloadAction<{ name: string, graphId: string}>,
+    listenerApi
+  ) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(destroyGraph({graphId: payload.graphId}))
+
+    dispatch(
+      compositionClosed({name: payload.name})
     ); // dispatch event
   },
 });

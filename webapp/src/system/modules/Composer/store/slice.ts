@@ -1,7 +1,16 @@
 import { loadSVG, SVGLoaded } from "@kernel/modules/SVG/store/actions";
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { createComposition, storeModel, parseSVG, selectPart, SVGParsed, fetchModel, modelStored } from "./actions";
+import {
+  createComposition,
+  storeModel,
+  parseSVG,
+  selectPart,
+  SVGParsed,
+  fetchModel,
+  modelStored,
+  closeComposition,
+} from "./actions";
 import { initialState, ComposerState, newCompositionState } from "./state";
 
 const slice = createSlice({
@@ -30,6 +39,24 @@ const slice = createSlice({
           },
         },
       })
+    );
+    builder.addCase(
+      closeComposition,
+      (
+        state: ComposerState,
+        { payload: { name } }
+      ) => {
+        return {
+          ...state,
+          compositionsManager: {
+            ...state.compositionsManager,
+            compositions: Object.values(state.compositionsManager.compositions).reduce((newState, comp)=>{
+              if (comp.name === name) return newState
+              return {...newState, [comp.name]: comp}
+            }, {}),
+          },
+        }
+      }
     );
 
     builder.addCase(loadSVG, (state: ComposerState, { payload: { path } }) => {
@@ -126,9 +153,13 @@ const slice = createSlice({
           compositions: {
             ...state.compositionsManager.compositions,
             [payload.compositionName]: {
-              ...state.compositionsManager.compositions[payload.compositionName],
+              ...state.compositionsManager.compositions[
+                payload.compositionName
+              ],
               loading: {
-                ...state.compositionsManager.compositions[payload.compositionName].loading,
+                ...state.compositionsManager.compositions[
+                  payload.compositionName
+                ].loading,
                 loadModel: "completed",
               },
             },
@@ -139,18 +170,15 @@ const slice = createSlice({
 
     builder.addCase(
       selectPart,
-      (
-        state: ComposerState,
-        { payload: { compositionName, partName } }
-      ) => ({
+      (state: ComposerState, { payload: { compositionName, partName } }) => ({
         ...state,
         compositionsManager: {
           ...state.compositionsManager,
           compositions: {
             ...state.compositionsManager.compositions,
             [compositionName]: {
-                ...state.compositionsManager.compositions[compositionName],
-                selectedPart: partName
+              ...state.compositionsManager.compositions[compositionName],
+              selectedPart: partName,
             },
           },
         },

@@ -36,16 +36,14 @@ const useComposition = <C=Composition, R=C>(
   );
   const compositionState = useAppSelector<R | undefined>(selector);
 
-  const actions: CompositionActions = useMemo(()=> ({
-    selectPart(partName) {
-      dispatch(selectPart({ compositionName, partName }));
-      panelsManager.functions.openDetails();
-    },
-  }), [])
-
   return {
     state: compositionState,
-    actions,
+    actions: {
+      selectPart(partName) {
+        dispatch(selectPart({ compositionName, partName }));
+        panelsManager.functions.openDetails();
+      },
+    },
   };
 };
 

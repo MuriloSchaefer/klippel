@@ -23,15 +23,15 @@ export const ComposerViewportLoader = () => {
 
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
+  console.log(activeViewport)
 
   const selector = useCallback(
     (c: CompositionState | undefined) => ({
       svgPath: c?.svgPath,
       graphId: c?.graphId,
     }),
-    []
+    [activeViewport]
   );
-
   const composition = useComposition(activeViewport!, selector);
 
   if (!composition.state?.svgPath || !composition.state?.graphId) return null;
@@ -55,14 +55,11 @@ export const ComposerViewport = ({
   graphId: string;
 }) => {
   const {
-    components: { SVGViewer },
-    hooks: { useSVG },
-  } = useModule<ISVGModule>("SVG");
+    components: { SVGViewer }  } = useModule<ISVGModule>("SVG");
   const {
     hooks: { useGraph },
   } = useModule<IGraphModule>("Graph");
 
-  const svgManager = useSVG(svgPath, (svg) => svg);
   const nodes = useGraph(graphId, (g) => g?.nodes);
 
   const beforeInjectionHandle = useCallback((svgRoot: SVGSVGElement) => {
@@ -78,7 +75,7 @@ export const ComposerViewport = ({
           });
         }
       });
-  }, []);
+  }, [graphId]);
 
   return (
     <>
@@ -93,13 +90,13 @@ export const ComposerViewport = ({
       >
         <SVGViewer path={svgPath} beforeInjection={beforeInjectionHandle} />
 
-        <ComposerSettingsPanel />
+        <ComposerSettingsPanel graphId={graphId} />
 
-        <ComposerDetailsPanel />
+        <ComposerDetailsPanel graphId={graphId} />
       </Box>
       <FloatingButtons />
     </>
   );
 };
 
-export default React.memo(ComposerViewportLoader);
+export default ComposerViewportLoader;

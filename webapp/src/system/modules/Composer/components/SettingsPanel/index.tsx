@@ -10,7 +10,7 @@ import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import React from "react";
 
-const ComposerSettingsPanel = () => {
+const ComposerSettingsPanel = ({graphId}: {graphId: string}) => {
   const layoutModule = useModule<ILayoutModule>("Layout");
 
   const { SettingsPanel, Accordion } = layoutModule.components;

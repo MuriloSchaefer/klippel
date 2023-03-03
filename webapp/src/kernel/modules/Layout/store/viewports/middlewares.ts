@@ -22,9 +22,8 @@ middlewares.startListening({
 middlewares.startListening({
     actionCreator: closeViewport,
     effect: async ({payload: {name}}: PayloadAction<{ name: string }>, listenerApi) => {
-      const { dispatch, getState} = listenerApi;
-      const {Layout: {viewportManager: {viewports}}} = getState() as {Layout: LayoutState}
-      dispatch(viewportClosed(viewports[name])) // dispatch event
+      const { dispatch} = listenerApi;
+      dispatch(viewportClosed({name})) // dispatch event
     },
   });
 

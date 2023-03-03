@@ -3,7 +3,7 @@ import ListSharpIcon from "@mui/icons-material/ListSharp";
 
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 
 import { Store } from "@kernel/modules/Store";
 
@@ -12,9 +12,9 @@ import ProcessesList from './ProcessesList'
 import { CompositionState } from "../../store/state";
 import useComposition from "../../hooks/useComposition";
 import { IGraphModule } from "@kernel/modules/Graphs";
-import { CompositionGraph, CompositionNode, PartNode } from "../../store/graph/state";
+import { CompositionGraph,  PartNode } from "../../store/graph/state";
 
-const ComposerDetailLoader = () => {
+const ComposerDetailLoader = ({graphId}: {graphId: string}) => {
 
   const layoutModule = useModule<ILayoutModule>("Layout");
   const storeModule = useModule<Store>("Store");
