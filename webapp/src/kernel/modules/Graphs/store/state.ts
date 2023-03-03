@@ -9,19 +9,31 @@ export interface AdjacencyList {
   [id: string]: NodeConnections;
 }
 
-export interface EdgesHashMap {
-  [id: string]: Edge;
+export interface EdgesHashMap<ET=Edge> {
+  [id: string]: ET;
 }
 
 export interface NodesHashMap<NT = Node> {
   [id: string]: NT;
 }
-export interface GraphState<NT = Node> {
+
+export interface SearchResult {
+  
+    findings: Node[]
+    visited: Node[]
+  
+}
+export interface SearchResults {
+  [name: string]: SearchResult
+}
+export interface GraphState<NT = Node, ET = Edge> {
   id: GraphId;
   nodes: NodesHashMap<NT>;
-  edges: EdgesHashMap;
+  edges: EdgesHashMap<ET>;
   adjacencyList: AdjacencyList;
+  searchResults: SearchResults
 }
+export type GraphSearch = Omit<GraphState, "searchResults">
 export type GraphId = string;
 export interface GraphsManagerState {
   graphs: { [graphId: string]: GraphState };
@@ -29,11 +41,12 @@ export interface GraphsManagerState {
 
 export const newGraphState: Pick<
   GraphState,
-  "nodes" | "edges" | "adjacencyList"
+  "nodes" | "edges" | "adjacencyList" | 'searchResults'
 > = {
   nodes: {},
   edges: {},
   adjacencyList: {},
+  searchResults: {}
 };
 
 export const graphsManagerInitialState: GraphsManagerState = {

@@ -1,8 +1,5 @@
-import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
-import ShortTextSharpIcon from "@mui/icons-material/ShortTextSharp";
+
 import ListSharpIcon from "@mui/icons-material/ListSharp";
-import SellSharpIcon from "@mui/icons-material/SellSharp";
-import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
 
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
@@ -14,50 +11,55 @@ import MaterialsList from './MaterialsList'
 import ProcessesList from './ProcessesList'
 import { CompositionState } from "../../store/state";
 import useComposition from "../../hooks/useComposition";
-import useRDFInterpreter from "../../hooks/useRDFInterpreter";
-import { RDF, SELF } from "../../constants";
+import { IGraphModule } from "@kernel/modules/Graphs";
+import { CompositionGraph, CompositionNode, PartNode } from "../../store/graph/state";
 
-const ComposerDetailsPanel = () => {
+const ComposerDetailLoader = () => {
+
   const layoutModule = useModule<ILayoutModule>("Layout");
   const storeModule = useModule<Store>("Store");
-
-  const { DetailsPanel, Accordion } = layoutModule.components;
-
-
   const { useAppSelector } = storeModule.hooks;
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
 
-
   const selector = useCallback((c: CompositionState | undefined) => ({
-    model: c?.model,
+    graphId: c?.graphId,
     selectedPart: c?.selectedPart
   }), [])
   const composition = useComposition(activeViewport!, selector);
-  const interpreter = useMemo(() => useRDFInterpreter(composition.state?.model), [composition.state?.model])
 
-  if (!composition.state?.selectedPart || !interpreter) return null;
 
-  const title = interpreter.any(SELF(composition.state.selectedPart), RDF('label'), undefined)
+  if (!composition.state?.selectedPart || !composition.state?.graphId) return null;
+  return <ComposerDetailsPanel graphId={composition.state.graphId} selectedPart={composition.state.selectedPart}/>
+}
+
+const ComposerDetailsPanel = ({graphId, selectedPart}: {graphId: string, selectedPart: string}) => {
+  const layoutModule = useModule<ILayoutModule>("Layout");
+  const graphModule = useModule<IGraphModule>('Graph');
+
+  const { DetailsPanel, Accordion } = layoutModule.components;
+  const { useGraph } = graphModule.hooks;
+
+  const node = useGraph<CompositionGraph, PartNode>(graphId, g=> g?.nodes[selectedPart])
 
   return (
-    <DetailsPanel title={title?.value ?? composition.state.selectedPart}>
+    <DetailsPanel title={node.state?.label ?? selectedPart}>
       <Accordion
         name="Materiais"
         icon={<ListSharpIcon />}
         summary="Lista de materiais"
       >
-        <MaterialsList selectedPart={composition.state.selectedPart} interpreter={interpreter}/>
+        <MaterialsList graphId={graphId} selectedPart={selectedPart}/>
       </Accordion>
-      <Accordion
+      {/* <Accordion
         name="Processos"
         icon={<ListSharpIcon />}
         summary="Lista de processos"
       >
         <ProcessesList />
-      </Accordion>
+      </Accordion> */}
     </DetailsPanel>
   );
 };
 
-export default React.memo(ComposerDetailsPanel);
+export default React.memo(ComposerDetailLoader);

@@ -1,6 +1,10 @@
 import { Edge } from "@kernel/modules/Graphs/interfaces/Edge";
 import { Node } from "@kernel/modules/Graphs/interfaces/Node";
-import { GraphsManagerState, GraphState } from "@kernel/modules/Graphs/store/state";
+import {
+  GraphSearch,
+  GraphsManagerState,
+  GraphState,
+} from "@kernel/modules/Graphs/store/state";
 
 import {
   addNode,
@@ -8,13 +12,16 @@ import {
   updateNode,
   addEdge,
   removeEdge,
+  search,
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { createSelector } from "reselect";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
+import _ from "lodash";
 
 export interface EdgeMap {
-  inputs: {[name: string]: Edge}, outputs: {[name: string]: Edge}
+  inputs: { [name: string]: Edge };
+  outputs: { [name: string]: Edge };
 }
 
 export interface GraphActions {
@@ -23,6 +30,15 @@ export interface GraphActions {
   updateNode(node: Node): void;
   addEdge(edge: Edge): void;
   removeEdge(id: string): void;
+
+  search(
+    strategy: "bfs" | "dfs",
+    nodeStart: string,
+    validate: (node: Node,graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean,
+    stopCriteria: (node: Node, graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean,
+    depth?: number,
+    label?: string
+  ): string;
 }
 export interface Graph<T = GraphState> {
   id: string;
@@ -30,7 +46,7 @@ export interface Graph<T = GraphState> {
   actions: GraphActions;
 }
 
-export const DEFAULT_EDGES: EdgeMap = {inputs: {}, outputs: {}}
+export const DEFAULT_EDGES: EdgeMap = { inputs: {}, outputs: {} };
 
 /**
  * Retrieves an existing graph.
@@ -41,12 +57,13 @@ const useGraph = <G = GraphState, R = G>(
   graphId: string,
   graphSelector: (g: GraphState<any> | undefined) => R | undefined
 ): Graph<R> => {
-  const storeModule = useModule<Store>("Store")
-  const dispatch = storeModule.hooks.useAppDispatch()
-  const useAppSelector = storeModule.hooks.useAppSelector
+  const storeModule = useModule<Store>("Store");
+  const dispatch = storeModule.hooks.useAppDispatch();
+  const useAppSelector = storeModule.hooks.useAppSelector;
 
   const selector = createSelector(
-    (state: {Graph: GraphsManagerState} | undefined) =>state && state.Graph && state.Graph.graphs[graphId],
+    (state: { Graph: GraphsManagerState } | undefined) =>
+      state && state.Graph && state.Graph.graphs[graphId],
     graphSelector
   );
   const graphState = useAppSelector<R | undefined>(selector);
@@ -69,6 +86,24 @@ const useGraph = <G = GraphState, R = G>(
       },
       removeEdge: (id) => {
         dispatch(removeEdge({ graphId, edgeId: id }));
+      },
+
+      search: (strategy, nodeStart, validate, stopCriteria, depth, label) => {
+        const resultPath = _.uniqueId("search");
+        dispatch(
+          search({
+            graphId,
+            id: resultPath,
+            strategy,
+            nodeStart,
+            validate,
+            stopCriteria,
+            depth,
+            label: label ?? resultPath,
+          })
+        );
+
+        return resultPath;
       },
     },
   };

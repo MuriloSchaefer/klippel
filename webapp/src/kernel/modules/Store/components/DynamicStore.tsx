@@ -37,7 +37,7 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
           [slice.name]: slice.reducer,
         }),
         middleware: (getDefaultMiddleware) =>
-          getDefaultMiddleware().concat(dynamicMiddlewares),
+          getDefaultMiddleware({serializableCheck: false}).concat(dynamicMiddlewares),
       }),
     []
   );

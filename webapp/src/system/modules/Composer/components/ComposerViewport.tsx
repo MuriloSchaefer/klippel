@@ -1,20 +1,19 @@
+import React, { useCallback } from "react";
+import _ from "lodash";
+
+import { Box } from "@mui/material";
+
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
-import { Box, Paper } from "@mui/material";
-import React, { useCallback, useEffect, useMemo } from "react";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { Store } from "@kernel/modules/Store";
-import { selectCompositionStateByViewportName } from "../store/selectors";
+
 import ComposerSettingsPanel from "./SettingsPanel";
 import ComposerDetailsPanel from "./DetailsPanel";
 import FloatingButtons from "./FloatingButtons";
-import useComposition, { Composition } from "../hooks/useComposition";
-import useGraph from "@kernel/modules/Graphs/hooks/useGraph";
-import _ from "lodash";
-import Part from "../interfaces";
+import useComposition from "../hooks/useComposition";
 import { CompositionState } from "../store/state";
-import useRDFInterpreter from "../hooks/useRDFInterpreter";
-import { IndexedFormula, literal } from "rdflib";
+import { IGraphModule } from "@kernel/modules/Graphs";
 
 export const ComposerViewportLoader = () => {
   const storeModule = useModule<Store>("Store");
@@ -25,41 +24,60 @@ export const ComposerViewportLoader = () => {
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
 
-  const selector = useCallback((c: CompositionState | undefined) => ({
-    svgPath: c?.svgPath,
-    graphId: c?.graphId,
-  }), [])
+  const selector = useCallback(
+    (c: CompositionState | undefined) => ({
+      svgPath: c?.svgPath,
+      graphId: c?.graphId,
+    }),
+    []
+  );
 
   const composition = useComposition(activeViewport!, selector);
-  
 
   if (!composition.state?.svgPath || !composition.state?.graphId) return null;
 
-  return <ComposerViewport svgPath={composition.state.svgPath} />
+  return (
+    <ComposerViewport
+      selectPart={composition.actions.selectPart}
+      svgPath={composition.state.svgPath}
+      graphId={composition.state.graphId}
+    />
+  );
 };
 
-export const ComposerViewport = ({ svgPath }: { svgPath: string }) => {
-
+export const ComposerViewport = ({
+  svgPath,
+  graphId,
+  selectPart,
+}: {
+  selectPart: (name: string) => void;
+  svgPath: string;
+  graphId: string;
+}) => {
   const {
     components: { SVGViewer },
     hooks: { useSVG },
   } = useModule<ISVGModule>("SVG");
-  const svgManager = useSVG(svgPath, svg => svg)
+  const {
+    hooks: { useGraph },
+  } = useModule<IGraphModule>("Graph");
 
+  const svgManager = useSVG(svgPath, (svg) => svg);
+  const nodes = useGraph(graphId, (g) => g?.nodes);
 
   const beforeInjectionHandle = useCallback((svgRoot: SVGSVGElement) => {
-
-    // parts.forEach(part => {
-    //   const domId = interpreter.any(part.subject, SELF('DOMId'), undefined)
-    //   const [element] = [...svgRoot?.querySelectorAll(`#${domId}`)];
-    //   element.addEventListener('click', (e) => {
-    //     e.stopPropagation()
-    //     console.log(part.subject.value.replace('_:#', ''))
-    //     selectPart(part.subject.value.replace('_:#', ''))
-    //   })
-    // })
-
-
+    if (!nodes.state) return;
+    Object.values(nodes.state)
+      .filter((n) => n.type === "PART")
+      .forEach((n) => {
+        if (n.domId) {
+          const [element] = [...svgRoot?.querySelectorAll(`#${n.domId}`)];
+          element.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectPart(n.id);
+          });
+        }
+      });
   }, []);
 
   return (
@@ -73,10 +91,7 @@ export const ComposerViewport = ({ svgPath }: { svgPath: string }) => {
           cursor: "crosshair",
         }}
       >
-        <SVGViewer
-          path={svgPath}
-          beforeInjection={beforeInjectionHandle}
-        />
+        <SVGViewer path={svgPath} beforeInjection={beforeInjectionHandle} />
 
         <ComposerSettingsPanel />
 
@@ -85,7 +100,6 @@ export const ComposerViewport = ({ svgPath }: { svgPath: string }) => {
       <FloatingButtons />
     </>
   );
-
-}
+};
 
 export default React.memo(ComposerViewportLoader);

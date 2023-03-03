@@ -1,51 +1,35 @@
-import * as React from "react";
+import React from "react";
+
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import ListSubheader from "@mui/material/ListSubheader";
-import Switch from "@mui/material/Switch";
-import WifiIcon from "@mui/icons-material/Wifi";
-import BluetoothIcon from "@mui/icons-material/Bluetooth";
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  Paper,
-  Select,
-} from "@mui/material";
-import { IndexedFormula } from "rdflib";
-import { RDF, SELF } from "../../constants";
-import EditableFields from "../editableFields";
+import { Paper } from "@mui/material";
 
+import useModule from "@kernel/hooks/useModule";
+import { IGraphModule } from "@kernel/modules/Graphs";
 
-export default function MaterialsList({ selectedPart, interpreter }: { selectedPart: string, interpreter: IndexedFormula }) {
+import MaterialItem from "./MaterialItem";
+import { PartNode, CompositionEdge } from "../../store/graph/state";
 
-  const materials = interpreter.statementsMatching(
-    SELF(selectedPart), SELF('madeOf'), undefined
-  )
+export default function MaterialsList({
+  selectedPart,
+  graphId,
+}: {
+  selectedPart: string;
+  graphId: string;
+}) {
+  const graphModule = useModule<IGraphModule>("Graph");
+  const { useNodeInfo } = graphModule.hooks;
+
+  const {edges} = useNodeInfo<PartNode, CompositionEdge>(graphId, selectedPart)
 
   return (
-    <List sx={{ width: "100%" }}>
-      {materials.map(material => {
-        const subject = material.object.value.replace('_:#', '')
-        const label = interpreter.any(SELF(subject), RDF('label'), undefined)
-        // console.log(editableFields)
-        return <Paper variant="outlined" square sx={{
+    <List sx={{ width: "100%" }} role="material-list">
+      {Object.values(edges).filter(e => e.type === 'MADE_OF').map(e => {
+        return <Paper key={e.targetId} variant="outlined" square sx={{
           width: "100%", paddin: 1, '&:div + div': {
             borderTop: 0
           }
-        }}>
-          <ListItem>
-            <ListItemText
-              primary={label?.value}
-              secondary={
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'space-between' }}>
-                  <EditableFields subject={subject} interpreter={interpreter} />
-                </Box>
-              }
-            />
-          </ListItem>
+        }} role="material-container">
+          <MaterialItem  graphId={graphId} nodeId={e.targetId}/>
         </Paper>
       })}
     </List>

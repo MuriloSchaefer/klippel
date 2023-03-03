@@ -7,7 +7,6 @@ import * as serviceWorker from "./sw.js";
 
 const root = createRoot(document.getElementById("root")!);
 root.render(
-  // TODO: activate StrictMode later on
   <React.StrictMode>
     <App />
   </React.StrictMode>

@@ -13,6 +13,7 @@ import {
   removeEdge,
   removeNode,
   resetGraph,
+  searchFinished,
   updateNode,
 } from "./actions";
 
@@ -21,13 +22,12 @@ const slice = createSlice({
   initialState: graphsManagerInitialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder
-      .addCase(
-        loadGraph,
-        (state: GraphsManagerState, { payload: { graphId, graph } }) => {
-          return {...state, graphs: {...state.graphs, [graphId]: graph}};
-        }
-      )
+    builder.addCase(
+      loadGraph,
+      (state: GraphsManagerState, { payload: { graphId, graph } }) => {
+        return { ...state, graphs: { ...state.graphs, [graphId]: graph } };
+      }
+    );
     builder
       .addCase(
         addNode,
@@ -43,7 +43,6 @@ const slice = createSlice({
             ([sourceId, edge]: [string, Edge]) => {
               const sourceNode = graph.nodes[sourceId];
               if (!sourceNode) throw Error("Source node does not exist");
-
 
               graph.adjacencyList[sourceId] = {
                 inputs: graph.adjacencyList[sourceId]?.inputs ?? [],
@@ -175,6 +174,27 @@ const slice = createSlice({
             graphs: {
               ...state.graphs,
               [graphId]: { id: graphId, ...newGraphState },
+            },
+          };
+        }
+      )
+      .addCase(
+        searchFinished,
+        (
+          state: GraphsManagerState,
+          { payload: { graphId, searchId, results } }
+        ) => {
+          return {
+            ...state,
+            graphs: {
+              ...state.graphs,
+              [graphId]: {
+                ...state.graphs[graphId],
+                searchResults: {
+                  ...state.graphs[graphId].searchResults,
+                  [searchId]: results,
+                },
+              },
             },
           };
         }

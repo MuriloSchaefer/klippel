@@ -100,6 +100,7 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
             }, {inputs: {
                 root: {
                     id: `root->${mod.name}`,
+                    type: 'DEPENDS_ON',
                     sourceId: 'root', targetId: mod.name
                 }
             }, outputs: {}})
@@ -109,6 +110,7 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
             const dependencies = mod.depends_on.reduce((inputs, dependency)=>{
                 const dependencyEdge = {
                     id: `${dependency}->${mod.name}`,
+                    type: 'DEPENDS_ON',
                     sourceId: dependency, targedId: mod.name
                 }
                 return {...inputs, [dependency]: dependencyEdge}
@@ -124,6 +126,7 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
             const dependencies = mod.depends_on.reduce((inputs, dependency)=>{
                 const dependencyEdge = {
                     id: `${dependency}->${mod.name}`,
+                    type: 'DEPENDS_ON',
                     sourceId: dependency, targedId: mod.name
                 }
                 return {...inputs, [dependency]: dependencyEdge}

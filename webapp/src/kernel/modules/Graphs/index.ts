@@ -6,6 +6,8 @@ import {MODULE_NAME, MODULE_VERSION} from "./constants"
 import { startModule } from "./kernelCalls";
 import useGraphsManager from "./hooks/useGraphsManager";
 import { getGraphState } from "./store/graphsManager/selectors";
+import useNodeInfo from "./hooks/useNodeInfo";
+import useSearchResult from "./hooks/useSearchResult";
 
 export interface IGraphModule extends IModule {
   name: typeof MODULE_NAME,
@@ -14,7 +16,9 @@ export interface IGraphModule extends IModule {
     graphs: typeof useGraphsManager
   },
   hooks: {
-    useGraph: typeof useGraph
+    useGraph: typeof useGraph,
+    useNodeInfo: typeof useNodeInfo,
+    useSearchResult: typeof useSearchResult
   }
   store: {
     selectors: {
@@ -39,7 +43,9 @@ const GraphModule: IGraphModule = {
     graphs: useGraphsManager
   },
   hooks: {
-    useGraph
+    useGraph,
+    useNodeInfo,
+    useSearchResult
   },
   store: {
     selectors: {getGraphState}

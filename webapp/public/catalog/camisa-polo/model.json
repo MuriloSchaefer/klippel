@@ -276,6 +276,18 @@
         "Material2MangaDireita->Material2MangaDireitaRestriction2"
       ]
     },
+    "Material1MangaDireitaRestriction1": {
+      "inputs": ["Material1MangaDireita->Material1MangaDireitaRestriction1"],
+      "outputs": []
+    },
+    "Material2MangaDireitaRestriction1": {
+      "inputs": ["Material2MangaDireita->Material2MangaDireitaRestriction1"],
+      "outputs": []
+    },
+    "Material2MangaDireitaRestriction2": {
+      "inputs": ["Material2MangaDireita->Material2MangaDireitaRestriction2"],
+      "outputs": []
+    },
     "barraMangaDireita": {},
     "mangaEsquerda": {
       "inputs": ["garment->mangaEsquerda"],
