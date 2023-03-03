@@ -17,11 +17,9 @@ export interface NodesHashMap<NT = Node> {
   [id: string]: NT;
 }
 
-export interface SearchResult {
-  
-    findings: Node[]
-    visited: Node[]
-  
+export interface SearchResult<N=Node> {
+    findings: N[]
+    visited: N[]
 }
 export interface SearchResults {
   [name: string]: SearchResult

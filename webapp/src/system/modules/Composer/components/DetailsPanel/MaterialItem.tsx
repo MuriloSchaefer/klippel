@@ -2,7 +2,8 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { Box, ListItem, ListItemText, Typography } from "@mui/material";
 import { MaterialUsageNode } from "../../store/graph/state";
-import EditableFields from "../editableFields";
+import MaterialSelector from "../editableFields/MaterialSelector";
+import MaterialTypeSelector from "../editableFields/MaterialTypeSelector";
 
 const MaterialItem = ({
   graphId,
@@ -30,7 +31,15 @@ const MaterialItem = ({
                 justifyContent: "space-between",
               }}
             >
-              <EditableFields node={node} graphId={graphId} />
+              <Box sx={{gap:1, display:'flex', flexDirection:'row'}} role="material-attributes" aria-label="material attributes">
+                  {node.editableAttributes.map(field => {
+                      switch (field) {
+                          case "materialType": return <MaterialTypeSelector key={field} graphId={graphId} node={node} />
+                          case "material": return <MaterialSelector key={field} graphId={graphId} node={node}/>
+                          default: return <>error</>
+                      }
+                  })}
+              </Box>
             </Box>
           </Typography>
         }

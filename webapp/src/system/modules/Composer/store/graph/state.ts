@@ -12,6 +12,17 @@ export interface PartNode extends Node {
     label: string;
 
 }
+export type RestrictionNode = AllowOnlyRestrictionNode | SameAsRestrictionNode
+export interface AllowOnlyRestrictionNode<T=string> extends Node {
+    type: 'RESTRICTION'
+    restrictionType: 'allowOnly'
+    allowOnly: T[]
+}
+export interface SameAsRestrictionNode<T=string> extends Node {
+    type: 'RESTRICTION'
+    restrictionType: 'sameAs'
+    sameAs: T
+}
 export interface MaterialUsageNode extends Node {
     type: 'MATERIAL_USAGE'
     label: string
@@ -21,7 +32,7 @@ export interface MaterialUsageNode extends Node {
 }
 
 
-export type CompositionNode = MaterialTypeNode | PartNode | MaterialUsageNode
+export type CompositionNode = MaterialTypeNode | PartNode | MaterialUsageNode | RestrictionNode
 
 
 

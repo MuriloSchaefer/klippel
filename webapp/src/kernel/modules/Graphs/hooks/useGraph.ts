@@ -27,7 +27,7 @@ export interface EdgeMap {
 export interface GraphActions {
   addNode(node: Node, edges?: EdgeMap): void;
   removeNode(id: string): void;
-  updateNode(node: Node): void;
+  updateNode(node: any): void; // QUESTION: how to set the type here
   addEdge(edge: Edge): void;
   removeEdge(id: string): void;
 
@@ -105,6 +105,10 @@ const useGraph = <G = GraphState, R = G>(
 
         return resultPath;
       },
+
+      // compareNodes: (nodeA: string, nodeB: string, attribute?: string) => {
+
+      // }
     },
   };
 };

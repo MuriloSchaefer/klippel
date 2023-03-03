@@ -1,17 +1,20 @@
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { useMemo } from "react";
-import { FieldProps } from ".";
+import { IMaterialsModule } from "@system/modules/Materials";
+import { useCallback, useMemo } from "react";
 import {
   CompositionEdge,
+  CompositionNode,
   MaterialTypeNode,
   MaterialUsageNode,
   RestrictedByEdge,
+  RestrictionNode,
 } from "../../store/graph/state";
 
-const MaterialTypeSelector = ({ node, graphId }: FieldProps) => {
+const MaterialTypeSelector = ({ node, graphId }: {node: MaterialUsageNode, graphId: string}) => {
   const graphModule = useModule<IGraphModule>("Graph");
+  const {components: {MaterialTypeSelector}} = useModule<IMaterialsModule>('Materials')
 
   const { useNodeInfo, useGraph, useSearchResult } = graphModule.hooks;
   const graph = useGraph<MaterialUsageNode, CompositionEdge>(
@@ -19,7 +22,6 @@ const MaterialTypeSelector = ({ node, graphId }: FieldProps) => {
     (g) => g?.nodes[node.id]
   );
   
-
   // Get all restrictions for node
   const searchResultPath = useMemo(
     () =>{
@@ -41,33 +43,25 @@ const MaterialTypeSelector = ({ node, graphId }: FieldProps) => {
             `Get all restriction associated with ${node.label}`
           )
     },
-    []
+    [graphId]
   );
-  const result = useSearchResult(graphId, searchResultPath);
-  // const restrictions = result?.findings.reduce((acc, curr)=> ({...acc, }), {})
+  const restrictions = useSearchResult<RestrictionNode>(graphId, searchResultPath);
+  const filterOptions = restrictions?.findings.reduce((allowed, restriction)=>{
+    if ('allowOnly' in restriction) return [...allowed, ...restriction.allowOnly]
+    return allowed
+  }, [] as string[])
 
   const materialTypeNode = useNodeInfo<MaterialTypeNode>(
     graphId,
     node.materialType
-  );
+  ); 
 
-  return (
-    <FormControl sx={{ m: 1, minWidth: 120 }} fullWidth size="small">
-      <InputLabel id={`${node.id}-material-type-label`}>Tipo</InputLabel>
-      <Select
-        labelId={`${node.id}-material-type-label`}
-        id={`${node.id}-material-type-label`}
-        value={node.materialType}
-        label={materialTypeNode.node.label}
-      >
-        <MenuItem value={node.materialType}>{materialTypeNode.node.label}</MenuItem>
-        {/* {availableOptions.map(option => {
-                const label = interpreter.any(SELF(option.replace('_:#', '')), RDF('label'), undefined)
-                return <MenuItem value={option}>{label?.value}</MenuItem>
-            })} */}
-      </Select>
-    </FormControl>
-  );
+  const handleChange = useCallback((value:string)=>{
+    // TODO: check if material type node is available first
+    graph.actions.updateNode({...node, materialType: value})
+  }, [graph])
+
+  return <MaterialTypeSelector filter={(type) => filterOptions?.includes(type.name) ?? true} value={materialTypeNode.node.id} onChange={handleChange}/>
 };
 
 export default MaterialTypeSelector;

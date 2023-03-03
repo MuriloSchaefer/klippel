@@ -72,7 +72,7 @@ export const removeNode = createAction<{ graphId: string; nodeId: string }>(
 export const updateNode = createAction<{
   graphId: string;
   nodeId: string;
-  changes: Partial<Node>;
+  changes: any;
 }>(`[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Update node`);
 
 export const addEdge = createAction<{ graphId: string; edge: Edge }>(

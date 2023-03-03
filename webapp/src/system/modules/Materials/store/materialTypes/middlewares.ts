@@ -10,18 +10,23 @@ middlewares.startListening({
     // Mock api call
     const mockedTypes = {
         malha: {
+            name: 'malha',
             label: 'Malha'
         },
         tecido: {
+            name: 'tecido',
             label: 'Tecido'
         },
         linha: {
+            name: 'linha',
             label: 'Linha'
         },
         agulha: {
+            name: 'agulha',
             label: 'Agulha'
         },
         pate: {
+            name: 'pate',
             label: 'Pate'
         }
     }

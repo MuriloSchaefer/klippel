@@ -1,10 +1,13 @@
+import Edge from "../interfaces/Edge"
+import Node from "../interfaces/Node"
+import { GraphState, SearchResult } from "../store/state"
 import useGraph from "./useGraph"
 
 
-const useSearchResult = (graphId: string, resultPath: string) => {
-    const result = useGraph(graphId, g=> g?.searchResults && g.searchResults[resultPath])
+const useSearchResult = <N=Node, E=Edge>(graphId: string, resultPath: string) => {
+    const result = useGraph<GraphState<N,E>, SearchResult>(graphId, g=> g?.searchResults && g.searchResults[resultPath])
     
-    return result.state
+    return result.state as SearchResult<N>
 }
 
 export default useSearchResult
