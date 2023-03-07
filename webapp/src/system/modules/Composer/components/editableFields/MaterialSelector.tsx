@@ -1,12 +1,11 @@
-import { FormControl, InputLabel, Select } from "@mui/material";
-import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/Graphs";
-import { IMaterialsModule } from "@system/modules/Materials";
-import { CompositionEdge, MaterialUsageNode } from "../../store/graph/state";
 import { useCallback } from "react";
+
+import useModule from "@kernel/hooks/useModule";
+
+import { IMaterialsModule } from "@system/modules/Materials";
+
+import { MaterialUsageNode } from "../../store/graph/state";
 import useComposition from "../../hooks/useComposition";
-import { Store } from "@kernel/modules/Store";
-import { selectCompositionStateByGraphId } from "../../store/selectors";
 
 const MaterialSelector = ({
   graphId,
@@ -18,7 +17,6 @@ const MaterialSelector = ({
   const {
     components: { MaterialSelector },
   } = useModule<IMaterialsModule>("Materials");
-
 
   const composition = useComposition(graphId, (c) => c); // QUESTION: what if graphId != composition name?
 

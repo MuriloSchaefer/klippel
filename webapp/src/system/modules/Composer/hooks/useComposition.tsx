@@ -58,10 +58,16 @@ const useComposition = <C = Composition, R = C>(
       },
       changeMaterialType(materialUsageId, materialType) {
         // check if material type is in the graph
+        console.log(materialUsageId, materialType);
 
-        graph.actions.updateNode({ id: materialUsageId, materialType: materialType });
+        graph.actions.updateNode({
+          id: materialUsageId,
+          materialType: materialType,
+        });
       },
-      changeMaterial(nodeId, materialId) {},
+      changeMaterial(nodeId, materialId) {
+        console.log(nodeId, materialId);
+      },
     },
   };
 };

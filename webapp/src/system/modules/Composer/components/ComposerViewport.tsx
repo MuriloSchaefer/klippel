@@ -23,7 +23,6 @@ export const ComposerViewportLoader = () => {
 
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
-  console.log(activeViewport)
 
   const selector = useCallback(
     (c: CompositionState | undefined) => ({

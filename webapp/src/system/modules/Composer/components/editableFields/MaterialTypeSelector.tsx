@@ -1,14 +1,15 @@
+import { useCallback, useMemo } from "react";
+
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+
 import { IMaterialsModule } from "@system/modules/Materials";
-import { useCallback, useMemo } from "react";
+
+import useComposition from "../../hooks/useComposition";
 import {
   CompositionEdge,
-  CompositionNode,
   MaterialTypeNode,
   MaterialUsageNode,
-  RestrictedByEdge,
   RestrictionNode,
 } from "../../store/graph/state";
 
@@ -56,12 +57,14 @@ const MaterialTypeSelector = ({ node, graphId }: {node: MaterialUsageNode, graph
     node.materialType
   ); 
 
-  const handleChange = useCallback((value:string)=>{
-    // TODO: check if material type node is available first
-    graph.actions.updateNode({...node, materialType: value})
-  }, [graph])
+  const composition = useComposition(graphId, (c) => c); // QUESTION: what if graphId != composition name?
 
-  return <MaterialTypeSelector filter={(type) => filterOptions?.includes(type.name) ?? true} value={materialTypeNode.node.id} onChange={handleChange}/>
+  const handleMaterialTypeChange = useCallback(
+    (materialType: string) => composition.actions.changeMaterialType(node.id, materialType),
+    [graphId, node.id]
+  );
+
+  return <MaterialTypeSelector filter={(type) => filterOptions?.includes(type.name) ?? true} value={materialTypeNode.node.id} onChange={handleMaterialTypeChange}/>
 };
 
 export default MaterialTypeSelector;

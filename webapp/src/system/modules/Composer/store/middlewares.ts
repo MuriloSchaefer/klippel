@@ -175,7 +175,6 @@ middlewares.startListening({
       compositionsManager.compositions[payload.compositionName];
 
     // add all proxies
-    console.log(payload)
     const nodes = payload.model.nodes;
     Object.values(nodes).forEach((node: any) => {
       if (!("proxies" in node)) return;
@@ -186,7 +185,6 @@ middlewares.startListening({
         ) => ({ ...acc, [curr.elem]: {...acc[curr.elem], [curr.attr]: 'blue'} }),
         {}
       );
-      console.log(proxies)
 
       Object.entries(proxies).forEach(([id, styles]) => {
         dispatch(addProxy({path: composition.svgPath, proxySet: composition.name, id, styles}))
