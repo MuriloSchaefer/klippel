@@ -28,17 +28,19 @@ export const ComposerViewportLoader = () => {
   const selector = useCallback(
     (c: CompositionState | undefined) => ({
       svgPath: c?.svgPath,
+      name: c?.name,
       graphId: c?.graphId,
     }),
     [activeViewport]
   );
   const composition = useComposition(activeViewport!, selector);
 
-  if (!composition.state?.svgPath || !composition.state?.graphId) return null;
+  if (!composition.state?.name || !composition.state?.svgPath || !composition.state?.graphId) return null;
 
   return (
     <ComposerViewport
       selectPart={composition.actions.selectPart}
+      name={composition.state.name}
       svgPath={composition.state.svgPath}
       graphId={composition.state.graphId}
     />
@@ -46,10 +48,12 @@ export const ComposerViewportLoader = () => {
 };
 
 export const ComposerViewport = ({
+  name,
   svgPath,
   graphId,
   selectPart,
 }: {
+  name: string;
   selectPart: (name: string) => void;
   svgPath: string;
   graphId: string;
@@ -88,7 +92,7 @@ export const ComposerViewport = ({
           cursor: "crosshair",
         }}
       >
-        <SVGViewer path={svgPath} beforeInjection={beforeInjectionHandle} />
+        <SVGViewer proxySet={name} path={svgPath} beforeInjection={beforeInjectionHandle} />
 
         <ComposerSettingsPanel graphId={graphId} />
 

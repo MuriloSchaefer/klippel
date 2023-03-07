@@ -5,10 +5,13 @@ type Loader = 'not-started' | 'started' | 'completed'
 interface Proxies {
     [id: string]: CSSProperties
 } 
+interface ProxySet {
+    [name: string]: Proxies
+}
 export interface SVGState {
     progress: Loader
     path: string;
-    proxies: Proxies;
+    proxies: ProxySet;
     content: string | undefined;
 }
 

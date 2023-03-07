@@ -183,13 +183,13 @@ middlewares.startListening({
         (
           acc: { [id: string]: CSSProperties },
           curr: { elem: string; attr: string }
-        ) => ({ ...acc, [curr.elem]: {...acc[curr.elem], [curr.attr]: 'grey'} }),
+        ) => ({ ...acc, [curr.elem]: {...acc[curr.elem], [curr.attr]: 'blue'} }),
         {}
       );
       console.log(proxies)
 
       Object.entries(proxies).forEach(([id, styles]) => {
-        dispatch(addProxy({path: composition.svgPath, id, styles}))
+        dispatch(addProxy({path: composition.svgPath, proxySet: composition.name, id, styles}))
       })
     });
 
@@ -213,24 +213,7 @@ middlewares.startListening({
     const composition =
       compositionsManager.compositions[payload.compositionName];
 
-    // add all proxies
-    // const proxiedElements = interpreter.statementsMatching(undefined, SELF('ProxyElement'), undefined)
-    // proxiedElements.forEach((proxiedElements: any) => {
-    //   // console.log(proxiedElements.subject.value)
-    //   const elem = proxiedElements.object.value
-    //   const node = proxiedElements.subject.value.replace('_:#', '')
-    //   const proxiedAttributes = interpreter.statementsMatching(SELF(node), SELF('ProxyAttribute'), undefined)
-
-    //   const styles = proxiedAttributes.reduce((acc, curr)=> ({...acc, [curr.object.value]: 'grey'}), {})
-
-    //   const proxy = {path: composition.svgPath, id: elem.replace('#', ''), styles }
-    //   dispatch(addProxy(proxy))
-    // })
     dispatch(loadGraph({ graphId: composition.graphId, graph: payload.model }));
-    // dispatch(
-    //   addProxies({graphId: composition.graphId, graph})
-    // )
-
     dispatch(
       modelStored({ compositionName: composition.name, model: payload.model })
     );

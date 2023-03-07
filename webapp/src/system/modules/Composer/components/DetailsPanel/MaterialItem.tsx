@@ -31,7 +31,7 @@ const MaterialItem = ({
                 justifyContent: "space-between",
               }}
             >
-              <Box sx={{gap:1, display:'flex', flexDirection:'row'}} role="material-attributes" aria-label="material attributes">
+              <Box sx={{gap:1, display:'flex', flexWrap:'wrap', flexDirection:'row'}} role="material-attributes" aria-label="material attributes">
                   {node.editableAttributes.map(field => {
                       switch (field) {
                           case "materialType": return <MaterialTypeSelector key={field} graphId={graphId} node={node} />

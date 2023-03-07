@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { initialState, MaterialsState } from "./state";
+import { initialState, MaterialsModuleState } from "./state";
 import materialTypesSlice from './materialTypes/slice';
+import materialsSlice from './materials/slice';
 
 
 const slice = createSlice({
@@ -15,6 +16,7 @@ const slice = createSlice({
         
       builder.addDefaultCase((state, action)=>({
         ...state, 
+        materials: materialsSlice.reducer(state.materials, action),
         materialTypes: materialTypesSlice.reducer(state.materialTypes, action),
       }))
     }

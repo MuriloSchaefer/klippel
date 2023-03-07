@@ -1,11 +1,13 @@
 import { IModule } from "@kernel/modules/base";
-import MaterialTypeSelector from "./components/selectors/materialType";
+import MaterialSelector from "./components/selectors/Material";
+import MaterialTypeSelector from "./components/selectors/MaterialType";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import { startModule } from "./kernelCalls";
 
 export interface IMaterialsModule extends IModule {
     components: {
         MaterialTypeSelector: typeof MaterialTypeSelector,
+        MaterialSelector: typeof MaterialSelector,
     },
     store: {
         actions: {
@@ -23,7 +25,8 @@ const module: IMaterialsModule = {
     version: MODULE_VERSION,
     depends_on: ['Layout', 'Graph', 'SVG'],
     components: {
-        MaterialTypeSelector
+        MaterialTypeSelector,
+        MaterialSelector
     },
     store: {
         actions: {

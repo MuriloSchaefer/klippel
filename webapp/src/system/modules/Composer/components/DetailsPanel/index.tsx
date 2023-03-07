@@ -51,13 +51,6 @@ const ComposerDetailsPanel = ({graphId, selectedPart}: {graphId: string, selecte
       >
         <MaterialsList graphId={graphId} selectedPart={selectedPart}/>
       </Accordion>
-      {/* <Accordion
-        name="Processos"
-        icon={<ListSharpIcon />}
-        summary="Lista de processos"
-      >
-        <ProcessesList />
-      </Accordion> */}
     </DetailsPanel>
   );
 };

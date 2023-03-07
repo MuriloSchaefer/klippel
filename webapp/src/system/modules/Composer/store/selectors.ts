@@ -28,3 +28,21 @@ export const selectCompositionStateByViewportName = <O=CompositionState | undefi
 
   );
 };
+
+export const selectCompositionStateByGraphId = <O=CompositionState | undefined>(
+  graphId: string,
+  selector?: (state: CompositionState | undefined) => O
+) => {
+  const defaultSelector = (state: CompositionState | undefined) => state;
+  const usedSelector = selector ?? defaultSelector;
+
+  return createSelector(
+    selectComposerModule,
+    (state: ComposerState | undefined) =>
+      state &&
+      usedSelector(Object.values(state.compositionsManager.compositions).find(
+        (comp) => comp.graphId === graphId
+      ))
+
+  );
+};

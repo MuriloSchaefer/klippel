@@ -47,14 +47,17 @@ const slice = createSlice({
     );
     builder.addCase(
       addProxy,
-      (state: SVGModuleState, { payload: { path, id, styles} }) => ({
+      (state: SVGModuleState, { payload: { path, proxySet, id, styles} }) => ({
         ...state,
         svgs: {
           [path]: {
             ...state.svgs[path],
             proxies: {
               ...state.svgs[path].proxies,
-              [id]: styles
+              [proxySet]: {
+                ...state.svgs[path].proxies[proxySet],
+                [id]: styles
+              }
             },
           },
         },

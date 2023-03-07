@@ -1,5 +1,6 @@
 import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
 import { loadMaterialTypes, materialTypesLoaded } from "./actions";
+import { MaterialTypesState } from "./state";
 
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
@@ -8,27 +9,104 @@ middlewares.startListening({
     const { dispatch} = listenerApi;
 
     // Mock api call
-    const mockedTypes = {
+    const mockedTypes: MaterialTypesState = {
         malha: {
             name: 'malha',
-            label: 'Malha'
+            label: 'Malha',
+            latestSchema: '0.0.1',
+            schemas: {
+                '0.0.1': {
+                    version: '0.0.1',
+                    attributes: {
+                        fornecedor: 'string',
+                        categoria: 'string',
+                        nome: 'string',
+                        cor: 'color',
+                        
+                        largura: 'number',
+                        larguraUnidade: 'string',
+
+                        gramatura: 'number',
+                        gramaturaUnidade: 'string',
+
+                        rendimento: 'number',
+                        rendimentoUInidade: 'string',
+
+                        trama: 'string'
+                    },
+                    selector: {
+                        principal: 'nome',
+                        extra: 'cor'
+                    }
+                }
+            },
+            
         },
         tecido: {
             name: 'tecido',
-            label: 'Tecido'
+            label: 'Tecido',
+            latestSchema: '0.0.1',
+            schemas: {
+                '0.0.1': {
+                    version: '0.0.1',
+                    attributes: {
+                        categoria: 'string',
+                        nome: 'string',
+                        cor: 'color',
+
+                        largura: 'number',
+                        larguraUnidade: 'string',
+                        
+                        gramatura: 'number',
+                        gramaturaUnidade: 'string',
+
+                        trama: 'string'
+                    },
+                    selector: {
+                        principal: 'nome',
+                        extra: 'cor'
+                    }
+                }
+            },
         },
         linha: {
             name: 'linha',
-            label: 'Linha'
+            label: 'Linha',
+            latestSchema: '0.0.1',
+            schemas: {
+                '0.0.1': {
+                    version: '0.0.1',
+                    attributes: {
+                        nome: 'string',
+                        cor: 'color',
+                    },
+                    selector: {
+                        principal: 'nome',
+                        extra: 'cor'
+                    }
+                }
+            },
         },
         agulha: {
             name: 'agulha',
-            label: 'Agulha'
+            label: 'Agulha',
+            latestSchema: '0.0.1',
+            schemas: {
+                '0.0.1': {
+                    version: '0.0.1',
+                    attributes: {
+                        fornecedor: 'string',
+                        categoria: 'string',
+                        nome: 'string',
+                        espessura: 'number'
+                    },
+                    selector: {
+                        principal: 'nome',
+                        extra: 'espessura'
+                    }
+                }
+            },
         },
-        pate: {
-            name: 'pate',
-            label: 'Pate'
-        }
     }
 
     dispatch(materialTypesLoaded(mockedTypes)) // dispatch event

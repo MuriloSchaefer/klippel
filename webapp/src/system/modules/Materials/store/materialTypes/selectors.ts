@@ -1,8 +1,14 @@
 import { createSelector } from "reselect";
-import { MaterialsState } from "../state";
+import { MaterialsModuleState } from "../state";
 
 export const selectMaterialTypes = createSelector(
-    (state: {Materials: MaterialsState}) => state.Materials, 
-    (state: MaterialsState) => state.materialTypes
+    (state: {Materials: MaterialsModuleState}) => state.Materials, 
+    (state: MaterialsModuleState) => state.materialTypes
     )
     
+export const selectMaterialType = (type: string) => {
+    return createSelector(
+        (state: {Materials: MaterialsModuleState}) => state.Materials, 
+        (state: MaterialsModuleState) => state.materialTypes[type]
+        )
+}

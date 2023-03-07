@@ -1,44 +1,39 @@
-import { FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from "@mui/material";
-import AddLinkSharpIcon from '@mui/icons-material/AddLinkSharp';
-import LockSharpIcon from '@mui/icons-material/LockSharp';
-import { useCallback, useState } from "react";
-import { FieldProps } from ".";
-import { SELF, RDF } from "../../constants";
+import { FormControl, InputLabel, Select } from "@mui/material";
+import useModule from "@kernel/hooks/useModule";
+import { IGraphModule } from "@kernel/modules/Graphs";
+import { IMaterialsModule } from "@system/modules/Materials";
+import { CompositionEdge, MaterialUsageNode } from "../../store/graph/state";
+import { useCallback } from "react";
+import useComposition from "../../hooks/useComposition";
+import { Store } from "@kernel/modules/Store";
+import { selectCompositionStateByGraphId } from "../../store/selectors";
+
+const MaterialSelector = ({
+  graphId,
+  node,
+}: {
+  graphId: string;
+  node: MaterialUsageNode;
+}) => {
+  const {
+    components: { MaterialSelector },
+  } = useModule<IMaterialsModule>("Materials");
 
 
-const MaterialSelector = ({ graphId, node }: FieldProps) => {  
+  const composition = useComposition(graphId, (c) => c); // QUESTION: what if graphId != composition name?
 
-    return <>
-        <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-            <InputLabel id={`${node.id}-material`}>Material</InputLabel>
-            <Select
-                labelId={`${node.id}-material`}
-                label="Material"
-                id="material"
-                // onChange={handleMaterialSelection}
-            >
-                {/* {availableMaterials.map(material => {
-                    const materiaLabel = interpreter.any(SELF(material.value.replace('_:#', '')), RDF('label'), undefined)
-                    return <MenuItem value={material.value}>{materiaLabel?.value}</MenuItem>
-                })} */}
-            </Select>
-        </FormControl>
+  const handleMaterialChange = useCallback(
+    (materialId: number) => composition.actions.changeMaterial(node.id, materialId),
+    [graphId, node.id]
+  );
 
-        <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-            <InputLabel id={`${node.id}-material-color`} sx={{display:'flex', gap:1, justifyItems:'middle'}}><span>Cor</span> </InputLabel>
-            <Select
-                labelId={`${node.id}-material-color`}
-                label="Cor"
-                id="color"
-                //onChange={handleMaterialColorSelection}
-            >
-                {/* {colorsAvailable.map(color => {
-                    //const colorLabel = interpreter.any(SELF(color.replace('_:#', '')), RDF('label'), undefined)
-                    return <MenuItem value={color}>{colorLabel?.value}</MenuItem>
-                })} */}
-            </Select>
-        </FormControl>
-    </>
-}
+  return (
+    <MaterialSelector
+      type={node.materialType}
+      value={1}
+      onChange={handleMaterialChange}
+    />
+  );
+};
 
 export default MaterialSelector;

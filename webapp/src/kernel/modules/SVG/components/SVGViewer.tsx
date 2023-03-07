@@ -22,11 +22,12 @@ interface SVGViewerPreferences {
 }
 interface SVGViewerProps {
   path: string;
+  proxySet?:string;
   beforeInjection?: BeforeEach;
   preferences?: SVGViewerPreferences;
 }
 
-const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
+const SVGViewer = ({ path, proxySet, beforeInjection, preferences }: SVGViewerProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
@@ -70,18 +71,19 @@ const SVGViewer = ({ path, beforeInjection, preferences }: SVGViewerProps) => {
       });
       // svg.setAttribute("height", `100%`);
       // svg.setAttribute("viewBox", `100%`);
-
-      Object.entries(svgState?.proxies ?? {}).forEach(([id, styles]) => {
-        const elem = svg.getElementById(id) as SVGSVGElement;
-        if (elem) {
-          if ('fill' in styles)
-            elem.setAttribute("fill", styles.fill!);
-
-          if ('stroke' in styles)
-            elem.setAttribute("stroke", styles.stroke!);
-        }
-      });
-
+      if (proxySet){
+        Object.entries(svgState?.proxies[proxySet] ?? {}).forEach(([id, styles]) => {
+          const elem = svg.getElementById(id) as SVGSVGElement;
+          if (elem) {
+            if ('fill' in styles)
+              elem.setAttribute("fill", styles.fill!);
+  
+            if ('stroke' in styles)
+              elem.setAttribute("stroke", styles.stroke!);
+          }
+        });
+      }
+      
       if (beforeInjection) beforeInjection(svg);
     },
     [beforeInjection, svgState?.content]

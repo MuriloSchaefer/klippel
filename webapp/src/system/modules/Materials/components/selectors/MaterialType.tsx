@@ -18,12 +18,11 @@ const MaterialTypeSelector = ({
   const { useAppSelector } = storeModule.hooks;
 
   const materialTypes = useAppSelector(selectMaterialTypes);
-  console.log(materialTypes);
 
   const noFilter = useCallback((option: MaterialType) => true, []);
 
   return (
-    <FormControl sx={{ m: 1, minWidth: 120 }} fullWidth size="small">
+    <FormControl sx={{ m: 1, minWidth: 120, width: 'min-content' }} fullWidth size="small">
       <InputLabel id={`label`}>Tipo</InputLabel>
       <Select
         labelId={`label`}
@@ -35,13 +34,8 @@ const MaterialTypeSelector = ({
         {Object.values(materialTypes)
           .filter(filter ?? noFilter)
           .map((type) => (
-            <MenuItem value={type.name}>{type.label}</MenuItem>
+            <MenuItem key={type.name} value={type.name}>{type.label}</MenuItem>
           ))}
-
-        {/* {availableOptions.map(option => {
-                const label = interpreter.any(SELF(option.replace('_:#', '')), RDF('label'), undefined)
-                return <MenuItem value={option}>{label?.value}</MenuItem>
-            })} */}
       </Select>
     </FormControl>
   );
