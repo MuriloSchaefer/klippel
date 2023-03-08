@@ -1,11 +1,11 @@
+import { createSelector } from "reselect";
+
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
-import { useMemo } from "react";
-import { useEffect } from "react";
-import { createSelector } from "reselect";
-import { selectPart } from "../store/actions";
+
+import { addMaterial, addMaterialType, selectPart } from "../store/actions";
 import { ComposerState, CompositionState } from "../store/state";
 
 interface CompositionActions {
@@ -42,12 +42,12 @@ const useComposition = <C = Composition, R = C>(
   );
   const compositionState = useAppSelector<R | undefined>(selector);
 
-  const state = useAppSelector(
+  const innerState = useAppSelector(
     (state: { Composer: ComposerState } | undefined) =>
       state && state.Composer.compositionsManager.compositions[compositionName]
   );
 
-  const graph = useGraph(state?.graphId!, (g) => g?.adjacencyList);
+  const graph = useGraph(innerState?.graphId!, (g) => g?.adjacencyList);
 
   return {
     state: compositionState,
@@ -58,15 +58,29 @@ const useComposition = <C = Composition, R = C>(
       },
       changeMaterialType(materialUsageId, materialType) {
         // check if material type is in the graph
-        console.log(materialUsageId, materialType);
+        if (!graph.actions.nodeExists(materialType)){
+          // add material to the model
+          dispatch(addMaterialType({compositionName:innerState?.name!, materialType}))
+        }
 
         graph.actions.updateNode({
           id: materialUsageId,
           materialType: materialType,
         });
       },
-      changeMaterial(nodeId, materialId) {
-        console.log(nodeId, materialId);
+      changeMaterial(materialUsageId, materialId) {
+        console.log(materialUsageId, materialId);
+
+        if (!graph.actions.nodeExists(`material-${materialId}`)){
+          // add material to the model
+          dispatch(addMaterial({compositionName:innerState?.name!, materialId}))
+
+        }
+
+        graph.actions.updateNode({
+          id: materialUsageId,
+          materialId: materialId,
+        });
       },
     },
   };

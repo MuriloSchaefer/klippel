@@ -31,6 +31,15 @@ export const loadProxies = createAction<{compositionName: string, model: any}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Load proxies`
 );
 
+
+export const addMaterial = createAction<{compositionName: string, materialId: number}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Add material`
+);
+
+export const addMaterialType = createAction<{compositionName: string, materialType: string}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Add material type`
+);
+
 // Events
 export const compositionCreated = createAction<CompositionState>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Composition created`
@@ -56,4 +65,12 @@ export const proxiesLoaded = createAction<{compositionName: string, model: any}>
 )
 export const modelStored = createAction<{compositionName: string, model: any}>( 
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Model stored`
+)
+
+export const materialAdded = createAction<{compositionName: string, materialId: number, nodeId: string}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Material added`
+)
+
+export const materialTypeAdded = createAction<{compositionName: string, materialType: string, nodeId: string}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Material type added`
 )

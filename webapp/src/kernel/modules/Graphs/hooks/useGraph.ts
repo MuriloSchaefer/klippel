@@ -30,12 +30,23 @@ export interface GraphActions {
   updateNode(node: any): void; // QUESTION: how to set the type here
   addEdge(edge: Edge): void;
   removeEdge(id: string): void;
+  nodeExists(id: string): boolean;
 
   search(
     strategy: "bfs" | "dfs",
     nodeStart: string,
-    validate: (node: Node,graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean,
-    stopCriteria: (node: Node, graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean,
+    validate: (
+      node: Node,
+      graph: GraphSearch,
+      currFindings: Node[],
+      visitedNodes: Node[]
+    ) => boolean,
+    stopCriteria: (
+      node: Node,
+      graph: GraphSearch,
+      currFindings: Node[],
+      visitedNodes: Node[]
+    ) => boolean,
     depth?: number,
     label?: string
   ): string;
@@ -67,7 +78,11 @@ const useGraph = <G = GraphState, R = G>(
     graphSelector
   );
   const graphState = useAppSelector<R | undefined>(selector);
-
+  
+  const innerState = useAppSelector(
+    (state: { Graph: GraphsManagerState } | undefined) =>
+      state && state.Graph && state.Graph.graphs[graphId]
+  );
   return {
     id: graphId,
     state: graphState,
@@ -87,6 +102,7 @@ const useGraph = <G = GraphState, R = G>(
       removeEdge: (id) => {
         dispatch(removeEdge({ graphId, edgeId: id }));
       },
+      nodeExists: (nodeId) => innerState ? nodeId in innerState?.nodes : false,
 
       search: (strategy, nodeStart, validate, stopCriteria, depth, label) => {
         const resultPath = _.uniqueId("search");

@@ -1,4 +1,4 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import { Color } from "../../typings";
 
 const ColorItem = ({
@@ -8,7 +8,7 @@ const ColorItem = ({
   color: Color;
   previewSize?: number;
 }) => {
-  const theme = useTheme();
+  const theme = useTheme(); 
   const size = previewSize ?? 15;
   return (
     <Box
@@ -16,10 +16,11 @@ const ColorItem = ({
         display: "flex",
         width: "100%",
         alignItems: "center",
+        gap: 1,
         justifyContent: "space-between",
       }}
     >
-      <svg width={size} height={size} style={{ margin: "2px" }}>
+      <svg width={size} height={size} >
         <circle
           r={size / 2}
           cx={size / 2}
@@ -31,7 +32,7 @@ const ColorItem = ({
           fill={color.hex}
         />
       </svg>
-      {color.label ?? color.id}
+      <Typography>{color.label ?? color.id}</Typography>
     </Box>
   );
 };

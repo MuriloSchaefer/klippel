@@ -123,7 +123,7 @@ const MaterialSelector = ({
           })}
         </Select>
       </FormControl>
-      <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+      <FormControl sx={{ m: 1, minWidth: 120, width: 'fit-content' }} size="small">
         <InputLabel id={`label`} sx={{ textTransform: "capitalize" }}>
           {selector.extra}
         </InputLabel>
