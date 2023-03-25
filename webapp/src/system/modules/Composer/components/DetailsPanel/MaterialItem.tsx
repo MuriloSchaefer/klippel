@@ -35,7 +35,7 @@ const MaterialItem = ({
                   {node.editableAttributes.map(field => {
                       switch (field) {
                           case "materialType": return <MaterialTypeSelector key={field} graphId={graphId} node={node} />
-                          case "material": return <MaterialSelector key={field} graphId={graphId} node={node}/>
+                          case "materialId": return <MaterialSelector key={field} graphId={graphId} node={node}/>
                           default: return <>error</>
                       }
                   })}

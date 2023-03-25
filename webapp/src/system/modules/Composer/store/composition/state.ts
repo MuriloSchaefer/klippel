@@ -21,7 +21,7 @@ export interface MaterialUsageNode extends Node {
     type: 'MATERIAL_USAGE'
     label: string
     editableAttributes: string[]
-    material: any // TODO: add typing
+    materialId: string // TODO: add typing
     materialType: string
     proxies: {elem: string, attr: string}[]
 }

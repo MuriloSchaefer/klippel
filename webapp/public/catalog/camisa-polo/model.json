@@ -82,9 +82,9 @@
       "id": "Material1MangaDireita",
       "type": "MATERIAL_USAGE",
       "label": "Material primario",
-      "editableAttributes": ["materialType", "material"],
+      "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
-      "material": "malhaPVVerde",
+      "materialId": "malhaPVVerde",
       "proxies": [{ "elem": "tecido-primario-manga-direita", "attr": "fill" }]
     },
     "Material1MangaDireitaRestriction1": {
@@ -98,9 +98,9 @@
       "id": "Material2MangaDireita",
       "type": "MATERIAL_USAGE",
       "label": "Material secundario",
-      "editableAttributes": ["materialType", "material"],
+      "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
-      "material": "malhaPVVermelha",
+      "materialId": "malhaPVVermelha",
       "proxies": [
         { "elem": "tecido-secundario-manga-direita", "attr": "fill" }
       ]

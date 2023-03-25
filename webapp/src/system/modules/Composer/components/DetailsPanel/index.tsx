@@ -9,7 +9,7 @@ import { Store } from "@kernel/modules/Store";
 
 import MaterialsList from './MaterialsList'
 import ProcessesList from './ProcessesList'
-import { CompositionState } from "../../store/state";
+import { CompositionState } from "../../store/composition/state";
 import useComposition from "../../hooks/useComposition";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { CompositionGraph,  PartNode } from "../../store/composition/state";

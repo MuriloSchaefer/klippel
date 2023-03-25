@@ -22,7 +22,7 @@ const MaterialSelector = ({
   onChange,
 }: {
   type: string;
-  value: number;
+  value?: number;
   filter?: (option: MaterialState) => boolean;
   onChange?: (value: number) => void;
 }) => {
@@ -45,7 +45,11 @@ const MaterialSelector = ({
   // adapt entries to be able to split into 2 selectors.
   // all entries are grouped per industry and external Id
   // This operation will be done in the backend eventually
-  const groupedMaterials = Object.values(materials).reduce((acc, curr) => {
+  const groupedMaterials: {
+    [industry: string]: {
+      [externalId: string]: { label: string; extra: MaterialState[] };
+    };
+  } = Object.values(materials).reduce((acc, curr) => {
     if (acc[curr.industry]) {
       if (acc[curr.industry][curr.externalId])
         return {
@@ -79,7 +83,7 @@ const MaterialSelector = ({
         },
       },
     };
-  }, {} as { [industry: string]: { [externalId: string]: { label: string; extra: MaterialState[] } } });
+  }, {});
 
   const [selectedMaterial, setSelectedMaterial] = useState(
     Object.values(materials).find((mat) => mat.id === value)
@@ -89,12 +93,17 @@ const MaterialSelector = ({
       ? `${selectedMaterial?.industry}-${selectedMaterial?.externalId}`
       : undefined
   );
-  
-  const handleMaterialSelection = useCallback((e: SelectChangeEvent<number>)=> {
-    if (typeof e.target.value === 'string') return
-    setSelectedMaterial(Object.values(materials).find((mat) => mat.id === e.target.value))
-    if (onChange) onChange(e.target.value)
-  }, [materials])
+
+  const handleMaterialSelection = useCallback(
+    (e: SelectChangeEvent<number>) => {
+      if (typeof e.target.value === "string") return;
+      setSelectedMaterial(
+        Object.values(materials).find((mat) => mat.id === e.target.value)
+      );
+      if (onChange) onChange(e.target.value);
+    },
+    [materials]
+  );
 
   return (
     <Box
@@ -123,7 +132,10 @@ const MaterialSelector = ({
           })}
         </Select>
       </FormControl>
-      <FormControl sx={{ m: 1, minWidth: 120, width: 'fit-content' }} size="small">
+      <FormControl
+        sx={{ m: 1, minWidth: 120, width: "fit-content" }}
+        size="small"
+      >
         <InputLabel id={`label`} sx={{ textTransform: "capitalize" }}>
           {selector.extra}
         </InputLabel>
@@ -134,24 +146,26 @@ const MaterialSelector = ({
           onChange={handleMaterialSelection}
           label={selector.extra}
         >
-          { // TODO: improve conditionals
+          {
+            // TODO: improve conditionals
             principalState &&
-            principalState.split("-")[0] in groupedMaterials &&
-            principalState.split("-")[1] in
-              groupedMaterials[principalState.split("-")[0]] &&
-            groupedMaterials[principalState.split("-")[0]][
-              principalState.split("-")[1]
-            ].extra.map((material) => (
-              <MenuItem key={material.id} value={material.id}>
-                {selector.extra === "cor" ? (
-                  <ColorItem
-                    color={material.attributes[selector.extra]}
-                  ></ColorItem>
-                ) : (
-                  <>{material.attributes[selector.extra]}</>
-                )}
-              </MenuItem>
-            ))}
+              principalState.split("-")[0] in groupedMaterials &&
+              principalState.split("-")[1] in
+                groupedMaterials[principalState.split("-")[0]] &&
+              groupedMaterials[principalState.split("-")[0]][
+                principalState.split("-")[1]
+              ].extra.map((material) => (
+                <MenuItem key={material.id} value={material.id}>
+                  {selector.extra === "cor" ? (
+                    <ColorItem
+                      color={material.attributes[selector.extra]}
+                    ></ColorItem>
+                  ) : (
+                    <>{material.attributes[selector.extra]}</>
+                  )}
+                </MenuItem>
+              ))
+          }
         </Select>
       </FormControl>
     </Box>

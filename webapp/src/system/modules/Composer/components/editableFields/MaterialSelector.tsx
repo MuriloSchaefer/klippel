@@ -4,8 +4,9 @@ import useModule from "@kernel/hooks/useModule";
 
 import { IMaterialsModule } from "@system/modules/Materials";
 
-import { MaterialUsageNode } from "../../store/composition/state";
+import { MaterialNode, MaterialUsageNode } from "../../store/composition/state";
 import useComposition from "../../hooks/useComposition";
+import { IGraphModule } from "@kernel/modules/Graphs";
 
 const MaterialSelector = ({
   graphId,
@@ -17,8 +18,15 @@ const MaterialSelector = ({
   const {
     components: { MaterialSelector },
   } = useModule<IMaterialsModule>("Materials");
+  const graphModule = useModule<IGraphModule>("Graph");
+  const { useGraph } = graphModule.hooks;
 
   const composition = useComposition(graphId, (c) => c); // QUESTION: what if graphId != composition name?
+
+  const materialInfo = useGraph<MaterialUsageNode, MaterialNode>(
+    graphId,
+    (g) => g?.nodes[node.materialId]
+  );
 
   const handleMaterialChange = useCallback(
     (materialId: number) => composition.actions.changeMaterial(node.id, materialId),
@@ -28,7 +36,7 @@ const MaterialSelector = ({
   return (
     <MaterialSelector
       type={node.materialType}
-      value={1}
+      value={materialInfo?.state?.materialId}
       onChange={handleMaterialChange}
     />
   );
