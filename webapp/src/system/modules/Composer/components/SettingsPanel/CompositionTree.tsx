@@ -109,23 +109,25 @@ function Subtree({
     { node: CompositionNode; edges: EdgesHashMap; connections: NodeConnections }
   >(
     graphId,
-    (g) => {
-      return g && g.adjacencyList[nodeId] && {
+    (g) =>
+      g &&
+      g.adjacencyList[nodeId] && {
         node: g.nodes[nodeId],
-        edges: g.edges ? Object.values(g.edges).reduce(
-          (acc, edge) =>
-            g.adjacencyList[nodeId].outputs.includes(edge.id)
-              ? { ...acc, [edge.id]: edge }
-              : acc,
-          {}
-        ) : {},
+        edges: g.edges
+          ? Object.values(g.edges).reduce(
+              (acc, edge) =>
+                g.adjacencyList[nodeId].outputs.includes(edge.id)
+                  ? { ...acc, [edge.id]: edge }
+                  : acc,
+              {}
+            )
+          : {},
         connections: g.adjacencyList[nodeId],
       }
-    }
-      
   );
-  
-  if (!info.state || !['GARMENT', 'PART'].includes(info.state.node.type)) return <></>;
+
+  if (!info.state || !["GARMENT", "PART"].includes(info.state.node.type))
+    return <></>;
 
   return (
     <StyledTreeItem
