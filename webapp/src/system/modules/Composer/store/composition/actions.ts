@@ -11,7 +11,7 @@ export const addMaterial = createAction<{compositionName: string, materialId: nu
 export const addMaterialType = createAction<{compositionName: string, materialType: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Add material type`
 );
-export const changeMaterial = createAction<{compositionName: string, materialUsageId: string, materialId: string}>(
+export const changeMaterial = createAction<{compositionName: string, materialUsageId: string, materialId: number}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Change material`
 );
 

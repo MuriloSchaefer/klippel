@@ -86,7 +86,7 @@ const SVGViewer = ({ path, proxySet, beforeInjection, preferences }: SVGViewerPr
       
       if (beforeInjection) beforeInjection(svg);
     },
-    [beforeInjection, svgState?.content]
+    [beforeInjection, svgState?.content, svgState?.proxies]
   );
 
   const objURL = useMemo(

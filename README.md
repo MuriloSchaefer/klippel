@@ -6,9 +6,7 @@ This is a project to study micro-kernel architecture using React and Redux. Even
 At the moment only the webapp is available. To run it execute the following commands:
 
 ```bash
-$ cd webapp
-webapp$ npm i
-webapp$ npm start
+$ cd webapp && npm i && npm start
 VITE v3.1.7  ready in 255 ms
 
   ➜  Local:   http://localhost:5174/

@@ -1,6 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { addProxy, fetchSVG, loadSVG, SVGFetched } from "./actions";
+import {
+  addProxy,
+  fetchSVG,
+  loadSVG,
+  SVGFetched,
+  updateProxy,
+} from "./actions";
 import { initialState, SVGModuleState, newSVGState } from "./state";
 
 const slice = createSlice({
@@ -27,7 +33,7 @@ const slice = createSlice({
         svgs: {
           [path]: {
             ...state.svgs[path],
-            progress: 'started',
+            progress: "started",
           },
         },
       })
@@ -39,7 +45,7 @@ const slice = createSlice({
         svgs: {
           [path]: {
             ...state.svgs[path],
-            progress: 'completed',
+            progress: "completed",
             content,
           },
         },
@@ -47,7 +53,7 @@ const slice = createSlice({
     );
     builder.addCase(
       addProxy,
-      (state: SVGModuleState, { payload: { path, proxySet, id, styles} }) => ({
+      (state: SVGModuleState, { payload: { path, proxySet, id, styles } }) => ({
         ...state,
         svgs: {
           [path]: {
@@ -56,8 +62,29 @@ const slice = createSlice({
               ...state.svgs[path].proxies,
               [proxySet]: {
                 ...state.svgs[path].proxies[proxySet],
-                [id]: styles
-              }
+                [id]: styles,
+              },
+            },
+          },
+        },
+      })
+    );
+    builder.addCase(
+      updateProxy,
+      (
+        state: SVGModuleState,
+        { payload: { path, proxySet, id, changes } }
+      ) => ({
+        ...state,
+        svgs: {
+          [path]: {
+            ...state.svgs[path],
+            proxies: {
+              ...state.svgs[path].proxies,
+              [proxySet]: {
+                ...state.svgs[path].proxies[proxySet],
+                [id]: { ...state.svgs[path].proxies[proxySet][id], ...changes },
+              },
             },
           },
         },

@@ -1,6 +1,11 @@
 # Webapp
 This project is created using [Vite](https://github.com/vitejs/vite).
 
+## Running the app
+```bash
+$ npm i
+$ npm start
+```
 ## Architecture
 
 The project is structured as a micro-kernel system, during boot the app initializes all modules to be used, differentianting from kernel modules and system modules. This type of architecture is common in operational system.
