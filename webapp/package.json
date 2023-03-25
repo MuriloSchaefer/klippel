@@ -12,9 +12,7 @@
     "@reduxjs/toolkit": "^1.8.1",
     "babel-plugin-direct-import": "^1.0.0",
     "install-peerdeps": "^3.0.3",
-    "jsonld": "^8.1.0",
     "lodash": "^4.17.21",
-    "rdflib": "^2.2.26",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-redux": "^7.2.6",
@@ -23,8 +21,7 @@
     "redux-dynamic-middlewares": "^2.2.0",
     "reselect": "^4.1.5",
     "styled-components": "^6.0.0-alpha.5",
-    "tslib": "^2.4.0",
-    "xstate": "^4.35.2"
+    "tslib": "^2.4.0"
   },
   "resolutions": {
     "styled-components": "^5.3.3"

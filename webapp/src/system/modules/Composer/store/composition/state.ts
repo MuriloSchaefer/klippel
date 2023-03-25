@@ -7,6 +7,11 @@ export interface MaterialTypeNode extends Node {
     type: 'MATERIAL_TYPE'
     label: string
 }
+export interface GarmentNode extends Node {
+    type: 'GARMENT'
+    label: string;
+
+}
 export interface PartNode extends Node {
     type: 'PART'
     label: string;
@@ -40,7 +45,7 @@ export interface SameAsRestrictionNode<T=string> extends Node {
 }
 
 
-export type CompositionNode = MaterialTypeNode | PartNode | MaterialUsageNode | RestrictionNode
+export type CompositionNode = GarmentNode | MaterialTypeNode | PartNode | MaterialUsageNode | RestrictionNode
 
 export interface MadeOfEdge extends Edge {
     type: 'MADE_OF'

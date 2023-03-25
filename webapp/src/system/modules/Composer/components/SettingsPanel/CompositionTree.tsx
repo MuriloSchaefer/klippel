@@ -1,26 +1,28 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import SvgIcon, { SvgIconProps } from "@mui/material/SvgIcon";
 import { alpha, styled } from "@mui/material/styles";
 import TreeView from "@mui/lab/TreeView";
 import TreeItem, { TreeItemProps, treeItemClasses } from "@mui/lab/TreeItem";
 import Collapse from "@mui/material/Collapse";
-// web.cjs is required for IE11 support
+
 import { animated, useSpring } from "@react-spring/web";
 import { TransitionProps } from "@mui/material/transitions";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import useModule from "@kernel/hooks/useModule";
-import { selectCompositionStateByViewportName } from "../../store/selectors";
 import { Store } from "@kernel/modules/Store";
-import Part from "../../interfaces";
-import { Graph } from "@kernel/modules/Graphs/hooks/useGraph";
-import Node from "@kernel/modules/Graphs/interfaces/Node";
-import { GraphState } from "@kernel/modules/Graphs/store/state";
+import {
+  AdjacencyList,
+  EdgesHashMap,
+  GraphState,
+  NodeConnections,
+} from "@kernel/modules/Graphs/store/state";
 import useComposition from "../../hooks/useComposition";
-import useRDFInterpreter from "../../hooks/useRDFInterpreter";
-import { CompositionState } from "../../store/state";
-import { IndexedFormula, literal } from "rdflib";
-import { RDF, SELF } from "../../constants";
+import {
+  CompositionGraph,
+  CompositionNode,
+  CompositionState,
+} from "../../store/composition/state";
 
 function MinusSquare(props: SvgIconProps) {
   return (
@@ -88,55 +90,98 @@ const StyledTreeItem = styled((props: TreeItemProps) => (
   },
 }));
 
-function Subtree({ interpreter, selectedPart, selectPart, nodeId }: { interpreter: IndexedFormula, selectedPart: string | undefined, selectPart: (partName: string) => void, nodeId: string }) {
+function Subtree({
+  graphId,
+  selectedPart,
+  selectPart,
+  nodeId,
+}: {
+  graphId: string;
+  selectedPart: string | undefined;
+  selectPart: (partName: string) => void;
+  nodeId: string;
+}) {
+  const graphsModule = useModule<IGraphModule>("Graph");
+  const { useGraph } = graphsModule.hooks;
 
-  const label = interpreter.any(SELF(nodeId), RDF('label'), undefined)
-  const children = interpreter.statementsMatching(
-    SELF(nodeId), SELF('composedOf'), undefined
-  )
+  const info = useGraph<
+    CompositionGraph,
+    { node: CompositionNode; edges: EdgesHashMap; connections: NodeConnections }
+  >(
+    graphId,
+    (g) => {
+      return g && g.adjacencyList[nodeId] && {
+        node: g.nodes[nodeId],
+        edges: g.edges ? Object.values(g.edges).reduce(
+          (acc, edge) =>
+            g.adjacencyList[nodeId].outputs.includes(edge.id)
+              ? { ...acc, [edge.id]: edge }
+              : acc,
+          {}
+        ) : {},
+        connections: g.adjacencyList[nodeId],
+      }
+    }
+      
+  );
+  
+  if (!info.state || !['GARMENT', 'PART'].includes(info.state.node.type)) return <></>;
 
   return (
     <StyledTreeItem
       nodeId={nodeId}
-      label={label?.value}
+      label={
+        "label" in info.state.node ? info.state.node.label : info.state.node.id
+      }
       onClick={() => selectPart(nodeId)}
       sx={{
-        color: nodeId === selectedPart ? 'secondary.main' : undefined
+        color: nodeId === selectedPart ? "secondary.main" : undefined,
       }}
     >
-      {children.map((child) => (
-        <MemoizedSubTree
-          key={`${nodeId}-${child.object.value.replace('_:#', '')}`}
-          interpreter={interpreter}
-          selectPart={selectPart}
-          selectedPart={selectedPart}
-          nodeId={child.object.value.replace('_:#', '')}
-        />
-      ))}
+      {info.state.connections.outputs.map(
+        (child) =>
+          info.state && (
+            <MemoizedSubTree
+              key={`${nodeId}-${info.state?.edges[child].targetId}`}
+              graphId={graphId}
+              selectPart={selectPart}
+              selectedPart={selectedPart}
+              nodeId={info.state.edges[child].targetId}
+            />
+          )
+      )}
     </StyledTreeItem>
   );
 }
 
-const MemoizedSubTree = React.memo(Subtree)
+const MemoizedSubTree = React.memo(Subtree);
 
 export default function CompositionTree() {
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
+  const graphsModule = useModule<IGraphModule>("Graph");
 
   const { useAppSelector } = storeModule.hooks;
+  const { useGraph } = graphsModule.hooks;
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
 
-
-  const selector = useCallback((c: CompositionState | undefined) => ({
-    svgPath: c?.svgPath,
-    model: c?.model,
-    selectedPart: c?.selectedPart
-  }), [])
+  const selector = useCallback(
+    (c: CompositionState | undefined) => ({
+      svgPath: c?.svgPath,
+      graphId: c?.graphId,
+      selectedPart: c?.selectedPart,
+    }),
+    []
+  );
   const composition = useComposition(activeViewport!, selector);
-  const interpreter = useMemo(() => useRDFInterpreter(composition.state?.model), [composition.state?.model])
+  const graph = useGraph<CompositionGraph, AdjacencyList>(
+    activeViewport!,
+    (g) => g?.adjacencyList
+  );
 
-  if (!composition.state?.svgPath || !interpreter) return null;
+  if (!composition.state?.svgPath || !composition.state?.graphId || !graph)
+    return null;
 
   return (
     <TreeView
@@ -145,9 +190,14 @@ export default function CompositionTree() {
       defaultCollapseIcon={<MinusSquare />}
       defaultExpandIcon={<PlusSquare />}
       defaultEndIcon={<CloseSquare />}
-      sx={{ flexGrow: 1, maxWidth: '100%', overflowY: "auto" }}
+      sx={{ flexGrow: 1, maxWidth: "100%", overflowY: "auto" }}
     >
-      <MemoizedSubTree nodeId="peca" interpreter={interpreter} selectPart={composition.actions.selectPart} selectedPart={composition.state.selectedPart} />
+      <MemoizedSubTree
+        nodeId="garment"
+        graphId={composition.state.graphId}
+        selectPart={composition.actions.selectPart}
+        selectedPart={composition.state.selectedPart}
+      />
     </TreeView>
   );
 }

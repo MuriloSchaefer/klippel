@@ -288,7 +288,10 @@
       "inputs": ["Material2MangaDireita->Material2MangaDireitaRestriction2"],
       "outputs": []
     },
-    "barraMangaDireita": {},
+    "barraMangaDireita": {
+      "inputs": ["mangaDireita->barraMangaDireita"],
+      "outputs": []
+    },
     "mangaEsquerda": {
       "inputs": ["garment->mangaEsquerda"],
       "outputs": []
