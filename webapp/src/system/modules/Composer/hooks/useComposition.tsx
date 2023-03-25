@@ -5,8 +5,10 @@ import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
 
-import { addMaterial, addMaterialType, selectPart } from "../store/actions";
-import { ComposerState, CompositionState } from "../store/state";
+import { addMaterial, addMaterialType, selectPart } from "../store/composition/actions";
+import { ComposerState } from "../store/state";
+import { CompositionGraph, CompositionState, MaterialNode } from "../store/composition/state";
+import { ISVGModule } from "@kernel/modules/SVG";
 
 interface CompositionActions {
   selectPart(partName: string): void;
@@ -27,11 +29,13 @@ const useComposition = <C = Composition, R = C>(
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>("Graph");
+  const svgModule = useModule<ISVGModule>("SVG");
 
   const panelsManager = layoutModule.hooks.usePanelsManager();
 
   const { useGraph } = graphModule.hooks;
   const { useAppDispatch } = storeModule.hooks;
+  const { useSVG } = svgModule.hooks;
   const dispatch = useAppDispatch();
   const useAppSelector = storeModule.hooks.useAppSelector;
 
@@ -47,7 +51,15 @@ const useComposition = <C = Composition, R = C>(
       state && state.Composer.compositionsManager.compositions[compositionName]
   );
 
-  const graph = useGraph(innerState?.graphId!, (g) => g?.adjacencyList);
+  const graph = useGraph<CompositionGraph, Partial<CompositionGraph>>(
+    innerState?.graphId!,
+    (g) => ({
+      adjacencyList: g?.adjacencyList,
+      nodes: g?.nodes,
+    })
+  );
+
+  const svg = useSVG(innerState?.svgPath!, svg => svg)
 
   return {
     state: compositionState,
@@ -58,9 +70,14 @@ const useComposition = <C = Composition, R = C>(
       },
       changeMaterialType(materialUsageId, materialType) {
         // check if material type is in the graph
-        if (!graph.actions.nodeExists(materialType)){
+        if (!graph.actions.nodeExists(materialType)) {
           // add material to the model
-          dispatch(addMaterialType({compositionName:innerState?.name!, materialType}))
+          dispatch(
+            addMaterialType({
+              compositionName: innerState?.name!,
+              materialType,
+            })
+          );
         }
 
         graph.actions.updateNode({
@@ -69,17 +86,39 @@ const useComposition = <C = Composition, R = C>(
         });
       },
       changeMaterial(materialUsageId, materialId) {
-        console.log(materialUsageId, materialId);
+        const nodeName = `material-${materialId}`;
+        const materialUsageNode =
+          graph?.state?.nodes && graph.state.nodes[materialUsageId];
+        if (!materialUsageNode) {
+          console.error(`Material node ${materialUsageId} was not found`);
+          return;
+        }
 
-        if (!graph.actions.nodeExists(`material-${materialId}`)){
+        if (!graph.actions.nodeExists(nodeName)) {
           // add material to the model
-          dispatch(addMaterial({compositionName:innerState?.name!, materialId}))
+          dispatch(
+            addMaterial({ compositionName: innerState?.name!, materialId })
+          );
+        }
 
+        const materialNode =
+          graph?.state?.nodes && graph.state.nodes[materialId];
+          
+        const color = materialNode && 'color' in materialNode ? materialNode.color : "none"
+        if (
+          "proxies" in materialUsageNode &&
+          materialUsageNode.proxies.length > 0 &&
+          color
+        ) {
+          // process proxies
+          materialUsageNode.proxies.forEach(proxy => {
+            svg.actions.updateProxy(proxy.elem, compositionName, {[proxy.attr]: color})
+          })
         }
 
         graph.actions.updateNode({
           id: materialUsageId,
-          materialId: materialId,
+          materialId: nodeName,
         });
       },
     },

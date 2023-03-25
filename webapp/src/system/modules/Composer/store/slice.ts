@@ -3,15 +3,15 @@ import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
 import {
   createComposition,
-  storeModel,
-  parseSVG,
-  selectPart,
-  SVGParsed,
   fetchModel,
   modelStored,
   closeComposition,
 } from "./actions";
-import { initialState, ComposerState, newCompositionState } from "./state";
+import { newCompositionState } from "./composition/state";
+import { initialState, ComposerState } from "./state";
+
+import instanceSlice from "./composition/slice";
+import { selectPart, unselectPart } from "./composition/actions";
 
 const slice = createSlice({
   name: MODULE_NAME,
@@ -42,20 +42,19 @@ const slice = createSlice({
     );
     builder.addCase(
       closeComposition,
-      (
-        state: ComposerState,
-        { payload: { name } }
-      ) => {
+      (state: ComposerState, { payload: { name } }) => {
         return {
           ...state,
           compositionsManager: {
             ...state.compositionsManager,
-            compositions: Object.values(state.compositionsManager.compositions).reduce((newState, comp)=>{
-              if (comp.name === name) return newState
-              return {...newState, [comp.name]: comp}
+            compositions: Object.values(
+              state.compositionsManager.compositions
+            ).reduce((newState, comp) => {
+              if (comp.name === name) return newState;
+              return { ...newState, [comp.name]: comp };
             }, {}),
           },
-        }
+        };
       }
     );
 
@@ -128,24 +127,6 @@ const slice = createSlice({
       }
     );
 
-    // builder.addCase(
-    //   storeModel,
-    //   (state: ComposerState, { payload: {compositionName, model} }) => {
-    //     return {
-    //       ...state,
-    //       compositionsManager: {
-    //         compositions: {
-    //           ...state.compositionsManager.compositions,
-    //           [compositionName]: {
-    //             ...state.compositionsManager.compositions[compositionName],
-    //             model: model
-    //           },
-    //         },
-    //       },
-    //     };
-    //   }
-    // );
-
     builder.addCase(modelStored, (state: ComposerState, { payload }) => {
       return {
         ...state,
@@ -168,22 +149,39 @@ const slice = createSlice({
       };
     });
 
-    builder.addCase(
-      selectPart,
-      (state: ComposerState, { payload: { compositionName, partName } }) => ({
-        ...state,
-        compositionsManager: {
-          ...state.compositionsManager,
-          compositions: {
-            ...state.compositionsManager.compositions,
-            [compositionName]: {
-              ...state.compositionsManager.compositions[compositionName],
-              selectedPart: partName,
-            },
-          },
+    // instance actions
+    builder.addCase(selectPart, (state: ComposerState, action) => ({
+      ...state,
+      compositionsManager: {
+        ...state.compositionsManager,
+        compositions: {
+          ...state.compositionsManager.compositions,
+
+          [action.payload.compositionName]: instanceSlice.reducer(
+            state.compositionsManager.compositions[
+              action.payload.compositionName
+            ],
+            action
+          ),
         },
-      })
-    );
+      },
+    }));
+    builder.addCase(unselectPart, (state: ComposerState, action) => ({
+      ...state,
+      compositionsManager: {
+        ...state.compositionsManager,
+        compositions: {
+          ...state.compositionsManager.compositions,
+
+          [action.payload.compositionName]: instanceSlice.reducer(
+            state.compositionsManager.compositions[
+              action.payload.compositionName
+            ],
+            action
+          ),
+        },
+      },
+    }));
   },
 });
 

@@ -136,20 +136,6 @@ middlewares.startListening({
     const composition =
       compositionsManager.compositions[payload.compositionName];
 
-    // add all proxies
-    // const proxiedElements = interpreter.statementsMatching(undefined, SELF('ProxyElement'), undefined)
-    // proxiedElements.forEach((proxiedElements: any) => {
-    //   // console.log(proxiedElements.subject.value)
-    //   const elem = proxiedElements.object.value
-    //   const node = proxiedElements.subject.value.replace('_:#', '')
-    //   const proxiedAttributes = interpreter.statementsMatching(SELF(node), SELF('ProxyAttribute'), undefined)
-
-    //   const styles = proxiedAttributes.reduce((acc, curr)=> ({...acc, [curr.object.value]: 'grey'}), {})
-
-    //   const proxy = {path: composition.svgPath, id: elem.replace('#', ''), styles }
-    //   dispatch(addProxy(proxy))
-    // })
-
     dispatch(
       loadProxies({ compositionName: composition.name, model: payload.model })
     );

@@ -12,6 +12,21 @@ export interface PartNode extends Node {
     label: string;
 
 }
+export interface MaterialUsageNode extends Node {
+    type: 'MATERIAL_USAGE'
+    label: string
+    editableAttributes: string[]
+    material: any // TODO: add typing
+    materialType: string
+    proxies: {elem: string, attr: string}[]
+}
+
+export interface MaterialNode extends Node {
+    type: 'MATERIAL'
+    label: string
+    materialId: number // TODO: add typing
+}
+
 export type RestrictionNode = AllowOnlyRestrictionNode | SameAsRestrictionNode
 export interface AllowOnlyRestrictionNode<T=string> extends Node {
     type: 'RESTRICTION'
@@ -23,18 +38,9 @@ export interface SameAsRestrictionNode<T=string> extends Node {
     restrictionType: 'sameAs'
     sameAs: T
 }
-export interface MaterialUsageNode extends Node {
-    type: 'MATERIAL_USAGE'
-    label: string
-    editableAttributes: string[]
-    material: any // TODO: add typing
-    materialType: string
-}
 
 
 export type CompositionNode = MaterialTypeNode | PartNode | MaterialUsageNode | RestrictionNode
-
-
 
 export interface MadeOfEdge extends Edge {
     type: 'MADE_OF'
@@ -47,3 +53,23 @@ export interface RestrictedByEdge extends Edge {
 export type CompositionEdge = RestrictedByEdge | MadeOfEdge
 
 export type CompositionGraph = GraphState<CompositionNode, CompositionEdge>
+
+type Loader = 'not-started' | 'started' | 'completed'
+export interface CompositionState {
+    name: string
+    viewportName: string
+    svgPath: string
+    graphId: string
+    selectedPart?: string
+    loading: {
+        loadSVG: Loader
+        loadModel: Loader
+    }
+}
+
+export const newCompositionState: Omit<CompositionState, 'name' | 'viewportName' | 'svgPath' | 'graphId'> = {
+    loading: {
+        loadSVG: 'not-started',
+        loadModel: 'not-started'
+    },
+}

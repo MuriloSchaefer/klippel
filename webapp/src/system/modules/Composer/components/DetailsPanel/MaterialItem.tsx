@@ -1,7 +1,7 @@
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { Box, ListItem, ListItemText, Typography } from "@mui/material";
-import { MaterialUsageNode } from "../../store/graph/state";
+import { MaterialUsageNode } from "../../store/composition/state";
 import MaterialSelector from "../editableFields/MaterialSelector";
 import MaterialTypeSelector from "../editableFields/MaterialTypeSelector";
 

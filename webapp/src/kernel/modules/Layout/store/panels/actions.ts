@@ -29,6 +29,6 @@ export const settingsCollapsed = createAction(
 export const detailsOpened = createAction(
     `[${MODULE_NAME}:Panels:${ACTION_TYPES.EVENT}] Details panel opened`
 );
-export const detailsClosed = createAction(
+export const detailsClosed = createAction<{viewportName: string}>(
     `[${MODULE_NAME}:Panels:${ACTION_TYPES.EVENT}] Details panel closed`
 );

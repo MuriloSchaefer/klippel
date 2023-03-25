@@ -7,7 +7,7 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 
 import MaterialItem from "./MaterialItem";
-import { PartNode, CompositionEdge } from "../../store/graph/state";
+import { PartNode, CompositionEdge } from "../../store/composition/state";
 
 export default function MaterialsList({
   selectedPart,

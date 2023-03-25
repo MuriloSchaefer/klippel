@@ -2,13 +2,14 @@ import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import { CSSProperties } from "react";
 import { createSelector } from "reselect";
-import { addProxy } from "../store/actions";
+import { addProxy, updateProxy } from "../store/actions";
 import { SVGState, SVGModuleState } from "../store/state";
 
 interface SVG<T = SVGState> {
   state: T | undefined;
   actions: {
-    addProxy(id: string, styles: CSSProperties): void;
+    addProxy(id: string, proxySet:string, styles: CSSProperties): void;
+    updateProxy(id: string, proxySet: string, changes: Partial<CSSProperties>): void;
   };
 }
 
@@ -32,9 +33,12 @@ const useSVG = <S = SVG, R = S>(
   return {
     state: state,
     actions: {
-      addProxy(id, styles) {
-        dispatch(addProxy({ path, id, styles }));
+      addProxy(id, proxySet, styles) {
+        dispatch(addProxy({ path,proxySet, id, styles }));
       },
+      updateProxy(id, proxySet, changes){
+        dispatch(updateProxy({ path,proxySet, id, changes }));
+      }
     },
   };
 };

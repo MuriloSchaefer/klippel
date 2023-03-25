@@ -4,6 +4,7 @@ import Composerviewport from "../components/ComposerViewport";
 import ModelSection from "../components/ModelSection";
 import { MODULE_NAME } from "../constants";
 import middlewares from "../store/middlewares";
+import graphMiddlewares from "../store/composition/middlewares";
 import slice from "../store/slice";
 
 
@@ -14,6 +15,7 @@ export function startModule({
 
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
     storeManager.functions.registerMiddleware(middlewares)
+    storeManager.functions.registerMiddleware(graphMiddlewares)
     
     componentRegistryManager.functions.registerComponents({
       ribbonMenuSections: {

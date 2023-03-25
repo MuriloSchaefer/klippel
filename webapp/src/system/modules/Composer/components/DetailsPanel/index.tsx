@@ -12,7 +12,7 @@ import ProcessesList from './ProcessesList'
 import { CompositionState } from "../../store/state";
 import useComposition from "../../hooks/useComposition";
 import { IGraphModule } from "@kernel/modules/Graphs";
-import { CompositionGraph,  PartNode } from "../../store/graph/state";
+import { CompositionGraph,  PartNode } from "../../store/composition/state";
 
 const ComposerDetailLoader = ({graphId}: {graphId: string}) => {
 

@@ -11,7 +11,7 @@ import {
   MaterialTypeNode,
   MaterialUsageNode,
   RestrictionNode,
-} from "../../store/graph/state";
+} from "../../store/composition/state";
 
 const MaterialTypeSelector = ({ node, graphId }: {node: MaterialUsageNode, graphId: string}) => {
   const graphModule = useModule<IGraphModule>("Graph");

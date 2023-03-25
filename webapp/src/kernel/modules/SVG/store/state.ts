@@ -2,7 +2,7 @@ import { CSSProperties } from "react";
 
 type Loader = 'not-started' | 'started' | 'completed'
 
-interface Proxies {
+export interface Proxies {
     [id: string]: CSSProperties
 } 
 interface ProxySet {

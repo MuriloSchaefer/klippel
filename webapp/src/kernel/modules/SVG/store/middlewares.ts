@@ -1,10 +1,13 @@
 import { PaletteMode } from "@mui/material";
 import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
+import { CSSProperties } from "react";
 import {
   fetchSVG,
   loadSVG,
+  proxyUpdated,
   SVGFetched,
   SVGLoaded,
+  updateProxy,
 } from "./actions";
 import { SVGModuleState } from "./state";
 
@@ -38,5 +41,26 @@ middlewares.startListening({
   },
 });
 
+middlewares.startListening({
+  actionCreator: updateProxy,
+  effect: async (
+    {
+      payload,
+    }: PayloadAction<{
+      path: string;
+      proxySet: string;
+      id: string;
+      changes: CSSProperties;
+    }>,
+    listenerApi
+  ) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      SVG: { svgs },
+    } = getState() as { SVG: SVGModuleState };
+
+    dispatch(proxyUpdated(svgs[payload.path].proxies[payload.proxySet])); // dispatch event
+  },
+});
 
 export default middlewares;

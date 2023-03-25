@@ -4,7 +4,7 @@ import useModule from "@kernel/hooks/useModule";
 
 import { IMaterialsModule } from "@system/modules/Materials";
 
-import { MaterialUsageNode } from "../../store/graph/state";
+import { MaterialUsageNode } from "../../store/composition/state";
 import useComposition from "../../hooks/useComposition";
 
 const MaterialSelector = ({

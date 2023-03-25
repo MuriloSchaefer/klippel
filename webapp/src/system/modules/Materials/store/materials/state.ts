@@ -23,7 +23,7 @@ export interface MaterialState {
     composition?: CompositionMap,
 }
 export interface MaterialsState {
-    [name: string]: MaterialState
+    [id: number]: MaterialState
 }
 
 export const initialState: MaterialsState = {}

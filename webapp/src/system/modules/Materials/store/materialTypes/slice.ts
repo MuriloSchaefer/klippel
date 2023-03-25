@@ -11,11 +11,6 @@ const slice = createSlice({
       builder.addCase(
         materialTypesLoaded,
         (state: MaterialTypesState, { payload }) => ({...state, ...payload}))
-        
-    //   builder.addDefaultCase((state, action)=>({
-    //     ...state, 
-    //     materialTypes: panelsSlice.reducer(state.materialTypes, action),
-    //   }))
     }
 })
 

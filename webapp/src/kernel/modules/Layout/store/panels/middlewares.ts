@@ -1,4 +1,5 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
+import { LayoutState } from "../state";
 import {
   expandSettings,
   settingsExpanded,
@@ -37,8 +38,14 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: closeDetails,
   effect: async (_action, listenerApi) => {
-    const { dispatch } = listenerApi;
-    dispatch(detailsClosed()); // dispatch event
+    const { dispatch, getState } = listenerApi;
+    const {
+      Layout: {
+        viewportManager: { activeViewport },
+      },
+    } = getState() as { Layout: LayoutState };
+    
+    dispatch(detailsClosed({ viewportName: activeViewport })); // dispatch event
   },
 });
 
