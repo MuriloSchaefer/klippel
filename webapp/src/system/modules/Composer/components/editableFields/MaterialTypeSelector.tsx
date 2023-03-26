@@ -64,7 +64,7 @@ const MaterialTypeSelector = ({ node, graphId }: {node: MaterialUsageNode, graph
     [graphId, node.id]
   );
 
-  return <MaterialTypeSelector filter={(type) => filterOptions?.includes(type.name) ?? true} value={materialTypeNode.node.id} onChange={handleMaterialTypeChange}/>
+  return <MaterialTypeSelector filter={(type) => filterOptions?.includes(type.name) ?? true} value={materialTypeNode.node?.id} onChange={handleMaterialTypeChange}/>
 };
 
 export default MaterialTypeSelector;

@@ -168,7 +168,7 @@ middlewares.startListening({
         (
           acc: { [id: string]: CSSProperties },
           curr: { elem: string; attr: string }
-        ) => ({ ...acc, [curr.elem]: {...acc[curr.elem], [curr.attr]: 'blue'} }),
+        ) => ({ ...acc, [curr.elem]: {...acc[curr.elem], [curr.attr]: 'grey'} }),
         {}
       );
 

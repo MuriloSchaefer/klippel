@@ -126,7 +126,7 @@ function Subtree({
       }
   );
 
-  if (!info.state || !["GARMENT", "PART"].includes(info.state.node.type))
+  if (!info.state)
     return <></>;
 
   return (
@@ -140,18 +140,20 @@ function Subtree({
         color: nodeId === selectedPart ? "secondary.main" : undefined,
       }}
     >
-      {info.state.connections.outputs.map(
-        (child) =>
-          info.state && (
-            <MemoizedSubTree
-              key={`${nodeId}-${info.state?.edges[child].targetId}`}
-              graphId={graphId}
-              selectPart={selectPart}
-              selectedPart={selectedPart}
-              nodeId={info.state.edges[child].targetId}
-            />
-          )
-      )}
+      {info.state.connections.outputs
+        .filter((out) => info.state?.edges[out].type === "COMPOSED_OF")
+        .map(
+          (child) =>
+            info.state && (
+              <MemoizedSubTree
+                key={`${nodeId}-${info.state?.edges[child].targetId}`}
+                graphId={graphId}
+                selectPart={selectPart}
+                selectedPart={selectedPart}
+                nodeId={info.state.edges[child].targetId}
+              />
+            )
+        )}
     </StyledTreeItem>
   );
 }
