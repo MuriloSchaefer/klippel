@@ -1,0 +1,464 @@
+{
+  "id": "camisa-polo-fem",
+  "nodes": {
+    "corte": {
+      "id": "corte",
+      "type": "PROCESS",
+      "label": "Corte"
+    },
+    "malha": {
+      "id": "malha",
+      "type": "MATERIAL_TYPE",
+      "label": "Malha"
+    },
+    "tecido": {
+      "id": "tecido",
+      "type": "MATERIAL_TYPE",
+      "label": "Tecido"
+    },
+    "garment": {
+      "id": "garment",
+      "type": "GARMENT",
+      "domId": "peca",
+      "label": "Camisa polo feminina"
+    },
+    "mangaDireita": {
+      "id": "mangaDireita",
+      "type": "PART",
+      "domId": "manga-direita",
+      "label": "Manga direita"
+    },
+    "Material1MangaDireita": {
+      "id": "Material1MangaDireita",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "tecido-primario-manga-direita", "attr": "fill" }]
+    },
+    "Material1MangaDireitaRestriction1": {
+      "id": "Material1MangaDireitaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+
+    "Material2MangaDireita": {
+      "id": "Material2MangaDireita",
+      "type": "MATERIAL_USAGE",
+      "label": "Material secundario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [
+        { "elem": "tecido-secundario-manga-direita", "attr": "fill" }
+      ]
+    },
+    "Material2MangaDireitaRestriction1": {
+      "id": "Material2MangaDireitaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "Material2MangaDireitaRestriction2": {
+      "id": "Material2MangaDireitaRestriction2",
+      "type": "RESTRICTION",
+      "sameAs": "Material1MangaDireita",
+      "label": "Ser do mesmo tipo que o tecido primario"
+    },
+
+    "corteMaterial1MangaDireita": {
+      "id": "corteMaterial1MangaDireita",
+      "type": "OPERATION",
+      "label": "Corte Material 1",
+      "time_taken": {
+        "amount": 10,
+        "unit": "min"
+      },
+      "cost": {
+        "amount": 0.2,
+        "unit": "R$/h"
+      }
+    },
+    "corteMaterial2MangaDireita": {
+      "id": "corteMaterial2MangaDireita",
+      "type": "OPERATION",
+      "label": "Corte Material 2",
+      "time_taken": {
+        "amount": 10,
+        "unit": "min"
+      },
+      "cost": {
+        "amount": 0.2,
+        "unit": "R$/h"
+      }
+    },
+
+    "barraMangaDireita": {
+      "id": "barraMangaDireita",
+      "type": "PART",
+      "domId": "barra-manga-direita",
+      "label": "Barra manga direita"
+    },
+
+    "Material1barraMangaDireita": {
+      "id": "Material1barraMangaDireita",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "tecido-barra-manga-direita", "attr": "fill" }]
+    },
+    "Material1barraMangaDireitaRestriction1": {
+      "id": "Material1barraMangaDireitaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "Material2barraMangaDireita": {
+      "id": "Material2barraMangaDireita",
+      "type": "MATERIAL_USAGE",
+      "label": "detalhe da barra",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "detalhe-manga-direita", "attr": "fill" }]
+    },
+    "Material2barraMangaDireitaRestriction1": {
+      "id": "Material2barraMangaDireitaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+
+
+    "mangaEsquerda": {
+      "id": "mangaEsquerda",
+      "type": "PART",
+      "domId": "manga-esquerda",
+      "label": "Manga esquerda"
+    },
+    "Material1mangaEsquerda": {
+      "id": "Material1mangaEsquerda",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "tecido-primario-manga-esquerda", "attr": "fill" }]
+    },
+    "Material1mangaEsquerdaRestriction1": {
+      "id": "Material1mangaEsquerdaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+
+    "Material2mangaEsquerda": {
+      "id": "Material2mangaEsquerda",
+      "type": "MATERIAL_USAGE",
+      "label": "Material secundario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [
+        { "elem": "tecido-secundario-manga-esquerda", "attr": "fill" }
+      ]
+    },
+    "Material2mangaEsquerdaRestriction1": {
+      "id": "Material2mangaEsquerdaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "Material2mangaEsquerdaRestriction2": {
+      "id": "Material2mangaEsquerdaRestriction2",
+      "type": "RESTRICTION",
+      "sameAs": "Material1mangaEsquerda",
+      "label": "Ser do mesmo tipo que o tecido primario"
+    },
+
+    "barraMangaEsquerda": {
+      "id": "barraMangaEsquerda",
+      "type": "PART",
+      "domId": "barra-manga-esquerda",
+      "label": "Barra manga esquerda"
+    },
+
+    "Material1barraMangaEsquerda": {
+      "id": "Material1barraMangaEsquerda",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "tecido-barra-manga-esquerda", "attr": "fill" }]
+    },
+    "Material1barraMangaEsquerdaRestriction1": {
+      "id": "Material1barraMangaEsquerdaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "Material2barraMangaEsquerda": {
+      "id": "Material2barraMangaEsquerda",
+      "type": "MATERIAL_USAGE",
+      "label": "Material detalhe da barra",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "detalhe-manga-esquerda", "attr": "fill" }]
+    },
+    "Material2barraMangaEsquerdaRestriction1": {
+      "id": "Material2barraMangaEsquerdaRestriction1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    }
+  },
+  "edges": {
+    "garment->mangaEsquerda": {
+      "type": "COMPOSED_OF",
+      "sourceId": "GARMENT",
+      "targetId": "mangaEsquerda",
+      "id": "garment->mangaEsquerda"
+    },
+    "garment->mangaDireita": {
+      "type": "COMPOSED_OF",
+      "sourceId": "GARMENT",
+      "targetId": "mangaDireita",
+      "id": "garment->mangaDireita"
+    },
+    "mangaDireita->barraMangaDireita": {
+      "type": "COMPOSED_OF",
+      "sourceId": "mangaDireita",
+      "targetId": "barraMangaDireita",
+      "id": "mangaDireita->barraMangaDireita"
+    },
+    "mangaDireita->Material1MangaDireita": {
+      "type": "MADE_OF",
+      "sourceId": "mangaDireita",
+      "targetId": "Material1MangaDireita",
+      "id": "mangaDireita->Material1MangaDireita"
+    },
+    "mangaDireita->Material2MangaDireita": {
+      "type": "MADE_OF",
+      "sourceId": "mangaDireita",
+      "targetId": "Material2MangaDireita",
+      "id": "mangaDireita->Material2MangaDireita"
+    },
+    "mangaDireita->corteMaterial1MangaDireita": {
+      "type": "PROCESS_NEEDED",
+      "sourceId": "mangaDireita",
+      "targetId": "corteMaterial1MangaDireita",
+      "id": "mangaDireita->corteMaterial1MangaDireita"
+    },
+    "corteMaterial1MangaDireita->Material1MangaDireita": {
+      "type": "CONSUMES",
+      "sourceId": "corteMaterial1MangaDireita",
+      "targetId": "Material1MangaDireita",
+      "id": "corteMaterial1MangaDireita->Material1MangaDireita",
+      "quantity": {
+        "amount": 1,
+        "unit": "m2"
+      }
+    },
+    "mangaDireita->corteMaterial2MangaDireita": {
+      "type": "PROCESS_NEEDED",
+      "sourceId": "mangaDireita",
+      "targetId": "corteMaterial2MangaDireita",
+      "id": "mangaDireita->corteMaterial2MangaDireita"
+    },
+    "corteMaterial2MangaDireita->Material2MangaDireita": {
+      "type": "CONSUMES",
+      "sourceId": "corteMaterial2MangaDireita",
+      "targetId": "Material2MangaDireita",
+      "id": "corteMaterial2MangaDireita->Material2MangaDireita",
+      "quantity": {
+        "amount": 0.5,
+        "unit": "m2"
+      }
+    },
+
+    "Material1MangaDireita->Material1MangaDireitaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material1MangaDireita",
+      "targetId": "Material1MangaDireitaRestriction1",
+      "id": "Material1MangaDireita->Material1MangaDireitaRestriction1"
+    },
+    "Material2MangaDireita->Material2MangaDireitaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material2MangaDireita",
+      "targetId": "Material2MangaDireitaRestriction1",
+      "id": "Material2MangaDireita->Material2MangaDireitaRestriction1"
+    },
+    "Material2MangaDireita->Material2MangaDireitaRestriction2": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material2MangaDireita",
+      "targetId": "Material2MangaDireitaRestriction2",
+      "id": "Material2MangaDireita->Material2MangaDireitaRestriction2"
+    },
+
+    "barraMangaDireita->Material1barraMangaDireita": {
+      "type": "MADE_OF",
+      "sourceId": "barraMangaDireita",
+      "targetId": "Material1barraMangaDireita",
+      "id": "barraMangaDireita->Material1barraMangaDireita"
+    },
+    "barraMangaDireita->Material2barraMangaDireita": {
+      "type": "MADE_OF",
+      "sourceId": "barraMangaDireita",
+      "targetId": "Material2barraMangaDireita",
+      "id": "barraMangaDireita->Material2barraMangaDireita"
+    },
+
+    "mangaEsquerda->barraMangaEsquerda": {
+      "type": "COMPOSED_OF",
+      "sourceId": "mangaEsquerda",
+      "targetId": "barraMangaEsquerda",
+      "id": "mangaEsquerda->barraMangaEsquerda"
+    },
+    "mangaEsquerda->Material1mangaEsquerda": {
+      "type": "MADE_OF",
+      "sourceId": "mangaEsquerda",
+      "targetId": "Material1mangaEsquerda",
+      "id": "mangaEsquerda->Material1mangaEsquerda"
+    },
+    "mangaEsquerda->Material2mangaEsquerda": {
+      "type": "MADE_OF",
+      "sourceId": "mangaEsquerda",
+      "targetId": "Material2mangaEsquerda",
+      "id": "mangaEsquerda->Material2mangaEsquerda"
+    },
+    "Material1mangaEsquerda->Material1mangaEsquerdaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material1mangaEsquerda",
+      "targetId": "Material1mangaEsquerdaRestriction1",
+      "id": "Material1mangaEsquerda->Material1mangaEsquerdaRestriction1"
+    },
+    "Material2mangaEsquerda->Material2mangaEsquerdaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material2mangaEsquerda",
+      "targetId": "Material2mangaEsquerdaRestriction1",
+      "id": "Material2mangaEsquerda->Material2mangaEsquerdaRestriction1"
+    },
+    "Material2mangaEsquerda->Material2mangaEsquerdaRestriction2": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material2mangaEsquerda",
+      "targetId": "Material2mangaEsquerdaRestriction2",
+      "id": "Material2mangaEsquerda->Material2mangaEsquerdaRestriction2"
+    },
+    "barraMangaEsquerda->Material1barraMangaEsquerda": {
+      "type": "MADE_OF",
+      "sourceId": "barraMangaEsquerda",
+      "targetId": "Material1barraMangaEsquerda",
+      "id": "barraMangaEsquerda->Material1barraMangaEsquerda"
+    },
+    "barraMangaEsquerda->Material2barraMangaEsquerda": {
+      "type": "MADE_OF",
+      "sourceId": "barraMangaEsquerda",
+      "targetId": "Material2barraMangaEsquerda",
+      "id": "barraMangaEsquerda->Material2barraMangaEsquerda"
+    }
+  },
+  "adjacencyList": {
+    "garment": {
+      "inputs": [],
+      "outputs": ["garment->mangaDireita", "garment->mangaEsquerda"]
+    },
+
+    "mangaDireita": {
+      "inputs": ["garment->mangaDireita"],
+      "outputs": [
+        "mangaDireita->barraMangaDireita",
+        "mangaDireita->Material1MangaDireita",
+        "mangaDireita->Material2MangaDireita",
+        "mangaDireita->corteMaterial1MangaDireita",
+        "mangaDireita->corteMaterial2MangaDireita"
+      ]
+    },
+    "Material1MangaDireita": {
+      "inputs": [
+        "mangaDireita->Material1MangaDireita",
+        "corteMaterial1MangaDireita->Material1MangaDireita"
+      ],
+      "outputs": ["Material1MangaDireita->Material1MangaDireitaRestriction1"]
+    },
+    "Material2MangaDireita": {
+      "inputs": [
+        "mangaDireita->Material2MangaDireita",
+        "corteMaterial2MangaDireita->Material2MangaDireita"
+      ],
+      "outputs": [
+        "Material2MangaDireita->Material2MangaDireitaRestriction1",
+        "Material2MangaDireita->Material2MangaDireitaRestriction2"
+      ]
+    },
+    "Material1MangaDireitaRestriction1": {
+      "inputs": ["Material1MangaDireita->Material1MangaDireitaRestriction1"],
+      "outputs": []
+    },
+    "Material2MangaDireitaRestriction1": {
+      "inputs": ["Material2MangaDireita->Material2MangaDireitaRestriction1"],
+      "outputs": []
+    },
+    "Material2MangaDireitaRestriction2": {
+      "inputs": ["Material2MangaDireita->Material2MangaDireitaRestriction2"],
+      "outputs": []
+    },
+    "barraMangaDireita": {
+      "inputs": ["mangaDireita->barraMangaDireita"],
+      "outputs": ["barraMangaDireita->Material1barraMangaDireita", "barraMangaDireita->Material2barraMangaDireita"]
+    },
+    "mangaEsquerda": {
+      "inputs": ["garment->mangaEsquerda"],
+      "outputs": [
+        "mangaEsquerda->barraMangaEsquerda",
+        "mangaEsquerda->Material1mangaEsquerda",
+        "mangaEsquerda->Material2mangaEsquerda"
+      ]
+    },
+    "barraMangaEsquerda": {
+      "inputs": ["mangaEsquerda->barraMangaEsquerda"],
+      "outputs": ["barraMangaEsquerda->Material1barraMangaEsquerda", "barraMangaEsquerda->Material2barraMangaEsquerda"]
+    },
+    
+    "Material1mangaEsquerda": {
+      "inputs": [
+        "mangaEsquerda->Material1mangaEsquerda"
+      ],
+      "outputs": [
+        "Material1mangaEsquerda->Material1mangaEsquerdaRestriction1"
+      ]
+    },
+    "Material2mangaEsquerda": {
+      "inputs": [
+        "mangaEsquerda->Material2mangaEsquerda"
+      ],
+      "outputs": [
+        "Material2mangaEsquerda->Material2mangaEsquerdaRestriction1",
+        "Material2mangaEsquerda->Material2mangaEsquerdaRestriction2"
+      ]
+    },
+    "Material1mangaEsquerdaRestriction1": {
+      "inputs": ["Material1mangaEsquerda->Material1mangaEsquerdaRestriction1"],
+      "outputs": []
+    },
+    "Material2mangaEsquerdaRestriction1": {
+      "inputs": ["Material2mangaEsquerda->Material2mangaEsquerdaRestriction1"],
+      "outputs": []
+    },
+    "Material2mangaEsquerdaRestriction2": {
+      "inputs": ["Material2mangaEsquerda->Material2mangaEsquerdaRestriction2"],
+      "outputs": []
+    }
+  }
+}

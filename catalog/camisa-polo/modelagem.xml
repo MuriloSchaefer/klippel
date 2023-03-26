@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- Arquivo de exportação de dados Audaces Moldes --><DATA_FILE_AUDACES ID="1" VER="3">
+   <MODEL NAME_M="baby polo">
+      <INFO FILE="C:\Users\Ana\Desktop\clientes g4\kgepel\baby polo com recortes.adsx">
+         <CUST></CUST>
+         <COLEC></COLEC>
+         <DESC></DESC>
+         <KEY></KEY>
+         <DAT_CRE DAY="4" MONTH="4" YEAR="2016" HOUR="16" MIN="21"></DAT_CRE>
+         <LAST_ALT DAY="26" MONTH="3" YEAR="2020" HOUR="10" MIN="18"></LAST_ALT>
+         <SIZES_M>
+            <SIZE_M NAME_SP="PP">
+               <PER_SM>863.210</PER_SM>  <!-- cm -->
+               <AREA_SM>5656.849</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+            <SIZE_M NAME_SP="P">
+               <PER_SM>896.183</PER_SM>  <!-- cm -->
+               <AREA_SM>6186.553</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+            <SIZE_M NAME_SP="M">
+               <PER_SM>929.252</PER_SM>  <!-- cm -->
+               <AREA_SM>6742.301</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+            <SIZE_M NAME_SP="G">
+               <PER_SM>963.950</PER_SM>  <!-- cm -->
+               <AREA_SM>7335.804</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+            <SIZE_M NAME_SP="GG">
+               <PER_SM>1001.966</PER_SM>  <!-- cm -->
+               <AREA_SM>7958.176</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+            <SIZE_M NAME_SP="EG">
+               <PER_SM>1035.627</PER_SM>  <!-- cm -->
+               <AREA_SM>8587.233</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+            <SIZE_M NAME_SP="X1">
+               <PER_SM>1070.155</PER_SM>  <!-- cm -->
+               <AREA_SM>9243.801</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+            <SIZE_M NAME_SP="X2">
+               <PER_SM>1104.792</PER_SM>  <!-- cm -->
+               <AREA_SM>9924.458</AREA_SM>  <!-- cm² -->
+            </SIZE_M>
+         </SIZES_M>
+      </INFO>
+      <PATTERNS>
+         <PATTERN NAME_P="COSTAS_1">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.667</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>1</NAME_FAB>
+            <QT_MOD>1</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>2</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>1</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>185.891</PER_SP>  <!-- cm -->
+                  <AREA_SP>2124.248</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>44.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>141.805</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>54.800</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>44.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>195.512</PER_SP>  <!-- cm -->
+                  <AREA_SP>2356.434</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>47.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>148.426</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>56.800</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>47.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>205.116</PER_SP>  <!-- cm -->
+                  <AREA_SP>2598.530</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>50.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>155.031</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>58.803</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>50.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>214.753</PER_SP>  <!-- cm -->
+                  <AREA_SP>2851.431</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>53.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>161.667</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>60.828</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>53.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>224.368</PER_SP>  <!-- cm -->
+                  <AREA_SP>3114.050</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>168.283</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>62.866</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>56.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>234.041</PER_SP>  <!-- cm -->
+                  <AREA_SP>3391.335</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>59.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>174.956</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>65.084</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>59.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>243.715</PER_SP>  <!-- cm -->
+                  <AREA_SP>3679.323</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>62.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>181.629</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>67.302</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>62.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>253.380</PER_SP>  <!-- cm -->
+                  <AREA_SP>3977.776</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>65.086</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>188.294</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>69.519</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>65.086</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="FRENTE">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.667</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>1</NAME_FAB>
+            <QT_MOD>1</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>2</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>1</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>192.857</PER_SP>  <!-- cm -->
+                  <AREA_SP>2079.334</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>44.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>148.755</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>55.572</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>44.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>202.302</PER_SP>  <!-- cm -->
+                  <AREA_SP>2307.753</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>47.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>155.199</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>57.572</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>47.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>211.480</PER_SP>  <!-- cm -->
+                  <AREA_SP>2547.849</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>50.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>161.378</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>59.572</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>50.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>221.320</PER_SP>  <!-- cm -->
+                  <AREA_SP>2809.265</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>53.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>168.218</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>62.072</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>53.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>231.392</PER_SP>  <!-- cm -->
+                  <AREA_SP>3070.631</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>175.290</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>64.272</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>56.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>240.910</PER_SP>  <!-- cm -->
+                  <AREA_SP>3339.700</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>59.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>181.808</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>66.272</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>59.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>250.450</PER_SP>  <!-- cm -->
+                  <AREA_SP>3618.890</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>62.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>188.348</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>68.272</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>62.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>260.010</PER_SP>  <!-- cm -->
+                  <AREA_SP>3908.038</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>65.102</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>194.907</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>70.272</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>65.102</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="PUNHO MANGA">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.333</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>2</NAME_FAB>
+            <QT_MOD>1</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>1</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>0</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>74.772</PER_SP>  <!-- cm -->
+                  <AREA_SP>183.919</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>74.772</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>30.999</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>78.834</PER_SP>  <!-- cm -->
+                  <AREA_SP>194.743</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>78.834</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>32.930</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>82.926</PER_SP>  <!-- cm -->
+                  <AREA_SP>205.564</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>82.926</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>34.861</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>87.304</PER_SP>  <!-- cm -->
+                  <AREA_SP>216.672</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>87.304</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>36.883</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>91.518</PER_SP>  <!-- cm -->
+                  <AREA_SP>227.554</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>91.518</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>38.836</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>95.760</PER_SP>  <!-- cm -->
+                  <AREA_SP>238.434</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>95.760</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>40.788</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>100.243</PER_SP>  <!-- cm -->
+                  <AREA_SP>249.533</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>100.243</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>42.810</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>104.759</PER_SP>  <!-- cm -->
+                  <AREA_SP>260.632</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>104.759</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>6.115</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>44.833</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="MANGA COM PUNHO">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.333</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>2</NAME_FAB>
+            <QT_MOD>1</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>1</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>2</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>110.514</PER_SP>  <!-- cm -->
+                  <AREA_SP>453.788</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>41.856</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>68.658</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>30.853</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>32.130</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>117.549</PER_SP>  <!-- cm -->
+                  <AREA_SP>504.542</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>44.630</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>72.919</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>32.629</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>34.506</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>124.919</PER_SP>  <!-- cm -->
+                  <AREA_SP>559.317</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>47.401</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>77.518</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>34.429</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>36.906</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>132.687</PER_SP>  <!-- cm -->
+                  <AREA_SP>618.190</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>50.336</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>82.351</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>36.331</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>39.523</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>139.899</PER_SP>  <!-- cm -->
+                  <AREA_SP>677.537</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>53.166</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>86.733</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>38.086</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>42.008</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>147.208</PER_SP>  <!-- cm -->
+                  <AREA_SP>739.759</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>55.997</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>91.212</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>39.862</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>44.508</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>154.921</PER_SP>  <!-- cm -->
+                  <AREA_SP>807.270</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>58.962</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>95.959</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>41.681</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>47.182</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>162.687</PER_SP>  <!-- cm -->
+                  <AREA_SP>877.856</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>61.935</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>100.752</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>43.500</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>49.872</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="MANGA COM PUNHO_1">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.333</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>1</NAME_FAB>
+            <QT_MOD>2</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>1</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>0</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>32.445</PER_SP>  <!-- cm -->
+                  <AREA_SP>48.066</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.600</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>28.845</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.831</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>11.178</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>35.255</PER_SP>  <!-- cm -->
+                  <AREA_SP>55.587</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.601</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>31.654</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>11.523</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>12.425</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>38.079</PER_SP>  <!-- cm -->
+                  <AREA_SP>63.547</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.601</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>34.478</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>12.210</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>13.676</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>41.154</PER_SP>  <!-- cm -->
+                  <AREA_SP>72.753</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.601</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>37.553</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>12.919</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>15.068</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>44.060</PER_SP>  <!-- cm -->
+                  <AREA_SP>81.906</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.600</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>40.460</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>13.605</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>16.354</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>46.978</PER_SP>  <!-- cm -->
+                  <AREA_SP>91.506</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.600</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>43.378</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>14.294</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>17.641</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>50.097</PER_SP>  <!-- cm -->
+                  <AREA_SP>102.287</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.599</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>46.498</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>15.004</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>19.034</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>53.228</PER_SP>  <!-- cm -->
+                  <AREA_SP>113.655</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>3.597</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>49.631</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>15.716</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>20.428</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="PATE 3 CM">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.667</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>1</NAME_FAB>
+            <QT_MOD>1</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>2</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>0</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>46.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>60.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>46.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>3.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="PATE 8 CM">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.667</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>2</NAME_FAB>
+            <QT_MOD>1</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>2</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>0</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>56.000</PER_SP>  <!-- cm -->
+                  <AREA_SP>160.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>56.000</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>8.000</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="PATE 4,75 CM">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.667</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>2</NAME_FAB>
+            <QT_MOD>1</QT_MOD>
+            <ROT_P>2</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>2</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>0</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>49.500</PER_SP>  <!-- cm -->
+                  <AREA_SP>95.000</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>49.500</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>0.000</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>20.000</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>4.750</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+         <PATTERN NAME_P="GOLA TECIDO">
+            <DESC_P>  </DESC_P>
+            <SIZE_TXT>0.333</SIZE_TXT>  <!-- cm -->
+            <NAME_FAB>1</NAME_FAB>
+            <QT_MOD>3</QT_MOD>
+            <ROT_P>5</ROT_P>
+            <BAND_ROT>0.000</BAND_ROT>  <!-- graus -->
+            <DOUBLE>2</DOUBLE>
+            <REF>1</REF>
+            <FOLD_HOR>1</FOLD_HOR>
+            <FOLD_VER>2</FOLD_VER>
+            <AUX_LINES_COUNT>0</AUX_LINES_COUNT>
+            <NOTCHES_COUNT>1</NOTCHES_COUNT>
+            <INTERNAL_NOTCHES_COUNT>0</INTERNAL_NOTCHES_COUNT>
+            <SIZES_P NAME_GRAD="PP | P | (M) | G | GG | EG | X1 | X2">
+               <BASE_NAME>"M"</BASE_NAME>
+               <SIZE_P NAME_SP="PP">
+                  <PER_SP>115.232</PER_SP>  <!-- cm -->
+                  <AREA_SP>452.493</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>97.455</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>49.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="P">
+                  <PER_SP>115.232</PER_SP>  <!-- cm -->
+                  <AREA_SP>452.493</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>97.455</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>49.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="M">
+                  <PER_SP>115.232</PER_SP>  <!-- cm -->
+                  <AREA_SP>452.493</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>97.455</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>49.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="G">
+                  <PER_SP>115.232</PER_SP>  <!-- cm -->
+                  <AREA_SP>452.493</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>97.455</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>49.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="GG">
+                  <PER_SP>119.229</PER_SP>  <!-- cm -->
+                  <AREA_SP>471.500</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>101.453</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>51.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="EG">
+                  <PER_SP>119.229</PER_SP>  <!-- cm -->
+                  <AREA_SP>471.500</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>101.453</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>51.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X1">
+                  <PER_SP>119.229</PER_SP>  <!-- cm -->
+                  <AREA_SP>471.500</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>101.453</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>51.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+               <SIZE_P NAME_SP="X2">
+                  <PER_SP>119.229</PER_SP>  <!-- cm -->
+                  <AREA_SP>471.500</AREA_SP>  <!-- cm² -->
+                  <RECTILINE_PER_SP>17.776</RECTILINE_PER_SP>  <!-- cm -->
+                  <CURVE_PER_SP>101.453</CURVE_PER_SP>  <!-- cm -->
+                  <WIDTH_SP>10.364</WIDTH_SP>  <!-- cm -->
+                  <HEIGHT_SP>51.578</HEIGHT_SP>  <!-- cm -->
+               </SIZE_P>
+            </SIZES_P>
+         </PATTERN>
+      </PATTERNS>
+   </MODEL>
+</DATA_FILE_AUDACES>
