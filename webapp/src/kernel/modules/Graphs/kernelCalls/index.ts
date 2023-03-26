@@ -1,4 +1,3 @@
-import { StoreManager } from "@kernel/modules/Store/manager";
 
 // graphs manager
 import { MODULE_NAME } from "../constants";

@@ -1,13 +1,16 @@
 import * as React from "react";
-import Button from "@mui/material/Button";
-import ButtonGroup from "@mui/material/ButtonGroup";
+import {
+  Grow,
+  Button,
+  ButtonGroup,
+  Paper,
+  Popper,
+  MenuItem,
+  MenuList,
+} from "@mui/material";
+
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
-import Grow from "@mui/material/Grow";
-import Paper from "@mui/material/Paper";
-import Popper from "@mui/material/Popper";
-import MenuItem from "@mui/material/MenuItem";
-import MenuList from "@mui/material/MenuList";
 
 const options = ["Adicionar ao orçamento", "Criar orçamento"];
 
@@ -66,6 +69,9 @@ export default function SplitButton() {
         sx={{
           zIndex: 1,
         }}
+        onResize={()=>null}
+        onResizeCapture={()=>null}
+        nonce={1}
         open={open}
         anchorEl={anchorRef.current}
         role={undefined}

@@ -12,7 +12,7 @@ import ComposerSettingsPanel from "./SettingsPanel";
 import ComposerDetailsPanel from "./DetailsPanel";
 import FloatingButtons from "./FloatingButtons";
 import useComposition from "../hooks/useComposition";
-import { CompositionState } from "../store/state";
+import { CompositionState } from "../store/composition/state";
 import { IGraphModule } from "@kernel/modules/Graphs";
 
 export const ComposerViewportLoader = () => {

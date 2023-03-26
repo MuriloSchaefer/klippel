@@ -11,7 +11,7 @@ const ViewportLoader = ()=> {
   const componentsRegistryManager = storeModule.managers.componentRegistry();
 
   const activeViewport = useAppSelector(selectActiveViewport);
-  const viewportState = useAppSelector(getViewportState(activeViewport));
+  const viewportState = useAppSelector(getViewportState(activeViewport!));
   
   if (!viewportState) return null
   const comp = componentsRegistryManager.functions.getComponent(VIEWPORT_TYPE_REGISTRY_NAME, viewportState.type)

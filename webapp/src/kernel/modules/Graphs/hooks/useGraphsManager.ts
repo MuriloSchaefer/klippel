@@ -18,25 +18,6 @@ export interface GraphsManager extends Manager {
 const useGraphsManager = (): GraphsManager => {
     const dispatch = useAppDispatch()
 
-    const buildGraphActions = (graphId:string):GraphActions=>{
-      return {
-        addNode: (node, edges) => {
-          dispatch(addNode({ graphId, node, edges: edges ?? DEFAULT_EDGES }));
-        },
-        removeNode: (id) => {
-          dispatch(removeNode({ graphId, nodeId: id }));
-        },
-        updateNode: (node) => {
-          dispatch(updateNode({ graphId, nodeId: node.id, changes: node }));
-        },
-        addEdge: (edge) => {
-          dispatch(addEdge({ graphId, edge }));
-        },
-        removeEdge: (id) => {
-          dispatch(removeEdge({ graphId, edgeId: id }));
-        },
-      }
-    }
 
     return {
         functions: {
@@ -46,7 +27,25 @@ const useGraphsManager = (): GraphsManager => {
                 return {
                     id: graphId,
                     state: {id: graphId, ...newGraphState},
-                    actions: buildGraphActions(graphId),
+                    actions: {
+                      addNode: (node, edges) => {
+                        dispatch(addNode({ graphId, node, edges: edges ?? DEFAULT_EDGES }));
+                      },
+                      removeNode: (id) => {
+                        dispatch(removeNode({ graphId, nodeId: id }));
+                      },
+                      updateNode: (node) => {
+                        dispatch(updateNode({ graphId, nodeId: node.id, changes: node }));
+                      },
+                      addEdge: (edge) => {
+                        dispatch(addEdge({ graphId, edge }));
+                      },
+                      removeEdge: (id) => {
+                        dispatch(removeEdge({ graphId, edgeId: id }));
+                      },
+                      nodeExists: (id)=> false, //QUESTION: how to implement this here?
+                      search: ()=>'null' // TODO: implement search dispatch here
+                    },
                   }
             },
             resetGraph(graphId){
