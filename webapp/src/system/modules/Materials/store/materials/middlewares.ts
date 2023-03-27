@@ -362,7 +362,7 @@ middlewares.startListening({
             suppliers: ['Sajama'],
             industry: 'Sajama',
             externalId: '05006/02',
-            externalURL: 'http://www.sajama.com.br/produtos.php?totReg=1&idx=4&ctg=4&sctg=0&txpesq=',
+            externalURL: 'https://www.sajama.com.br/produtos.php?totReg=1&idx=4&ctg=4&sctg=0&txpesq=',
             images: [],
             
             schemaVersion: '0.0.1',
@@ -396,7 +396,7 @@ middlewares.startListening({
             suppliers: ['Sajama'],
             industry: 'Sajama',
             externalId: '05006/02',
-            externalURL: 'http://www.sajama.com.br/produtos.php?totReg=1&idx=4&ctg=4&sctg=0&txpesq=',
+            externalURL: 'https://www.sajama.com.br/produtos.php?totReg=1&idx=4&ctg=4&sctg=0&txpesq=',
             images: [],
             
             schemaVersion: '0.0.1',
