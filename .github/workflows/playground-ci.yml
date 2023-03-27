@@ -1,0 +1,13 @@
+name: Playground CI (github pages)
+run-name: ${{ github.actor }} is deploying playground to github page 🚀
+on: workflow_dispatch
+jobs:
+  release:
+    name: Deploy webapp
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: release version
+        run: |
+          ls ${{ github.workspace }}/webapp && npm run deploy
