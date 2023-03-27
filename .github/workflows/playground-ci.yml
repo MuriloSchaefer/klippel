@@ -8,14 +8,13 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
-      - name: release version
-        run: |
-          cd ${{ github.workspace }}/webapp
           
       - name: Install all dependencies
         run: npm install
+        working-directory: ./webapp
       - name: Build
         run: npm run build
+        working-directory: ./webapp
         
       - name: Push
         uses: s0/git-publish-subdir-action@develop
