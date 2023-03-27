@@ -28,7 +28,7 @@
   },
   "scripts": {
     "start": "vite --host",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --base=./",
     "test": "jest",
     "serve": "vite preview",
     "predeploy": "npm run build",
