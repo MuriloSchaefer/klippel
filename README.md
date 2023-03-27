@@ -1,6 +1,6 @@
 # Composer
 
-[![pages-build-deployment](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages)](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment)
+[![pages-build-deployment](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages)](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MuriloSchaefer_composer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=MuriloSchaefer_composer)
 
 This is a project to study micro-kernel architecture using React and Redux. Eventually this will evolve to also include backend and infrastructure projects.
 
