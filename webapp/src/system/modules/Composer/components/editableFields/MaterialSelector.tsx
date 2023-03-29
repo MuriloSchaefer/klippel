@@ -2,11 +2,11 @@ import { useCallback } from "react";
 
 import useModule from "@kernel/hooks/useModule";
 
+import { IGraphModule } from "@kernel/modules/Graphs";
 import { IMaterialsModule } from "@system/modules/Materials";
 
 import { MaterialNode, MaterialUsageNode } from "../../store/composition/state";
 import useComposition from "../../hooks/useComposition";
-import { IGraphModule } from "@kernel/modules/Graphs";
 
 const MaterialSelector = ({
   graphId,

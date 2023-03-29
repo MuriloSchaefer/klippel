@@ -367,6 +367,21 @@
       "sourceId": "barraMangaEsquerda",
       "targetId": "Material2barraMangaEsquerda",
       "id": "barraMangaEsquerda->Material2barraMangaEsquerda"
+    },
+    
+    "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material1barraMangaEsquerda",
+      "targetId": "Material1barraMangaEsquerdaRestriction1",
+      "id": "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"
+    },
+    "Material2barraMangaEsquerda->Material2barraMangaEsquerdaRestriction1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "Material1barraMangaEsquerda",
+      "targetId": "Material1barraMangaEsquerdaRestriction1",
+      "id": "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"
     }
   },
   "adjacencyList": {
@@ -458,6 +473,22 @@
     },
     "Material2mangaEsquerdaRestriction2": {
       "inputs": ["Material2mangaEsquerda->Material2mangaEsquerdaRestriction2"],
+      "outputs": []
+    },
+    "Material1barraMangaEsquerda": {
+      "inputs": ["barraMangaEsquerda->Material1barraMangaEsquerda"],
+      "outputs": ["Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"]
+    },
+    "Material2barraMangaEsquerda": {
+      "inputs": ["barraMangaEsquerda->Material2barraMangaEsquerda"],
+      "outputs": ["Material2barraMangaEsquerda->Material2barraMangaEsquerdaRestriction1"]
+    },
+    "Material1barraMangaEsquerdaRestriction1": {
+      "inputs": ["Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"],
+      "outputs": []
+    },
+    "Material2barraMangaEsquerdaRestriction1": {
+      "inputs": ["Material2barraMangaEsquerda->Material2barraMangaEsquerdaRestriction1"],
       "outputs": []
     }
   }
