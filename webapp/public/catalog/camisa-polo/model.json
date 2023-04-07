@@ -1,5 +1,4 @@
 {
-  "id": "camisa-polo-fem",
   "nodes": {
     "corte": {
       "id": "corte",
@@ -51,9 +50,7 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [
-        { "elem": "tecido-secundario-manga-direita", "attr": "fill" }
-      ]
+      "proxies": [{ "elem": "tecido-secundario-manga-direita", "attr": "fill" }]
     },
     "Material2MangaDireitaRestriction1": {
       "id": "Material2MangaDireitaRestriction1",
@@ -132,7 +129,6 @@
       "allowOnly": ["malha", "tecido"],
       "label": "Permitido apenas tecidos ou malhas"
     },
-
 
     "mangaEsquerda": {
       "id": "mangaEsquerda",
@@ -216,6 +212,106 @@
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
       "label": "Permitido apenas tecidos ou malhas"
+    },
+
+    "frente": {
+      "id": "frente",
+      "type": "PART",
+      "domId": "frente",
+      "label": "Frente"
+    },
+    "ombro-esquerdo-frente": {
+      "id": "ombro-esquerdo-frente",
+      "type": "PART",
+      "domId": "ombro-esquerdo-frente",
+      "label": "Ombro esquerdo"
+    },
+    "ombro-direito-frente": {
+      "id": "ombro-direito-frente",
+      "type": "PART",
+      "domId": "ombro-direito-frente",
+      "label": "Ombro direito"
+    },
+    "material1-ombro-esquerdo-frente": {
+      "id": "material1-ombro-esquerdo-frente",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "ombro-esquerdo-frente", "attr": "fill" }]
+    },
+    "material1-ombro-esquerdo-frente-restriction-1": {
+      "id": "material1-ombro-esquerdo-frente-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material1-ombro-direito-frente": {
+      "id": "material1-ombro-direito-frente",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "ombro-direito-frente", "attr": "fill" }]
+    },
+    "material1-ombro-direito-frente-restriction-1": {
+      "id": "material1-ombro-direito-frente-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "barra-frente": {
+      "id": "barra-frente",
+      "type": "PART",
+      "domId": "barra-frente",
+      "label": "Barra"
+    },
+    "material1-barra-frente": {
+      "id": "material1-barra-frente",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "barra-frente", "attr": "fill" }]
+    },
+    "material1-barra-frente-restriction-1": {
+      "id": "material1-barra-frente-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material1-frente": {
+      "id": "material1-frente",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "frente-tecido-principal", "attr": "fill" }]
+    },
+    "material1-frente-restriction-1": {
+      "id": "material1-frente-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material2-frente": {
+      "id": "material2-frente",
+      "type": "MATERIAL_USAGE",
+      "label": "Filete",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "filete_46", "attr": "stroke" }]
+    },
+    "material2-frente-restriction-1": {
+      "id": "material2-frente-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
     }
   },
   "edges": {
@@ -231,6 +327,97 @@
       "targetId": "mangaDireita",
       "id": "garment->mangaDireita"
     },
+    "garment->frente": {
+      "type": "COMPOSED_OF",
+      "sourceId": "GARMENT",
+      "targetId": "frente",
+      "id": "garment->frente"
+    },
+
+    "frente->material1-frente": {
+      "type": "MADE_OF",
+      "sourceId": "frente",
+      "targetId": "material1-frente",
+      "id": "frente->material1-frente"
+    },
+    "material1-frente->material1-frente-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-frente",
+      "targetId": "material1-frente-restriction-1",
+      "id": "material1-frente->material1-frente-restriction-1"
+    },
+    "frente->material2-frente": {
+      "type": "MADE_OF",
+      "sourceId": "frente",
+      "targetId": "material2-frente",
+      "id": "frente->material2-frente"
+    },
+    "material2-frente->material2-frente-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material2-frente",
+      "targetId": "material2-frente-restriction-1",
+      "id": "material1-frente->material2-frente-restriction-1"
+    },
+    "frente->ombro-esquerdo-frente": {
+      "type": "COMPOSED_OF",
+      "sourceId": "frente",
+      "targetId": "ombro-esquerdo-frente",
+      "id": "frente->ombro-esquerdo-frente"
+    },
+    "ombro-esquerdo-frente->material1-ombro-esquerdo-frente": {
+      "type": "MADE_OF",
+      "sourceId": "ombro-esquerdo-frente",
+      "targetId": "material1-ombro-esquerdo-frente",
+      "id": "ombro-esquerdo-frente->material1-ombro-esquerdo-frente"
+    },
+    "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-ombro-esquerdo-frente",
+      "targetId": "material1-ombro-esquerdo-frente-restriction-1",
+      "id": "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"
+    },
+    "frente->ombro-direito-frente": {
+      "type": "COMPOSED_OF",
+      "sourceId": "frente",
+      "targetId": "ombro-direito-frente",
+      "id": "frente->ombro-direito-frente"
+    },
+    "ombro-direito-frente->material1-ombro-direito-frente": {
+      "type": "MADE_OF",
+      "sourceId": "ombro-direito-frente",
+      "targetId": "material1-ombro-direito-frente",
+      "id": "ombro-direito-frente->material1-ombro-direito-frente"
+    },
+    "material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-ombro-direito-frente",
+      "targetId": "material1-ombro-direito-frente-restriction-1",
+      "id": "material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1"
+    },
+    "frente->barra-frente": {
+      "type": "COMPOSED_OF",
+      "sourceId": "frente",
+      "targetId": "barra-frente",
+      "id": "frente->barra-frente"
+    },
+    "barra-frente->material1-barra-frente": {
+      "type": "MADE_OF",
+      "sourceId": "barra-frente",
+      "targetId": "material1-barra-frente",
+      "id": "barra-frente->material1-barra-frente"
+    },
+    "material1-barra-frente->material1-barra-frente-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-barra-frente",
+      "targetId": "material1-barra-frente-restriction-1",
+      "id": "material1-barra-frente->material1-barra-frente-restriction-1"
+    },
+
     "mangaDireita->barraMangaDireita": {
       "type": "COMPOSED_OF",
       "sourceId": "mangaDireita",
@@ -368,7 +555,7 @@
       "targetId": "Material2barraMangaEsquerda",
       "id": "barraMangaEsquerda->Material2barraMangaEsquerda"
     },
-    
+
     "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1": {
       "type": "RESTRICTED_BY",
       "attr": "materialType",
@@ -387,7 +574,11 @@
   "adjacencyList": {
     "garment": {
       "inputs": [],
-      "outputs": ["garment->mangaDireita", "garment->mangaEsquerda"]
+      "outputs": [
+        "garment->mangaDireita",
+        "garment->mangaEsquerda",
+        "garment->frente"
+      ]
     },
 
     "mangaDireita": {
@@ -431,7 +622,10 @@
     },
     "barraMangaDireita": {
       "inputs": ["mangaDireita->barraMangaDireita"],
-      "outputs": ["barraMangaDireita->Material1barraMangaDireita", "barraMangaDireita->Material2barraMangaDireita"]
+      "outputs": [
+        "barraMangaDireita->Material1barraMangaDireita",
+        "barraMangaDireita->Material2barraMangaDireita"
+      ]
     },
     "mangaEsquerda": {
       "inputs": ["garment->mangaEsquerda"],
@@ -443,21 +637,18 @@
     },
     "barraMangaEsquerda": {
       "inputs": ["mangaEsquerda->barraMangaEsquerda"],
-      "outputs": ["barraMangaEsquerda->Material1barraMangaEsquerda", "barraMangaEsquerda->Material2barraMangaEsquerda"]
-    },
-    
-    "Material1mangaEsquerda": {
-      "inputs": [
-        "mangaEsquerda->Material1mangaEsquerda"
-      ],
       "outputs": [
-        "Material1mangaEsquerda->Material1mangaEsquerdaRestriction1"
+        "barraMangaEsquerda->Material1barraMangaEsquerda",
+        "barraMangaEsquerda->Material2barraMangaEsquerda"
       ]
     },
+
+    "Material1mangaEsquerda": {
+      "inputs": ["mangaEsquerda->Material1mangaEsquerda"],
+      "outputs": ["Material1mangaEsquerda->Material1mangaEsquerdaRestriction1"]
+    },
     "Material2mangaEsquerda": {
-      "inputs": [
-        "mangaEsquerda->Material2mangaEsquerda"
-      ],
+      "inputs": ["mangaEsquerda->Material2mangaEsquerda"],
       "outputs": [
         "Material2mangaEsquerda->Material2mangaEsquerdaRestriction1",
         "Material2mangaEsquerda->Material2mangaEsquerdaRestriction2"
@@ -477,18 +668,93 @@
     },
     "Material1barraMangaEsquerda": {
       "inputs": ["barraMangaEsquerda->Material1barraMangaEsquerda"],
-      "outputs": ["Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"]
+      "outputs": [
+        "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"
+      ]
     },
     "Material2barraMangaEsquerda": {
       "inputs": ["barraMangaEsquerda->Material2barraMangaEsquerda"],
-      "outputs": ["Material2barraMangaEsquerda->Material2barraMangaEsquerdaRestriction1"]
+      "outputs": [
+        "Material2barraMangaEsquerda->Material2barraMangaEsquerdaRestriction1"
+      ]
     },
     "Material1barraMangaEsquerdaRestriction1": {
-      "inputs": ["Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"],
+      "inputs": [
+        "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"
+      ],
       "outputs": []
     },
     "Material2barraMangaEsquerdaRestriction1": {
-      "inputs": ["Material2barraMangaEsquerda->Material2barraMangaEsquerdaRestriction1"],
+      "inputs": [
+        "Material2barraMangaEsquerda->Material2barraMangaEsquerdaRestriction1"
+      ],
+      "outputs": []
+    },
+
+    "frente": {
+      "inputs": ["garment->frente"],
+      "outputs": [
+        "frente->ombro-esquerdo-frente",
+        "frente->ombro-direito-frente",
+        "frente->barra-frente",
+        "frente->material1-frente",
+        "frente->material2-frente"
+      ]
+    },
+    "ombro-esquerdo-frente": {
+      "inputs": ["frente->ombro-esquerdo-frente"],
+      "outputs": ["ombro-esquerdo-frente->material1-ombro-esquerdo-frente"]
+    },
+    "material1-ombro-esquerdo-frente": {
+      "inputs": ["ombro-esquerdo-frente->material1-ombro-esquerdo-frente"],
+      "outputs": [
+        "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"
+      ]
+    },
+    "material1-ombro-esquerdo-frente-restriction-1": {
+      "inputs": ["material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"],
+      "outputs": []
+    },
+    "ombro-direito-frente": {
+      "inputs": ["frente->ombro-direito-frente"],
+      "outputs": ["ombro-direito-frente->material1-ombro-direito-frente"]
+    },
+    "material1-ombro-direito-frente": {
+      "inputs": ["ombro-direito-frente->material1-ombro-direito-frente"],
+      "outputs": [
+        "material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1"
+      ]
+    },
+    "material1-ombro-direito-frente-restriction-1": {
+      "inputs": ["material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1"],
+      "outputs": []
+    },
+    "barra-frente": {
+      "inputs": ["frente->barra-frente"],
+      "outputs": ["barra-frente->material1-barra-frente"]
+    },
+    "material1-barra-frente": {
+      "inputs": ["barra-frente->material1-barra-frente"],
+      "outputs": ["material1-barra-frente->material1-barra-frente-restriction-1"]
+    },
+    "material1-barra-frente-restriction-1":{
+      "inputs": ["material1-barra-frente->material1-barra-frente-restriction-1"],
+      "outputs": []
+    },
+    "material1-frente": {
+      "inputs": ["frente->material1-frente"],
+      "outputs": ["material1-frente->material1-frente-restriction-1"]
+    },
+    "material1-frente-restriction-1": {
+      "inputs": ["material1-frente->material1-frente-restriction-1"],
+      "outputs": []
+    },
+    "material2-frente": {
+      "inputs": ["frente->material2-frente"],
+      "outputs": ["material2-frente->material2-frente-restriction-1"]
+    },
+    "material2-frente-restriction-1": {
+      "inputs": ["material2-frente->material2-frente-restriction-1"],
       "outputs": []
     }
   }
