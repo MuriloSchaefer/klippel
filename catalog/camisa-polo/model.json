@@ -413,6 +413,74 @@
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
       "label": "Permitido apenas tecidos ou malhas"
+    },
+
+
+    "gola": {
+      "id": "gola",
+      "type": "PART",
+      "domId": "gola",
+      "label": "Gola"
+    },
+    "material1-gola": {
+      "id": "material1-gola",
+      "type": "MATERIAL_USAGE",
+      "label": "Externa",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "gola-externa", "attr": "fill" }]
+    },
+    "material1-gola-restriction-1": {
+      "id": "material1-gola-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material2-gola": {
+      "id": "material2-gola",
+      "type": "MATERIAL_USAGE",
+      "label": "Externa",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "gola-interna", "attr": "fill" }]
+    },
+    "material2-gola-restriction-1": {
+      "id": "material2-gola-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material3-gola": {
+      "id": "material3-gola",
+      "type": "MATERIAL_USAGE",
+      "label": "Botoes Interno",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "lapela-interna", "attr": "fill" }]
+    },
+    "material3-gola-restriction-1": {
+      "id": "material3-gola-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material4-gola": {
+      "id": "material4-gola",
+      "type": "MATERIAL_USAGE",
+      "label": "Botoes Externo",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "lapela-externa", "attr": "fill" }]
+    },
+    "material4-gola-restriction-1": {
+      "id": "material4-gola-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
     }
   },
   "edges": {
@@ -762,16 +830,78 @@
       "sourceId": "material1-ombro-direito-costas",
       "targetId": "material1-ombro-direito-costas-restriction-1",
       "id": "material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"
+    },
+
+
+    "garment->gola": {
+      "type": "COMPOSED_OF",
+      "sourceId": "garment",
+      "targetId": "gola",
+      "id": "garment->gola"
+    },
+
+    "gola->material1-gola": {
+      "type": "MADE_OF",
+      "sourceId": "gola",
+      "targetId": "material1-gola",
+      "id": "gola->material1-gola"
+    },
+    "gola->material2-gola": {
+      "type": "MADE_OF",
+      "sourceId": "gola",
+      "targetId": "material2-gola",
+      "id": "gola->material2-gola"
+    },
+    "gola->material3-gola": {
+      "type": "MADE_OF",
+      "sourceId": "gola",
+      "targetId": "material3-gola",
+      "id": "gola->material3-gola"
+    },
+    "gola->material4-gola": {
+      "type": "MADE_OF",
+      "sourceId": "gola",
+      "targetId": "material4-gola",
+      "id": "gola->material4-gola"
+    },
+    "material1-gola->material1-gola-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-gola",
+      "targetId": "material1-gola-restriction-1",
+      "id": "material1-gola->material1-gola-restriction-1"
+    },
+    "material2-gola->material2-gola-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material2-gola",
+      "targetId": "material2-gola-restriction-1",
+      "id": "material2-gola->material2-gola-restriction-1"
+    },
+    "material3-gola->material3-gola-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-gola",
+      "targetId": "material3-gola-restriction-1",
+      "id": "material3-gola->material3-gola-restriction-1"
+    },
+    "material4-gola->material4-gola-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material4-gola",
+      "targetId": "material4-gola-restriction-1",
+      "id": "material4-gola->material4-gola-restriction-1"
     }
   },
   "adjacencyList": {
     "garment": {
       "inputs": [],
       "outputs": [
+        "garment->frente",
+        "garment->costas",
         "garment->mangaDireita",
         "garment->mangaEsquerda",
-        "garment->frente",
-        "garment->costas"
+        "garment->gola"
       ]
     },
 
@@ -1018,6 +1148,49 @@
     },
     "material1-ombro-direito-costas-restriction-1": {
       "inputs": ["material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"],
+      "outputs": []
+    },
+
+    "gola": {
+      "inputs": ["garment->gola"],
+      "outputs": [
+        "gola->material1-gola",
+        "gola->material2-gola",
+        "gola->material3-gola",
+        "gola->material4-gola"
+      ]
+    },
+    "material1-gola": {
+      "inputs": ["gola->material1-gola"],
+      "outputs": ["material1-gola->material1-gola-restriction-1"]
+    },
+    "material2-gola": {
+      "inputs": ["gola->material2-gola"],
+      "outputs": ["material2-gola->material2-gola-restriction-1"]
+    },
+    "material3-gola": {
+      "inputs": ["gola->material3-gola"],
+      "outputs": ["material3-gola->material3-gola-restriction-1"]
+    },
+    "material4-gola": {
+      "inputs": ["gola->material4-gola"],
+      "outputs": ["material4-gola->material4-gola-restriction-1"]
+    },
+
+    "material1-gola-restriction-1": {
+      "inputs": ["material1-gola->material1-gola-restriction-1"],
+      "outputs": []
+    },
+    "material2-gola-restriction-1": {
+      "inputs": ["material2-gola->material2-gola-restriction-1"],
+      "outputs": []
+    },
+    "material3-gola-restriction-1": {
+      "inputs": ["material3-gola->material3-gola-restriction-1"],
+      "outputs": []
+    },
+    "material4-gola-restriction-1": {
+      "inputs": ["material4-gola->material4-gola-restriction-1"],
       "outputs": []
     }
   }
