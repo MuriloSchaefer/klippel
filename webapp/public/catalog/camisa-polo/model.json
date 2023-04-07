@@ -312,6 +312,107 @@
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
       "label": "Permitido apenas tecidos ou malhas"
+    },
+
+    "costas": {
+      "id": "costas",
+      "type": "PART",
+      "domId": "costas",
+      "label": "Costas"
+    },
+    "ombro-esquerdo-costas": {
+      "id": "ombro-esquerdo-costas",
+      "type": "PART",
+      "domId": "ombro-esquerdo-costas",
+      "label": "Ombro esquerdo"
+    },
+    "ombro-direito-costas": {
+      "id": "ombro-direito-costas",
+      "type": "PART",
+      "domId": "ombro-direito-costas",
+      "label": "Ombro direito"
+    },
+    "barra-costas": {
+      "id": "barra-costas",
+      "type": "PART",
+      "domId": "barra-costas",
+      "label": "Barra"
+    },
+
+    "material1-costas": {
+      "id": "material1-costas",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "costas-tecido-principal", "attr": "fill" }]
+    },
+    "material1-costas-restriction-1": {
+      "id": "material1-costas-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material2-costas": {
+      "id": "material2-costas",
+      "type": "MATERIAL_USAGE",
+      "label": "Filete",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "filete-costa", "attr": "stroke" }]
+    },
+    "material2-costas-restriction-1": {
+      "id": "material2-costas-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material1-barra-costas": {
+      "id": "material1-barra-costas",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "barra-costas", "attr": "fill" }]
+    },
+    "material1-barra-costas-restriction-1": {
+      "id": "material1-barra-costas-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material1-ombro-esquerdo-costas": {
+      "id": "material1-ombro-esquerdo-costas",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "ombro-esquerdo-costas", "attr": "fill" }]
+    },
+    "material1-ombro-esquerdo-costas-restriction-1": {
+      "id": "material1-ombro-esquerdo-costas-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
+    },
+    "material1-ombro-direito-costas": {
+      "id": "material1-ombro-direito-costas",
+      "type": "MATERIAL_USAGE",
+      "label": "Material primario",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialType": "malha",
+      "materialId": "material-1",
+      "proxies": [{ "elem": "ombro-direito-costas", "attr": "fill" }]
+    },
+    "material1-ombro-direito-costas-restriction-1": {
+      "id": "material1-ombro-direito-costas-restriction-1",
+      "type": "RESTRICTION",
+      "allowOnly": ["malha", "tecido"],
+      "label": "Permitido apenas tecidos ou malhas"
     }
   },
   "edges": {
@@ -332,6 +433,18 @@
       "sourceId": "GARMENT",
       "targetId": "frente",
       "id": "garment->frente"
+    },
+    "frente->ombro-esquerdo-frente": {
+      "type": "COMPOSED_OF",
+      "sourceId": "frente",
+      "targetId": "ombro-esquerdo-frente",
+      "id": "frente->ombro-esquerdo-frente"
+    },
+    "frente->ombro-direito-frente": {
+      "type": "COMPOSED_OF",
+      "sourceId": "frente",
+      "targetId": "ombro-direito-frente",
+      "id": "frente->ombro-direito-frente"
     },
 
     "frente->material1-frente": {
@@ -360,12 +473,6 @@
       "targetId": "material2-frente-restriction-1",
       "id": "material1-frente->material2-frente-restriction-1"
     },
-    "frente->ombro-esquerdo-frente": {
-      "type": "COMPOSED_OF",
-      "sourceId": "frente",
-      "targetId": "ombro-esquerdo-frente",
-      "id": "frente->ombro-esquerdo-frente"
-    },
     "ombro-esquerdo-frente->material1-ombro-esquerdo-frente": {
       "type": "MADE_OF",
       "sourceId": "ombro-esquerdo-frente",
@@ -378,12 +485,6 @@
       "sourceId": "material1-ombro-esquerdo-frente",
       "targetId": "material1-ombro-esquerdo-frente-restriction-1",
       "id": "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"
-    },
-    "frente->ombro-direito-frente": {
-      "type": "COMPOSED_OF",
-      "sourceId": "frente",
-      "targetId": "ombro-direito-frente",
-      "id": "frente->ombro-direito-frente"
     },
     "ombro-direito-frente->material1-ombro-direito-frente": {
       "type": "MADE_OF",
@@ -569,6 +670,98 @@
       "sourceId": "Material1barraMangaEsquerda",
       "targetId": "Material1barraMangaEsquerdaRestriction1",
       "id": "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"
+    },
+
+
+    "garment->costas": {
+      "type": "COMPOSED_OF",
+      "sourceId": "GARMENT",
+      "targetId": "costas",
+      "id": "garment->costas"
+    },
+    "costas->ombro-esquerdo-costas": {
+      "type": "COMPOSED_OF",
+      "sourceId": "costas",
+      "targetId": "ombro-esquerdo-costas",
+      "id": "costas->ombro-esquerdo-costas"
+    },
+    "costas->ombro-direito-costas": {
+      "type": "COMPOSED_OF",
+      "sourceId": "costas",
+      "targetId": "ombro-direito-costas",
+      "id": "costas->ombro-direito-costas"
+    },
+    "costas->barra-costas": {
+      "type": "COMPOSED_OF",
+      "sourceId": "costas",
+      "targetId": "barra-costas",
+      "id": "costas->barra-costas"
+    },
+
+    "costas->material1-costas": {
+      "type": "MADE_OF",
+      "sourceId": "costas",
+      "targetId": "material1-costas",
+      "id": "costas->material1-costas"
+    },
+    "material1-costas->material1-costas-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-costas",
+      "targetId": "material1-costas-restriction-1",
+      "id": "material1-costas->material1-costas-restriction-1"
+    },
+    "costas->material2-costas": {
+      "type": "MADE_OF",
+      "sourceId": "costas",
+      "targetId": "material2-costas",
+      "id": "costas->material2-costas"
+    },
+    "material2-costas->material2-costas-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material2-costas",
+      "targetId": "material2-costas-restriction-1",
+      "id": "material1-costas->material2-costas-restriction-1"
+    },
+    "barra-costas->material1-barra-costas": {
+      "type": "MADE_OF",
+      "sourceId": "barra-costas",
+      "targetId": "material1-barra-costas",
+      "id": "barra-costas->material1-barra-costas"
+    },
+    "material1-barra-costas->material1-barra-costas-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-barra-costas",
+      "targetId": "material1-barra-costas-restriction-1",
+      "id": "material1-barra-costas->material1-barra-costas-restriction-1"
+    },
+    "ombro-esquerdo-costas->material1-ombro-esquerdo-costas": {
+      "type": "MADE_OF",
+      "sourceId": "ombro-esquerdo-costas",
+      "targetId": "material1-ombro-esquerdo-costas",
+      "id": "ombro-esquerdo-costas->material1-ombro-esquerdo-costas"
+    },
+    "material1-ombro-esquerdo-costas->material1-ombro-esquerdo-costas-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-ombro-esquerdo-costas",
+      "targetId": "material1-ombro-esquerdo-costas-restriction-1",
+      "id": "material1-ombro-esquerdo-costas->material1-ombro-esquerdo-costas-restriction-1"
+    },
+    "ombro-direito-costas->material1-ombro-direito-costas": {
+      "type": "MADE_OF",
+      "sourceId": "ombro-direito-costas",
+      "targetId": "material1-ombro-direito-costas",
+      "id": "ombro-direito-costas->material1-ombro-direito-costas"
+    },
+    "material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1": {
+      "type": "RESTRICTED_BY",
+      "attr": "materialType",
+      "sourceId": "material1-ombro-direito-costas",
+      "targetId": "material1-ombro-direito-costas-restriction-1",
+      "id": "material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"
     }
   },
   "adjacencyList": {
@@ -577,7 +770,8 @@
       "outputs": [
         "garment->mangaDireita",
         "garment->mangaEsquerda",
-        "garment->frente"
+        "garment->frente",
+        "garment->costas"
       ]
     },
 
@@ -705,6 +899,10 @@
       "inputs": ["frente->ombro-esquerdo-frente"],
       "outputs": ["ombro-esquerdo-frente->material1-ombro-esquerdo-frente"]
     },
+    "ombro-direito-frente": {
+      "inputs": ["frente->ombro-direito-frente"],
+      "outputs": ["ombro-direito-frente->material1-ombro-direito-frente"]
+    },
     "material1-ombro-esquerdo-frente": {
       "inputs": ["ombro-esquerdo-frente->material1-ombro-esquerdo-frente"],
       "outputs": [
@@ -714,10 +912,6 @@
     "material1-ombro-esquerdo-frente-restriction-1": {
       "inputs": ["material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"],
       "outputs": []
-    },
-    "ombro-direito-frente": {
-      "inputs": ["frente->ombro-direito-frente"],
-      "outputs": ["ombro-direito-frente->material1-ombro-direito-frente"]
     },
     "material1-ombro-direito-frente": {
       "inputs": ["ombro-direito-frente->material1-ombro-direito-frente"],
@@ -755,6 +949,75 @@
     },
     "material2-frente-restriction-1": {
       "inputs": ["material2-frente->material2-frente-restriction-1"],
+      "outputs": []
+    },
+
+
+    "costas": {
+      "inputs": ["garment->costas"],
+      "outputs": [
+        "costas->ombro-esquerdo-costas",
+        "costas->ombro-direito-costas",
+        "costas->barra-costas",
+        "costas->material1-costas",
+        "costas->material2-costas"
+      ]
+    },
+    "ombro-esquerdo-costas": {
+      "inputs": ["costas->ombro-esquerdo-costas"],
+      "outputs": ["ombro-esquerdo-costas->material1-ombro-esquerdo-costas"]
+    },
+    "ombro-direito-costas": {
+      "inputs": ["costas->ombro-direito-costas"],
+      "outputs": ["ombro-direito-costas->material1-ombro-direito-costas"]
+    },
+    "barra-costas":{
+      "inputs": ["costas->barra-costas"],
+      "outputs": ["barra-costas->material1-barra-costas"]
+    },
+
+    "material1-costas": {
+      "inputs": ["costas->material1-costas"],
+      "outputs": ["material1-costas->material1-costas-restriction-1"]
+    },
+    "material1-costas-restriction-1": {
+      "inputs": ["material1-costas->material1-costas-restriction-1"],
+      "outputs": []
+    },
+    "material2-costas": {
+      "inputs": ["costas->material2-costas"],
+      "outputs": ["material2-costas->material2-costas-restriction-1"]
+    },
+    "material2-costas-restriction-1": {
+      "inputs": ["material2-costas->material2-costas-restriction-1"],
+      "outputs": []
+    },
+    "material1-barra-costas": {
+      "inputs": ["barra-costas->material1-barra-costas"],
+      "outputs": ["material1-barra-costas->material1-barra-costas-restriction-1"]
+    },
+    "material1-barra-costas-restriction-1":{
+      "inputs": ["material1-barra-costas->material1-barra-costas-restriction-1"],
+      "outputs": []
+    },
+    "material1-ombro-esquerdo-costas": {
+      "inputs": ["ombro-esquerdo-costas->material1-ombro-esquerdo-costas"],
+      "outputs": [
+        "material1-ombro-esquerdo-costas->material1-ombro-esquerdo-costas-restriction-1"
+      ]
+    },
+    "material1-ombro-esquerdo-costas-restriction-1": {
+      "inputs": ["material1-ombro-esquerdo-costas->material1-ombro-esquerdo-costas-restriction-1"],
+      "outputs": []
+    },
+    "material1-ombro-direito-costas": {
+      "inputs": ["ombro-direito-costas->material1-ombro-direito-costas"],
+      "outputs": [
+        "material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"
+      ]
+    },
+    "material1-ombro-direito-costas-restriction-1": {
+      "inputs": ["material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"],
       "outputs": []
     }
   }
