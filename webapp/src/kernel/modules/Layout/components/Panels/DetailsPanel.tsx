@@ -8,13 +8,6 @@ import { DETAILS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
 import { selectDetailsPanel } from "../../store/panels/selectors";
 
-
-const StyledPanel = styled(Box)`
-  overflow: hidden;
-  height: 100%;
-  flex-direction: column;
-`
-
 export const DetailsPanel = ({
   title,
   display,
@@ -45,15 +38,15 @@ export const DetailsPanel = ({
 
   if (!ref || !panelState) return null;
   return createPortal(
-    <StyledPanel
+    <Box
       role="details-panel"
       aria-label="details panel"
       display={panelState.state === 'opened' ? 'flex' : 'none'}
       sx={{
+        flexDirection: 'column',
         padding: 1,
         gap: 1,
         minWidth: '15vw',
-        
       }}
     >
       <Box
@@ -74,7 +67,7 @@ export const DetailsPanel = ({
         <span>{title ?? "Detalhes"}</span>
       </Box>
       <Box role="panel-content">{children}</Box>
-    </StyledPanel>,
+    </Box>,
     ref
   );
 };

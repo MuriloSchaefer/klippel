@@ -25,7 +25,7 @@ export default function MaterialsList({
     <List sx={{ width: "100%" }} role="material-list">
       {Object.values(edges).filter(e => e.type === 'MADE_OF').map(e => {
         return <Paper key={e.targetId} variant="outlined" square sx={{
-          width: "100%", paddin: 1, '&:div + div': {
+          width: "100%", padding: 1, '&:div + div': {
             borderTop: 0
           }
         }} role="material-container">

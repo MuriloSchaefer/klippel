@@ -5,7 +5,6 @@ import {
   CssBaseline,
   styled,
 } from "@mui/material";
-import grey from "@mui/material/colors/grey";
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
@@ -36,13 +35,12 @@ const StyledContent = styled(Box)`
   height: 100vh;
 
   grid-template-rows: min-content auto;
-  overflow: hidden;
   grid-template-areas:
     "ribbon ribbon ribbon"
     "settings viewport details";
 
   @media (orientation: portrait) {
-    grid-template-rows: auto 2fr 2fr;
+    grid-template-rows: auto 2fr minmax(10px, 2fr);
     grid-template-areas:
       "ribbon ribbon"
       "viewport viewport"
@@ -135,7 +133,7 @@ const Layout = () => {
             sx={{
               gridArea: "details",
               width: "100%",
-              minHeight: "100%",
+              //minHeight: "100%",
               borderLeft: 1,
               borderColor: "divider",
               overflow: "auto",
@@ -143,7 +141,7 @@ const Layout = () => {
                 borderLeft: 0,
                 borderTop: 1,
                 borderColor: "divider",
-                height: "max-content",
+                //height: "max-content",
               },
             }}
           />

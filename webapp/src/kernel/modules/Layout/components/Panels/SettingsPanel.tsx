@@ -42,7 +42,8 @@ export const SettingsPanel = ({
 
   if (!ref || !panelState) return null;
   return createPortal(
-    <Box
+    <Box sx={{position:'relative'}}>
+      <Box
       role="settings-panel"
       aria-label="settings panel"
       sx={{
@@ -51,7 +52,7 @@ export const SettingsPanel = ({
           width: "0.4em",
         },
 
-        height: "100%",
+        //height: "100%",
         padding: 1,
         maxWidth: panelState.state === "collapsed" ? "6vw" : "100%",
 
@@ -104,6 +105,7 @@ export const SettingsPanel = ({
           cloneElement(child, { state: panelState.state, key: idx })
         )}
       </Box>
+    </Box>
     </Box>,
     ref
   );

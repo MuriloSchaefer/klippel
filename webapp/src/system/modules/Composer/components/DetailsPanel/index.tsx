@@ -48,6 +48,7 @@ const ComposerDetailsPanel = ({graphId, selectedPart}: {graphId: string, selecte
         name="Materiais"
         icon={<ListSharpIcon />}
         summary="Lista de materiais"
+        sx={{flexGrow: 1}}
       >
         <MaterialsList graphId={graphId} selectedPart={selectedPart}/>
       </Accordion>
