@@ -8,8 +8,10 @@ import { SVGState, SVGModuleState } from "../store/state";
 interface SVG<T = SVGState> {
   state: T | undefined;
   actions: {
-    addProxy(id: string, proxySet:string, styles: CSSProperties): void;
-    updateProxy(id: string, proxySet: string, changes: Partial<CSSProperties>): void;
+    setPan(x: number, y: number): void
+    setZoom(zoom: number): void;
+    addProxy(id: string, instanceName:string, styles: CSSProperties): void;
+    updateProxy(id: string, instanceName: string, changes: Partial<CSSProperties>): void;
   };
 }
 
@@ -33,11 +35,17 @@ const useSVG = <S = SVG, R = S>(
   return {
     state: state,
     actions: {
-      addProxy(id, proxySet, styles) {
-        dispatch(addProxy({ path,proxySet, id, styles }));
+      setPan(x, y) {
+
       },
-      updateProxy(id, proxySet, changes){
-        dispatch(updateProxy({ path,proxySet, id, changes }));
+      setZoom(zoom){
+        
+      },
+      addProxy(id, instanceName, styles) {
+        dispatch(addProxy({ path, instanceName, id, styles }));
+      },
+      updateProxy(id, instanceName, changes){
+        dispatch(updateProxy({ path, instanceName, id, changes }));
       }
     },
   };

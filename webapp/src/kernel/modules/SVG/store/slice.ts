@@ -16,12 +16,19 @@ const slice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(
       loadSVG,
-      (state: SVGModuleState, { payload: { path } }) => ({
+      (state: SVGModuleState, { payload: { path,instanceName } }) => ({
         ...state,
         svgs: {
           [path]: {
             path,
             ...newSVGState,
+            instances: {
+              [instanceName]: {
+                zoom: 1,
+                pan: [0,0],
+                proxies: {}
+              }
+            }
           },
         },
       })
@@ -53,16 +60,21 @@ const slice = createSlice({
     );
     builder.addCase(
       addProxy,
-      (state: SVGModuleState, { payload: { path, proxySet, id, styles } }) => ({
+      (state: SVGModuleState, { payload: { path, instanceName, id, styles } }) => ({
         ...state,
         svgs: {
           [path]: {
             ...state.svgs[path],
-            proxies: {
-              ...state.svgs[path].proxies,
-              [proxySet]: {
-                ...state.svgs[path].proxies[proxySet],
-                [id]: styles,
+            instances: {
+              ...state.svgs[path].instances,
+              [instanceName]: {
+                ...state.svgs[path].instances[instanceName],
+                proxies: state.svgs[path].instances[instanceName]
+                  ? {
+                      ...state.svgs[path].instances[instanceName].proxies,
+                      [id]: styles,
+                    }
+                  : { [id]: styles },
               },
             },
           },
@@ -73,17 +85,23 @@ const slice = createSlice({
       updateProxy,
       (
         state: SVGModuleState,
-        { payload: { path, proxySet, id, changes } }
+        { payload: { path, instanceName, id, changes } }
       ) => ({
         ...state,
         svgs: {
           [path]: {
             ...state.svgs[path],
-            proxies: {
-              ...state.svgs[path].proxies,
-              [proxySet]: {
-                ...state.svgs[path].proxies[proxySet],
-                [id]: { ...state.svgs[path].proxies[proxySet][id], ...changes },
+            instances: {
+              ...state.svgs[path].instances,
+              [instanceName]: {
+                ...state.svgs[path].instances[instanceName],
+                proxies: {
+                  ...state.svgs[path].instances[instanceName].proxies,
+                  [id]: state.svgs[path].instances[instanceName].proxies ? {
+                    ...state.svgs[path].instances[instanceName].proxies[id],
+                    ...changes,
+                  } : changes
+                }
               },
             },
           },

@@ -48,7 +48,7 @@ middlewares.startListening({
       payload,
     }: PayloadAction<{
       path: string;
-      proxySet: string;
+      instanceName: string;
       id: string;
       changes: CSSProperties;
     }>,
@@ -59,7 +59,7 @@ middlewares.startListening({
       SVG: { svgs },
     } = getState() as { SVG: SVGModuleState };
 
-    dispatch(proxyUpdated(svgs[payload.path].proxies[payload.proxySet])); // dispatch event
+    dispatch(proxyUpdated(svgs[payload.path].instances[payload.instanceName].proxies)); // dispatch event
   },
 });
 

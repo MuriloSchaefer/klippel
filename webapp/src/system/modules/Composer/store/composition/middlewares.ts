@@ -120,7 +120,7 @@ middlewares.startListening({
         dispatch(
           updateProxy({
             path: composition.svgPath,
-            proxySet: composition.name,
+            instanceName: composition.name,
             id: id,
             changes: changes,
           })

@@ -7,27 +7,13 @@ import { selectSVGState } from "../store/selectors";
 import { Box } from "@mui/material";
 
 type A4cm = [21, 29.7];
-interface SVGViewerPreferences {
-  layout?: {
-    showRulers?: {
-      unit: "px" | "mm" | "cm" | "mt";
-      x: boolean;
-      y: boolean;
-    };
-    gridLines?: {
-      unit: "px" | "mm" | "cm" | "mt";
-      size: [number, number];
-    };
-  };
-}
 interface SVGViewerProps {
   path: string;
-  proxySet?:string;
+  instanceName:string;
   beforeInjection?: BeforeEach;
-  preferences?: SVGViewerPreferences;
 }
 
-const SVGViewer = ({ path, proxySet, beforeInjection, preferences }: SVGViewerProps) => {
+const SVGViewer = ({ path, instanceName, beforeInjection }: SVGViewerProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
@@ -69,24 +55,34 @@ const SVGViewer = ({ path, proxySet, beforeInjection, preferences }: SVGViewerPr
       svg.addEventListener("wheel", (e: WheelEvent) => {
         handleZoom(svg, e.deltaY, [e.x, e.y]);
       });
-      // svg.setAttribute("height", `100%`);
+
+      
       // svg.setAttribute("viewBox", `100%`);
-      if (proxySet){
-        Object.entries(svgState?.proxies[proxySet] ?? {}).forEach(([id, styles]) => {
+      console.log('instance: ', instanceName)
+      if (instanceName){
+        const instance = svgState?.instances[instanceName]
+        if (!instance) return
+
+        //svg.setAttribute('viewBox', `${-instance.pan[0]} ${-instance.pan[1]} ${100 / instance.zoom} ${100 / instance.zoom}`)
+        
+        console.group('Proxies')
+        console.log(instance)
+        Object.entries(svgState?.instances[instanceName].proxies ?? {}).forEach(([id, styles]) => {
           const elem = svg.getElementById(id) as SVGSVGElement;
           if (elem) {
             if ('fill' in styles)
-              elem.setAttribute("fill", styles.fill!);
+              elem.setAttribute("fill", styles.fill as string);
   
             if ('stroke' in styles)
-              elem.setAttribute("stroke", styles.stroke!);
+              elem.setAttribute("stroke", styles.stroke as string);
           }
         });
+        console.groupEnd()
       }
       
       if (beforeInjection) beforeInjection(svg);
     },
-    [beforeInjection, svgState?.content, svgState?.proxies]
+    [beforeInjection, svgState?.content, instanceName, svgState?.instances[instanceName]]
   );
 
   const objURL = useMemo(

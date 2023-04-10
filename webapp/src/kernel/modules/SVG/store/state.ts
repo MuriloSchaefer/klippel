@@ -5,13 +5,22 @@ type Loader = 'not-started' | 'started' | 'completed'
 export interface Proxies {
     [id: string]: CSSProperties
 } 
-interface ProxySet {
-    [name: string]: Proxies
+
+export interface Settings {
+    pan: [number, number]
+    zoom: number,
+    proxies: {
+        [name: string]: Proxies
+    }
+}
+
+interface InstancesMap {
+    [name: string]: Settings
 }
 export interface SVGState {
     progress: Loader
     path: string;
-    proxies: ProxySet;
+    instances: InstancesMap;
     content: string | undefined;
 }
 
@@ -25,7 +34,7 @@ export interface SVGModuleState{
 
 export const newSVGState: Omit<SVGState, 'path'> = {
     progress: 'not-started',
-    proxies: {},
+    instances: {},
     content: undefined,
 }
 

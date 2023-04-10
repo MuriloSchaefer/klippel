@@ -173,7 +173,7 @@ middlewares.startListening({
       );
 
       Object.entries(proxies).forEach(([id, styles]) => {
-        dispatch(addProxy({path: composition.svgPath, proxySet: composition.name, id, styles}))
+        dispatch(addProxy({path: composition.svgPath, instanceName: composition.name, id, styles}))
       })
     });
 

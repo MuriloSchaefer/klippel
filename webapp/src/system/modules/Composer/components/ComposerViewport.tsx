@@ -91,7 +91,7 @@ export const ComposerViewport = ({
           cursor: "crosshair",
         }}
       >
-        <SVGViewer proxySet={name} path={svgPath} beforeInjection={beforeInjectionHandle} />
+        <SVGViewer instanceName={name} path={svgPath} beforeInjection={beforeInjectionHandle} />
 
         <ComposerSettingsPanel graphId={graphId} />
 

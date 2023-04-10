@@ -5,7 +5,7 @@ import { loadSVG } from "../store/actions";
 
 interface SVGManager extends Manager {
     functions: {
-        loadSVG(path: string):void
+        loadSVG(path: string, instanceName: string):void
     }
 }
 
@@ -18,8 +18,8 @@ export const useSVGManager = (): SVGManager => {
 
     return {
         functions: {
-            loadSVG(path){
-                dispatch(loadSVG({path}))
+            loadSVG(path, instanceName){
+                dispatch(loadSVG({path, instanceName}))
             }
         }
     }
