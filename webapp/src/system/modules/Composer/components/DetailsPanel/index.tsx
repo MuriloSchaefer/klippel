@@ -45,12 +45,28 @@ const ComposerDetailsPanel = ({graphId, selectedPart}: {graphId: string, selecte
   return (
     <DetailsPanel title={node.state?.label ?? selectedPart}>
       <Accordion
+        name="Opcionais"
+        icon={<ListSharpIcon />}
+        summary="Lista de opcionais"
+        sx={{flexGrow: 1}}
+      >
+       
+      </Accordion>
+      <Accordion
         name="Materiais"
         icon={<ListSharpIcon />}
         summary="Lista de materiais"
         sx={{flexGrow: 1}}
       >
         <MaterialsList graphId={graphId} selectedPart={selectedPart}/>
+      </Accordion>
+      <Accordion
+        name="Processos"
+        icon={<ListSharpIcon />}
+        summary="Lista de processos"
+        sx={{flexGrow: 1}}
+      >
+        <ProcessesList graphId={graphId} selectedPart={selectedPart}/>
       </Accordion>
     </DetailsPanel>
   );

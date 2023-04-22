@@ -4,6 +4,8 @@ import {
   addProxy,
   fetchSVG,
   loadSVG,
+  setPan,
+  setZoom,
   SVGFetched,
   updateProxy,
 } from "./actions";
@@ -25,7 +27,7 @@ const slice = createSlice({
             instances: {
               [instanceName]: {
                 zoom: 1,
-                pan: [0,0],
+                pan: [500,500],
                 proxies: {}
               }
             }
@@ -75,6 +77,42 @@ const slice = createSlice({
                       [id]: styles,
                     }
                   : { [id]: styles },
+              },
+            },
+          },
+        },
+      })
+    );
+    builder.addCase(
+      setZoom,
+      (state: SVGModuleState, { payload: { path, instanceName, zoom } }) => ({
+        ...state,
+        svgs: {
+          [path]: {
+            ...state.svgs[path],
+            instances: {
+              ...state.svgs[path].instances,
+              [instanceName]: {
+                ...state.svgs[path].instances[instanceName],
+                zoom: zoom
+              },
+            },
+          },
+        },
+      })
+    );
+    builder.addCase(
+      setPan,
+      (state: SVGModuleState, { payload: { path, instanceName, x,y } }) => ({
+        ...state,
+        svgs: {
+          [path]: {
+            ...state.svgs[path],
+            instances: {
+              ...state.svgs[path].instances,
+              [instanceName]: {
+                ...state.svgs[path].instances[instanceName],
+                pan: [x,y]
               },
             },
           },

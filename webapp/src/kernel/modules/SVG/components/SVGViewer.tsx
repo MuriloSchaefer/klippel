@@ -1,7 +1,7 @@
 import { BeforeEach } from "@tanem/svg-injector";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
-import React, { useCallback, useMemo } from "react";
+import React, { PointerEvent, useCallback, useMemo } from "react";
 import { ReactSVG } from "react-svg";
 import { selectSVGState } from "../store/selectors";
 import { Box } from "@mui/material";
@@ -9,7 +9,7 @@ import { Box } from "@mui/material";
 type A4cm = [21, 29.7];
 interface SVGViewerProps {
   path: string;
-  instanceName:string;
+  instanceName: string;
   beforeInjection?: BeforeEach;
 }
 
@@ -24,22 +24,23 @@ const SVGViewer = ({ path, instanceName, beforeInjection }: SVGViewerProps) => {
     delta: number,
     center: [number, number]
   ) => {
-    console.group('zoom')
+    console.group("zoom");
     const originalViewbox = svg.viewBox;
 
     // invert op
-    center[0] = delta < 0 ? -center[0] : center[0]
-    center[1] = delta < 1 ? -center[1] : center[1]
+    center[0] = delta < 0 ? -center[0] : center[0];
+    center[1] = delta < 1 ? -center[1] : center[1];
     const nextViewbox = `
-    ${originalViewbox.baseVal.x } 
-    ${originalViewbox.baseVal.y } 
-    ${originalViewbox.baseVal.width + delta*5} 
+    ${originalViewbox.baseVal.x} 
+    ${originalViewbox.baseVal.y} 
+    ${originalViewbox.baseVal.width + delta * 5} 
     ${originalViewbox.baseVal.height}`;
 
     svg.setAttribute("viewBox", nextViewbox);
 
-    console.groupEnd()
+    console.groupEnd();
   };
+
 
   const handleBeforeInjection = useCallback(
     (svg: SVGSVGElement) => {
@@ -48,41 +49,45 @@ const SVGViewer = ({ path, instanceName, beforeInjection }: SVGViewerProps) => {
       svg.setAttribute("width", "100%");
       svg.setAttribute("height", "100%");
 
-      // set zoom and pam
-      // TODO: make event configurable (mouse commands should be configurable)
-      // QUESTION: how to handle pen / multi-touch events (on tablet)
-
-      svg.addEventListener("wheel", (e: WheelEvent) => {
-        handleZoom(svg, e.deltaY, [e.x, e.y]);
-      });
-
-      
       // svg.setAttribute("viewBox", `100%`);
-      console.log('instance: ', instanceName)
-      if (instanceName){
-        const instance = svgState?.instances[instanceName]
-        if (!instance) return
+      if (instanceName) {
+        const instance = svgState?.instances[instanceName];
+        if (!instance) return;
 
-        //svg.setAttribute('viewBox', `${-instance.pan[0]} ${-instance.pan[1]} ${100 / instance.zoom} ${100 / instance.zoom}`)
-        
-        console.group('Proxies')
-        console.log(instance)
-        Object.entries(svgState?.instances[instanceName].proxies ?? {}).forEach(([id, styles]) => {
-          const elem = svg.getElementById(id) as SVGSVGElement;
-          if (elem) {
-            if ('fill' in styles)
-              elem.setAttribute("fill", styles.fill as string);
-  
-            if ('stroke' in styles)
-              elem.setAttribute("stroke", styles.stroke as string);
+        // TODO: fix zoom and panning
+        // const currentViewBox = svg.getAttribute("viewBox");
+        // if (currentViewBox) {
+        //   const [minX, minY, width, height] = currentViewBox
+        //     .split(" ")
+        //     .map((value) => Number(value));
+        //   const newViewBox = `${minX + instance.pan[0]} ${
+        //     minY + instance.pan[1]
+        //   } ${width / instance.zoom} ${height / instance.zoom}`;
+        //   svg.setAttribute("viewBox", newViewBox);
+        // }
+
+        Object.entries(svgState?.instances[instanceName].proxies ?? {}).forEach(
+          ([id, styles]) => {
+            const elem = svg.getElementById(id) as SVGSVGElement;
+            if (elem) {
+              if ("fill" in styles)
+                elem.setAttribute("fill", styles.fill as string);
+
+              if ("stroke" in styles)
+                elem.setAttribute("stroke", styles.stroke as string);
+            }
           }
-        });
-        console.groupEnd()
+        );
       }
-      
+
       if (beforeInjection) beforeInjection(svg);
     },
-    [beforeInjection, svgState?.content, instanceName, svgState?.instances[instanceName]]
+    [
+      beforeInjection,
+      svgState?.content,
+      instanceName,
+      svgState?.instances[instanceName],
+    ]
   );
 
   const objURL = useMemo(
@@ -112,7 +117,6 @@ const SVGViewer = ({ path, instanceName, beforeInjection }: SVGViewerProps) => {
         style={{
           width: "100%",
           overflow: "hidden",
-          height: "100%",
         }}
         src={objURL}
         height="100%"

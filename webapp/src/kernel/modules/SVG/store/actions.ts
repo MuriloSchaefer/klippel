@@ -20,6 +20,7 @@ export const setPan = createAction<{
   x: number;
   y: number
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Set pan`);
+
 export const setZoom = createAction<{
   path: string;
   instanceName: string;

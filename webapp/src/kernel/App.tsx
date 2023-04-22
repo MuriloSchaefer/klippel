@@ -12,6 +12,7 @@ import SVG from "./modules/SVG";
 // System modules
 import materialsModule from "@system/modules/Materials";
 import composerModule from "@system/modules/Composer";
+import pointerModule from "./modules/Pointer";
 
 export interface InitializationConfig {
   extraModules: ModulesMap
@@ -20,7 +21,7 @@ export interface InitializationConfig {
 const App = (): React.ReactElement => {
 
   const builtInModules: ModulesMap = {
-    kernel: [SVG],
+    kernel: [SVG, pointerModule],
     system: [materialsModule, composerModule ]
   }
   

@@ -68,7 +68,7 @@
     "corteMaterial1MangaDireita": {
       "id": "corteMaterial1MangaDireita",
       "type": "OPERATION",
-      "label": "Corte Material 1",
+      "label": "Corte Material primario",
       "time_taken": {
         "amount": 10,
         "unit": "min"
@@ -81,7 +81,7 @@
     "corteMaterial2MangaDireita": {
       "id": "corteMaterial2MangaDireita",
       "type": "OPERATION",
-      "label": "Corte Material 2",
+      "label": "Corte Material secundario",
       "time_taken": {
         "amount": 10,
         "unit": "min"
@@ -220,22 +220,10 @@
       "domId": "frente",
       "label": "Frente"
     },
-    "ombro-esquerdo-frente": {
-      "id": "ombro-esquerdo-frente",
-      "type": "PART",
-      "domId": "ombro-esquerdo-frente",
-      "label": "Ombro esquerdo"
-    },
-    "ombro-direito-frente": {
-      "id": "ombro-direito-frente",
-      "type": "PART",
-      "domId": "ombro-direito-frente",
-      "label": "Ombro direito"
-    },
     "material1-ombro-esquerdo-frente": {
       "id": "material1-ombro-esquerdo-frente",
       "type": "MATERIAL_USAGE",
-      "label": "Material primario",
+      "label": "Ombro esquerdo",
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
@@ -250,7 +238,7 @@
     "material1-ombro-direito-frente": {
       "id": "material1-ombro-direito-frente",
       "type": "MATERIAL_USAGE",
-      "label": "Material primario",
+      "label": "Ombro direito",
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
@@ -262,6 +250,10 @@
       "allowOnly": ["malha", "tecido"],
       "label": "Permitido apenas tecidos ou malhas"
     },
+    "process1-frente": {
+
+    },
+
     "barra-frente": {
       "id": "barra-frente",
       "type": "PART",
@@ -313,6 +305,8 @@
       "allowOnly": ["malha", "tecido"],
       "label": "Permitido apenas tecidos ou malhas"
     },
+
+
 
     "costas": {
       "id": "costas",
@@ -502,18 +496,6 @@
       "targetId": "frente",
       "id": "garment->frente"
     },
-    "frente->ombro-esquerdo-frente": {
-      "type": "COMPOSED_OF",
-      "sourceId": "frente",
-      "targetId": "ombro-esquerdo-frente",
-      "id": "frente->ombro-esquerdo-frente"
-    },
-    "frente->ombro-direito-frente": {
-      "type": "COMPOSED_OF",
-      "sourceId": "frente",
-      "targetId": "ombro-direito-frente",
-      "id": "frente->ombro-direito-frente"
-    },
 
     "frente->material1-frente": {
       "type": "MADE_OF",
@@ -541,11 +523,11 @@
       "targetId": "material2-frente-restriction-1",
       "id": "material1-frente->material2-frente-restriction-1"
     },
-    "ombro-esquerdo-frente->material1-ombro-esquerdo-frente": {
+    "frente->material1-ombro-esquerdo-frente": {
       "type": "MADE_OF",
-      "sourceId": "ombro-esquerdo-frente",
+      "sourceId": "frente",
       "targetId": "material1-ombro-esquerdo-frente",
-      "id": "ombro-esquerdo-frente->material1-ombro-esquerdo-frente"
+      "id": "frente->material1-ombro-esquerdo-frente"
     },
     "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1": {
       "type": "RESTRICTED_BY",
@@ -554,11 +536,11 @@
       "targetId": "material1-ombro-esquerdo-frente-restriction-1",
       "id": "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"
     },
-    "ombro-direito-frente->material1-ombro-direito-frente": {
+    "frente->material1-ombro-direito-frente": {
       "type": "MADE_OF",
-      "sourceId": "ombro-direito-frente",
+      "sourceId": "frente",
       "targetId": "material1-ombro-direito-frente",
-      "id": "ombro-direito-frente->material1-ombro-direito-frente"
+      "id": "frente->material1-ombro-direito-frente"
     },
     "material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1": {
       "type": "RESTRICTED_BY",
@@ -1018,23 +1000,23 @@
     "frente": {
       "inputs": ["garment->frente"],
       "outputs": [
-        "frente->ombro-esquerdo-frente",
-        "frente->ombro-direito-frente",
         "frente->barra-frente",
+        "frente->material1-ombro-esquerdo-frente",
+        "frente->material1-ombro-direito-frente",
         "frente->material1-frente",
         "frente->material2-frente"
       ]
     },
     "ombro-esquerdo-frente": {
       "inputs": ["frente->ombro-esquerdo-frente"],
-      "outputs": ["ombro-esquerdo-frente->material1-ombro-esquerdo-frente"]
+      "outputs": ["frente->material1-ombro-esquerdo-frente"]
     },
     "ombro-direito-frente": {
       "inputs": ["frente->ombro-direito-frente"],
       "outputs": ["ombro-direito-frente->material1-ombro-direito-frente"]
     },
     "material1-ombro-esquerdo-frente": {
-      "inputs": ["ombro-esquerdo-frente->material1-ombro-esquerdo-frente"],
+      "inputs": ["frente->material1-ombro-esquerdo-frente"],
       "outputs": [
         "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"
       ]
@@ -1044,7 +1026,7 @@
       "outputs": []
     },
     "material1-ombro-direito-frente": {
-      "inputs": ["ombro-direito-frente->material1-ombro-direito-frente"],
+      "inputs": ["frente->material1-ombro-direito-frente"],
       "outputs": [
         "material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1"
       ]

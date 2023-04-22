@@ -31,6 +31,17 @@ export interface MaterialNode extends Node {
     label: string
     materialId: number // TODO: add typing
 }
+export interface OperationNode extends Node {
+    type: 'OPERATION'
+    label: string
+    time_taken: UnitValue
+    cost: UnitValue
+}
+
+export interface UnitValue {
+    unit: string;
+    amount: number;
+}
 
 export type RestrictionNode = AllowOnlyRestrictionNode | SameAsRestrictionNode
 export interface AllowOnlyRestrictionNode<T=string> extends Node {
@@ -54,8 +65,11 @@ export interface RestrictedByEdge extends Edge {
     type: 'RESTRICTED_BY'
     attr: string
 }
+export interface ProcessNeededEdge extends Edge {
+    type: 'PROCESS_NEEDED'
+}
 
-export type CompositionEdge = RestrictedByEdge | MadeOfEdge
+export type CompositionEdge = RestrictedByEdge | MadeOfEdge | ProcessNeededEdge
 
 export type CompositionGraph = GraphState<CompositionNode, CompositionEdge>
 
