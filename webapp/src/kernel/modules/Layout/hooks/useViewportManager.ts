@@ -5,26 +5,25 @@ import useModule from "@kernel/hooks/useModule"
 import { Manager } from "@kernel/modules/base"
 import { Store } from "@kernel/modules/Store"
 
-import { ViewportState } from "../store/viewports/state"
-import {ViewportType, ViewportTypeContext} from '../components/ViewportManager/ViewportTypeProvider'
-import { addViewport, closeViewport, renameViewport, selectViewport } from "../store/viewports/actions"
-import { PaletteColor } from "@mui/material"
+import {ViewportType} from '../components/ViewportManager/ViewportTypeProvider'
+import { addToGroup, addViewport, closeViewport, renameViewport, selectViewport } from "../store/viewports/actions"
 import { VIEWPORT_TYPE_REGISTRY_NAME } from "../constants"
+import { createGroup } from "../store/viewports/groups/actions"
 
 
 export interface ViewportManager extends Manager {
     functions: {
         registerViewportTypes(components: {[name: string]: ViewportType}): void;
-        getViewportTypeComponent(name: string): ViewportType;
+        getViewportTypeComponent(name: string): React.ComponentType<ViewportType>;
         addViewport(title: string, type: string, group?: string, namePrefix?: string):string;
         selectViewport(name: string):void;
         closeViewport(name: string):void;
         renameViewport(oldName: string, newName: string): void;
 
-        createGroup(name: string, color: PaletteColor): void;
+        createGroup(name: string, color: string): void;
         addToGroup(viewportName: string, groupName: string): void;
-        removeFromGroup(viewportName: string): void;
-        deleteGroup(name: string): void;
+        // removeFromGroup(viewportName: string): void;
+        // deleteGroup(name: string): void;
     }
 }
 
@@ -68,8 +67,15 @@ export function useViewportManager():ViewportManager{
             },
 
 
+            createGroup(viewportName, color){
+                console.log('create group')
+                dispatch(createGroup({name: viewportName, color}))
+            },
+            addToGroup(viewportName, groupName){
+                dispatch(addToGroup({viewportName, groupName}))
+            }
         }
-    } as ViewportManager
+    }
 }
 
 export default useViewportManager

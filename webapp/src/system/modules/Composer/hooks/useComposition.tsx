@@ -29,11 +29,14 @@ export interface Composition<T = CompositionState> {
   actions: CompositionActions;
 }
 
+export interface NonNullComposition<T = CompositionState> {
+  state: T;
+  actions: CompositionActions;
+}
+
 const useComposition = <C = Composition, R = C>(
   compositionName: string,
-  compositionSelector: (
-    composition: CompositionState | undefined
-  ) => R | undefined
+  compositionSelector: (composition: CompositionState | undefined) => R
 ): Composition<R> => {
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -53,7 +56,7 @@ const useComposition = <C = Composition, R = C>(
       state && state.Composer.compositionsManager.compositions[compositionName],
     compositionSelector
   );
-  const compositionState = useAppSelector<R | undefined>(selector);
+  const compositionState = useAppSelector(selector);
 
   const innerState = useAppSelector(
     (state: { Composer: ComposerState } | undefined) =>

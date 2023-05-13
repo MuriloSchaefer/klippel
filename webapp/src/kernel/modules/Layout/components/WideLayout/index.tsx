@@ -13,7 +13,7 @@ import { selectTheme } from "../../store/selectors";
 import RibbonMenu from "../RibbonMenu";
 import React, { useMemo } from "react";
 import ViewportManager from "../ViewportManager";
-import SystemTray from "../SystemTray";
+import SystemTray from "../SystemTray/SystemTray";
 import { DETAILS_PANEL_ID, SETTINGS_PANEL_ID } from "../../constants";
 
 declare module "@mui/material/styles" {

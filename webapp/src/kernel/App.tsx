@@ -10,6 +10,7 @@ import Layout from "./modules/Layout/components/WideLayout";
 import SVG from "./modules/SVG";
 
 // System modules
+import converterModule from "@system/modules/Converter";
 import materialsModule from "@system/modules/Materials";
 import composerModule from "@system/modules/Composer";
 import pointerModule from "./modules/Pointer";
@@ -22,7 +23,7 @@ const App = (): React.ReactElement => {
 
   const builtInModules: ModulesMap = {
     kernel: [SVG, pointerModule],
-    system: [materialsModule, composerModule ]
+    system: [converterModule, materialsModule, composerModule ]
   }
   
   return (

@@ -3,6 +3,7 @@ import { MODULE_NAME, SECTIONS_REGISTRY_NAME, VIEWPORT_TYPE_REGISTRY_NAME } from
 import layoutMiddleware from "../store/middlewares";
 import ribbonMenuMiddleware from "../store/ribbonMenu/middlewares";
 import viewportMiddleware from "../store/viewports/middlewares";
+import viewportGroupsMiddleware from "../store/viewports/groups/middlewares";
 import panelsMiddleware from "../store/panels/middlewares";
 
 import slice from "../store/slice";
@@ -17,6 +18,7 @@ export const startModule = ({
   storeManager.functions.registerMiddleware(layoutMiddleware);
   storeManager.functions.registerMiddleware(ribbonMenuMiddleware);
   storeManager.functions.registerMiddleware(viewportMiddleware);
+  storeManager.functions.registerMiddleware(viewportGroupsMiddleware);
   storeManager.functions.registerMiddleware(panelsMiddleware);
 
   componentRegistryManager.functions.createRegistries({

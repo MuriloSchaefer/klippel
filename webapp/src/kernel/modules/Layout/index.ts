@@ -10,6 +10,7 @@ import DetailsPanel from "./components/Panels/DetailsPanel";
 import { Accordion } from "./components/Panels/Accordion";
 import usePanelsManager from "./hooks/usePanelsManager";
 import { getViewportState, selectActiveViewport } from "./store/viewports/selectors";
+import ViewportNotificationsTray from "./components/SystemTray/ViewportNotificationsTray";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -17,6 +18,7 @@ export interface ILayoutModule extends IModule {
   components: {
     SettingsPanel: typeof SettingsPanel,
     DetailsPanel: typeof DetailsPanel,
+    ViewportNotificationsTray: typeof ViewportNotificationsTray,
     Accordion: typeof Accordion,
   },
   hooks: {
@@ -48,6 +50,7 @@ const LayoutModule: ILayoutModule = {
   components: {
     SettingsPanel,
     DetailsPanel,
+    ViewportNotificationsTray,
     Accordion
   },
   hooks: {

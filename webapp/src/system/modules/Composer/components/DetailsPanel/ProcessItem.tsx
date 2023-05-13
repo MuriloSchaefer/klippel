@@ -36,7 +36,7 @@ const ProcessItem = ({
             >
               <Box sx={{gap:1, display:'flex', flexWrap:'wrap', flexDirection:'row'}} role="material-attributes" aria-label="material attributes">
                   <AccessTimeSharpIcon /> {node.time_taken.amount} {node.time_taken.unit}
-                  <AttachMoneySharpIcon /> {node.cost.amount} {node.cost.unit}
+                  <AttachMoneySharpIcon /> {node.cost.amount} {node.cost.unit} {'by' in node.cost && `/ ${node.cost.by}`}
               </Box>
             </Box>
           </Typography>

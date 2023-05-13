@@ -19,6 +19,14 @@ export const renameViewport = createAction<{oldName: string, newName: string}>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Rename viewport`
 );
 
+export const addToGroup = createAction<{viewportName: string, groupName: string}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Add viewport to group`
+);
+export const removeFromGroup = createAction<{viewportName: string}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Viewport removed from group`
+);
+
+
 // Events
 export const viewportAdded = createAction<ViewportState>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport added`
@@ -31,4 +39,10 @@ export const viewportClosed = createAction<{name: string}>(
 );
 export const viewportRenamed = createAction<{oldName: string, newName: string}>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport renamed`
+);
+export const addedToGroup = createAction<{viewportName: string, groupName: string}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport added to group`
+);
+export const removedFromGroup = createAction<{viewportName: string, groupName: string}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport removed from group`
 );

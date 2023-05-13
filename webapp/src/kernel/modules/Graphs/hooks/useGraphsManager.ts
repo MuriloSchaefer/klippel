@@ -10,6 +10,7 @@ export interface GraphsManager extends Manager {
     functions: {
         createGraph: (graphId: string) => Graph
         resetGraph: (graphId: string) => void
+        openGraphViewport: (graphId: string) => void
     }
 }
 
@@ -21,6 +22,9 @@ const useGraphsManager = (): GraphsManager => {
 
     return {
         functions: {
+            openGraphViewport(graphId){
+              dispatch()
+            },
             createGraph(graphId){
                 dispatch(createGraphAction({graphId}))
 

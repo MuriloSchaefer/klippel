@@ -3,7 +3,8 @@ import { MODULE_NAME } from "../../constants";
 import {
   viewportManagerState, ViewportState
 } from "./state";
-import { addViewport, closeViewport, renameViewport, selectViewport } from "./actions";
+import groupsSlice from './groups/slice'
+import { addToGroup, addViewport, closeViewport, removeFromGroup, renameViewport, selectViewport } from "./actions";
 
 
 const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManagerState>, string>({
@@ -35,7 +36,6 @@ const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManage
         return {...state, activeViewport: payload.name}
       })
       builder.addCase(renameViewport, (state:viewportManagerState,{ payload: {oldName, newName} }) => {
-        console.log(state.viewports, oldName, newName)
         return {
           ...state,
           viewports: Object.entries(state.viewports).reduce((newState, [name, vp])=>{
@@ -45,6 +45,35 @@ const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManage
           }, {})
         }
       })
+      builder.addCase(addToGroup, (state,{ payload: {viewportName, groupName} }) => {
+        return {
+          ...state,
+          viewports: {
+            ...state.viewports,
+            [viewportName]: {
+              ...state.viewports[viewportName],
+              group: groupName
+            }
+          }
+        }
+      })
+      builder.addCase(removeFromGroup, (state,{ payload: {viewportName} }) => {
+        return {
+          ...state,
+          viewports: {
+            ...state.viewports,
+            [viewportName]: {
+              ...state.viewports[viewportName],
+              group: undefined
+            }
+          }
+        }
+      })
+
+      builder.addDefaultCase((state, action)=>({
+        ...state,
+        groups: groupsSlice.reducer(state.groups, action)
+      }))
     }
 })
 

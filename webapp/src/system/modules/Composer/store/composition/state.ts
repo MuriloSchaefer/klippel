@@ -1,6 +1,7 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+import { Value } from "@system/modules/Converter/typings";
 
 
 export interface MaterialTypeNode extends Node {
@@ -34,14 +35,10 @@ export interface MaterialNode extends Node {
 export interface OperationNode extends Node {
     type: 'OPERATION'
     label: string
-    time_taken: UnitValue
-    cost: UnitValue
+    time_taken: Value
+    cost: Value
 }
 
-export interface UnitValue {
-    unit: string;
-    amount: number;
-}
 
 export type RestrictionNode = AllowOnlyRestrictionNode | SameAsRestrictionNode
 export interface AllowOnlyRestrictionNode<T=string> extends Node {
@@ -80,6 +77,7 @@ export interface CompositionState {
     svgPath: string
     graphId: string
     selectedPart?: string
+    debugViewport?: string
     loading: {
         loadSVG: Loader
         loadModel: Loader

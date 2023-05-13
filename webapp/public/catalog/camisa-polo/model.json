@@ -75,7 +75,8 @@
       },
       "cost": {
         "amount": 0.2,
-        "unit": "R$/h"
+        "unit": "R$",
+        "by": "h"
       }
     },
     "corteMaterial2MangaDireita": {
@@ -87,8 +88,9 @@
         "unit": "min"
       },
       "cost": {
-        "amount": 0.2,
-        "unit": "R$/h"
+        "amount": 0.35,
+        "unit": "R$",
+        "by": "h"
       }
     },
 
@@ -305,7 +307,6 @@
       "allowOnly": ["malha", "tecido"],
       "label": "Permitido apenas tecidos ou malhas"
     },
-
 
 
     "costas": {

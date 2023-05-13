@@ -1,6 +1,9 @@
 import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { destroyGraph } from "@kernel/modules/Graphs/store/graphsManager/actions";
-import { closeViewport } from "@kernel/modules/Layout/store/viewports/actions";
+import {
+  closeViewport,
+  removeFromGroup,
+} from "@kernel/modules/Layout/store/viewports/actions";
 import { SVGLoaded, addProxy } from "@kernel/modules/SVG/store/actions";
 import { SVGState } from "@kernel/modules/SVG/store/state";
 import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
@@ -18,6 +21,7 @@ import {
   proxiesLoaded,
 } from "./actions";
 import { ComposerState } from "./state";
+import { debugViewportOpened, openDebugView } from "./composition/actions";
 
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
@@ -49,6 +53,9 @@ middlewares.startListening({
     Object.values(compositionsManager.compositions).forEach((comp) => {
       if (comp.viewportName === payload.name) {
         dispatch(closeComposition({ name: comp.name, graphId: comp.graphId })); // dispatch event
+      }
+      if (comp.debugViewport === payload.name) {
+        dispatch(removeFromGroup({ viewportName: comp.name }));
       }
     });
   },
@@ -118,7 +125,12 @@ middlewares.startListening({
     const model = await (await response.blob()).text();
 
     // tree root
-    dispatch(modelFetched({ compositionName: composition.name, model: JSON.parse(model) }));
+    dispatch(
+      modelFetched({
+        compositionName: composition.name,
+        model: JSON.parse(model),
+      })
+    );
   },
 });
 
@@ -168,13 +180,23 @@ middlewares.startListening({
         (
           acc: { [id: string]: CSSProperties },
           curr: { elem: string; attr: string }
-        ) => ({ ...acc, [curr.elem]: {...acc[curr.elem], [curr.attr]: 'grey'} }),
+        ) => ({
+          ...acc,
+          [curr.elem]: { ...acc[curr.elem], [curr.attr]: "grey" },
+        }),
         {}
       );
 
       Object.entries(proxies).forEach(([id, styles]) => {
-        dispatch(addProxy({path: composition.svgPath, instanceName: composition.name, id, styles}))
-      })
+        dispatch(
+          addProxy({
+            path: composition.svgPath,
+            instanceName: composition.name,
+            id,
+            styles,
+          })
+        );
+      });
     });
 
     dispatch(
@@ -200,6 +222,26 @@ middlewares.startListening({
     dispatch(loadGraph({ graphId: composition.graphId, graph: payload.model }));
     dispatch(
       modelStored({ compositionName: composition.name, model: payload.model })
+    );
+  },
+});
+
+middlewares.startListening({
+  actionCreator: openDebugView,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Composer: { compositionsManager },
+    } = getState() as { Composer: ComposerState };
+
+    const composition =
+      compositionsManager.compositions[payload.compositionName];
+
+    dispatch(
+      debugViewportOpened({
+        compositionName: payload.compositionName,
+        viewportName: payload.debugViewport,
+      })
     );
   },
 });

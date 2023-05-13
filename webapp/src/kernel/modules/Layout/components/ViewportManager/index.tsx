@@ -22,6 +22,8 @@ import ViewportLoader from "./ViewportLoader";
 import useViewportManager from "../../hooks/useViewportManager";
 import { ViewportState } from "../../store/viewports/state";
 import { OverridableComponent } from "@mui/material/OverridableComponent";
+import { VIEWPORT_NOTIFICATIONS_ID } from "../../constants";
+import { selectAllGroups } from "../../store/viewports/groups/selectors";
 
 type GroupedViewports = {
   notGrouped: ViewportState[];
@@ -32,6 +34,9 @@ type GroupedViewports = {
 const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
+
+  const groups = useAppSelector(selectAllGroups);
+
   const selectedViewport = useAppSelector(selectActiveViewport);
   const viewports = useAppSelector(selectViewportStates);
 
@@ -61,7 +66,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   } = useViewportManager();
 
   const handleAddViewport = useCallback(() => {
-    addViewport("Nova aba", "home", "group");
+    addViewport("Nova aba", "home", undefined, 'new-');
   }, []);
 
   const handleCloseViewport = useCallback((name: string) => {
@@ -127,7 +132,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                   width: "fit-content",
                   p: 1,
                   borderTop: 2,
-                  borderColor: "red",
+                  borderColor: groups[vp.group!].color, // CHORE: remove ! mark
                 }}
                 onClick={() => selectViewport(vp.name)}
                 label={
@@ -170,13 +175,11 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
           />
         </Tabs>
         <Box
+          id={VIEWPORT_NOTIFICATIONS_ID}
           role="viewport-notifications"
           aria-label="viewport notifications"
           sx={{ display: "flex", p: 1, gap: 2, alignItems: "center" }}
-        >
-          <CastSharpIcon fontSize="small"/>
-          <NotificationsSharpIcon  fontSize="small"/>
-        </Box>
+        />
       </Box>
 
       <Box

@@ -11,3 +11,4 @@ export const VIEWPORT_TYPE_REGISTRY_NAME = 'viewportTypes'
 
 export const SETTINGS_PANEL_ID = 'settings-panel'
 export const DETAILS_PANEL_ID = 'details-panel'
+export const VIEWPORT_NOTIFICATIONS_ID = 'viewport-notifications-tray'
