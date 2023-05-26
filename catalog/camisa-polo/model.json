@@ -3,29 +3,49 @@
     "corte": {
       "id": "corte",
       "type": "PROCESS",
-      "label": "Corte"
+      "label": "Corte",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "malha": {
       "id": "malha",
       "type": "MATERIAL_TYPE",
-      "label": "Malha"
+      "label": "Malha",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "tecido": {
       "id": "tecido",
       "type": "MATERIAL_TYPE",
-      "label": "Tecido"
+      "label": "Tecido",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "garment": {
       "id": "garment",
       "type": "GARMENT",
       "domId": "peca",
-      "label": "Camisa polo feminina"
+      "label": "Camisa polo feminina",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "mangaDireita": {
       "id": "mangaDireita",
       "type": "PART",
       "domId": "manga-direita",
-      "label": "Manga direita"
+      "label": "Manga direita",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material1MangaDireita": {
       "id": "Material1MangaDireita",
@@ -34,13 +54,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "tecido-primario-manga-direita", "attr": "fill" }]
+      "proxies": [{ "elem": "tecido-primario-manga-direita", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material1MangaDireitaRestriction1": {
       "id": "Material1MangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "Material2MangaDireita": {
@@ -50,19 +78,31 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "tecido-secundario-manga-direita", "attr": "fill" }]
+      "proxies": [{ "elem": "tecido-secundario-manga-direita", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2MangaDireitaRestriction1": {
       "id": "Material2MangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2MangaDireitaRestriction2": {
       "id": "Material2MangaDireitaRestriction2",
       "type": "RESTRICTION",
       "sameAs": "Material1MangaDireita",
-      "label": "Ser do mesmo tipo que o tecido primario"
+      "label": "Ser do mesmo tipo que o tecido primario",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "corteMaterial1MangaDireita": {
@@ -75,7 +115,12 @@
       },
       "cost": {
         "amount": 0.2,
-        "unit": "R$/h"
+        "unit": "R$",
+        "by": "h"
+      },
+      "position": {
+        "x": 0,
+        "y": 0
       }
     },
     "corteMaterial2MangaDireita": {
@@ -87,8 +132,13 @@
         "unit": "min"
       },
       "cost": {
-        "amount": 0.2,
-        "unit": "R$/h"
+        "amount": 0.35,
+        "unit": "R$",
+        "by": "h"
+      },
+      "position": {
+        "x": 0,
+        "y": 0
       }
     },
 
@@ -96,7 +146,11 @@
       "id": "barraMangaDireita",
       "type": "PART",
       "domId": "barra-manga-direita",
-      "label": "Barra manga direita"
+      "label": "Barra manga direita",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "Material1barraMangaDireita": {
@@ -106,13 +160,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "tecido-barra-manga-direita", "attr": "fill" }]
+      "proxies": [{ "elem": "tecido-barra-manga-direita", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material1barraMangaDireitaRestriction1": {
       "id": "Material1barraMangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2barraMangaDireita": {
       "id": "Material2barraMangaDireita",
@@ -121,20 +183,32 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "detalhe-manga-direita", "attr": "fill" }]
+      "proxies": [{ "elem": "detalhe-manga-direita", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2barraMangaDireitaRestriction1": {
       "id": "Material2barraMangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "mangaEsquerda": {
       "id": "mangaEsquerda",
       "type": "PART",
       "domId": "manga-esquerda",
-      "label": "Manga esquerda"
+      "label": "Manga esquerda",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material1mangaEsquerda": {
       "id": "Material1mangaEsquerda",
@@ -143,13 +217,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "tecido-primario-manga-esquerda", "attr": "fill" }]
+      "proxies": [{ "elem": "tecido-primario-manga-esquerda", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material1mangaEsquerdaRestriction1": {
       "id": "Material1mangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "Material2mangaEsquerda": {
@@ -161,26 +243,42 @@
       "materialId": "material-1",
       "proxies": [
         { "elem": "tecido-secundario-manga-esquerda", "attr": "fill" }
-      ]
+      ],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2mangaEsquerdaRestriction1": {
       "id": "Material2mangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2mangaEsquerdaRestriction2": {
       "id": "Material2mangaEsquerdaRestriction2",
       "type": "RESTRICTION",
       "sameAs": "Material1mangaEsquerda",
-      "label": "Ser do mesmo tipo que o tecido primario"
+      "label": "Ser do mesmo tipo que o tecido primario",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "barraMangaEsquerda": {
       "id": "barraMangaEsquerda",
       "type": "PART",
       "domId": "barra-manga-esquerda",
-      "label": "Barra manga esquerda"
+      "label": "Barra manga esquerda",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "Material1barraMangaEsquerda": {
@@ -190,13 +288,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "tecido-barra-manga-esquerda", "attr": "fill" }]
+      "proxies": [{ "elem": "tecido-barra-manga-esquerda", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material1barraMangaEsquerdaRestriction1": {
       "id": "Material1barraMangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2barraMangaEsquerda": {
       "id": "Material2barraMangaEsquerda",
@@ -205,20 +311,32 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "detalhe-manga-esquerda", "attr": "fill" }]
+      "proxies": [{ "elem": "detalhe-manga-esquerda", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "Material2barraMangaEsquerdaRestriction1": {
       "id": "Material2barraMangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "frente": {
       "id": "frente",
       "type": "PART",
       "domId": "frente",
-      "label": "Frente"
+      "label": "Frente",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-esquerdo-frente": {
       "id": "material1-ombro-esquerdo-frente",
@@ -227,13 +345,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "ombro-esquerdo-frente", "attr": "fill" }]
+      "proxies": [{ "elem": "ombro-esquerdo-frente", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-esquerdo-frente-restriction-1": {
       "id": "material1-ombro-esquerdo-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-direito-frente": {
       "id": "material1-ombro-direito-frente",
@@ -242,23 +368,38 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "ombro-direito-frente", "attr": "fill" }]
+      "proxies": [{ "elem": "ombro-direito-frente", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-direito-frente-restriction-1": {
       "id": "material1-ombro-direito-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "process1-frente": {
-
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "barra-frente": {
       "id": "barra-frente",
       "type": "PART",
       "domId": "barra-frente",
-      "label": "Barra"
+      "label": "Barra",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-barra-frente": {
       "id": "material1-barra-frente",
@@ -267,13 +408,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "barra-frente", "attr": "fill" }]
+      "proxies": [{ "elem": "barra-frente", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-barra-frente-restriction-1": {
       "id": "material1-barra-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-frente": {
       "id": "material1-frente",
@@ -282,13 +431,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "frente-tecido-principal", "attr": "fill" }]
+      "proxies": [{ "elem": "frente-tecido-principal", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-frente-restriction-1": {
       "id": "material1-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material2-frente": {
       "id": "material2-frente",
@@ -297,40 +454,63 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "filete_46", "attr": "stroke" }]
+      "proxies": [{ "elem": "filete_46", "attr": "stroke" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material2-frente-restriction-1": {
       "id": "material2-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
-
 
 
     "costas": {
       "id": "costas",
       "type": "PART",
       "domId": "costas",
-      "label": "Costas"
+      "label": "Costas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "ombro-esquerdo-costas": {
       "id": "ombro-esquerdo-costas",
       "type": "PART",
       "domId": "ombro-esquerdo-costas",
-      "label": "Ombro esquerdo"
+      "label": "Ombro esquerdo",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "ombro-direito-costas": {
       "id": "ombro-direito-costas",
       "type": "PART",
       "domId": "ombro-direito-costas",
-      "label": "Ombro direito"
+      "label": "Ombro direito",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "barra-costas": {
       "id": "barra-costas",
       "type": "PART",
       "domId": "barra-costas",
-      "label": "Barra"
+      "label": "Barra",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
     "material1-costas": {
@@ -340,13 +520,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "costas-tecido-principal", "attr": "fill" }]
+      "proxies": [{ "elem": "costas-tecido-principal", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-costas-restriction-1": {
       "id": "material1-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material2-costas": {
       "id": "material2-costas",
@@ -355,13 +543,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "filete-costa", "attr": "stroke" }]
+      "proxies": [{ "elem": "filete-costa", "attr": "stroke" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material2-costas-restriction-1": {
       "id": "material2-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-barra-costas": {
       "id": "material1-barra-costas",
@@ -370,13 +566,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "barra-costas", "attr": "fill" }]
+      "proxies": [{ "elem": "barra-costas", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-barra-costas-restriction-1": {
       "id": "material1-barra-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-esquerdo-costas": {
       "id": "material1-ombro-esquerdo-costas",
@@ -385,13 +589,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "ombro-esquerdo-costas", "attr": "fill" }]
+      "proxies": [{ "elem": "ombro-esquerdo-costas", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-esquerdo-costas-restriction-1": {
       "id": "material1-ombro-esquerdo-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-direito-costas": {
       "id": "material1-ombro-direito-costas",
@@ -400,13 +612,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "ombro-direito-costas", "attr": "fill" }]
+      "proxies": [{ "elem": "ombro-direito-costas", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-ombro-direito-costas-restriction-1": {
       "id": "material1-ombro-direito-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
 
 
@@ -414,7 +634,11 @@
       "id": "gola",
       "type": "PART",
       "domId": "gola",
-      "label": "Gola"
+      "label": "Gola",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-gola": {
       "id": "material1-gola",
@@ -423,13 +647,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "gola-externa", "attr": "fill" }]
+      "proxies": [{ "elem": "gola-externa", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material1-gola-restriction-1": {
       "id": "material1-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material2-gola": {
       "id": "material2-gola",
@@ -438,13 +670,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "gola-interna", "attr": "fill" }]
+      "proxies": [{ "elem": "gola-interna", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material2-gola-restriction-1": {
       "id": "material2-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material3-gola": {
       "id": "material3-gola",
@@ -453,13 +693,21 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "lapela-interna", "attr": "fill" }]
+      "proxies": [{ "elem": "lapela-interna", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material3-gola-restriction-1": {
       "id": "material3-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material4-gola": {
       "id": "material4-gola",
@@ -468,31 +716,39 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "lapela-externa", "attr": "fill" }]
+      "proxies": [{ "elem": "lapela-externa", "attr": "fill" }],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     },
     "material4-gola-restriction-1": {
       "id": "material4-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
-      "label": "Permitido apenas tecidos ou malhas"
+      "label": "Permitido apenas tecidos ou malhas",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     }
   },
   "edges": {
     "garment->mangaEsquerda": {
       "type": "COMPOSED_OF",
-      "sourceId": "GARMENT",
+      "sourceId": "garment",
       "targetId": "mangaEsquerda",
       "id": "garment->mangaEsquerda"
     },
     "garment->mangaDireita": {
       "type": "COMPOSED_OF",
-      "sourceId": "GARMENT",
+      "sourceId": "garment",
       "targetId": "mangaDireita",
       "id": "garment->mangaDireita"
     },
     "garment->frente": {
       "type": "COMPOSED_OF",
-      "sourceId": "GARMENT",
+      "sourceId": "garment",
       "targetId": "frente",
       "id": "garment->frente"
     },
@@ -725,7 +981,7 @@
 
     "garment->costas": {
       "type": "COMPOSED_OF",
-      "sourceId": "GARMENT",
+      "sourceId": "garment",
       "targetId": "costas",
       "id": "garment->costas"
     },
