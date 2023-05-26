@@ -25,7 +25,7 @@ export interface EdgeMap {
 }
 
 export interface GraphActions {
-  addNode(node: Node, edges?: EdgeMap): void;
+  addNode(node: Omit<Node, 'position'>, edges?: EdgeMap): void;
   removeNode(id: string): void;
   updateNode(node: any): void; // QUESTION: how to set the type here
   addEdge(edge: Edge): void;
@@ -88,7 +88,8 @@ const useGraph = <G = GraphState, R = G>(
     state: graphState,
     actions: {
       addNode: (node, edges) => {
-        dispatch(addNode({ graphId, node, edges: edges ?? DEFAULT_EDGES }));
+        const positionedNode: Node = {...node, position: {x:0,y:0}}
+        dispatch(addNode({ graphId, node: positionedNode  , edges: edges ?? DEFAULT_EDGES }));
       },
       removeNode: (id) => {
         dispatch(removeNode({ graphId, nodeId: id }));

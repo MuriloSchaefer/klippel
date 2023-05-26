@@ -119,7 +119,7 @@ const Layout = () => {
           <ViewportManager
             sx={{
               gridArea: "viewport",
-              position: 'relative',
+              position: "relative",
               overflow: "auto",
               "&::-webkit-scrollbar": {
                 width: "0.4em",

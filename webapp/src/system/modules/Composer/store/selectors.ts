@@ -2,14 +2,14 @@ import { createSelector } from "reselect";
 import { ComposerState } from "./state";
 import { CompositionState } from "./composition/state";
 
-const selectComposerModule = (state: { Composer: ComposerState }) =>
+export const selectComposerModule = (state: { Composer: ComposerState }) =>
   state.Composer;
 
 export const selectCompositionState = (name: string) =>
   createSelector(
     selectComposerModule,
     (state: ComposerState | undefined) =>
-      state && state.compositionsManager.compositions[name]
+      state?.compositionsManager.compositions[name]
   );
 
 export const selectCompositionStateByViewportName = <

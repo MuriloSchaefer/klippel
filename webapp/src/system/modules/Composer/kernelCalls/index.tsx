@@ -6,6 +6,7 @@ import { MODULE_NAME } from "../constants";
 import middlewares from "../store/middlewares";
 import graphMiddlewares from "../store/composition/middlewares";
 import slice from "../store/slice";
+import DebuggerViewport from "../components/DebuggerViewport";
 
 
 export function startModule({
@@ -22,7 +23,8 @@ export function startModule({
         ModelSelector: React.memo(ModelSection),
       },
       viewportTypes: {
-        Composer: React.memo(Composerviewport)
+        Composer: React.memo(Composerviewport),
+        DebuggerViewport: DebuggerViewport
       }
     })
     ribbonMenuManager.functions.addNewTab({

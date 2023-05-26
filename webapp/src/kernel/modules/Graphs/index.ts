@@ -8,10 +8,14 @@ import useGraphsManager from "./hooks/useGraphsManager";
 import { getGraphState } from "./store/graphsManager/selectors";
 import useNodeInfo from "./hooks/useNodeInfo";
 import useSearchResult from "./hooks/useSearchResult";
+import GraphViewer from "./components/GraphViewer";
 
 export interface IGraphModule extends IModule {
   name: typeof MODULE_NAME,
   version: typeof MODULE_VERSION,
+  components: {
+    GraphViewer: typeof GraphViewer
+  },
   managers: {
     graphs: typeof useGraphsManager
   },
@@ -39,6 +43,7 @@ const GraphModule: IGraphModule = {
   name: MODULE_NAME,
   version: MODULE_VERSION,
   depends_on: ['Store'],
+  components: {GraphViewer},
   managers: {
     graphs: useGraphsManager
   },

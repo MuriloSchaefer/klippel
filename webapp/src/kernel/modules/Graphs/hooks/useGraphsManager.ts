@@ -5,12 +5,12 @@ import { addEdge, addNode, removeEdge, removeNode, resetGraph, updateNode } from
 import {createGraph as createGraphAction} from "../store/graphsManager/actions"
 import { newGraphState } from "../store/state";
 import { DEFAULT_EDGES, Graph, GraphActions } from "./useGraph";
+import Node from "../interfaces/Node";
 
 export interface GraphsManager extends Manager {
     functions: {
         createGraph: (graphId: string) => Graph
         resetGraph: (graphId: string) => void
-        openGraphViewport: (graphId: string) => void
     }
 }
 
@@ -22,9 +22,6 @@ const useGraphsManager = (): GraphsManager => {
 
     return {
         functions: {
-            openGraphViewport(graphId){
-              dispatch()
-            },
             createGraph(graphId){
                 dispatch(createGraphAction({graphId}))
 
@@ -33,7 +30,8 @@ const useGraphsManager = (): GraphsManager => {
                     state: {id: graphId, ...newGraphState},
                     actions: {
                       addNode: (node, edges) => {
-                        dispatch(addNode({ graphId, node, edges: edges ?? DEFAULT_EDGES }));
+                        const positionedNode: Node = {...node, position: {x:0,y:0}}
+                        dispatch(addNode({ graphId, node: positionedNode, edges: edges ?? DEFAULT_EDGES }));
                       },
                       removeNode: (id) => {
                         dispatch(removeNode({ graphId, nodeId: id }));

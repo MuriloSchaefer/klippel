@@ -42,14 +42,7 @@ middlewares.startListening({
   effect: async (
     {
       payload: { graphId, node, edges },
-    }: PayloadAction<{
-      graphId: string;
-      node: Node;
-      edges: {
-        inputs: { [name: string]: Edge };
-        outputs: { [name: string]: Edge };
-      };
-    }>,
+    },
     listenerApi
   ) => {
     const { dispatch } = listenerApi;
@@ -61,7 +54,7 @@ middlewares.startListening({
   effect: async (
     {
       payload: { graphId, nodeId },
-    }: PayloadAction<{ graphId: string; nodeId: string }>,
+    },
     listenerApi
   ) => {
     const { dispatch } = listenerApi;
@@ -75,11 +68,7 @@ middlewares.startListening({
   effect: async (
     {
       payload: action,
-    }: PayloadAction<{
-      graphId: string;
-      nodeId: string;
-      changes: Partial<Node>;
-    }>,
+    },
     listenerApi
   ) => {
     const { dispatch } = listenerApi;

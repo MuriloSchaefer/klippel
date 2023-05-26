@@ -1,4 +1,5 @@
 import {
+  addEdge,
   addNode,
   updateNode,
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
@@ -48,6 +49,7 @@ middlewares.startListening({
       type: "MATERIAL",
       label: material.attributes[schema.selector.principal],
       materialId: payload.materialId,
+      position: {x: 0, y: 0}
     };
 
     dispatch(
@@ -134,6 +136,15 @@ middlewares.startListening({
         nodeId: materialUsageId,
         changes: { materialId: materialNodeId },
       })
+    );
+
+    dispatch(
+      addEdge({edge: {
+        id: `${materialUsageId}->${materialNodeId}`,
+        sourceId: materialUsageId,
+        targetId: materialNodeId,
+        type:'CONSUMES'
+      }, graphId: composition.graphId})
     );
 
     dispatch(

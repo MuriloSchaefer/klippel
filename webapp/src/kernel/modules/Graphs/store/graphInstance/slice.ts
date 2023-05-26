@@ -37,55 +37,32 @@ const slice = createSlice({
           const nodeState = graph.nodes[node.id];
           if (nodeState) throw Error("Node already exists");
 
-          graph.nodes[node.id] = node;
+          return {
+            ...state,
+            graphs: {
+              ...state.graphs,
+              [graphId]: {
+                ...graph,
+                nodes: {
+                  ...graph.nodes,
+                  [node.id]: node
+                },
+                edges: {
+                  ...graph.edges,
+                  ...Object.entries(edges.inputs).reduce((acc, [id, edge])=> ({...acc, [id]: edge}), {}),
+                  ...Object.entries(edges.outputs).reduce((acc, [id, edge])=> ({...acc, [id]: edge}), {})
+                },
+                adjacencyList: {
+                  ...graph.adjacencyList,
+                  [node.id]: {
+                    inputs: Object.keys(edges.inputs),
+                    outputs: Object.keys(edges.outputs)
+                  }
+                }
+              },
+            },
+          };
 
-          Object.entries(edges.inputs).forEach(
-            ([sourceId, edge]: [string, Edge]) => {
-              const sourceNode = graph.nodes[sourceId];
-              if (!sourceNode) throw Error("Source node does not exist");
-
-              graph.adjacencyList[sourceId] = {
-                inputs: graph.adjacencyList[sourceId]?.inputs ?? [],
-                outputs: [
-                  ...(graph.adjacencyList[sourceId]?.outputs ?? []),
-                  edge.id,
-                ],
-              };
-              graph.adjacencyList[node.id] = {
-                outputs: graph.adjacencyList[node.id]?.outputs ?? [],
-                inputs: [
-                  ...(graph.adjacencyList[node.id]?.inputs ?? []),
-                  edge.id,
-                ],
-              };
-
-              graph.edges[edge.id] = edge;
-            }
-          );
-
-          Object.entries(edges.outputs).forEach(
-            ([targetId, edge]: [string, Edge]) => {
-              const targetNode = graph.nodes[targetId];
-              if (!targetNode) throw Error("Source node does not exist");
-
-              graph.adjacencyList[targetId] = {
-                ...graph.adjacencyList[targetId],
-                inputs: [
-                  ...(graph.adjacencyList[targetId]?.inputs ?? []),
-                  node.id,
-                ],
-              };
-              graph.adjacencyList[node.id] = {
-                ...graph.adjacencyList[node.id],
-                outputs: [
-                  ...(graph.adjacencyList[node.id]?.outputs ?? []),
-                  targetId,
-                ],
-              };
-            }
-          );
-
-          return state;
         }
       )
       .addCase(

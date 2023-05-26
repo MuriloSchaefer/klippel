@@ -8,7 +8,7 @@ import managerMiddlewares from "../store/graphsManager/middlewares"
 import instanceMiddlewares from "../store/graphInstance/middlewares"
 import { StartModuleProps } from "@kernel/modules/base";
 import { SECTIONS_REGISTRY_NAME, VIEWPORT_TYPE_REGISTRY_NAME } from "@kernel/modules/Layout/constants";
-import GraphViewport from "../components/GraphViewport";
+import GraphViewport from "../components/GraphViewer";
 
 
 export const startModule = ({

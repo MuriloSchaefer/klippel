@@ -7,12 +7,15 @@ import { ISVGModule } from "@kernel/modules/SVG";
 import _ from "lodash";
 import { createComposition } from "../store/actions";
 import { openDebugView } from "../store/composition/actions";
+import { CompositionState } from "../store/composition/state";
+import { selectComposerModule } from "../store/selectors";
 
 
 interface CompositionsManager extends Manager {
     functions: {
         createComposition(compositionName: string, modelPath: string): void;
         createDebugView(compositionName:string, viewportName: string): void;
+        findComposition(filter: (composition: CompositionState)=>boolean): CompositionState | undefined
     }
 }
 
@@ -23,12 +26,14 @@ export const useCompositionsManager = (): CompositionsManager => {
     const layoutModule = useModule<ILayoutModule>('Layout')
     const svgModule = useModule<ISVGModule>("SVG");
 
-    const { useAppDispatch } = storeModule.hooks;
+    const { useAppDispatch, useAppSelector } = storeModule.hooks;
     const dispatch = useAppDispatch()
 
     const viewportManager = layoutModule.hooks.useViewportManager()
     const svgManager = svgModule.hooks.useSVGManager()
     const graphManager = graphModule.managers.graphs()
+
+    const {compositionsManager: _state} = useAppSelector(selectComposerModule)
 
     return {
         functions: {
@@ -45,10 +50,13 @@ export const useCompositionsManager = (): CompositionsManager => {
                 const groupName = `debug-${compositionName}`
                 viewportManager.functions.createGroup(groupName,  'blue')
                 viewportManager.functions.addToGroup(viewportName, groupName)
-                const debugVpName = viewportManager.functions.addViewport("Debug", "Composer", groupName, "debug-")
+                const debugVpName = viewportManager.functions.addViewport("Debug", "DebuggerViewport", groupName, "debug-")
                 
                 dispatch(openDebugView({compositionName, debugViewport: debugVpName}))
                 viewportManager.functions.selectViewport(debugVpName)
+            },
+            findComposition(filter){
+                return Object.values(_state.compositions).find(filter)
             }
         }
     }
