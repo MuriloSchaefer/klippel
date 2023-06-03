@@ -1,4 +1,5 @@
 import { createSelector } from "reselect";
+import _ from "lodash";
 
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
@@ -6,20 +7,22 @@ import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
 
 import {
-  addMaterial,
   addMaterialType,
   changeMaterial,
   selectPart,
 } from "../store/composition/actions";
 import { ComposerState } from "../store/state";
 import {
+  AllowOnlyRestrictionNode,
   CompositionGraph,
   CompositionState,
-  MaterialNode,
+  MaterialUsageNode,
+  PartNode,
 } from "../store/composition/state";
-import { ISVGModule } from "@kernel/modules/SVG";
 
 interface CompositionActions {
+  addPart(name: string, domId: string, parentName?: string): void;
+  addMaterialUsage(label: string, partId:string): void;
   selectPart(partName: string): void;
   changeMaterialType(materialUsageId: string, materialType: string): void;
   changeMaterial(materialUsageId: string, material: number): void;
@@ -41,15 +44,11 @@ const useComposition = <C = Composition, R = C>(
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>("Graph");
-  const svgModule = useModule<ISVGModule>("SVG");
 
-  const panelsManager = layoutModule.hooks.usePanelsManager();
-
-  const { useGraph } = graphModule.hooks;
-  const { useAppDispatch } = storeModule.hooks;
-  const { useSVG } = svgModule.hooks;
+  const { useAppDispatch, useAppSelector } = storeModule.hooks;
   const dispatch = useAppDispatch();
-  const useAppSelector = storeModule.hooks.useAppSelector;
+  const panelsManager = layoutModule.hooks.usePanelsManager();
+  const { useGraph } = graphModule.hooks;
 
   const selector = createSelector(
     (state: { Composer: ComposerState } | undefined) =>
@@ -71,11 +70,88 @@ const useComposition = <C = Composition, R = C>(
     })
   );
 
-  const svg = useSVG(innerState?.svgPath!, (svg) => svg);
-
   return {
     state: compositionState,
     actions: {
+      addPart(name, domId, parentName) {
+        const newPart: PartNode = {
+          type: "PART",
+          id: name,
+          label: name,
+          position: { x: 0, y: 0 },
+          domId: domId,
+        };
+        let edges = undefined;
+        if (parentName) {
+          const edgeId = `${parentName}->${name}`;
+          edges = {
+            inputs: {
+              [edgeId]: {
+                id: edgeId,
+                sourceId: parentName,
+                targetId: name,
+                type: "COMPOSED_OF",
+              },
+            },
+            outputs: {}
+          };
+        }
+        graph.actions.addNode(newPart, edges);
+      },
+      addMaterialUsage(label, partId){
+        const nodeId = _.uniqueId(`material-usage-`)
+        console.log('adding', nodeId)
+        const materialUsageNode: MaterialUsageNode = {
+          type: "MATERIAL_USAGE",
+          id: nodeId,
+          label: label,
+          editableAttributes: ['materialType', 'materialId'],
+          materialId: "material-12",
+          materialType: "malha", // TODO: allow null values
+          position: {x: 0, y: 0},
+          proxies: [],
+        }
+        const restrictionNodeId = `${nodeId}-restriction-1`
+        
+
+        const edgeId = `${partId}->${nodeId}`;
+        const edges = {
+            inputs: {
+              [edgeId]: {
+                id: edgeId,
+                sourceId: partId,
+                targetId: nodeId,
+                type: "MADE_OF",
+              },
+            },
+            outputs: {}
+          };
+        graph.actions.addNode(materialUsageNode, edges);
+
+        // add default restrictions
+        const materialDefaultRestrictions: AllowOnlyRestrictionNode = {
+          type: "RESTRICTION",
+          restrictionType: 'allowOnly',
+          id: restrictionNodeId,
+          label: 'Permitido apenas tecidos ou malhas',
+          allowOnly: ['malha', 'tecido'],
+          position: {x: 0, y: 0},
+        }
+        const restrictionEdgeId = `${nodeId}->${restrictionNodeId}`
+        const restrictionEdges = {
+          inputs: {
+            [restrictionEdgeId]: {
+              id: restrictionEdgeId,
+              sourceId: nodeId,
+              targetId: restrictionNodeId,
+              attr:'materialType',
+              type: "RESTRICTED_BY",
+            },
+          },
+          outputs: {}
+        };
+        graph.actions.addNode(materialDefaultRestrictions, restrictionEdges);
+      },
       selectPart(partName) {
         dispatch(selectPart({ compositionName, partName }));
         panelsManager.functions.openDetails();

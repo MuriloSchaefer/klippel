@@ -45,24 +45,49 @@ const slice = createSlice({
                 ...graph,
                 nodes: {
                   ...graph.nodes,
-                  [node.id]: node
+                  [node.id]: node,
                 },
                 edges: {
                   ...graph.edges,
-                  ...Object.entries(edges.inputs).reduce((acc, [id, edge])=> ({...acc, [id]: edge}), {}),
-                  ...Object.entries(edges.outputs).reduce((acc, [id, edge])=> ({...acc, [id]: edge}), {})
+                  ...Object.entries(edges.inputs).reduce(
+                    (acc, [id, edge]) => ({ ...acc, [id]: edge }),
+                    {}
+                  ),
+                  ...Object.entries(edges.outputs).reduce(
+                    (acc, [id, edge]) => ({ ...acc, [id]: edge }),
+                    {}
+                  ),
                 },
                 adjacencyList: {
                   ...graph.adjacencyList,
                   [node.id]: {
                     inputs: Object.keys(edges.inputs),
-                    outputs: Object.keys(edges.outputs)
-                  }
-                }
+                    outputs: Object.keys(edges.outputs),
+                  },
+                  ...Object.entries(edges.inputs).reduce(
+                    (acc, [id, edge]) => ({
+                      ...acc,
+                      [edge.sourceId]: {
+                        ...graph.adjacencyList[edge.sourceId],
+                        outputs: [...graph.adjacencyList[edge.sourceId].outputs, id]
+                      },
+                    }),
+                    {}
+                  ),
+                  ...Object.entries(edges.outputs).reduce(
+                    (acc, [id, edge]) => ({
+                      ...acc,
+                      [edge.targetId]: {
+                        ...graph.adjacencyList[edge.targetId],
+                        inputs: [...graph.adjacencyList[edge.targetId].inputs, id]
+                      },
+                    }),
+                    {}
+                  ),
+                },
               },
             },
           };
-
         }
       )
       .addCase(

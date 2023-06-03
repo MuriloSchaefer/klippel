@@ -1,12 +1,13 @@
 import React, { useCallback } from "react";
+import { animated, useSpring } from "@react-spring/web";
 import SvgIcon, { SvgIconProps } from "@mui/material/SvgIcon";
 import { alpha, styled } from "@mui/material/styles";
 import TreeView from "@mui/lab/TreeView";
 import TreeItem, { TreeItemProps, treeItemClasses } from "@mui/lab/TreeItem";
 import Collapse from "@mui/material/Collapse";
-
-import { animated, useSpring } from "@react-spring/web";
+import { Box } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
+
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import useModule from "@kernel/hooks/useModule";
@@ -17,12 +18,14 @@ import {
   GraphState,
   NodeConnections,
 } from "@kernel/modules/Graphs/store/state";
+
 import useComposition from "../../hooks/useComposition";
 import {
   CompositionGraph,
   CompositionNode,
   CompositionState,
 } from "../../store/composition/state";
+import AddPartButton from "./AddPartButton";
 
 function MinusSquare(props: SvgIconProps) {
   return (
@@ -91,17 +94,20 @@ const StyledTreeItem = styled((props: TreeItemProps) => (
 }));
 
 function Subtree({
+  compositionName,
   graphId,
   selectedPart,
   selectPart,
   nodeId,
 }: {
+  compositionName: string;
   graphId: string;
   selectedPart: string | undefined;
   selectPart: (partName: string) => void;
   nodeId: string;
 }) {
   const graphsModule = useModule<IGraphModule>("Graph");
+
   const { useGraph } = graphsModule.hooks;
 
   const info = useGraph<
@@ -126,35 +132,54 @@ function Subtree({
       }
   );
 
-  if (!info.state)
-    return <></>;
+  if (!info.state) return <></>;
 
   return (
-    <StyledTreeItem
-      nodeId={nodeId}
-      label={
-        "label" in info.state.node ? info.state.node.label : info.state.node.id
-      }
-      onClick={() => selectPart(nodeId)}
-      sx={{
-        color: nodeId === selectedPart ? "secondary.main" : undefined,
-      }}
-    >
-      {info.state.connections.outputs
-        .filter((out) => info.state?.edges[out].type === "COMPOSED_OF")
-        .map(
-          (child) =>
-            info.state && (
-              <MemoizedSubTree
-                key={`${nodeId}-${info.state?.edges[child].targetId}`}
-                graphId={graphId}
-                selectPart={selectPart}
-                selectedPart={selectedPart}
-                nodeId={info.state.edges[child].targetId}
-              />
-            )
-        )}
-    </StyledTreeItem>
+    <Box sx={{ color: "text.primary" }}>
+      <StyledTreeItem
+        nodeId={nodeId}
+        label={
+          <Box
+            sx={{ height: "30px", alignItems: "center", display: "flex" }}
+            onClick={(e) => {
+              if (nodeId !== selectedPart) {
+                selectPart(nodeId);
+                e.stopPropagation();
+              }
+
+            }}
+          >
+            {info.state.node.label}
+            {nodeId === selectedPart && (
+              <AddPartButton compositionName={compositionName} />
+            )}
+          </Box>
+        }
+        onClick={() => {
+          selectPart(nodeId);
+        }}
+        sx={{
+          color:
+            nodeId === selectedPart ? "secondary.main" : "secondary.secondary",
+        }}
+      >
+        {info.state.connections.outputs
+          .filter((out) => info.state?.edges[out].type === "COMPOSED_OF")
+          .map(
+            (child) =>
+              info.state && (
+                <MemoizedSubTree
+                  compositionName={compositionName}
+                  key={`${nodeId}-${info.state?.edges[child].targetId}`}
+                  graphId={graphId}
+                  selectPart={selectPart}
+                  selectedPart={selectedPart}
+                  nodeId={info.state.edges[child].targetId}
+                />
+              )
+          )}
+      </StyledTreeItem>
+    </Box>
   );
 }
 
@@ -172,6 +197,7 @@ export default function CompositionTree() {
 
   const selector = useCallback(
     (c: CompositionState | undefined) => ({
+      name: c?.name,
       svgPath: c?.svgPath,
       graphId: c?.graphId,
       selectedPart: c?.selectedPart,
@@ -184,7 +210,13 @@ export default function CompositionTree() {
     (g) => g?.adjacencyList
   );
 
-  if (!composition.state?.svgPath || !composition.state?.graphId || !graph)
+  // QUESTION: how to make next if statement cleaner?
+  if (
+    !composition.state?.svgPath ||
+    !composition.state?.graphId ||
+    !composition.state?.name ||
+    !graph
+  )
     return null;
 
   return (
@@ -197,6 +229,7 @@ export default function CompositionTree() {
       sx={{ flexGrow: 1, maxWidth: "100%", overflowY: "auto" }}
     >
       <MemoizedSubTree
+        compositionName={composition.state.name}
         nodeId="garment"
         graphId={composition.state.graphId}
         selectPart={composition.actions.selectPart}

@@ -23,17 +23,18 @@ const ComposerDetailLoader = ({graphId}: {graphId: string}) => {
   const activeViewport = useAppSelector(selectActiveViewport);
 
   const selector = useCallback((c: CompositionState | undefined) => ({
+    name: c?.name,
     graphId: c?.graphId,
     selectedPart: c?.selectedPart
   }), [])
   const composition = useComposition(activeViewport!, selector);
 
 
-  if (!composition.state?.selectedPart || !composition.state?.graphId) return null;
-  return <ComposerDetailsPanel graphId={composition.state.graphId} selectedPart={composition.state.selectedPart}/>
+  if (!composition.state?.selectedPart || !composition.state?.graphId || !composition.state?.name) return null;
+  return <ComposerDetailsPanel graphId={composition.state.graphId} selectedPart={composition.state.selectedPart} compositionName={composition.state.name}/>
 }
 
-const ComposerDetailsPanel = ({graphId, selectedPart}: {graphId: string, selectedPart: string}) => {
+const ComposerDetailsPanel = ({graphId, selectedPart, compositionName}: {graphId: string, selectedPart: string, compositionName:string}) => {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>('Graph');
 
@@ -58,7 +59,7 @@ const ComposerDetailsPanel = ({graphId, selectedPart}: {graphId: string, selecte
         summary="Lista de materiais"
         sx={{flexGrow: 1}}
       >
-        <MaterialsList graphId={graphId} selectedPart={selectedPart}/>
+        <MaterialsList graphId={graphId} selectedPart={selectedPart} compositionName={compositionName}/>
       </Accordion>
       <Accordion
         name="Processos"

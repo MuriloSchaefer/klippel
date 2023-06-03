@@ -50,7 +50,7 @@ export const useCompositionsManager = (): CompositionsManager => {
                 const groupName = `debug-${compositionName}`
                 viewportManager.functions.createGroup(groupName,  'blue')
                 viewportManager.functions.addToGroup(viewportName, groupName)
-                const debugVpName = viewportManager.functions.addViewport("Debug", "DebuggerViewport", groupName, "debug-")
+                const debugVpName = viewportManager.functions.addViewport("Modelo", "DebuggerViewport", groupName, "debug-")
                 
                 dispatch(openDebugView({compositionName, debugViewport: debugVpName}))
                 viewportManager.functions.selectViewport(debugVpName)

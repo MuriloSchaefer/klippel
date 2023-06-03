@@ -1,16 +1,17 @@
+import React from "react";
+
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import ShortTextSharpIcon from "@mui/icons-material/ShortTextSharp";
-import ListSharpIcon from "@mui/icons-material/ListSharp";
 import SellSharpIcon from "@mui/icons-material/SellSharp";
-import AccessTimeSharpIcon from '@mui/icons-material/AccessTimeSharp';
+import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
 
-import CompositionTree from "./CompositionTree";
 
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
-import React from "react";
 
-const ComposerSettingsPanel = ({graphId}: {graphId: string}) => {
+import CompositionTree from "./CompositionTree";
+
+const ComposerSettingsPanel = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
 
   const { SettingsPanel, Accordion } = layoutModule.components;
@@ -22,6 +23,7 @@ const ComposerSettingsPanel = ({graphId}: {graphId: string}) => {
         icon={<AccountTreeSharpIcon />}
         summary="composição da peça"
       >
+
         <CompositionTree />
       </Accordion>
 

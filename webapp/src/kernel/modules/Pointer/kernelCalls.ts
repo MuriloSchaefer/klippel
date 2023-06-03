@@ -10,9 +10,6 @@ export const startModule = ({
     console.group('Pointer module start')
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
   
-//   storeManager.functions.registerMiddleware(layoutMiddleware);
-//   storeManager.functions.registerMiddleware(ribbonMenuMiddleware);
-//   storeManager.functions.registerMiddleware(viewportMiddleware);
 //   storeManager.functions.registerMiddleware(panelsMiddleware);
 
 //   componentRegistryManager.functions.createRegistries({

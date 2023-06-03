@@ -16,6 +16,7 @@ export interface GarmentNode extends Node {
 export interface PartNode extends Node {
     type: 'PART'
     label: string;
+    domId?: string;
 
 }
 export interface MaterialUsageNode extends Node {
@@ -43,11 +44,13 @@ export interface OperationNode extends Node {
 export type RestrictionNode = AllowOnlyRestrictionNode | SameAsRestrictionNode
 export interface AllowOnlyRestrictionNode<T=string> extends Node {
     type: 'RESTRICTION'
+    label: string;
     restrictionType: 'allowOnly'
     allowOnly: T[]
 }
 export interface SameAsRestrictionNode<T=string> extends Node {
     type: 'RESTRICTION'
+    label: string;
     restrictionType: 'sameAs'
     sameAs: T
 }
@@ -55,6 +58,9 @@ export interface SameAsRestrictionNode<T=string> extends Node {
 
 export type CompositionNode = GarmentNode | MaterialTypeNode | PartNode | MaterialUsageNode | RestrictionNode
 
+export interface ComposedOfEdge extends Edge {
+    type: 'COMPOSED_OF'
+}
 export interface MadeOfEdge extends Edge {
     type: 'MADE_OF'
 }
@@ -66,7 +72,7 @@ export interface ProcessNeededEdge extends Edge {
     type: 'PROCESS_NEEDED'
 }
 
-export type CompositionEdge = RestrictedByEdge | MadeOfEdge | ProcessNeededEdge
+export type CompositionEdge = ComposedOfEdge | RestrictedByEdge | MadeOfEdge | ProcessNeededEdge
 
 export type CompositionGraph = GraphState<CompositionNode, CompositionEdge>
 
