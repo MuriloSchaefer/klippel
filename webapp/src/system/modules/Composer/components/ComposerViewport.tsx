@@ -138,7 +138,7 @@ export const ComposerViewport = ({
             sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}
           />
         </ViewportNotificationsTray>
-        <ComposerSettingsPanel graphId={graphId} />
+        <ComposerSettingsPanel />
 
         <ComposerDetailsPanel graphId={graphId} />
       </Box>
