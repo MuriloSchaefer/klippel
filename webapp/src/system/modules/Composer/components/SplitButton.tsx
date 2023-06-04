@@ -69,9 +69,6 @@ export default function SplitButton() {
         sx={{
           zIndex: 1,
         }}
-        onResize={()=>null}
-        onResizeCapture={()=>null}
-        nonce={1}
         open={open}
         anchorEl={anchorRef.current}
         role={undefined}
