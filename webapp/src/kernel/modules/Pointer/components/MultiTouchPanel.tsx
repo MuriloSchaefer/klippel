@@ -18,7 +18,7 @@ const MultiTouchPanel = ({
     drag: { filterTaps: true, triggerAllEvents: true },
   });
   const props = bind()
-  console.log(props)
+  
 
   return (
     <Box

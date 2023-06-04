@@ -11,10 +11,10 @@ export const AddMaterialButton = ({compositionName}: {compositionName: string}) 
 
   const composition = useComposition(compositionName, (c) => c?.selectedPart);
 
-  const [label, setLabel] = useState<string|undefined>()
+  const [label, setLabel] = useState<string>("")
 
   const handleConfirm = useCallback(()=>{
-    if (label && composition.state){
+    if (composition.state){
       composition.actions.addMaterialUsage(label, composition.state)
     }
   }, [label])

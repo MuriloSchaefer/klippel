@@ -22,15 +22,13 @@ export const AddPartButton = ({
 
   const composition = useComposition(compositionName, (c) => c?.selectedPart);
 
-  const [form, setForm] = useState<Partial<AddPartForm>>({
-    name: undefined,
-    domId: undefined,
+  const [form, setForm] = useState<AddPartForm>({
+    name: "",
+    domId: "",
   });
 
   const handleSubmit = useCallback(() => {
-    console.log(form);
-    if (form.name && form.domId)
-      composition.actions.addPart(form.name, form.domId, composition.state);
+    composition.actions.addPart(form.name, form.domId, composition.state);
   }, [form]);
 
   return (

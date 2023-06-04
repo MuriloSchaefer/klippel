@@ -1,5 +1,4 @@
-import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
+import { useCallback, useState } from "react";
 import {
   FormControl,
   InputLabel,
@@ -9,9 +8,12 @@ import {
   Box,
   SelectChangeEvent,
 } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+
+import useModule from "@kernel/hooks/useModule";
+import { Store } from "@kernel/modules/Store";
+
 import { selectMaterials } from "../../store/materials/selectors";
-import { MaterialsState, MaterialState } from "../../store/materials/state";
+import { MaterialState } from "../../store/materials/state";
 import { selectMaterialType } from "../../store/materialTypes/selectors";
 import ColorItem from "./ColorItem";
 

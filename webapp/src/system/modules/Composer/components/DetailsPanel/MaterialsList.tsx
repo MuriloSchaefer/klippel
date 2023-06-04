@@ -25,8 +25,6 @@ export default function MaterialsList({
     selectedPart
   );
 
-  console.log(Object.values(edges))
-
   return (
     <List sx={{ width: "100%" }} role="material-list">
       <AddMaterialButton compositionName={compositionName}/>

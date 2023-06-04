@@ -100,7 +100,6 @@ const useComposition = <C = Composition, R = C>(
       },
       addMaterialUsage(label, partId){
         const nodeId = _.uniqueId(`material-usage-`)
-        console.log('adding', nodeId)
         const materialUsageNode: MaterialUsageNode = {
           type: "MATERIAL_USAGE",
           id: nodeId,
