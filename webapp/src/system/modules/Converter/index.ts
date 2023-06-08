@@ -1,9 +1,11 @@
 import { IModule } from "@kernel/modules/base";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import { startModule } from "./kernelCalls";
+import ScaleSlider from "./components/ScaleSlider";
 
 export interface IConverterModule extends IModule {
     components: {
+        ScaleSlider: typeof ScaleSlider;
     },
     store: {
         actions: {
@@ -21,6 +23,7 @@ const module: IConverterModule = {
     version: MODULE_VERSION,
     depends_on: ['Graph'],
     components: {
+        ScaleSlider
     },
     store: {
         actions: {

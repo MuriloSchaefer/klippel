@@ -17,14 +17,18 @@ import {
   CompositionGraph,
   CompositionState,
   MaterialUsageNode,
+  OperationNode,
   PartNode,
 } from "../store/composition/state";
+import { UnitValue } from "@system/modules/Converter/typings";
 
 interface CompositionActions {
   addPart(name: string, domId: string, parentName?: string): void;
+  selectPart(partName: string): void;
   addMaterialUsage(label: string, partId:string): void;
   removeMaterialUsage(materialUsageId: string): void;
-  selectPart(partName: string): void;
+  addOperation(label: string, cost: UnitValue, time_taken: UnitValue, partId: string): void;
+
   changeMaterialType(materialUsageId: string, materialType: string): void;
   changeMaterial(materialUsageId: string, material: number): void;
 }
@@ -154,6 +158,30 @@ const useComposition = <C = Composition, R = C>(
       },
       removeMaterialUsage(materialUsageId){
         graph.actions.removeNode(materialUsageId)
+      },
+      addOperation(label, cost, time_taken, partId){
+        const nodeId = _.uniqueId(`operation-`)
+        const edgeId = `${partId}->${nodeId}`
+        const node: OperationNode = {
+          id: nodeId,
+          type: "OPERATION",
+          label: label,
+          position: {x: 0, y: 0},
+          cost: cost,
+          time_taken: time_taken
+        }
+        const edges = {
+          inputs: {
+            [edgeId]: {
+              id: edgeId,
+              sourceId: partId,
+              targetId: nodeId,
+              type: "PROCESS_NEEDED",
+            },
+          },
+          outputs: {}
+        };
+        graph.actions.addNode(node, edges);
       },
       selectPart(partName) {
         dispatch(selectPart({ compositionName, partName }));

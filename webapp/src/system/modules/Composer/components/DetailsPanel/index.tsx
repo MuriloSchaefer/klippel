@@ -8,7 +8,7 @@ import React, { useCallback } from "react";
 import { Store } from "@kernel/modules/Store";
 
 import MaterialsList from './MaterialSection/MaterialsList'
-import ProcessesList from './ProcessesList'
+import ProcessesList from './ProcessesSection/ProcessesList'
 import { CompositionState } from "../../store/composition/state";
 import useComposition from "../../hooks/useComposition";
 import { IGraphModule } from "@kernel/modules/Graphs";
@@ -67,7 +67,7 @@ const ComposerDetailsPanel = ({graphId, selectedPart, compositionName}: {graphId
         summary="Lista de processos"
         sx={{flexGrow: 1}}
       >
-        <ProcessesList graphId={graphId} selectedPart={selectedPart}/>
+        <ProcessesList graphId={graphId} selectedPart={selectedPart} compositionName={compositionName} />
       </Accordion>
     </DetailsPanel>
   );

@@ -97,8 +97,8 @@ export const PointerContainer = ({
               flexDirection: "column",
               padding: 0,
               flexGrow: 2,
-              justifyContent: "center",
-              alignContent: "space-around",
+              justifyContent: "space-evenly",
+              alignContent: "space-evenly",
             }}
             role="actions"
           >

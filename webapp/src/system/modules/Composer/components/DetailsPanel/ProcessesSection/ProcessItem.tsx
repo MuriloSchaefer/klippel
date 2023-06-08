@@ -1,9 +1,7 @@
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { Box, ListItem, ListItemText, Typography } from "@mui/material";
-import { OperationNode } from "../../store/composition/state";
-import MaterialSelector from "../editableFields/MaterialSelector";
-import MaterialTypeSelector from "../editableFields/MaterialTypeSelector";
+import { OperationNode } from "../../../store/composition/state";
 
 import AccessTimeSharpIcon from '@mui/icons-material/AccessTimeSharp';
 import AttachMoneySharpIcon from '@mui/icons-material/AttachMoneySharp';

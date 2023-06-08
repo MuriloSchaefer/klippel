@@ -1,18 +1,19 @@
-import React from "react";
-
 import List from "@mui/material/List";
 import { Paper } from "@mui/material";
 
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 
-import { PartNode, CompositionEdge } from "../../store/composition/state";
+import { PartNode, CompositionEdge } from "../../../store/composition/state";
 import ProcessItem from "./ProcessItem";
+import AddProcessButton from "./AddProcessButton";
 
 export default function ProcessesList({
+  compositionName,
   selectedPart,
   graphId,
 }: {
+  compositionName: string;
   selectedPart: string;
   graphId: string;
 }) {
@@ -23,6 +24,7 @@ export default function ProcessesList({
 
   return (
     <List sx={{ width: "100%" }} role="processes-list">
+      <AddProcessButton compositionName={compositionName} />
       {Object.values(edges).filter(e => e.type === 'PROCESS_NEEDED').map(e => {
         return <Paper key={e.targetId} variant="outlined" square sx={{
           width: "100%", padding: 1, '&:div + div': {
