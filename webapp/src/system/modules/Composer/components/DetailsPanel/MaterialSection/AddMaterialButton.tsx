@@ -3,7 +3,7 @@ import { IPointerModule } from "@kernel/modules/Pointer";
 import { Box, Button, TextField } from "@mui/material";
 import AddSharpIcon from "@mui/icons-material/AddSharp";
 import { useCallback, useState } from "react";
-import useComposition from "../../hooks/useComposition";
+import useComposition from "../../../hooks/useComposition";
 
 export const AddMaterialButton = ({compositionName}: {compositionName: string}) => {
   const pointerModule = useModule<IPointerModule>("Pointer");

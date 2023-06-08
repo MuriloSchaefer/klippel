@@ -69,7 +69,10 @@ const slice = createSlice({
                       ...acc,
                       [edge.sourceId]: {
                         ...graph.adjacencyList[edge.sourceId],
-                        outputs: [...graph.adjacencyList[edge.sourceId].outputs, id]
+                        outputs: [
+                          ...graph.adjacencyList[edge.sourceId].outputs,
+                          id,
+                        ],
                       },
                     }),
                     {}
@@ -79,7 +82,10 @@ const slice = createSlice({
                       ...acc,
                       [edge.targetId]: {
                         ...graph.adjacencyList[edge.targetId],
-                        inputs: [...graph.adjacencyList[edge.targetId].inputs, id]
+                        inputs: [
+                          ...graph.adjacencyList[edge.targetId].inputs,
+                          id,
+                        ],
                       },
                     }),
                     {}
@@ -93,30 +99,51 @@ const slice = createSlice({
       .addCase(
         removeNode,
         (state: GraphsManagerState, { payload: { graphId, nodeId } }) => {
-          const graph = state.graphs[graphId];
-          if (!graph) throw Error("Graph does not exist");
-          const nodeState = graph.nodes[nodeId];
-          if (!nodeState) throw Error("Node does not exist");
+          const edgesToRemove = Object.entries(state.graphs[graphId].edges)
+            .filter(
+              ([_, edge]) =>
+                edge.sourceId === nodeId || edge.targetId === nodeId
+            )
+            .map(([k, _]) => k);
 
-          delete graph.nodes[nodeId];
-          delete graph.adjacencyList[nodeId];
-
-          Object.values(graph.edges).forEach((edge) => {
-            if (edge.sourceId === nodeId) {
-              delete graph.edges[edge.id];
-              graph.adjacencyList[edge.targetId].inputs = graph.adjacencyList[
-                edge.targetId
-              ].inputs.filter((c) => c !== edge.id);
-            }
-            if (edge.targetId === nodeId) {
-              delete graph.edges[edge.id];
-              graph.adjacencyList[edge.sourceId].outputs = graph.adjacencyList[
-                edge.sourceId
-              ].outputs.filter((c) => c !== edge.id);
-            }
-          });
-
-          return state;
+          return {
+            ...state,
+            graphs: {
+              ...state.graphs,
+              [graphId]: {
+                ...state.graphs[graphId],
+                nodes: Object.values(state.graphs[graphId].nodes).reduce(
+                  (acc, curr) =>
+                    curr.id !== nodeId ? { ...acc, [curr.id]: curr } : acc,
+                  {}
+                ),
+                adjacencyList: Object.entries(
+                  state.graphs[graphId].adjacencyList
+                ).reduce(
+                  (acc, [id, curr]) =>
+                    id !== nodeId
+                      ? {
+                          ...acc,
+                          [id]: {
+                            inputs: curr.inputs.filter(
+                              (i) => !edgesToRemove.includes(i)
+                            ),
+                            outputs: curr.outputs.filter(
+                              (i) => !edgesToRemove.includes(i)
+                            ),
+                          },
+                        }
+                      : acc,
+                  {}
+                ),
+                edges: Object.entries(state.graphs[graphId].edges).reduce(
+                  (acc, [id, curr]) =>
+                    !edgesToRemove.includes(id) ? { ...acc, [id]: curr } : acc,
+                  {}
+                ),
+              },
+            },
+          };
         }
       )
 

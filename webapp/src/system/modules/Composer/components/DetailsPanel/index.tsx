@@ -7,7 +7,7 @@ import React, { useCallback } from "react";
 
 import { Store } from "@kernel/modules/Store";
 
-import MaterialsList from './MaterialsList'
+import MaterialsList from './MaterialSection/MaterialsList'
 import ProcessesList from './ProcessesList'
 import { CompositionState } from "../../store/composition/state";
 import useComposition from "../../hooks/useComposition";

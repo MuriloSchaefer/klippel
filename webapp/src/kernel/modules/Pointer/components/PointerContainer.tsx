@@ -66,9 +66,8 @@ export const PointerContainer = ({
         open={open}
         onClose={handleClose}
         disableEnforceFocus
+        role="pointer-panel"
         sx={{
-          left: position.x,
-          top: position.y,
           width: "min-content",
           height: "min-content",
           touchAction: 'none',
@@ -84,12 +83,13 @@ export const PointerContainer = ({
           sx={{
             position: "fixed",
             margin: 1,
+            left: position.x,
+            top: position.y, //getQuadrant(position.x, position.y) < 3 ? position.y : `calc(${position.y}px - 100%)`,
             display: "flex",
             flexGrow: 1,
             flexDirection: getQuadrant(position.x, position.y) % 2 == 1 ? "row" : "row-reverse",
           }}
           elevation={6}
-          id="pointer-portal"
         >
           <Box
             sx={{
@@ -100,9 +100,9 @@ export const PointerContainer = ({
               justifyContent: "center",
               alignContent: "space-around",
             }}
-            role="pointer-container-actions"
+            role="actions"
           >
-            <IconButton sx={{ cursor: "grab" }} size="small">
+            <IconButton sx={{ cursor: "grab" }} size="small" id="drag-panel">
               <DragIndicatorSharpIcon />
             </IconButton>
 
@@ -119,6 +119,7 @@ export const PointerContainer = ({
               key="reject"
               onClick={handleClose}
               size="small"
+              id="close-panel"
             >
               <CloseSharpIcon />
             </IconButton>

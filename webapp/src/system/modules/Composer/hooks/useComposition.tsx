@@ -23,6 +23,7 @@ import {
 interface CompositionActions {
   addPart(name: string, domId: string, parentName?: string): void;
   addMaterialUsage(label: string, partId:string): void;
+  removeMaterialUsage(materialUsageId: string): void;
   selectPart(partName: string): void;
   changeMaterialType(materialUsageId: string, materialType: string): void;
   changeMaterial(materialUsageId: string, material: number): void;
@@ -150,6 +151,9 @@ const useComposition = <C = Composition, R = C>(
           outputs: {}
         };
         graph.actions.addNode(materialDefaultRestrictions, restrictionEdges);
+      },
+      removeMaterialUsage(materialUsageId){
+        graph.actions.removeNode(materialUsageId)
       },
       selectPart(partName) {
         dispatch(selectPart({ compositionName, partName }));

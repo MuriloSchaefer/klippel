@@ -1,5 +1,5 @@
 import List from "@mui/material/List";
-import { Paper } from "@mui/material";
+import {  Paper } from "@mui/material";
 
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
@@ -7,6 +7,8 @@ import { IGraphModule } from "@kernel/modules/Graphs";
 import MaterialItem from "./MaterialItem";
 import { PartNode, CompositionEdge } from "../../store/composition/state";
 import AddMaterialButton from "./AddMaterialButton";
+import MaterialUsageActions from "./MaterialUsageActions";
+
 
 export default function MaterialsList({
   compositionName,
@@ -27,7 +29,7 @@ export default function MaterialsList({
 
   return (
     <List sx={{ width: "100%" }} role="material-list">
-      <AddMaterialButton compositionName={compositionName}/>
+      <AddMaterialButton compositionName={compositionName} />
 
       {Object.values(edges)
         .filter((e) => e.type === "MADE_OF")
@@ -43,10 +45,12 @@ export default function MaterialsList({
                 "&:div + div": {
                   borderTop: 0,
                 },
+                display: 'flex',
               }}
               role="material-container"
             >
               <MaterialItem graphId={graphId} nodeId={e.targetId} />
+              <MaterialUsageActions compositionName={compositionName} materialUsageId={e.targetId}/>
             </Paper>
           );
         })}
