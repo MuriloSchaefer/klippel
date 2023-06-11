@@ -1,6 +1,7 @@
 import {
   addEdge,
   addNode,
+  removeEdge,
   updateNode,
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
@@ -49,7 +50,7 @@ middlewares.startListening({
       type: "MATERIAL",
       label: material.attributes[schema.selector.principal],
       materialId: payload.materialId,
-      position: {x: 0, y: 0}
+      position: { x: 0, y: 0 },
     };
 
     dispatch(
@@ -101,6 +102,9 @@ middlewares.startListening({
     }
 
     const usageNode = graph.nodes[materialUsageId];
+    const linkedMaterials = Object.values(graph.edges).filter(
+      (edge) => edge.sourceId === materialUsageId && edge.type == "CONSUMES"
+    );
 
     // const color =
     //   materialNode && "color" in materialNode ? materialNode.color : "none";
@@ -117,7 +121,6 @@ middlewares.startListening({
         }),
         {} as { [id: string]: CSSProperties }
       );
-      console.log(allChanges)
       Object.entries(allChanges).forEach(([id, changes]) => {
         dispatch(
           updateProxy({
@@ -139,13 +142,20 @@ middlewares.startListening({
     );
 
     dispatch(
-      addEdge({edge: {
-        id: `${materialUsageId}->${materialNodeId}`,
-        sourceId: materialUsageId,
-        targetId: materialNodeId,
-        type:'CONSUMES'
-      }, graphId: composition.graphId})
+      addEdge({
+        edge: {
+          id: `${materialUsageId}->${materialNodeId}`,
+          sourceId: materialUsageId,
+          targetId: materialNodeId,
+          type: "CONSUMES",
+        },
+        graphId: composition.graphId,
+      })
     );
+
+    linkedMaterials.forEach(lm => {
+      dispatch(removeEdge({graphId: composition.graphId, edgeId: lm.id}))
+    })
 
     dispatch(
       materialChanged({

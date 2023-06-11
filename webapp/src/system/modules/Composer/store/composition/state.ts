@@ -71,8 +71,11 @@ export interface RestrictedByEdge extends Edge {
 export interface ProcessNeededEdge extends Edge {
     type: 'PROCESS_NEEDED'
 }
+export interface ConsumesEdge extends Edge {
+    type: 'CONSUMES'
+}
 
-export type CompositionEdge = ComposedOfEdge | RestrictedByEdge | MadeOfEdge | ProcessNeededEdge
+export type CompositionEdge = ComposedOfEdge | RestrictedByEdge | MadeOfEdge | ProcessNeededEdge | ConsumesEdge
 
 export type CompositionGraph = GraphState<CompositionNode, CompositionEdge>
 

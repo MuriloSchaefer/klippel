@@ -1,7 +1,6 @@
-import { Box, IconButton } from "@mui/material";
-
-import TuneSharpIcon from "@mui/icons-material/TuneSharp";
+import { Box } from "@mui/material";
 import RemoveMaterialButton from "./RemoveMaterialButton";
+import ConfigureMaterialButton from "./ConfigureMaterialButton";
 
 const MaterialUsageActions = (props: {compositionName: string, materialUsageId: string}) => {
   return (
@@ -12,13 +11,12 @@ const MaterialUsageActions = (props: {compositionName: string, materialUsageId: 
         padding: 0,
         justifyContent: "space-around",
         alignContent: "space-evenly",
+        
       }}
       role="actions"
     >
       <RemoveMaterialButton {...props}/>
-      <IconButton color="default" key="configure" id="configure-material" sx={{flexGrow: 2}}>
-        <TuneSharpIcon />
-      </IconButton>
+      <ConfigureMaterialButton />
     </Box>
   );
 };

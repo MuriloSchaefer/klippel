@@ -26,6 +26,7 @@ import {
   CompositionState,
 } from "../../store/composition/state";
 import AddPartButton from "./AddPartButton";
+import RemovePartButton from "./RemovePartButton";
 
 function MinusSquare(props: SvgIconProps) {
   return (
@@ -151,7 +152,10 @@ function Subtree({
           >
             {info.state.node.label}
             {nodeId === selectedPart && (
+              <>
               <AddPartButton compositionName={compositionName} />
+              <RemovePartButton compositionName={compositionName} />
+              </>
             )}
           </Box>
         }
