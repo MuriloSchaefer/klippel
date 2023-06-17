@@ -1,8 +1,9 @@
 import { Box } from "@mui/material";
-import RemoveMaterialButton from "./RemoveMaterialButton";
-import ConfigureMaterialButton from "./ConfigureMaterialButton";
+import RemoveMaterialButton from "./actions/RemoveMaterialButton";
+import LinkMaterialButton from "./actions/LinkMaterialButton";
+import AddRestrictionMaterialButton from "./actions/AddRestrictionMaterialButton";
 
-const MaterialUsageActions = (props: {compositionName: string, materialUsageId: string}) => {
+const MaterialUsageActions = (props: MaterialActionProps) => {
   return (
     <Box
       sx={{
@@ -16,7 +17,8 @@ const MaterialUsageActions = (props: {compositionName: string, materialUsageId: 
       role="actions"
     >
       <RemoveMaterialButton {...props}/>
-      <ConfigureMaterialButton />
+      <LinkMaterialButton {...props}/>
+      <AddRestrictionMaterialButton sx={{'hover': {color: 'yellow'}}}/>
     </Box>
   );
 };

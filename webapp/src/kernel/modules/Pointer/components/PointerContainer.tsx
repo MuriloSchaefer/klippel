@@ -2,6 +2,7 @@ import {
   MouseEvent,
   cloneElement,
   useCallback,
+  useMemo,
   useState,
 } from "react";
 import {
@@ -47,6 +48,8 @@ export const PointerContainer = ({
     }
   }, [windowCenter]);
 
+  const quadrant = useMemo(()=>getQuadrant(position.x, position.y), [position])
+
   const handleOpen = useCallback((e: MouseEvent) => {
     setOpen(true);
     setPosition({x: e.clientX, y:e.clientY})
@@ -69,7 +72,6 @@ export const PointerContainer = ({
         role="pointer-panel"
         sx={{
           width: "min-content",
-          height: "min-content",
           touchAction: 'none',
         }}
         slotProps={{ backdrop: {} }}
@@ -87,7 +89,7 @@ export const PointerContainer = ({
             top: position.y, //getQuadrant(position.x, position.y) < 3 ? position.y : `calc(${position.y}px - 100%)`,
             display: "flex",
             flexGrow: 1,
-            flexDirection: getQuadrant(position.x, position.y) % 2 == 1 ? "row" : "row-reverse",
+            flexDirection: quadrant % 2 == 1 ? "row" : "row-reverse",
           }}
           elevation={6}
         >
@@ -99,6 +101,8 @@ export const PointerContainer = ({
               flexGrow: 2,
               justifyContent: "space-evenly",
               alignContent: "space-evenly",
+              borderLeft: `1px solid rgba(0,0,0, ${quadrant % 2 == 1 ? 0 : 0.1})`,
+              borderRight: `1px solid rgba(0,0,0, ${quadrant % 2 == 1 ? 0.1 : 0})`
             }}
             role="actions"
           >

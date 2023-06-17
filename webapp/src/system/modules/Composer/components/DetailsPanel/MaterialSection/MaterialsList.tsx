@@ -6,7 +6,7 @@ import { IGraphModule } from "@kernel/modules/Graphs";
 
 import MaterialItem from "./MaterialItem";
 import { PartNode, CompositionEdge } from "../../../store/composition/state";
-import AddMaterialButton from "./AddMaterialButton";
+import AddMaterialButton from "./actions/AddMaterialButton";
 import MaterialUsageActions from "./MaterialUsageActions";
 
 

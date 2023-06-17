@@ -13,33 +13,20 @@ interface SVGViewerProps {
   beforeInjection?: BeforeEach;
 }
 
+// TODO: refactor to use D3 rather than ReactSVG, here is how to import svg in d3: 
+/* ```ts
+    d3.xml("maple_illustration.svg")
+      .then(data => {
+        d3.select("#svg-container").node().append(data.documentElement)
+      });
+    ```
+*/
+
 const SVGViewer = ({ path, instanceName, beforeInjection }: SVGViewerProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
   const svgState = useAppSelector(selectSVGState(path));
-
-  const handleZoom = (
-    svg: SVGSVGElement,
-    delta: number,
-    center: [number, number]
-  ) => {
-    console.group("zoom");
-    const originalViewbox = svg.viewBox;
-
-    // invert op
-    center[0] = delta < 0 ? -center[0] : center[0];
-    center[1] = delta < 1 ? -center[1] : center[1];
-    const nextViewbox = `
-    ${originalViewbox.baseVal.x} 
-    ${originalViewbox.baseVal.y} 
-    ${originalViewbox.baseVal.width + delta * 5} 
-    ${originalViewbox.baseVal.height}`;
-
-    svg.setAttribute("viewBox", nextViewbox);
-
-    console.groupEnd();
-  };
 
 
   const handleBeforeInjection = useCallback(
