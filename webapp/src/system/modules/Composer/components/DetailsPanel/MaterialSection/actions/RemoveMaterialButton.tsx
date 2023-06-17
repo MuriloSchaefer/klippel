@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import useComposition from "../../../../hooks/useComposition";
 
 import DeleteForeverSharpIcon from "@mui/icons-material/DeleteForeverSharp";
+import { MaterialActionProps } from "./types";
 
 export const RemoveMaterialButton = ({compositionName, materialUsageId}: MaterialActionProps) => {
   const composition = useComposition(compositionName, c=>c)

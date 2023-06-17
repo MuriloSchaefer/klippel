@@ -11,9 +11,12 @@ import useModule from "@kernel/hooks/useModule";
 import AdjustSharpIcon from "@mui/icons-material/AdjustSharp";
 import { IPointerModule } from "@kernel/modules/Pointer";
 import EnhancedEncryptionSharpIcon from '@mui/icons-material/EnhancedEncryptionSharp';
+import { MaterialActionProps } from "./types";
 
 
-const AddRestrictionMaterialButton = ({sx, ...props}: IconButtonProps) => {
+interface Props extends MaterialActionProps, IconButtonProps {}
+
+const AddRestrictionMaterialButton = ({sx, materialUsageId, compositionName, ...props}: Props) => {
   const pointerModule = useModule<IPointerModule>("Pointer");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;

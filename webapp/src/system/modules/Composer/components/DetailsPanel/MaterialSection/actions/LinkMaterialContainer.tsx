@@ -48,7 +48,7 @@ const LinkMaterialContainer = ({
   }, [node]);
 
   const rows = Object.entries(adaptedProxies).map(([elem, proxy]) =>({...proxy, id: elem}))
-
+  console.log(rows)
   return (
     <Box role="link-material-container" sx={{ height: "max-content" }}>
       <Typography variant="h4">Elementos visuais vinculados</Typography>
@@ -65,6 +65,7 @@ const LinkMaterialContainer = ({
       <DataGrid
         editMode="row"
         density="compact"
+        hideFooter={true}
         columns={[
           {
             field: "id",

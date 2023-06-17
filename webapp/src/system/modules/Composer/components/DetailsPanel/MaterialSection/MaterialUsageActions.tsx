@@ -2,6 +2,7 @@ import { Box } from "@mui/material";
 import RemoveMaterialButton from "./actions/RemoveMaterialButton";
 import LinkMaterialButton from "./actions/LinkMaterialButton";
 import AddRestrictionMaterialButton from "./actions/AddRestrictionMaterialButton";
+import { MaterialActionProps } from "./actions/types";
 
 const MaterialUsageActions = (props: MaterialActionProps) => {
   return (
@@ -18,7 +19,7 @@ const MaterialUsageActions = (props: MaterialActionProps) => {
     >
       <RemoveMaterialButton {...props}/>
       <LinkMaterialButton {...props}/>
-      <AddRestrictionMaterialButton sx={{'hover': {color: 'yellow'}}}/>
+      <AddRestrictionMaterialButton {...props} sx={{'hover': {color: 'yellow'}}}/>
     </Box>
   );
 };
