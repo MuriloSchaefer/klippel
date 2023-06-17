@@ -1,1 +1,2 @@
-type MaterialActionProps = {compositionName: string, materialUsageId: string}
+
+export type MaterialActionProps = {compositionName: string, materialUsageId: string}

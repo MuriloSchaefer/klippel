@@ -8,6 +8,7 @@ import LinkSharpIcon from "@mui/icons-material/LinkSharp";
 import LinkMaterialContainer from "./LinkMaterialContainer";
 
 import useComposition from "../../../../hooks/useComposition";
+import { MaterialActionProps } from "./types";
 
 const LinkMaterialButton = ({
   compositionName,
