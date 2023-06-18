@@ -4,10 +4,9 @@ import { Box, Button, TextField } from "@mui/material";
 import AddSharpIcon from "@mui/icons-material/AddSharp";
 import { useCallback, useState } from "react";
 import useComposition from "../../../../hooks/useComposition";
-import { MaterialActionProps } from "./types";
 
 
-export const AddMaterialButton = ({compositionName}: MaterialActionProps) => {
+export const AddMaterialButton = ({compositionName}: {compositionName: string}) => {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
