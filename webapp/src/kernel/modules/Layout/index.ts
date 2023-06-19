@@ -12,6 +12,7 @@ import usePanelsManager from "./hooks/usePanelsManager";
 import { getViewportState, selectActiveViewport } from "./store/viewports/selectors";
 import ViewportNotificationsTray from "./components/SystemTray/ViewportNotificationsTray";
 import SystemModal from "./components/SystemModal";
+import CRUDGrid from "./components/CRUDGrid";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -22,6 +23,7 @@ export interface ILayoutModule extends IModule {
     ViewportNotificationsTray: typeof ViewportNotificationsTray,
     Accordion: typeof Accordion,
     SystemModal: typeof SystemModal,
+    CRUDGrid: typeof CRUDGrid,
   },
   hooks: {
     useLayoutManager: typeof useLayoutManager
@@ -54,7 +56,8 @@ const LayoutModule: ILayoutModule = {
     DetailsPanel,
     ViewportNotificationsTray,
     Accordion,
-    SystemModal
+    SystemModal,
+    CRUDGrid
   },
   hooks: {
     useLayoutManager,
