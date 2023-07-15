@@ -13,6 +13,7 @@ import { getViewportState, selectActiveViewport } from "./store/viewports/select
 import ViewportNotificationsTray from "./components/SystemTray/ViewportNotificationsTray";
 import SystemModal from "./components/SystemModal";
 import CRUDGrid from "./components/CRUDGrid";
+import CRUDGridProvider, { CRUDGridContext } from "./components/CRUDGridProvider";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -23,7 +24,11 @@ export interface ILayoutModule extends IModule {
     ViewportNotificationsTray: typeof ViewportNotificationsTray,
     Accordion: typeof Accordion,
     SystemModal: typeof SystemModal,
+    CRUDGridProvider: typeof CRUDGridProvider,
     CRUDGrid: typeof CRUDGrid,
+  },
+  contexts: {
+    CRUDGridContext: typeof CRUDGridContext,
   },
   hooks: {
     useLayoutManager: typeof useLayoutManager
@@ -57,8 +62,10 @@ const LayoutModule: ILayoutModule = {
     ViewportNotificationsTray,
     Accordion,
     SystemModal,
-    CRUDGrid
+    CRUDGrid,
+    CRUDGridProvider
   },
+  contexts: {CRUDGridContext},
   hooks: {
     useLayoutManager,
     useRibbonMenuManager,

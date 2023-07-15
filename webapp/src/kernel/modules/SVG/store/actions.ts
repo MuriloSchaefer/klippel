@@ -5,7 +5,7 @@ import { MODULE_NAME } from "../constants";
 import { SVGState, Proxies } from "./state";
 
 // Commands
-export const loadSVG = createAction<{ path: string, instanceName: string }>(
+export const loadSVG = createAction<{ path: string; instanceName: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Load SVG`
 );
 
@@ -13,12 +13,11 @@ export const fetchSVG = createAction<{ path: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Fetch SVG`
 );
 
-
 export const setPan = createAction<{
   path: string;
   instanceName: string;
   x: number;
-  y: number
+  y: number;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Set pan`);
 
 export const setZoom = createAction<{
@@ -39,6 +38,11 @@ export const updateProxy = createAction<{
   id: string;
   changes: CSSProperties;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Update proxy`);
+export const deleteProxy = createAction<{
+  path: string;
+  instanceName: string;
+  id: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Delete proxy`);
 
 // Events
 export const SVGFetched = createAction<{ path: string; content: string }>(
@@ -54,4 +58,11 @@ export const proxyAdded = createAction<{
   styles: CSSProperties;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Proxy added`);
 
-export const proxyUpdated = createAction<Proxies>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Proxy updated`);
+export const proxyUpdated = createAction<Proxies>(
+  `[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Proxy updated`
+);
+export const proxyDeleted = createAction<{
+  path: string;
+  instanceName: string;
+  id: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Proxy deleted`);

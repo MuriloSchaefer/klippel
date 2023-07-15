@@ -4,15 +4,19 @@ import {
   removeEdge,
   updateNode,
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
-import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
+import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { MaterialsModuleState } from "@system/modules/Materials/store/state";
 import {
   addMaterial,
+  addProxy,
   changeMaterial,
+  deleteProxy,
   materialAdded,
   materialChanged,
   partSelected,
   partUnselected,
+  proxyAdded,
+  proxyDeleted,
   selectPart,
   unselectPart,
 } from "./actions";
@@ -20,7 +24,11 @@ import { ComposerState } from "../state";
 import { MaterialNode, CompositionGraph } from "./state";
 import { detailsClosed } from "@kernel/modules/Layout/store/panels/actions";
 import { GraphsManagerState } from "@kernel/modules/Graphs/store/state";
-import { updateProxy } from "@kernel/modules/SVG/store/actions";
+import {
+  deleteProxy as deleteSVGProxy,
+  addProxy as addSVGProxy,
+  updateProxy,
+} from "@kernel/modules/SVG/store/actions";
 import { CSSProperties } from "react";
 
 const middlewares = createListenerMiddleware();
@@ -92,7 +100,6 @@ middlewares.startListening({
       state.Composer.compositionsManager.compositions[compositionName];
     const graph = state.Graph.graphs[composition.graphId] as CompositionGraph; // QUESTION: how to get typing in here without casting?
     const material = state.Materials.materials[materialId];
-    const materialType = state.Materials.materialTypes[material.type];
 
     const materialNodeId = `material-${materialId}`;
 
@@ -106,8 +113,6 @@ middlewares.startListening({
       (edge) => edge.sourceId === materialUsageId && edge.type == "CONSUMES"
     );
 
-    // const color =
-    //   materialNode && "color" in materialNode ? materialNode.color : "none";
     if (
       "proxies" in usageNode &&
       usageNode.proxies.length > 0 &&
@@ -153,9 +158,9 @@ middlewares.startListening({
       })
     );
 
-    linkedMaterials.forEach(lm => {
-      dispatch(removeEdge({graphId: composition.graphId, edgeId: lm.id}))
-    })
+    linkedMaterials.forEach((lm) => {
+      dispatch(removeEdge({ graphId: composition.graphId, edgeId: lm.id }));
+    });
 
     dispatch(
       materialChanged({
@@ -201,6 +206,118 @@ middlewares.startListening({
     const { dispatch } = listenerApi;
 
     dispatch(partUnselected({ compositionName: payload.compositionName })); // dispatch event
+  },
+});
+middlewares.startListening({
+  actionCreator: deleteProxy,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Composer: {
+        compositionsManager: { compositions },
+      },
+      Graph: { graphs },
+    } = getState() as { Composer: ComposerState; Graph: GraphsManagerState };
+    const comp = compositions[payload.compositionName];
+    const graph = graphs[comp.graphId] as CompositionGraph;
+
+    if (!comp.selectedPart) {
+      console.warn("trying to delete proxy without selecting a part");
+      return;
+    }
+
+    const materialUsageNode = graph.nodes[payload.materialId];
+    if (!("proxies" in materialUsageNode)) {
+      // TODO: add error handling
+      return;
+    }
+    const newProxies = materialUsageNode.proxies.filter(
+      (p) => p.elem !== payload.proxyId
+    );
+
+    dispatch(
+      updateNode({
+        graphId: comp.graphId,
+        nodeId: payload.materialId,
+        changes: { proxies: newProxies },
+      })
+    ); // filter proxy
+    dispatch(
+      deleteSVGProxy({
+        path: comp.svgPath,
+        instanceName: comp.name,
+        id: payload.proxyId,
+      })
+    );
+    dispatch(proxyDeleted(payload)); // dispatch event
+  },
+});
+middlewares.startListening({
+  actionCreator: addProxy,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Composer: {
+        compositionsManager: { compositions },
+      },
+      Graph: { graphs },
+      Materials: { materials },
+    } = getState() as {
+      Composer: ComposerState;
+      Graph: GraphsManagerState;
+      Materials: MaterialsModuleState;
+    };
+    const comp = compositions[payload.compositionName];
+    const graph = graphs[comp.graphId] as CompositionGraph;
+
+    if (!comp.selectedPart) {
+      // TODO: add error handling
+      console.error("trying to delete proxy without selecting a part");
+      return;
+    }
+
+    const materialUsageNode = graph.nodes[payload.materialId];
+    if (!("proxies" in materialUsageNode)) {
+      // TODO: add error handling
+      console.error(
+        "trying to add proxy in an node that does not support proxies"
+      );
+      return;
+    }
+    const newProxies = [...materialUsageNode.proxies, payload.proxy];
+
+    // set SVG colors based on curr material
+    const materialId = Number(materialUsageNode.materialId.split("-")[1]);
+    const material = materials[materialId];
+
+    if (!("cor" in material.attributes)) {
+      //TODO: add error handling
+      console.error("material does not have a color attribute ");
+      return;
+    }
+    const styles = newProxies
+      .filter((p) => p.elem === payload.proxy.elem)
+      .reduce(
+        (acc, curr) => ({ ...acc, [curr.attr]: material.attributes.cor.hex }),
+        {}
+      );
+
+    dispatch(
+      updateNode({
+        graphId: comp.graphId,
+        nodeId: payload.materialId,
+        changes: { proxies: newProxies },
+      })
+    ); // filter proxy
+    dispatch(
+      addSVGProxy({
+        path: comp.svgPath,
+        instanceName: comp.name,
+        id: payload.proxy.elem,
+        styles,
+      })
+    );
+    dispatch(proxyAdded(payload)); // dispatch event
   },
 });
 

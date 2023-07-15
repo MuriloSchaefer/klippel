@@ -49,8 +49,6 @@ export const ComponentsRegistryProvider = ({
         return curr 
       }, curr)
 
-      console.log(curr, components, newValues)
-
       setRegistries(newValues);
     }
   

@@ -97,6 +97,7 @@ middlewares.startListening({
     if (!modelPath) return;
 
     compositions.forEach((comp) => {
+      if (comp.loading.loadModel !== "not-started") return
       dispatch(
         fetchModel({
           compositionName: comp.name,

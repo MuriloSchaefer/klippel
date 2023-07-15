@@ -8,7 +8,9 @@ import { Store } from "@kernel/modules/Store";
 
 import {
   addMaterialType,
+  addProxy,
   changeMaterial,
+  deleteProxy,
   selectPart,
 } from "../store/composition/actions";
 import { ComposerState } from "../store/state";
@@ -19,8 +21,10 @@ import {
   MaterialUsageNode,
   OperationNode,
   PartNode,
+  Proxy,
 } from "../store/composition/state";
 import { UnitValue } from "@system/modules/Converter/typings";
+import { ISVGModule } from "@kernel/modules/SVG";
 
 interface CompositionActions {
   addPart(name: string, domId: string, parentName?: string): void;
@@ -33,6 +37,10 @@ interface CompositionActions {
 
   changeMaterialType(materialUsageId: string, materialType: string): void;
   changeMaterial(materialUsageId: string, material: number): void;
+
+  addProxy(proxy: Proxy, materialId:string): void;
+  deleteProxy(proxyId: string, materialId:string): void;
+  updateProxy(): void;
 }
 export interface Composition<T = CompositionState> {
   state: T | undefined;
@@ -51,11 +59,13 @@ const useComposition = <C = Composition, R = C>(
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>("Graph");
+  const svgModule = useModule<ISVGModule>("SVG");
 
   const { useAppDispatch, useAppSelector } = storeModule.hooks;
   const dispatch = useAppDispatch();
   const panelsManager = layoutModule.hooks.usePanelsManager();
   const { useGraph } = graphModule.hooks;
+  const { useSVG } = svgModule.hooks;
 
   const selector = createSelector(
     (state: { Composer: ComposerState } | undefined) =>
@@ -76,6 +86,7 @@ const useComposition = <C = Composition, R = C>(
       nodes: g?.nodes,
     })
   );
+  const svg = useSVG(innerState?.svgPath!, svg => svg)
 
   return {
     state: compositionState,
@@ -224,6 +235,15 @@ const useComposition = <C = Composition, R = C>(
           })
         );
       },
+
+      addProxy(proxy, materialId){
+        dispatch(addProxy({compositionName, materialId, proxy}))
+      },
+      deleteProxy(proxyId, materialId){
+        dispatch(deleteProxy({compositionName, materialId, proxyId}))
+        //svg.actions.deleteProxy(proxyId, compositionName)
+      },
+      updateProxy(){},
     },
   };
 };

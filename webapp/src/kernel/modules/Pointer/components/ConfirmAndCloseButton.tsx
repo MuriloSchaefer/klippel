@@ -3,7 +3,7 @@ import CheckSharpIcon from "@mui/icons-material/CheckSharp";
 
 import { PointerContainerActionProps } from "@kernel/modules/Pointer/components/PointerContainer";
 
-interface ConfirmButtonProps extends PointerContainerActionProps {
+export interface ConfirmButtonProps extends PointerContainerActionProps {
   handleConfirm: () => void;
 }
 

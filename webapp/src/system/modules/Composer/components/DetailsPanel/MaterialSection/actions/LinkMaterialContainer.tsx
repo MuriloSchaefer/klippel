@@ -1,7 +1,6 @@
-import { Box, Button, Typography, styled } from "@mui/material";
+import { Box, Switch, Typography } from "@mui/material";
 import {
   GridRenderEditCellParams,
-  GridRowsProp,
   useGridApiContext,
 } from "@mui/x-data-grid";
 import useModule from "@kernel/hooks/useModule";
@@ -10,12 +9,19 @@ import {
   CompositionState,
   MaterialUsageNode,
 } from "../../../../store/composition/state";
-import { useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 
 import _ from "lodash";
 import { ILayoutModule } from "@kernel/modules/Layout";
 
-
+function CRUDBooleanCell({id, value, field}: GridRenderEditCellParams) {
+  const apiRef = useGridApiContext();
+  const handleValueChange = (event: React.ChangeEvent<any>) => {
+    const newValue = event.target.checked; // The new value entered by the user
+    apiRef.current.setEditCellValue({ id, field, value: newValue });
+  };
+  return <Switch checked={value} onChange={handleValueChange} />;
+}
 
 const LinkMaterialContainer = ({
   compositionState,
@@ -28,6 +34,8 @@ const LinkMaterialContainer = ({
   const layoutModule = useModule<ILayoutModule>("Layout");
 
   const { useNodeInfo } = graphModule.hooks;
+
+  const { CRUDGridContext } = layoutModule.contexts;
   const { CRUDGrid } = layoutModule.components;
 
   const { node } = useNodeInfo<MaterialUsageNode>(
@@ -44,20 +52,25 @@ const LinkMaterialContainer = ({
     );
   }, [node]);
 
-  const initialRows: GridRowsProp = useMemo(
+  const { setRows } = useContext(CRUDGridContext);
+
+  useEffect(
     () =>
-      Object.entries(adaptedProxies).map(([elem, proxy]) => ({
-        ...proxy,
-        elem,
-        id: _.uniqueId("proxy-"),
-      })),
+      setRows(
+        Object.entries(adaptedProxies).map(([elem, proxy]) => ({
+          ...proxy,
+          elem,
+          state: 'untouched',
+          id: _.uniqueId("proxy-"),
+        }))
+      ),
     [adaptedProxies]
   );
 
   return (
     <Box role="link-material-container" sx={{ height: "max-content" }}>
       <Typography variant="h4">Elementos visuais vinculados</Typography>
-      <Typography>
+      <Typography component="div">
         <p>
           A tabela abaixo mostra os atuais elementos visuais vínculados com o
           material.
@@ -65,14 +78,14 @@ const LinkMaterialContainer = ({
         <p>Manipule a tabela para alterar os valores</p>
       </Typography>
       <CRUDGrid
-        initialRows={initialRows}
         columns={[
           {
             field: "elem",
             editable: true,
             flex: 4,
             minWidth: 100,
-            resizable: true,
+            maxWidth: 200,
+            // resizable: true,
             renderHeader: () => "Elemento",
             // renderEditCell: (params: GridRenderEditCellParams) => (
             //   <CustomEditComponent {...params} />
@@ -82,15 +95,25 @@ const LinkMaterialContainer = ({
             field: "stroke",
             editable: true,
             flex: 1,
+            maxWidth: 200,
             minWidth: 100,
             renderHeader: () => "Contorno",
+            renderCell: ({value})=> <Switch checked={value} disabled/>,
+            renderEditCell: (params: GridRenderEditCellParams) => (
+              <CRUDBooleanCell {...params} />
+            ),
           },
           {
             field: "fill",
             editable: true,
             flex: 1,
+            maxWidth: 200,
             minWidth: 100,
             renderHeader: () => "Preenchimento",
+            renderCell: ({value})=> <Switch checked={value} disabled/>,
+            renderEditCell: (params: GridRenderEditCellParams) => (
+              <CRUDBooleanCell {...params} />
+            ),
           },
         ]}
       />

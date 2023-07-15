@@ -10,7 +10,7 @@
       "name": "Launch Chrome against localhost",
       "runtimeExecutable": "/usr/bin/brave",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
+      "webRoot": "${workspaceFolder}",
     }
   ]
 }
