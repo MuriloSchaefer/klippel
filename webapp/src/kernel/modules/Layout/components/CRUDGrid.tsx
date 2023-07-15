@@ -321,7 +321,7 @@ export const CRUDGrid = ({
           },
         },
       ]}
-      rows={rows.toSorted((a, b) => a.state.localeCompare(b.state))}
+      rows={rows}
     />
   );
 };
