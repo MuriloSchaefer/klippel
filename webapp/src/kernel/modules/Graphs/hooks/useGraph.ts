@@ -25,7 +25,7 @@ export interface EdgeMap {
 }
 
 export interface GraphActions {
-  addNode(node: Omit<Node, 'position'>, edges?: EdgeMap): void;
+  addNode(node: Omit<Node, "position">, edges?: EdgeMap): void;
   removeNode(id: string): void;
   updateNode(node: any): void; // QUESTION: how to set the type here
   addEdge(edge: Edge): void;
@@ -48,7 +48,8 @@ export interface GraphActions {
       visitedNodes: Node[]
     ) => boolean,
     depth?: number,
-    label?: string
+    label?: string,
+    id?: string,
   ): string;
 }
 export interface Graph<T = GraphState> {
@@ -78,7 +79,7 @@ const useGraph = <G = GraphState, R = G>(
     graphSelector
   );
   const graphState = useAppSelector<R | undefined>(selector);
-  
+
   const innerState = useAppSelector(
     (state: { Graph: GraphsManagerState } | undefined) =>
       state && state.Graph && state.Graph.graphs[graphId]
@@ -88,8 +89,14 @@ const useGraph = <G = GraphState, R = G>(
     state: graphState,
     actions: {
       addNode: (node, edges) => {
-        const positionedNode: Node = {...node, position: {x:0,y:0}}
-        dispatch(addNode({ graphId, node: positionedNode  , edges: edges ?? DEFAULT_EDGES }));
+        const positionedNode: Node = { ...node, position: { x: 0, y: 0 } };
+        dispatch(
+          addNode({
+            graphId,
+            node: positionedNode,
+            edges: edges ?? DEFAULT_EDGES,
+          })
+        );
       },
       removeNode: (id) => {
         dispatch(removeNode({ graphId, nodeId: id }));
@@ -103,14 +110,15 @@ const useGraph = <G = GraphState, R = G>(
       removeEdge: (id) => {
         dispatch(removeEdge({ graphId, edgeId: id }));
       },
-      nodeExists: (nodeId) => innerState ? nodeId in innerState?.nodes : false,
+      nodeExists: (nodeId) =>
+        innerState ? nodeId in innerState?.nodes : false,
 
-      search: (strategy, nodeStart, validate, stopCriteria, depth, label) => {
-        const resultPath = _.uniqueId("search");
+      search: (strategy, nodeStart, validate, stopCriteria, depth, label, id) => {
+        const resultPath = id ?? _.uniqueId("search");
         dispatch(
           search({
-            graphId,
             id: resultPath,
+            graphId,
             strategy,
             nodeStart,
             validate,

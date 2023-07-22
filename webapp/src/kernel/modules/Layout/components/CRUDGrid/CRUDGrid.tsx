@@ -133,8 +133,10 @@ type CRUDGridRow = {
 
 export const CRUDGrid = ({
   columns,
+  addLabel
 }: {
   columns: GridColDef<GridValidRowModel>[];
+  addLabel?: string
 }) => {
   const { rows, setRows } = useContext(CRUDGridContext);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
@@ -237,6 +239,7 @@ export const CRUDGrid = ({
       editMode="row"
       density="compact"
       hideFooter={true}
+      autoHeight={true}
       rowModesModel={rowModesModel}
       getRowClassName={(params) => `state--${params.row.state}`}
       onRowEditStop={handleRowEditStop}
@@ -246,7 +249,7 @@ export const CRUDGrid = ({
         toolbar: () => (
           <GridToolbarContainer>
             <Button startIcon={<AddSharpIcon />} onClick={handleAddLink}>
-              Adicionar vínculo
+              {addLabel || 'Adicionar'}
             </Button>
           </GridToolbarContainer>
         ),
@@ -260,6 +263,7 @@ export const CRUDGrid = ({
           //width: 'min-content',
           flex: 2,
           minWidth: 80,
+          maxWidth: 200,
           cellClassName: "actions",
           getActions: ({ id }) => {
             const row = rows.find((row) => row.id === id);

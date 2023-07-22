@@ -1,21 +1,16 @@
-
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
 import useGraph from "../hooks/useGraph";
 import { useGraphEditor } from "../hooks/useGraphEditor";
 import { D3Graph } from "../interfaces";
-import { useResizeObserver } from "../hooks/useResizeObserver";
 import { useTheme } from "@mui/material";
+import useModule from "@kernel/hooks/useModule";
+import { ILayoutModule } from "@kernel/modules/Layout";
 
-const GraphViewer = ({
-  graphId,
-}: {
-  graphId: string
-}) => {
+const GraphViewer = ({ graphId }: { graphId: string }) => {
+  const {
+    hooks: { useResizeObserver },
+  } = useModule<ILayoutModule>("Layout");
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(wrapperRef);

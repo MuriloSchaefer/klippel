@@ -1,6 +1,6 @@
 import { PaletteMode } from "@mui/material";
 import {initialState as panelsInitialState, PanelsState} from "./panels/state";
-import { RibbonMenuState, Tabs } from "./ribbonMenu/state";
+import { RibbonMenuState } from "./ribbonMenu/state";
 import { viewportManagerState } from "./viewports/state";
 
 export type Theme = PaletteMode;

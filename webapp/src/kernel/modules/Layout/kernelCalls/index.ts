@@ -9,11 +9,18 @@ import panelsMiddleware from "../store/panels/middlewares";
 import slice from "../store/slice";
 import { StartModuleProps } from "@kernel/modules/base";
 import HomeViewport from "../components/ViewportManager/HomeViewport";
+import { switchTheme } from "../store/actions";
 
 export const startModule = ({
+  dispatch,
   managers: { storeManager, componentRegistryManager },
 }: StartModuleProps) => {
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
+
+  const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (darkThemeMq.matches) {
+    dispatch(switchTheme({theme: 'dark'}))
+  }
   
   storeManager.functions.registerMiddleware(layoutMiddleware);
   storeManager.functions.registerMiddleware(ribbonMenuMiddleware);

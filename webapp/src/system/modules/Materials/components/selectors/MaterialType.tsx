@@ -1,19 +1,19 @@
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select, SelectProps } from "@mui/material";
 import { useCallback } from "react";
 import { selectMaterialTypes } from "../../store/materialTypes/selectors";
 import { MaterialType } from "../../store/materialTypes/state";
 
-const MaterialTypeSelector = ({
-    filter,
-    value,
-    onChange
-}: {
-    value?: string;
+interface MaterialTypeSelectorProps extends SelectProps<any> {
   filter?: (types: MaterialType) => boolean;
-  onChange?: (value: string) => void;
-}) => {
+}
+
+const MaterialTypeSelector = ({
+  filter,
+  value,
+  ...props
+}: MaterialTypeSelectorProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
@@ -22,19 +22,25 @@ const MaterialTypeSelector = ({
   const noFilter = useCallback((option: MaterialType) => true, []);
 
   return (
-    <FormControl sx={{ m: 1, minWidth: 120, width: 'min-content' }} fullWidth size="small">
+    <FormControl
+      sx={{ m: 1, minWidth: 120, width: "min-content" }}
+      fullWidth
+      size="small"
+    >
       <InputLabel id={`label`}>Tipo</InputLabel>
       <Select
+        {...props}
         labelId={`label`}
         id={`material-type`}
         value={value}
-        onChange={(e)=>{onChange && onChange(e.target.value)}}
         label="Tipo"
       >
         {Object.values(materialTypes)
           .filter(filter ?? noFilter)
           .map((type) => (
-            <MenuItem key={type.name} value={type.name}>{type.label}</MenuItem>
+            <MenuItem key={type.name} value={type.name}>
+              {type.label}
+            </MenuItem>
           ))}
       </Select>
     </FormControl>

@@ -1,7 +1,6 @@
 import { Box, Switch, Typography } from "@mui/material";
 import {
   GridRenderEditCellParams,
-  useGridApiContext,
 } from "@mui/x-data-grid";
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
@@ -14,14 +13,7 @@ import { useContext, useEffect, useMemo } from "react";
 import _ from "lodash";
 import { ILayoutModule } from "@kernel/modules/Layout";
 
-function CRUDBooleanCell({id, value, field}: GridRenderEditCellParams) {
-  const apiRef = useGridApiContext();
-  const handleValueChange = (event: React.ChangeEvent<any>) => {
-    const newValue = event.target.checked; // The new value entered by the user
-    apiRef.current.setEditCellValue({ id, field, value: newValue });
-  };
-  return <Switch checked={value} onChange={handleValueChange} />;
-}
+
 
 const LinkMaterialContainer = ({
   compositionState,
@@ -36,7 +28,7 @@ const LinkMaterialContainer = ({
   const { useNodeInfo } = graphModule.hooks;
 
   const { CRUDGridContext } = layoutModule.contexts;
-  const { CRUDGrid } = layoutModule.components;
+  const { CRUDGrid, CRUDBooleanCell } = layoutModule.components;
 
   const { node } = useNodeInfo<MaterialUsageNode>(
     compositionState.graphId,
@@ -78,14 +70,15 @@ const LinkMaterialContainer = ({
         <p>Manipule a tabela para alterar os valores</p>
       </Typography>
       <CRUDGrid
+        addLabel="Adicionar vínculo"
         columns={[
           {
             field: "elem",
             editable: true,
-            flex: 4,
-            minWidth: 100,
+            flex: 1,
+            width: 100,
+            minWidth: 200,
             maxWidth: 200,
-            // resizable: true,
             renderHeader: () => "Elemento",
             // renderEditCell: (params: GridRenderEditCellParams) => (
             //   <CustomEditComponent {...params} />
@@ -94,9 +87,10 @@ const LinkMaterialContainer = ({
           {
             field: "stroke",
             editable: true,
+            width: 100,
             flex: 1,
-            maxWidth: 200,
             minWidth: 100,
+            maxWidth: 200,
             renderHeader: () => "Contorno",
             renderCell: ({value})=> <Switch checked={value} disabled/>,
             renderEditCell: (params: GridRenderEditCellParams) => (
@@ -106,9 +100,10 @@ const LinkMaterialContainer = ({
           {
             field: "fill",
             editable: true,
+            width: 100,
             flex: 1,
-            maxWidth: 200,
             minWidth: 100,
+            maxWidth: 200,
             renderHeader: () => "Preenchimento",
             renderCell: ({value})=> <Switch checked={value} disabled/>,
             renderEditCell: (params: GridRenderEditCellParams) => (

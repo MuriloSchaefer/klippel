@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useMemo, useState } from "react";
 import { GridRowsProp, GridValidRowModel } from "@mui/x-data-grid";
 
 export type CRUDGridContextType = GridRowsProp;
@@ -21,15 +21,15 @@ export const CRUDGridProvider = ({
   const [rows, setRows] = useState<GridRowsProp>(
     (initialRows ?? []).map((entry) => ({ ...entry, state: "untouched" }))
   );
-  // const values = useMemo(
-  //   () => ({
-  //     rows,
-  //     setRows,
-  //   }),
-  //   [rows]
-  // );
+  const values = useMemo(
+    () => ({
+      rows,
+      setRows,
+    }),
+    [rows]
+  );
 
-  return <CRUDGridContext.Provider value={{rows, setRows}}>{children}</CRUDGridContext.Provider>;
+  return <CRUDGridContext.Provider value={values}>{children}</CRUDGridContext.Provider>;
 };
 
 export default React.memo(CRUDGridProvider);

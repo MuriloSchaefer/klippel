@@ -7,10 +7,10 @@
     {
       "type": "pwa-chrome",
       "request": "launch",
-      "name": "Launch Chrome against localhost",
+      "name": "Launch Brave against localhost",
       "runtimeExecutable": "/usr/bin/brave",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/webapp",
     }
   ]
 }

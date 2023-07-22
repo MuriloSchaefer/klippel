@@ -12,8 +12,6 @@ import DebuggerViewport from "../components/DebuggerViewport";
 export function startModule({
     managers: { storeManager,componentRegistryManager,layoutManager, ribbonMenuManager, viewportManager },
   }: StartModuleProps){
-    
-
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
     storeManager.functions.registerMiddleware(middlewares)
     storeManager.functions.registerMiddleware(graphMiddlewares)

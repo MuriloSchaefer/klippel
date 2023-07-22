@@ -1,7 +1,6 @@
 import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
 import Edge from "../../interfaces/Edge";
 
-import Node from "../../interfaces/Node";
 import bfs from "../../searchAlgs/bfs";
 import dfs from "../../searchAlgs/dfs";
 import { GraphState, SearchResult, GraphsManagerState } from "../state";
@@ -116,6 +115,17 @@ middlewares.startListening({
       Graph: { graphs },
     } = getState() as { Graph: GraphsManagerState };
     let graph = graphs[action.graphId];
+
+    // If already has a result, avoid searching again. 
+    // This is usefull to avoid re-searching on multiple renders.
+    if (graph.searchResults && action.id in graph.searchResults)
+      dispatch(
+        searchFinished({
+          graphId: action.graphId,
+          searchId: action.id,
+          results: graph.searchResults[action.id],
+        })
+      );
 
     switch (action.strategy) {
       case "dfs":

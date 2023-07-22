@@ -30,7 +30,7 @@ interface CompositionActions {
   addPart(name: string, domId: string, parentName?: string): void;
   removePart(partId: string): void;
   selectPart(partName: string): void;
-  addMaterialUsage(label: string, partId:string): void;
+  addMaterialUsage(label: string, partId:string, allowedMaterialTypes: string[]): void;
   removeMaterialUsage(materialUsageId: string): void;
   removeOperation(operationId: string): void;
   addOperation(label: string, cost: UnitValue, time_taken: UnitValue, partId: string): void;
@@ -121,7 +121,7 @@ const useComposition = <C = Composition, R = C>(
         // TODO: link subparts to the parent node
         graph.actions.removeNode(partId)
       },
-      addMaterialUsage(label, partId){
+      addMaterialUsage(label, partId, materialTypes){
         const nodeId = _.uniqueId(`material-usage-`)
         const materialUsageNode: MaterialUsageNode = {
           type: "MATERIAL_USAGE",
@@ -129,7 +129,7 @@ const useComposition = <C = Composition, R = C>(
           label: label,
           editableAttributes: ['materialType', 'materialId'],
           materialId: "material-12",
-          materialType: "malha", // TODO: allow null values
+          materialType: materialTypes[0] ?? 'malha', // TODO: allow null values
           position: {x: 0, y: 0},
           proxies: [],
         }
@@ -155,8 +155,8 @@ const useComposition = <C = Composition, R = C>(
           type: "RESTRICTION",
           restrictionType: 'allowOnly',
           id: restrictionNodeId,
-          label: 'Permitido apenas tecidos ou malhas',
-          allowOnly: ['malha', 'tecido'],
+          label: 'Permitido apenas',
+          allowOnly: materialTypes,
           position: {x: 0, y: 0},
         }
         const restrictionEdgeId = `${nodeId}->${restrictionNodeId}`

@@ -12,8 +12,11 @@ import usePanelsManager from "./hooks/usePanelsManager";
 import { getViewportState, selectActiveViewport } from "./store/viewports/selectors";
 import ViewportNotificationsTray from "./components/SystemTray/ViewportNotificationsTray";
 import SystemModal from "./components/SystemModal";
-import CRUDGrid from "./components/CRUDGrid";
-import CRUDGridProvider, { CRUDGridContext } from "./components/CRUDGridProvider";
+
+import CRUDGrid from "./components/CRUDGrid/CRUDGrid";
+import CRUDGridProvider, { CRUDGridContext } from "./components/CRUDGrid/CRUDGridProvider";
+import CRUDBooleanCell from "./components/CRUDGrid/BooleanCell";
+import { useResizeObserver } from "./hooks/useResizeObserver";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -25,6 +28,7 @@ export interface ILayoutModule extends IModule {
     Accordion: typeof Accordion,
     SystemModal: typeof SystemModal,
     CRUDGridProvider: typeof CRUDGridProvider,
+    CRUDBooleanCell: typeof CRUDBooleanCell,
     CRUDGrid: typeof CRUDGrid,
   },
   contexts: {
@@ -35,6 +39,7 @@ export interface ILayoutModule extends IModule {
     useRibbonMenuManager: typeof useRibbonMenuManager
     useViewportManager: typeof useViewportManager
     usePanelsManager: typeof usePanelsManager
+    useResizeObserver: typeof useResizeObserver
   },
   store: {
     selectors: {
@@ -63,14 +68,16 @@ const LayoutModule: ILayoutModule = {
     Accordion,
     SystemModal,
     CRUDGrid,
-    CRUDGridProvider
+    CRUDBooleanCell,
+    CRUDGridProvider,
   },
   contexts: {CRUDGridContext},
   hooks: {
     useLayoutManager,
     useRibbonMenuManager,
     useViewportManager,
-    usePanelsManager
+    usePanelsManager,
+    useResizeObserver
   },
   store: {
     selectors: {
