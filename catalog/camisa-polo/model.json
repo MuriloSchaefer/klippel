@@ -64,6 +64,7 @@
       "id": "Material1MangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -88,6 +89,7 @@
       "id": "Material2MangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -98,6 +100,7 @@
       "id": "Material2MangaDireitaRestriction2",
       "type": "RESTRICTION",
       "sameAs": "Material1MangaDireita",
+      "restrictionType": "sameAs",
       "label": "Ser do mesmo tipo que o tecido primario",
       "position": {
         "x": 0,
@@ -170,6 +173,7 @@
       "id": "Material1barraMangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -193,6 +197,7 @@
       "id": "Material2barraMangaDireitaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -227,6 +232,7 @@
       "id": "Material1mangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -253,6 +259,7 @@
       "id": "Material2mangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -263,6 +270,7 @@
       "id": "Material2mangaEsquerdaRestriction2",
       "type": "RESTRICTION",
       "sameAs": "Material1mangaEsquerda",
+      "restrictionType": "sameAs",
       "label": "Ser do mesmo tipo que o tecido primario",
       "position": {
         "x": 0,
@@ -298,6 +306,7 @@
       "id": "Material1barraMangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -321,6 +330,7 @@
       "id": "Material2barraMangaEsquerdaRestriction1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -355,6 +365,7 @@
       "id": "material1-ombro-esquerdo-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -378,6 +389,7 @@
       "id": "material1-ombro-direito-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -412,6 +424,7 @@
       "id": "material1-barra-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -435,6 +448,7 @@
       "id": "material1-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -458,6 +472,7 @@
       "id": "material2-frente-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -524,6 +539,7 @@
       "id": "material1-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -547,6 +563,7 @@
       "id": "material2-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -570,6 +587,7 @@
       "id": "material1-barra-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -593,6 +611,7 @@
       "id": "material1-ombro-esquerdo-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -616,6 +635,7 @@
       "id": "material1-ombro-direito-costas-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -651,6 +671,7 @@
       "id": "material1-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -674,6 +695,7 @@
       "id": "material2-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -697,6 +719,7 @@
       "id": "material3-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
@@ -720,6 +743,7 @@
       "id": "material4-gola-restriction-1",
       "type": "RESTRICTION",
       "allowOnly": ["malha", "tecido"],
+      "restrictionType": "allowOnly",
       "label": "Permitido apenas tecidos ou malhas",
       "position": {
         "x": 0,
