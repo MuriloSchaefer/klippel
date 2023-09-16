@@ -30,7 +30,6 @@ function calculateValue(value: number) {
   if (value < chunk ) newValue = value/120
   else if (value < 2*chunk ) newValue = value/240
   else if (value > 3*chunk ) newValue = value
-  console.log(value, chunk, newValue)
   return newValue
 }
 

@@ -10,6 +10,7 @@ import { RestrictionsProps } from "./Container";
 import {
   MaterialUsageNode,
 } from "../../../../../store/composition/state";
+import _ from "lodash";
 
 export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
   const graphModule = useModule<IGraphModule>("Graph");
@@ -25,7 +26,7 @@ export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
   );
   const searchResultPath = useMemo(() => {
     if (!node) return ""; // TODO: loading
-    return search('bfs', node?.id, ()=> true, () => false);
+    return search('bfs', node?.id, ()=> true, () => false, 1, `Get recommendations for ${node?.label ?? node.id}`);
   }, [node]);
 
   const result = useSearchResult(compositionState.graphId, searchResultPath)
@@ -47,6 +48,7 @@ export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
         <p>A tabela abaixo mostra contra indicações para este material.</p>
       </Typography>
       <CRUDGrid
+        newRecord={() => ({id: _.uniqueId('recommendations-')})}
         columns={[]}
       />
     </Box>

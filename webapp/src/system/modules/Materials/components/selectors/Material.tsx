@@ -118,7 +118,7 @@ const MaterialSelector = ({
         <Select
           labelId={`label`}
           id={`material-name`}
-          value={principalState}
+          value={principalState ?? ""}
           onChange={(e) => setPrincipalState(e.target.value)}
           label={selector.principal}
         >
@@ -144,7 +144,7 @@ const MaterialSelector = ({
         <Select
           labelId={`label`}
           id={`material-extra`}
-          value={selectedMaterial?.id}
+          value={selectedMaterial?.id ?? ""}
           onChange={handleMaterialSelection}
           label={selector.extra}
         >

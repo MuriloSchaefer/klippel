@@ -1,4 +1,4 @@
-import {
+import React, {
   MouseEvent,
   cloneElement,
   useCallback,
@@ -17,6 +17,10 @@ export interface PointerContainerActionProps extends IconButtonProps {
   closeContainer?: (e: MouseEvent) => void;
 }
 
+export interface PointerContainerProps {
+  isOpen?: boolean
+}
+
 export const PointerContainer = ({
   children,
   component,
@@ -24,7 +28,7 @@ export const PointerContainer = ({
   onClose,
 }: {
   children: React.ReactElement;
-  component: React.ReactElement;
+  component: React.ReactElement<PointerContainerProps>;
   actions: React.ReactElement<PointerContainerActionProps>[];
   onClose?: (event: MouseEvent) => void;
 }) => {
@@ -176,7 +180,7 @@ export const PointerContainer = ({
                 alignContent: "center",
               }}
             >
-              {component}
+              {React.cloneElement(component, {isOpen: open})}
             </Box>
           </Box>
         </Paper>

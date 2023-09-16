@@ -25,7 +25,7 @@ const ConfirmButton = ({composition,materialUsageId, ...props}: ConfirmProps) =>
   const handleConfirm = useCallback(() => {
     rows.filter(r => r.state === 'deleted').forEach(r => composition.actions.deleteProxy(r.elem, materialUsageId))
     rows.filter(r => r.state === 'modified').forEach(r => {
-      composition.actions.deleteProxy(r.elem, materialUsageId)
+      composition.actions.deleteProxy(r.old.elem, materialUsageId)
       if (r.stroke)
         composition.actions.addProxy({elem:r.elem, attr: 'stroke' }, materialUsageId)
       if (r.fill)

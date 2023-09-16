@@ -32,7 +32,7 @@ const MaterialTypeSelector = ({
         {...props}
         labelId={`label`}
         id={`material-type`}
-        value={value}
+        value={value ?? ""}
         label="Tipo"
       >
         {Object.values(materialTypes)

@@ -2,7 +2,7 @@ import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import { CSSProperties } from "react";
 import { createSelector } from "reselect";
-import { addProxy, setPan, setZoom, updateProxy } from "../store/actions";
+import { addProxy, deleteProxy, setPan, setZoom, updateProxy } from "../store/actions";
 import { SVGState, SVGModuleState } from "../store/state";
 
 interface SVG<T = SVGState> {
@@ -11,6 +11,7 @@ interface SVG<T = SVGState> {
     setPan(instanceName: string, x: number, y: number): void
     setZoom(instanceName: string, zoom: number): void;
     addProxy(id: string, instanceName:string, styles: CSSProperties): void;
+    deleteProxy(id: string, instanceName:string): void;
     updateProxy(id: string, instanceName: string, changes: Partial<CSSProperties>): void;
   };
 }
@@ -43,6 +44,9 @@ const useSVG = <S = SVG, R = S>(
       },
       addProxy(id, instanceName, styles) {
         dispatch(addProxy({ path, instanceName, id, styles }));
+      },
+      deleteProxy(id, instanceName) {
+        dispatch(deleteProxy({ path, instanceName, id }));
       },
       updateProxy(id, instanceName, changes){
         dispatch(updateProxy({ path, instanceName, id, changes }));

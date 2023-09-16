@@ -8,20 +8,22 @@ import {
   CompositionState,
   MaterialUsageNode,
 } from "../../../../store/composition/state";
-import { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 
 import _ from "lodash";
 import { ILayoutModule } from "@kernel/modules/Layout";
+import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
 
-
+interface LinkMaterialContainerProps extends PointerContainerProps {
+  compositionState: CompositionState;
+  materialUsageId: string;
+}
 
 const LinkMaterialContainer = ({
   compositionState,
   materialUsageId,
-}: {
-  compositionState: CompositionState;
-  materialUsageId: string;
-}) => {
+  isOpen
+}: LinkMaterialContainerProps) => {
   const graphModule = useModule<IGraphModule>("Graph");
   const layoutModule = useModule<ILayoutModule>("Layout");
 
@@ -59,6 +61,8 @@ const LinkMaterialContainer = ({
     [adaptedProxies]
   );
 
+  if (!isOpen) return <></>
+
   return (
     <Box role="link-material-container" sx={{ height: "max-content" }}>
       <Typography variant="h4">Elementos visuais vinculados</Typography>
@@ -71,6 +75,7 @@ const LinkMaterialContainer = ({
       </Typography>
       <CRUDGrid
         addLabel="Adicionar vínculo"
+        newRecord={() => ({id: _.uniqueId("proxy-"), stroke:false, fill:false})}
         columns={[
           {
             field: "elem",
@@ -116,4 +121,4 @@ const LinkMaterialContainer = ({
   );
 };
 
-export default LinkMaterialContainer;
+export default React.memo(LinkMaterialContainer);

@@ -75,14 +75,14 @@ const useGraph = <G = GraphState, R = G>(
 
   const selector = createSelector(
     (state: { Graph: GraphsManagerState } | undefined) =>
-      state && state.Graph && state.Graph.graphs[graphId],
+      state?.Graph && state.Graph.graphs[graphId],
     graphSelector
   );
   const graphState = useAppSelector<R | undefined>(selector);
 
   const innerState = useAppSelector(
     (state: { Graph: GraphsManagerState } | undefined) =>
-      state && state.Graph && state.Graph.graphs[graphId]
+      state?.Graph && state.Graph.graphs[graphId]
   );
   return {
     id: graphId,
@@ -111,7 +111,7 @@ const useGraph = <G = GraphState, R = G>(
         dispatch(removeEdge({ graphId, edgeId: id }));
       },
       nodeExists: (nodeId) =>
-        innerState ? nodeId in innerState?.nodes : false,
+        innerState ? nodeId in innerState.nodes : false,
 
       search: (strategy, nodeStart, validate, stopCriteria, depth, label, id) => {
         const resultPath = id ?? _.uniqueId("search");
