@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { DETAILS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
 import { selectDetailsPanel } from "../../store/panels/selectors";
+import { ErrorBoundary } from "react-error-boundary";
 
 export const DetailsPanel = ({
   title,
@@ -66,7 +67,7 @@ export const DetailsPanel = ({
         </IconButton>}
         <span>{title ?? "Detalhes"}</span>
       </Box>
-      <Box role="panel-content">{children}</Box>
+      <Box role="panel-content"><ErrorBoundary fallback={<div>Ocorreu um erro</div>}>{children}</ErrorBoundary></Box>
     </Box>,
     ref
   );

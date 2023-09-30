@@ -12,6 +12,7 @@ import useModule from "@kernel/hooks/useModule";
 import { SETTINGS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
 import { selectSettingsPanel } from "../../store/panels/selectors";
+import { ErrorBoundary } from "react-error-boundary";
 
 export const SettingsPanel = ({
   title,
@@ -42,70 +43,72 @@ export const SettingsPanel = ({
 
   if (!ref || !panelState) return null;
   return createPortal(
-    <Box sx={{position:'relative'}}>
+    <Box sx={{ position: "relative" }}>
       <Box
-      role="settings-panel"
-      aria-label="settings panel"
-      sx={{
-        overflowX: "hidden",
-        "&::-webkit-scrollbar": {
-          width: "0.4em",
-        },
-
-        //height: "100%",
-        padding: 1,
-        maxWidth: panelState.state === "collapsed" ? "6vw" : "100%",
-
-        display: "flex",
-        flexDirection: "column",
-        gap: 1,
-
-        "@media (orientation: portrait)": {
-          maxWidth: panelState.state === "collapsed" ? "8vw" : "100%",
-        },
-      }}
-    >
-      <Box
-        role="panel-header"
+        role="settings-panel"
+        aria-label="settings panel"
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {panelState.state === "expanded" && (
-          <>
-            <TuneSharp />
-            <span>{title ?? "Configurações"}</span>
-          </>
-        )}
-        <IconButton
-          size="small"
-          component="span"
-          onClick={handleToggleSettings}
-        >
-          {panelState.state === "collapsed" ? (
-            <UnfoldMoreSharpIcon sx={{ transform: "rotate(90deg)" }} />
-          ) : (
-            <UnfoldLessIcon sx={{ transform: "rotate(90deg)" }} />
-          )}
-        </IconButton>
-      </Box>
-      <Box
-        role="panel-content"
-        sx={{
+          overflowX: "hidden",
+          "&::-webkit-scrollbar": {
+            width: "0.4em",
+          },
+
+          //height: "100%",
+          padding: 1,
+          maxWidth: panelState.state === "collapsed" ? "6vw" : "100%",
+
           display: "flex",
           flexDirection: "column",
-          placeSelf: "center",
-          gap: panelState.state === "collapsed" ? 2 : 0,
-          marginTop: 4,
+          gap: 1,
+
+          "@media (orientation: portrait)": {
+            maxWidth: panelState.state === "collapsed" ? "8vw" : "100%",
+          },
         }}
       >
-        {children.map((child, idx) =>
-          cloneElement(child, { state: panelState.state, key: idx })
-        )}
+        <Box
+          role="panel-header"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {panelState.state === "expanded" && (
+            <>
+              <TuneSharp />
+              <span>{title ?? "Configurações"}</span>
+            </>
+          )}
+          <IconButton
+            size="small"
+            component="span"
+            onClick={handleToggleSettings}
+          >
+            {panelState.state === "collapsed" ? (
+              <UnfoldMoreSharpIcon sx={{ transform: "rotate(90deg)" }} />
+            ) : (
+              <UnfoldLessIcon sx={{ transform: "rotate(90deg)" }} />
+            )}
+          </IconButton>
+        </Box>
+        <Box
+          role="panel-content"
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            placeSelf: "center",
+            gap: panelState.state === "collapsed" ? 2 : 0,
+            marginTop: 4,
+          }}
+        >
+          <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
+            {children.map((child, idx) =>
+              cloneElement(child, { state: panelState.state, key: idx })
+            )}
+          </ErrorBoundary>
+        </Box>
       </Box>
-    </Box>
     </Box>,
     ref
   );

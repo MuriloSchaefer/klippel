@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "react-error-boundary";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import React, { useContext } from "react";
@@ -17,7 +18,7 @@ const ViewportLoader = ()=> {
   const comp = componentsRegistryManager.functions.getComponent(VIEWPORT_TYPE_REGISTRY_NAME, viewportState.type)
   if (!comp) return null
 
-  return React.createElement(comp, viewportState, [])
+  return <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>{React.createElement(comp, viewportState, [])}</ErrorBoundary>
 }
 
 export default ViewportLoader
