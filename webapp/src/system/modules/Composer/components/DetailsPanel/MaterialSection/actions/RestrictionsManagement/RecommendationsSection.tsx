@@ -7,7 +7,7 @@ import { ILayoutModule } from "@kernel/modules/Layout";
 import { RestrictionsProps } from "./Container";
 import _ from "lodash";
 
-export default ({}: RestrictionsProps) => {
+export default (props: RestrictionsProps) => {
   const layoutModule = useModule<ILayoutModule>("Layout");
 
   const { CRUDGrid } = layoutModule.components;
