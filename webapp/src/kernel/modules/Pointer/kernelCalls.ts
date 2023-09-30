@@ -7,7 +7,7 @@ import slice from "./store/slice";
 export const startModule = ({
   managers: { storeManager, componentRegistryManager },
 }: StartModuleProps) => {
-    console.group('Pointer module start')
+    console.group('Starting pointer module')
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
   
 //   storeManager.functions.registerMiddleware(panelsMiddleware);
@@ -18,6 +18,6 @@ export const startModule = ({
 //       home: HomeViewport,
 //     },
 //   })
-    console.log('completed')
+    console.info('Pointer module started')
     console.groupEnd()
 };

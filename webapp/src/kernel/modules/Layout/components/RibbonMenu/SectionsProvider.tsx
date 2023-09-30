@@ -24,7 +24,6 @@ export const SectionsProvider = ({
   
 
   function handleSetSections (tabName: string, sections: React.ReactNode[]){
-    console.log(currentSections, tabName, sections)
     setSections({...currentSections, [tabName]: sections})
   }
 

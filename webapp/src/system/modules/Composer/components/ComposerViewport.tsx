@@ -86,7 +86,6 @@ export const ComposerViewport = ({
           if (n.domId) {
             const [element] = [...svgRoot?.querySelectorAll(`#${n.domId}`)];
             element.addEventListener("click", (e) => {
-              console.log(e);
               e.stopPropagation();
               selectPart(n.id);
             });

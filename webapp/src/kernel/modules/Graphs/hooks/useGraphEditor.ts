@@ -211,7 +211,6 @@ export const useGraphEditor = ({
       //.call(addDrag(simulation));
 
       simulation.on("tick", () => {
-        console.log('ticking')
         nodes.attr("transform", (n) => `translate(${n.x}, ${n.y})`);
 
         links.selectAll('line')

@@ -12,13 +12,14 @@ import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 import DragIndicatorSharpIcon from "@mui/icons-material/DragIndicatorSharp";
 
 import useDraggable from "../hooks/useDraggable";
+import { ErrorBoundary } from "react-error-boundary";
 
 export interface PointerContainerActionProps extends IconButtonProps {
   closeContainer?: (e: MouseEvent) => void;
 }
 
 export interface PointerContainerProps {
-  isOpen?: boolean
+  isOpen?: boolean;
 }
 
 export const PointerContainer = ({
@@ -69,8 +70,7 @@ export const PointerContainer = ({
           x: curr.x - clientWidth,
           y: curr.y - clientHeight,
         }));
-      }
-      else if (quadrant > 2) {
+      } else if (quadrant > 2) {
         setPosition((curr) => ({
           x: curr.x,
           y: curr.y - clientHeight,
@@ -81,7 +81,7 @@ export const PointerContainer = ({
     }
 
     if (!open) {
-      setCalculateOffset(true)
+      setCalculateOffset(true);
     }
   }, [open, ref.current]);
 
@@ -107,7 +107,7 @@ export const PointerContainer = ({
         role="pointer-panel"
         sx={{
           width: "min-content",
-          touchAction: "none"
+          touchAction: "none",
         }}
         slotProps={{ backdrop: {} }}
         slots={{
@@ -180,7 +180,9 @@ export const PointerContainer = ({
                 alignContent: "center",
               }}
             >
-              {React.cloneElement(component, {isOpen: open})}
+              <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
+                {React.cloneElement(component, { isOpen: open })}
+              </ErrorBoundary>
             </Box>
           </Box>
         </Paper>

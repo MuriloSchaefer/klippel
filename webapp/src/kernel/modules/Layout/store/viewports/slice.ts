@@ -39,7 +39,6 @@ const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManage
         return {
           ...state,
           viewports: Object.entries(state.viewports).reduce((newState, [name, vp])=>{
-            console.log(name, oldName)
             if (name === oldName) return {...newState, [oldName]: {...vp, title: newName}}
             return {...newState, [name]: vp}
           }, {})

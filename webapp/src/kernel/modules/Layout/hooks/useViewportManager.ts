@@ -68,7 +68,6 @@ export function useViewportManager():ViewportManager{
 
 
             createGroup(viewportName, color){
-                console.log('create group')
                 dispatch(createGroup({name: viewportName, color}))
             },
             addToGroup(viewportName, groupName){
