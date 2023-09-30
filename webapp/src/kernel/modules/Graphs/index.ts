@@ -9,6 +9,7 @@ import { getGraphState } from "./store/graphsManager/selectors";
 import useNodeInfo from "./hooks/useNodeInfo";
 import useSearchResult from "./hooks/useSearchResult";
 import GraphViewer from "./components/GraphViewer";
+import useSearch from "./hooks/useSearch";
 
 export interface IGraphModule extends IModule {
   name: typeof MODULE_NAME,
@@ -22,6 +23,7 @@ export interface IGraphModule extends IModule {
   hooks: {
     useGraph: typeof useGraph,
     useNodeInfo: typeof useNodeInfo,
+    useSearch: typeof useSearch,
     useSearchResult: typeof useSearchResult
   }
   store: {
@@ -50,6 +52,7 @@ const GraphModule: IGraphModule = {
   hooks: {
     useGraph,
     useNodeInfo,
+    useSearch,
     useSearchResult
   },
   store: {

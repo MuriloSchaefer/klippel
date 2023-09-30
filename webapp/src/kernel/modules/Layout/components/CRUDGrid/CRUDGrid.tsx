@@ -132,9 +132,25 @@ const NoRows = () => (
   </Box>
 );
 
-type CRUDGridRow = {
+const CustomToolbar = ({handleAddRecord, addLabel}: {handleAddRecord: () => void, addLabel: string}) => {
+  return (
+    <GridToolbarContainer
+      sx={{ display: "flex", justifyContent: "space-around" }}
+    >
+      <Button startIcon={<AddSharpIcon />} onPointerUp={handleAddRecord}> 
+        {addLabel || "Adicionar"}
+      </Button>
+      <div>
+        <GridToolbarFilterButton />
+        <GridToolbarDensitySelector />
+      </div>
+    </GridToolbarContainer>
+  )
+}
+
+type CRUDGridRow = GridValidRowModel & {
   state: "untouched" | "modified" | "added" | "deleted";
-} & GridValidRowModel;
+};
 
 export const CRUDGrid = ({
   columns,
@@ -149,7 +165,7 @@ export const CRUDGrid = ({
   const { rows, setRows } = useContext(CRUDGridContext);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
-  const handleAddRecord = useCallback(() => {
+  const handleAddRecord = () => {
     const rec = newRecord();
     setRows((oldRows) => [
       ...oldRows,
@@ -160,7 +176,7 @@ export const CRUDGrid = ({
       ...oldModel,
       [rec.id]: { mode: GridRowModes.Edit, fieldToFocus: "id" },
     }));
-  }, []);
+  }
 
   const handleEditClick = useCallback(
     (id: GridRowId) => () => {
@@ -248,7 +264,8 @@ export const CRUDGrid = ({
   );
 
   return (
-      <StyledDataGrid
+    <>
+    <StyledDataGrid
         editMode="row"
         density="compact"
         hideFooter={true}
@@ -257,21 +274,10 @@ export const CRUDGrid = ({
         getRowClassName={(params) => `state--${params.row.state}`}
         onRowEditStop={handleRowEditStop}
         processRowUpdate={processRowUpdate}
+        slotProps={{toolbar: {handleAddRecord, addLabel}}}
         slots={{
           noRowsOverlay: NoRows,
-          toolbar: () => (
-            <GridToolbarContainer
-              sx={{ display: "flex", justifyContent: "space-around" }}
-            >
-              <Button startIcon={<AddSharpIcon />} onClick={handleAddRecord}>
-                {addLabel || "Adicionar"}
-              </Button>
-              <div>
-                <GridToolbarFilterButton />
-                <GridToolbarDensitySelector />
-              </div>
-            </GridToolbarContainer>
-          ),
+          toolbar: CustomToolbar,
         }}
         columns={[
           ...columns,
@@ -348,6 +354,8 @@ export const CRUDGrid = ({
         {...props}
         rows={rows}
       />
+    </>
+      
   );
 };
 

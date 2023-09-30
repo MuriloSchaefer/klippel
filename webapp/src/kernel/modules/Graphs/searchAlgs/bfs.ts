@@ -15,7 +15,7 @@ const bfs = (
     visitedNodes: Node[]
   ) => boolean,
   depth?: number
-): SearchResult => {
+): Omit<SearchResult, 'outdated'> => {
   const visited: Node[] = [];
   const findings: Node[] = [];
   let currDepth = 0;

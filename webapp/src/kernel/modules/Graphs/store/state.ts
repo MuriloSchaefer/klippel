@@ -18,6 +18,7 @@ export interface NodesHashMap<NT = Node> {
 }
 
 export interface SearchResult<N=Node> {
+    outdated: boolean
     findings: N[]
     visited: N[]
 }

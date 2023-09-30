@@ -50,6 +50,11 @@ export const searchFinished = createAction<{
   results: SearchResult
 }>(`[${MODULE_NAME}:Instance:${ACTION_TYPES.EVENT}] Search finished`);
 
+export const searchInvalidated = createAction<{
+  graphId: string;
+  searchId: string;
+}>(`[${MODULE_NAME}:Instance:${ACTION_TYPES.EVENT}] Search invalidated`);
+
 // Commands
 export const loadGraph = createAction<{ graphId: string; graph: GraphState }>(
   `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Load Graph`
@@ -83,3 +88,7 @@ export const removeEdge = createAction<{ graphId: string; edgeId: string }>(
 );
 
 export const search = createAction<SearchPayload>(`[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Search`);
+export const invalidateSearch = createAction<{
+  graphId: string;
+  searchId: string;
+}>(`[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Invalidate Search`);

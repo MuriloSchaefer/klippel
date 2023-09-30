@@ -9,9 +9,12 @@ import { Store } from "@kernel/modules/Store";
 import {
   addMaterialType,
   addProxy,
+  addRestriction,
   changeMaterial,
   deleteProxy,
+  deleteRestriction,
   selectPart,
+  updateRestriction,
 } from "../store/composition/actions";
 import { ComposerState } from "../store/state";
 import {
@@ -22,6 +25,7 @@ import {
   OperationNode,
   PartNode,
   Proxy,
+  RestrictionNode,
 } from "../store/composition/state";
 import { UnitValue } from "@system/modules/Converter/typings";
 import { ISVGModule } from "@kernel/modules/SVG";
@@ -32,6 +36,11 @@ interface CompositionActions {
   selectPart(partName: string): void;
   addMaterialUsage(label: string, partId:string, allowedMaterialTypes: string[]): void;
   removeMaterialUsage(materialUsageId: string): void;
+
+  removeRestriction(materialId:string, restrictionId:string): void;
+  addRestriction(materialId:string, restriction:RestrictionNode): void;
+  updateRestriction(materialId:string, restrictionId: string, changes:Partial<RestrictionNode>): void;
+
   removeOperation(operationId: string): void;
   addOperation(label: string, cost: UnitValue, time_taken: UnitValue, partId: string): void;
 
@@ -154,9 +163,10 @@ const useComposition = <C = Composition, R = C>(
         const materialDefaultRestrictions: AllowOnlyRestrictionNode = {
           type: "RESTRICTION",
           restrictionType: 'allowOnly',
+          attribute: 'materialType',
           id: restrictionNodeId,
           label: 'Permitido apenas',
-          allowOnly: materialTypes,
+          operand: materialTypes,
           position: {x: 0, y: 0},
         }
         const restrictionEdgeId = `${nodeId}->${restrictionNodeId}`
@@ -175,8 +185,16 @@ const useComposition = <C = Composition, R = C>(
         graph.actions.addNode(materialDefaultRestrictions, restrictionEdges);
       },
       removeMaterialUsage(materialUsageId){
-        // TODO: remove proxies
         graph.actions.removeNode(materialUsageId)
+      },
+      addRestriction(materialId, restriction){
+        dispatch(addRestriction({ compositionName, materialId, restriction }));
+      },
+      updateRestriction(materialId, restrictionId, changes){
+        dispatch(updateRestriction({ compositionName, materialId, restrictionId, changes }));
+      },
+      removeRestriction(materialId, restrictionId){
+        dispatch(deleteRestriction({ compositionName, materialId, restrictionId }));
       },
       removeOperation(operationId){
         graph.actions.removeNode(operationId)

@@ -1,7 +1,7 @@
 import { ACTION_TYPES } from "@kernel/contants";
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
-import { Proxy } from "./state";
+import { Proxy, RestrictionNode } from "./state";
 
 // commands
 export const addMaterial = createAction<{compositionName: string, materialId: number}>(
@@ -22,9 +22,7 @@ export const unselectPart = createAction<{compositionName: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Unselect part`
 );
 
-export const materialChanged = createAction<{compositionName: string, materialUsageId: string, materialId: string}>(
-    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Material changed`
-);
+
 
 export const addProxy = createAction<{compositionName:string, materialId:string, proxy: Proxy}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Add Proxy`
@@ -34,6 +32,16 @@ export const deleteProxy = createAction<{compositionName:string, materialId:stri
 );
 export const updateProxy = createAction<any>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Update Proxy`
+);
+
+export const addRestriction = createAction<{compositionName:string, materialId:string, restriction: RestrictionNode}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Add Restriction`
+);
+export const deleteRestriction = createAction<{compositionName:string, materialId:string, restrictionId:string}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Delete Restriction`
+);
+export const updateRestriction = createAction<{compositionName:string, materialId:string, restrictionId:string, changes: Partial<RestrictionNode>}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Update Restriction`
 );
 
 
@@ -61,6 +69,9 @@ export const partSelected = createAction<{compositionName: string, partName: str
 export const partUnselected = createAction<{compositionName: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Part unselected`
 );
+export const materialChanged = createAction<{compositionName: string, materialUsageId: string, materialId: string}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Material changed`
+);
 
 export const proxyAdded = createAction<any>( 
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Proxy added`
@@ -70,6 +81,16 @@ export const proxyDeleted = createAction<any>(
 )
 export const proxyUpdated = createAction<any>( 
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Proxy updated`
+)
+
+export const restrictionAdded = createAction<{compositionName:string, materialId:string, restrictionId:string}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Restriction added`
+)
+export const restrictionDeleted = createAction<{compositionName:string, materialId:string, restrictionId:string}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Restriction deleted`
+)
+export const restrictionUpdated = createAction<{compositionName:string, materialId:string, restrictionId:string}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Restriction updated`
 )
 
 export const debugViewportOpened = createAction<{compositionName: string, viewportName: string}>(

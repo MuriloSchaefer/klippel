@@ -9,7 +9,7 @@ const dfs = (
     validate: (node: Node, graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean,
     stopCriteria: (node: Node, graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean,
     depth?: number,
-): SearchResult => {
+): Omit<SearchResult, 'outdated'> => {
 
     const visited = []
     const findings = []

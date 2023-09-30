@@ -21,6 +21,8 @@ import {
   search,
   searchFinished,
   SearchPayload,
+  invalidateSearch,
+  searchInvalidated,
 } from "./actions";
 
 const middlewares = createListenerMiddleware();
@@ -107,10 +109,7 @@ middlewares.startListening({
   ) => {
     const { dispatch, getState } = listenerApi;
 
-    let results: SearchResult = {
-      findings: [],
-      visited: [],
-    };
+    
     let {
       Graph: { graphs },
     } = getState() as { Graph: GraphsManagerState };
@@ -118,7 +117,7 @@ middlewares.startListening({
 
     // If already has a result, avoid searching again. 
     // This is usefull to avoid re-searching on multiple renders.
-    if (graph.searchResults && action.id in graph.searchResults)
+    if (graph.searchResults && action.id in graph.searchResults && !graph.searchResults[action.id].outdated ){
       dispatch(
         searchFinished({
           graphId: action.graphId,
@@ -126,16 +125,22 @@ middlewares.startListening({
           results: graph.searchResults[action.id],
         })
       );
-
+      return
+    }
+      
+    let results: Omit<SearchResult, 'outdated'> = {
+      findings: [],
+      visited: [],
+    };
     switch (action.strategy) {
       case "dfs":
-        results = dfs(
+        results = {...dfs(
           graph,
           action.nodeStart,
           action.validate,
           action.stopCriteria,
           action.depth
-        );
+        )};
         break;
       case 'bfs':
         results = bfs(
@@ -152,9 +157,21 @@ middlewares.startListening({
       searchFinished({
         graphId: action.graphId,
         searchId: action.id,
-        results,
+        results: {...results, outdated: false},
       })
     ); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: invalidateSearch,
+  effect: async (
+    { payload },
+    listenerApi
+  ) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(searchInvalidated(payload)); // dispatch event
   },
 });
 

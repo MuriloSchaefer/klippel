@@ -45,14 +45,16 @@ export type RestrictionNode = AllowOnlyRestrictionNode | SameAsRestrictionNode;
 export interface AllowOnlyRestrictionNode<T = string> extends Node {
   type: "RESTRICTION";
   label: string;
+  attribute: string;
   restrictionType: "allowOnly";
-  allowOnly: T[];
+  operand: T[];
 }
 export interface SameAsRestrictionNode<T = string> extends Node {
   type: "RESTRICTION";
   label: string;
+  attribute: string;
   restrictionType: "sameAs";
-  sameAs: T;
+  operand: T;
 }
 
 export type CompositionNode =

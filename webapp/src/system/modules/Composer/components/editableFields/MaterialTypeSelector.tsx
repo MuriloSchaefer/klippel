@@ -13,6 +13,7 @@ import {
   RestrictionNode,
 } from "../../store/composition/state";
 import { SelectChangeEvent } from "@mui/material";
+import _ from "lodash";
 
 const MaterialTypeSelector = ({
   node,
@@ -26,15 +27,17 @@ const MaterialTypeSelector = ({
     components: { MaterialTypeSelector },
   } = useModule<IMaterialsModule>("Materials");
 
-  const { useNodeInfo, useGraph, useSearchResult } = graphModule.hooks;
+  const { useNodeInfo, useGraph, useSearch } = graphModule.hooks;
   const graph = useGraph<MaterialUsageNode, CompositionEdge>(
     graphId,
     (g) => g?.nodes[node.id]
   );
 
-  // Get all restrictions for node
-  const searchResultPath = useMemo(() => {
-    return graph.actions.search(
+  const searchId = useMemo(()=> `${node.id}/materialType/restrictions`, [node?.id])
+
+  const restrictions = useSearch<RestrictionNode>(graphId, searchId, ()=>{
+    if (!node) return
+    graph.actions.search(
       "bfs",
       node.id,
       (n, g) => {
@@ -49,21 +52,19 @@ const MaterialTypeSelector = ({
       },
       () => false, // stops only when checked all neighbours
       1, // search only neighbours
-      `Get all restriction associated with ${node.label}`
+      `Get all restriction associated with ${node.label}`,
+      searchId
     );
-  }, [graphId]);
-  const restrictions = useSearchResult<RestrictionNode>(
-    graphId,
-    searchResultPath
-  );
-  const filterOptions = restrictions?.findings.reduce(
+  })
+
+  const filterOptions = useMemo(()=>restrictions?.findings.reduce(
     (allowed, restriction) => {
-      if ("allowOnly" in restriction)
-        return [...allowed, ...restriction.allowOnly];
+      if (restriction.restrictionType === "allowOnly")
+        return [...allowed, ...restriction.operand];
       return allowed;
     },
     [] as string[]
-  );
+  ), [restrictions])
 
   const materialTypeNode = useNodeInfo<MaterialTypeNode>(
     graphId,
@@ -80,7 +81,11 @@ const MaterialTypeSelector = ({
 
   return (
     <MaterialTypeSelector
-      filter={(type) => filterOptions?.includes(type.name) ?? true}
+      filter={(type) =>
+        restrictions?.findings.length
+          ? filterOptions?.includes(type.name)
+          : true
+      }
       value={materialTypeNode.node?.id}
       onChange={handleMaterialTypeChange}
     />

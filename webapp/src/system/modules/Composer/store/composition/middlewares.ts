@@ -1,7 +1,9 @@
 import {
   addEdge,
   addNode,
+  invalidateSearch,
   removeEdge,
+  removeNode,
   updateNode,
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { createListenerMiddleware } from "@reduxjs/toolkit";
@@ -9,19 +11,25 @@ import { MaterialsModuleState } from "@system/modules/Materials/store/state";
 import {
   addMaterial,
   addProxy,
+  addRestriction,
   changeMaterial,
   deleteProxy,
+  deleteRestriction,
   materialAdded,
   materialChanged,
   partSelected,
   partUnselected,
   proxyAdded,
   proxyDeleted,
+  restrictionAdded,
+  restrictionDeleted,
+  restrictionUpdated,
   selectPart,
   unselectPart,
+  updateRestriction,
 } from "./actions";
 import { ComposerState } from "../state";
-import { MaterialNode, CompositionGraph } from "./state";
+import { MaterialNode, CompositionGraph, RestrictedByEdge } from "./state";
 import { detailsClosed } from "@kernel/modules/Layout/store/panels/actions";
 import { GraphsManagerState } from "@kernel/modules/Graphs/store/state";
 import {
@@ -208,6 +216,151 @@ middlewares.startListening({
     dispatch(partUnselected({ compositionName: payload.compositionName })); // dispatch event
   },
 });
+
+middlewares.startListening({
+  actionCreator: addRestriction,
+  effect: async (
+    { payload: { compositionName, materialId, restriction } },
+    listenerApi
+  ) => {
+    const { dispatch, getState } = listenerApi;
+
+    const {
+      Composer: {
+        compositionsManager: { compositions },
+      },
+      Graph: { graphs },
+      // Materials: { materials },
+    } = getState() as {
+      Composer: ComposerState;
+      Graph: GraphsManagerState;
+      // Materials: MaterialsModuleState;
+    };
+    const comp = compositions[compositionName];
+    const { searchResults } = graphs[comp.graphId] as CompositionGraph;
+
+    dispatch(
+      addNode({
+        graphId: comp.graphId,
+        node: restriction,
+        edges: {
+          inputs: {
+            [materialId]: {
+              id: `${materialId}->${restriction.id}`,
+              type: "RESTRICTED_BY",
+              attr: restriction.attribute,
+              sourceId: materialId,
+              targetId: restriction.id,
+            } as RestrictedByEdge,
+          },
+          outputs: {},
+        },
+      })
+    );
+
+    Object.entries(searchResults)
+      .filter(
+        ([searchId, result]) => !!searchId.includes("restriction") // invalidate all restriction searches
+      )
+      .forEach(([searchId, result]) =>
+        dispatch(invalidateSearch({ graphId: comp.graphId, searchId }))
+      );
+
+    dispatch(
+      restrictionAdded({
+        compositionName,
+        materialId,
+        restrictionId: restriction.id,
+      })
+    ); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: updateRestriction,
+  effect: async (
+    { payload: { compositionName, materialId, restrictionId, changes } },
+    listenerApi
+  ) => {
+    const { dispatch, getState } = listenerApi;
+
+    const {
+      Composer: {
+        compositionsManager: { compositions },
+      },
+      Graph: { graphs },
+      // Materials: { materials },
+    } = getState() as {
+      Composer: ComposerState;
+      Graph: GraphsManagerState;
+      // Materials: MaterialsModuleState;
+    };
+    const comp = compositions[compositionName];
+    const { searchResults } = graphs[comp.graphId] as CompositionGraph;
+
+    dispatch(
+      updateNode({
+        graphId: comp.graphId,
+        nodeId: restrictionId,
+        changes: changes,
+      })
+    );
+
+    Object.entries(searchResults)
+      .filter(
+        ([searchId, result]) =>
+          !!result.findings.find((n) => n.id === restrictionId) // invalidate all restriction searches that had found this restriction
+      )
+      .forEach(([searchId, result]) =>
+        dispatch(invalidateSearch({ graphId: comp.graphId, searchId }))
+      );
+
+    dispatch(
+      restrictionUpdated({
+        compositionName,
+        materialId,
+        restrictionId: restrictionId,
+      })
+    ); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: deleteRestriction,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+
+    const {
+      Composer: {
+        compositionsManager: { compositions },
+      },
+      Graph: { graphs },
+      // Materials: { materials },
+    } = getState() as {
+      Composer: ComposerState;
+      Graph: GraphsManagerState;
+      // Materials: MaterialsModuleState;
+    };
+    const comp = compositions[payload.compositionName];
+    const { searchResults } = graphs[comp.graphId] as CompositionGraph;
+
+    dispatch(
+      removeNode({ graphId: comp.graphId, nodeId: payload.restrictionId })
+    );
+
+    Object.entries(searchResults)
+      .filter(
+        ([searchId, result]) =>
+          !!result.findings.find((n) => n.id === payload.restrictionId)
+      )
+      .forEach(([searchId, result]) =>
+        dispatch(invalidateSearch({ graphId: comp.graphId, searchId }))
+      );
+
+    dispatch(restrictionDeleted(payload)); // dispatch event
+  },
+});
+
 middlewares.startListening({
   actionCreator: deleteProxy,
   effect: async ({ payload }, listenerApi) => {

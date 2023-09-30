@@ -3,7 +3,7 @@ import { GridRenderEditCellParams, useGridApiContext } from "@mui/x-data-grid";
 import { MaterialType } from "../../store/materialTypes/state";
 import MaterialTypeSelector from "./MaterialType";
 
-export const  CRUDMaterialTypeCell = ({ id, field, value }: GridRenderEditCellParams) => {
+export const  CRUDMaterialTypeCell = ({ id, field, value, multiple=false }: GridRenderEditCellParams & {multiple?: boolean}) => {
     const apiRef = useGridApiContext();
     const handleValueChange = (
       event: SelectChangeEvent<MaterialType>
@@ -19,7 +19,7 @@ export const  CRUDMaterialTypeCell = ({ id, field, value }: GridRenderEditCellPa
       <MaterialTypeSelector
         value={value}
         onChange={handleValueChange}
-        multiple
+        multiple={multiple}
       />
     );
   }

@@ -9,6 +9,7 @@ import {
 import {
   addEdge,
   addNode,
+  invalidateSearch,
   loadGraph,
   removeEdge,
   removeNode,
@@ -227,7 +228,24 @@ const slice = createSlice({
             },
           };
         }
-      );
+      ).addCase(invalidateSearch, (state, {payload: {graphId, searchId}})=>{
+        return {
+          ...state,
+          graphs: {
+            ...state.graphs,
+            [graphId]: {
+              ...state.graphs[graphId],
+              searchResults: {
+                ...state.graphs[graphId].searchResults,
+                [searchId]: {
+                  ...state.graphs[graphId].searchResults[searchId],
+                  outdated: true
+                },
+              }
+            }
+          }
+        }
+      })
   },
 });
 

@@ -24,12 +24,16 @@ export const CRUDGridProvider = ({
   const values = useMemo(
     () => ({
       rows,
-      setRows,
+      setRows //: (rows)=>setRows(rows.map(r => r.state ? r.state : {...r, state: 'untouched'})),
     }),
     [rows]
   );
 
-  return <CRUDGridContext.Provider value={values}>{children}</CRUDGridContext.Provider>;
+  return (
+    <CRUDGridContext.Provider value={values}>
+      {children}
+    </CRUDGridContext.Provider>
+  );
 };
 
-export default React.memo(CRUDGridProvider);
+export default CRUDGridProvider;
