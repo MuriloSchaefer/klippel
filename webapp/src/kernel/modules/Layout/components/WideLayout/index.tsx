@@ -1,4 +1,5 @@
-import { styled, createTheme, ThemeProvider } from '@mui/system';
+import { styled, ThemeProvider } from '@mui/system';
+import { createTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 
