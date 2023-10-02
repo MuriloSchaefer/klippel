@@ -1,4 +1,4 @@
-import {
+import type {
   AccordionProps as MUIAccordionProps,
 } from "@mui/material";
 

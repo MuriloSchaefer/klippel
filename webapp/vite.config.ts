@@ -8,6 +8,20 @@ export default defineConfig({
   plugins: [react(), viteTsconfigPaths(), svgrPlugin()],
   build: {
     target: "es2020",
+    rollupOptions: {
+      output: {
+        manualChunks: (id, { getModuleInfo })=>{
+          if (id.includes('@mui')) return 'material'
+          if (id.includes('node_modules')) return 'vendor'
+          if (id.includes('src/kernel')) return 'kernel'
+          if (id.includes('src/system')) {
+            const array = id.split('/')
+            const moduleName = array[array.findIndex(p => p === 'modules') + 1]
+            return `system/${moduleName}`
+          }
+        }
+      }
+    }
   },
   optimizeDeps: {
     esbuildOptions: {
