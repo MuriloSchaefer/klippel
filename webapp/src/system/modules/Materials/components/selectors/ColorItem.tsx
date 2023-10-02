@@ -1,4 +1,6 @@
-import { Box, Typography, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import { Color } from "../../typings";
 
 const ColorItem = ({

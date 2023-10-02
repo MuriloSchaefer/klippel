@@ -1,4 +1,6 @@
-import { Box } from "@mui/material";
+import Box from '@mui/material/Box';
+
+
 import RemoveMaterialButton from "./actions/RemoveMaterialButton";
 import LinkMaterialButton from "./actions/LinkMaterialButton";
 import AddRestrictionButton from "./actions/RestrictionsManagement/Button";

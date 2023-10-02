@@ -1,7 +1,10 @@
 import React, { cloneElement, MouseEvent, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { ErrorBoundary } from "react-error-boundary";
 
-import { Box, IconButton } from "@mui/material";
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+
 import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
 import UnfoldMoreSharpIcon from "@mui/icons-material/UnfoldMoreSharp";
 import TuneSharp from "@mui/icons-material/TuneSharp";
@@ -12,7 +15,6 @@ import useModule from "@kernel/hooks/useModule";
 import { SETTINGS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
 import { selectSettingsPanel } from "../../store/panels/selectors";
-import { ErrorBoundary } from "react-error-boundary";
 
 export const SettingsPanel = ({
   title,

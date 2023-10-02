@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import _ from "lodash";
 
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 
 import LanIcon from "@mui/icons-material/Lan";
 import useModule from "@kernel/hooks/useModule";

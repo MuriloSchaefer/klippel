@@ -1,11 +1,17 @@
+import { useCallback, useState } from "react";
+
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import AddSharpIcon from "@mui/icons-material/AddSharp";
+
 import useModule from "@kernel/hooks/useModule";
 import { IPointerModule } from "@kernel/modules/Pointer";
 import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
-import { Box, Button, TextField } from "@mui/material";
-import AddSharpIcon from "@mui/icons-material/AddSharp";
-import { useCallback, useState } from "react";
-import useComposition from "../../../../hooks/useComposition";
+
 import { IMaterialsModule } from "@system/modules/Materials";
+
+import useComposition from "../../../../hooks/useComposition";
 
 const Container = ({ isOpen, labelState: [label, setLabel], materialTypes, handleMaterialTypeChange }: PointerContainerProps & {labelState: [string, React.Dispatch<React.SetStateAction<string>>], materialTypes: string[], handleMaterialTypeChange: (event: any) => void}) => {
   const {

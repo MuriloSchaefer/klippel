@@ -1,11 +1,12 @@
+
+import Box from '@mui/material/Box';
+import ListItem from '@mui/material/ListItem';
+import Typography from '@mui/material/Typography';
+import ListItemText from '@mui/material/ListItemText';
+
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
-import {
-  Box,
-  ListItem,
-  ListItemText,
-  Typography,
-} from "@mui/material";
+
 import { MaterialUsageNode } from "../../../store/composition/state";
 import MaterialSelector from "../../editableFields/MaterialSelector";
 import MaterialTypeSelector from "../../editableFields/MaterialTypeSelector";

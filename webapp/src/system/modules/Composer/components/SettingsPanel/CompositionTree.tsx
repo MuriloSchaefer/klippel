@@ -5,7 +5,7 @@ import { alpha, styled } from "@mui/material/styles";
 import TreeView from "@mui/lab/TreeView";
 import TreeItem, { TreeItemProps, treeItemClasses } from "@mui/lab/TreeItem";
 import Collapse from "@mui/material/Collapse";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { TransitionProps } from "@mui/material/transitions";
 
 import { ILayoutModule } from "@kernel/modules/Layout";

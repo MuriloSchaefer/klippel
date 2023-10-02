@@ -1,7 +1,9 @@
 import { useCallback, useContext } from "react";
-import { IconButton } from "@mui/material";
+
+import IconButton from "@mui/material/IconButton";
 import LinkSharpIcon from "@mui/icons-material/LinkSharp";
 
+import { ConfirmButtonProps } from "@kernel/modules/Pointer/components/ConfirmAndCloseButton";
 import useModule from "@kernel/hooks/useModule";
 import { IPointerModule } from "@kernel/modules/Pointer";
 import { ILayoutModule } from "@kernel/modules/Layout";
@@ -10,7 +12,6 @@ import useComposition, { Composition } from "../../../../hooks/useComposition";
 import { CompositionState } from "../../../../store/composition/state";
 import LinkMaterialContainer from "./LinkMaterialContainer";
 import { MaterialActionProps } from "./types";
-import { ConfirmButtonProps } from "@kernel/modules/Pointer/components/ConfirmAndCloseButton";
 
 interface ConfirmProps extends Omit<ConfirmButtonProps, 'handleConfirm'> {materialUsageId:string, composition: Composition<CompositionState | undefined>}
 

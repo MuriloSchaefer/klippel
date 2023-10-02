@@ -7,12 +7,17 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Box, IconButton, IconButtonProps, Modal, Paper } from "@mui/material";
+import { ErrorBoundary } from "react-error-boundary";
+
+import { IconButtonProps } from "@mui/material";
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Modal from '@mui/material/Modal';
+import Paper from '@mui/material/Paper';
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 import DragIndicatorSharpIcon from "@mui/icons-material/DragIndicatorSharp";
 
 import useDraggable from "../hooks/useDraggable";
-import { ErrorBoundary } from "react-error-boundary";
 
 export interface PointerContainerActionProps extends IconButtonProps {
   closeContainer?: (e: MouseEvent) => void;

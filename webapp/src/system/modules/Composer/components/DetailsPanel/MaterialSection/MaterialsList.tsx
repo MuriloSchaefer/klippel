@@ -1,5 +1,5 @@
 import List from "@mui/material/List";
-import {  Paper } from "@mui/material";
+import Paper from "@mui/material/Paper";
 
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";

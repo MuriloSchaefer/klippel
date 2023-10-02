@@ -1,4 +1,4 @@
-import { Switch } from "@mui/material";
+import Switch from "@mui/material/Switch";
 import {
   GridRenderEditCellParams,
   useGridApiContext,

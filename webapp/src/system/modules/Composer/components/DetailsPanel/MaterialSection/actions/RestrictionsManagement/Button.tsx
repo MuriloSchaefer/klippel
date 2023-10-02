@@ -1,5 +1,8 @@
 import { useCallback, useContext } from "react";
-import { IconButton, IconButtonProps } from "@mui/material";
+
+
+import {IconButtonProps} from '@mui/material';
+import IconButton from '@mui/material/IconButton';
 import EnhancedEncryptionSharpIcon from "@mui/icons-material/EnhancedEncryptionSharp";
 
 import useModule from "@kernel/hooks/useModule";
@@ -11,7 +14,6 @@ import AddRestrictionContainer from "./Container";
 import { MaterialActionProps } from "../types";
 import {
   CompositionState,
-  RestrictionNode,
 } from "../../../../../store/composition/state";
 import useComposition, {
   Composition,

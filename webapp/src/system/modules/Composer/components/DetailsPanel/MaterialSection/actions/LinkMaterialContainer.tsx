@@ -1,18 +1,25 @@
-import { Box, Switch, Typography } from "@mui/material";
+
+import React, { useContext, useEffect, useMemo } from "react";
+import _ from "lodash";
+
+import Box from '@mui/material/Box';
+import Switch from '@mui/material/Switch';
+import Typography from '@mui/material/Typography';
 import {
   GridRenderEditCellParams,
 } from "@mui/x-data-grid";
+
+
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
+import { ILayoutModule } from "@kernel/modules/Layout";
+import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
+
+
 import {
   CompositionState,
   MaterialUsageNode,
 } from "../../../../store/composition/state";
-import React, { useContext, useEffect, useMemo } from "react";
-
-import _ from "lodash";
-import { ILayoutModule } from "@kernel/modules/Layout";
-import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
 
 interface LinkMaterialContainerProps extends PointerContainerProps {
   compositionState: CompositionState;

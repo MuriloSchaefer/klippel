@@ -1,5 +1,8 @@
 import React from "react";
-import { Box, Typography, Slider, Grid } from "@mui/material";
+import Box from '@mui/material/Box';
+import Slider from '@mui/material/Slider';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
 import { UnitValue } from "../typings";
 import { ScaleSliderProps } from "./ScaleSlider";
 

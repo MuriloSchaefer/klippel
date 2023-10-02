@@ -1,14 +1,12 @@
 import React from "react";
-import {
-  Box,
-  Typography,
-  Slider,
-  Grid,
-  InputBase,
-  TextField,
-  Select,
-  MenuItem,
-} from "@mui/material";
+
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import TextField from '@mui/material/TextField';
+import Slider from '@mui/material/Slider';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+
 import { UnitValue } from "../typings";
 import { ScaleSliderProps } from "./ScaleSlider";
 

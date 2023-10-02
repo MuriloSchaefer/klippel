@@ -1,12 +1,16 @@
-import React, { createElement, useCallback, useContext, useMemo } from "react";
-import { Tabs, Tab, Box, BoxProps } from "@mui/material";
+import React, { createElement, useCallback, useMemo } from "react";
+
+import { BoxProps } from "@mui/material";
+import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import { TabPanel, TabContext } from "@mui/lab";
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 
 import { selectActiveTab, selectTabs } from "../../store/ribbonMenu/selectors";
-import SectionsProvider, { SectionsContext } from "./SectionsProvider";
+import SectionsProvider from "./SectionsProvider";
 import useRibbonMenuManager from "../../hooks/useRibbonMenuManager";
 import { SECTIONS_REGISTRY_NAME } from "../../constants";
 

@@ -1,5 +1,5 @@
 
-import {  IconButton } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 import { useCallback } from "react";
 import useComposition from "../../../hooks/useComposition";
 

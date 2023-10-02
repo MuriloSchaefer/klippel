@@ -1,13 +1,18 @@
-import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
-import CloseSharp from "@mui/icons-material/CloseSharp";
-import { Box, IconButton, styled, useMediaQuery } from "@mui/material";
 import React, { MouseEvent, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { ErrorBoundary } from "react-error-boundary";
+
+import CloseSharp from "@mui/icons-material/CloseSharp";
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import useMediaQuery from '@mui/material/useMediaQuery';
+
+import { Store } from "@kernel/modules/Store";
+import useModule from "@kernel/hooks/useModule";
+
 import { DETAILS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
 import { selectDetailsPanel } from "../../store/panels/selectors";
-import { ErrorBoundary } from "react-error-boundary";
 
 export const DetailsPanel = ({
   title,

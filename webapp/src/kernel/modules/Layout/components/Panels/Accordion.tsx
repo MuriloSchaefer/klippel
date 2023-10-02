@@ -1,19 +1,17 @@
 import {
-  Accordion as MUIAccordion,
-  AccordionDetails,
   AccordionProps as MUIAccordionProps,
-  AccordionSummary,
-  Box,
-  SvgIcon,
-  SvgIconTypeMap,
-  Typography,
 } from "@mui/material";
+
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import SvgIcon from '@mui/material/SvgIcon';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import MUIAccordion from '@mui/material/Accordion';
+
 import ExpandMoreSharp from "@mui/icons-material/ExpandMoreSharp";
-import { OverridableComponent } from "@mui/material/OverridableComponent";
 import SettingsInputCompositeSharp from "@mui/icons-material/SettingsInputCompositeSharp";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import usePanelsManager from "../../hooks/usePanelsManager";
-import { useCallback, useState } from "react";
 
 interface AccordionProps extends MUIAccordionProps {
   name: string;

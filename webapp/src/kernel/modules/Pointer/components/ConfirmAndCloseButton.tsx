@@ -1,4 +1,4 @@
-import { IconButton } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 import CheckSharpIcon from "@mui/icons-material/CheckSharp";
 
 import { PointerContainerActionProps } from "@kernel/modules/Pointer/components/PointerContainer";

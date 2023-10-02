@@ -1,10 +1,13 @@
-import { BeforeEach } from "@tanem/svg-injector";
-import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
 import React, { PointerEvent, useCallback, useMemo } from "react";
 import { ReactSVG } from "react-svg";
+import { BeforeEach } from "@tanem/svg-injector";
+
+import Box from "@mui/material/Box";
+
+import { Store } from "@kernel/modules/Store";
+import useModule from "@kernel/hooks/useModule";
+
 import { selectSVGState } from "../store/selectors";
-import { Box } from "@mui/material";
 
 type A4cm = [21, 29.7];
 interface SVGViewerProps {

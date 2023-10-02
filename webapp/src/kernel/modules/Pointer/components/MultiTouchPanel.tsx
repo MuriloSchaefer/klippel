@@ -1,10 +1,11 @@
-import React, { useRef } from "react";
-import { Box } from "@mui/material";
+import { useRef } from "react";
 import {
   AnyHandlerEventTypes,
   GestureHandlers,
   useGesture,
 } from "@use-gesture/react";
+
+import Box from "@mui/material/Box";
 
 const MultiTouchPanel = ({
   gestures,

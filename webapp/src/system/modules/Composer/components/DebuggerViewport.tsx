@@ -1,9 +1,12 @@
+import React, { useMemo } from "react";
+
+import Box from "@mui/material/Box";
+
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { ViewportStateSelector } from "@kernel/modules/Layout/store/viewports/selectors";
-import { Box } from "@mui/material";
-import React, { useMemo } from "react";
+
 import useCompositionsManager from "../hooks/useCompositionsManager";
 
 const DebuggerViewport = ({ name }: ViewportStateSelector) => {

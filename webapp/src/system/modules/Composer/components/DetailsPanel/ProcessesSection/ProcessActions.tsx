@@ -1,4 +1,6 @@
-import { Box, IconButtonProps } from "@mui/material";
+import { IconButtonProps } from "@mui/material";
+
+import Box from '@mui/material/Box';
 
 import RemoveProcessButton from "./RemoveProcessButton";
 import ConfigureProcessButton from "./ConfigureProcess/Button";

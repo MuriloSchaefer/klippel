@@ -1,9 +1,9 @@
-import { Box } from "@mui/material";
+import Box from '@mui/material/Box';
+
 import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
 
 import { CompositionState } from "../../../../../store/composition/state";
 import RestrictionsSection from "./RestrictionsSection";
-import RecommendationsSection from "./RecommendationsSection";
 
 export interface RestrictionsProps extends PointerContainerProps {
   compositionState: CompositionState;

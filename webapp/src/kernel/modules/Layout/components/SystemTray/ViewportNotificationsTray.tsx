@@ -1,7 +1,7 @@
 import React, { cloneElement, MouseEvent, useCallback } from "react";
 import { createPortal } from "react-dom";
 
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 
 import { VIEWPORT_NOTIFICATIONS_ID } from "../../constants";
 

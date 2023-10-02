@@ -1,5 +1,7 @@
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+
 import { SystemModalProps } from "@kernel/modules/Layout/components/SystemModal";
-import { Box, Paper } from "@mui/material";
 
 interface ModelSelectionModal extends SystemModalProps {
   onModelSelection: (name: string, path: string) => void;

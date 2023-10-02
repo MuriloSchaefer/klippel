@@ -1,4 +1,4 @@
-import { Button } from "@mui/material"
+import Button from "@mui/material/Button"
 import { useCallback } from "react";
 import useMaterialsManager from "../hooks/useMaterialsManager";
 

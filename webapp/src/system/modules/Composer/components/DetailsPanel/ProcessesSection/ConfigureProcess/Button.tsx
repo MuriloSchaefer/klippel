@@ -1,5 +1,5 @@
 import { useCallback, useContext } from "react";
-import { IconButton } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";

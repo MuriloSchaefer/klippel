@@ -1,10 +1,15 @@
+import { useCallback, useState } from "react";
+
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import TextField from '@mui/material/TextField';
+
 import useModule from "@kernel/hooks/useModule";
 import { IPointerModule } from "@kernel/modules/Pointer";
-import { Box, IconButton, InputAdornment, TextField } from "@mui/material";
-
 import AddSharpIcon from "@mui/icons-material/AddSharp";
 import AdjustSharpIcon from "@mui/icons-material/AdjustSharp";
-import { useCallback, useState } from "react";
+
 import useComposition from "../../hooks/useComposition";
 
 interface AddPartForm {

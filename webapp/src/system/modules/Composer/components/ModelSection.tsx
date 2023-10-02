@@ -1,10 +1,13 @@
 import { useCallback } from "react";
-import { IconButton } from "@mui/material";
-import useCompositionsManager from "../hooks/useCompositionsManager";
+
+import IconButton from "@mui/material/IconButton";
 import FileOpenIcon from "@mui/icons-material/FileOpen";
+
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
+
 import ModelSelectionModal from "./ModelSelectionModal";
+import useCompositionsManager from "../hooks/useCompositionsManager";
 
 export const ModelSection = () => {
   const compositionsManager = useCompositionsManager();

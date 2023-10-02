@@ -1,16 +1,17 @@
-import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/Graphs";
-import {
-  Box,
-  Divider,
-  ListItem,
-  ListItemText,
-  Typography,
-} from "@mui/material";
-import { OperationNode } from "../../../store/composition/state";
 
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import Typography from '@mui/material/Typography';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
 import AttachMoneySharpIcon from "@mui/icons-material/AttachMoneySharp";
+
+
+import useModule from "@kernel/hooks/useModule";
+import { IGraphModule } from "@kernel/modules/Graphs";
+
+import { OperationNode } from "../../../store/composition/state";
 
 const ProcessItem = ({
   graphId,

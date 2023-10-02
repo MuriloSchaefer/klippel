@@ -1,13 +1,14 @@
 import React, { MouseEvent, useCallback, useMemo } from "react";
 
 // UI
-import { TabContext } from "@mui/lab";
-import { Box, BoxProps, IconButton, Tab, Tabs } from "@mui/material";
+import { BoxProps } from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
 import HomeSharpIcon from "@mui/icons-material/HomeSharp";
-import NotificationsSharpIcon from "@mui/icons-material/NotificationsSharp";
-import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
-import CastSharpIcon from '@mui/icons-material/CastSharp';
 
 // Kernel
 import useModule from "@kernel/hooks/useModule";
@@ -21,7 +22,6 @@ import {
 import ViewportLoader from "./ViewportLoader";
 import useViewportManager from "../../hooks/useViewportManager";
 import { ViewportState } from "../../store/viewports/state";
-import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { VIEWPORT_NOTIFICATIONS_ID } from "../../constants";
 import { selectAllGroups } from "../../store/viewports/groups/selectors";
 

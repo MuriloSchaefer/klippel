@@ -1,11 +1,10 @@
-import {
-  Box,
-  BoxProps,
-  FormControl,
-  Select,
-  SelectChangeEvent,
-  TextField,
-} from "@mui/material";
+
+import Box from '@mui/material/Box';
+import {BoxProps, SelectChangeEvent} from '@mui/material';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+
+import TextField from '@mui/material/TextField';
 import { UnitValue } from "../typings";
 
 export interface UnitSelectorProps extends Omit<BoxProps, "onChange"> {

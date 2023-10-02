@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import useGraph from "../hooks/useGraph";
 import { useGraphEditor } from "../hooks/useGraphEditor";
 import { D3Graph } from "../interfaces";
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 

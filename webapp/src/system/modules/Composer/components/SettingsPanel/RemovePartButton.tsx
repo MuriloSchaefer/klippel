@@ -1,5 +1,5 @@
 
-import { IconButton} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 
 import DeleteForeverSharpIcon from '@mui/icons-material/DeleteForeverSharp';
 import { MouseEvent, useCallback } from "react";

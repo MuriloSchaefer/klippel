@@ -1,9 +1,9 @@
 import {
-  Box,
   BoxProps,
-  MenuItem,
-  Typography,
 } from "@mui/material";
+import Box from '@mui/material/Box';
+import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
 import { CompoundValue, UnitValue } from "../typings";
 import UnitSelector from "./UnitSelector";
 

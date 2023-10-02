@@ -1,10 +1,7 @@
-import {
-  Box,
-  ThemeProvider,
-  createTheme,
-  CssBaseline,
-  styled,
-} from "@mui/material";
+import { styled, createTheme, ThemeProvider } from '@mui/system';
+import Box from '@mui/material/Box';
+import CssBaseline from '@mui/material/CssBaseline';
+
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";

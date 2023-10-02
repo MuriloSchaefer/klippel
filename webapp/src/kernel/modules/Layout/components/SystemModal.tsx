@@ -1,4 +1,8 @@
-import { Box, Paper, Modal, SxProps, Typography } from "@mui/material";
+import { SxProps } from "@mui/material";
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Modal from '@mui/material/Modal';
 import React, { MouseEvent, useCallback, useState } from "react";
 
 export interface SystemModalProps {
