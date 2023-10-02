@@ -1,4 +1,4 @@
-import { IconButtonProps } from "@mui/material";
+import type { IconButtonProps } from "@mui/material";
 
 import Box from '@mui/material/Box';
 

@@ -9,7 +9,7 @@ import AddSharpIcon from "@mui/icons-material/AddSharp";
 import useModule from "@kernel/hooks/useModule";
 import { IPointerModule } from "@kernel/modules/Pointer";
 
-import { IConverterModule } from "@system/modules/Converter";
+import type { IConverterModule } from "@system/modules/Converter";
 
 import useComposition from "../../../hooks/useComposition";
 import { OperationNode } from "../../../store/composition/state";

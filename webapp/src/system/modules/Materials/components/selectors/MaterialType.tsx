@@ -1,6 +1,6 @@
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
-import { SelectProps } from "@mui/material";
+import type { SelectProps } from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";

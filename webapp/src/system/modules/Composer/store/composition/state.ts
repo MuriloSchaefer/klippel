@@ -1,7 +1,7 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
-import { CompoundValue } from "@system/modules/Converter/typings";
+import type { CompoundValue } from "@system/modules/Converter/typings";
 
 export interface MaterialTypeNode extends Node {
   type: "MATERIAL_TYPE";

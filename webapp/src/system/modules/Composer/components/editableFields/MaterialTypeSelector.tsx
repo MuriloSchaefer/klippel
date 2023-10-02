@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 
-import { IMaterialsModule } from "@system/modules/Materials";
+import type { IMaterialsModule } from "@system/modules/Materials";
 
 import useComposition from "../../hooks/useComposition";
 import {
@@ -12,7 +12,7 @@ import {
   MaterialUsageNode,
   RestrictionNode,
 } from "../../store/composition/state";
-import { SelectChangeEvent } from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
 import _ from "lodash";
 
 const MaterialTypeSelector = ({

@@ -1,4 +1,4 @@
-import { PaletteMode } from "@mui/material";
+import type { PaletteMode } from "@mui/material";
 import {initialState as panelsInitialState, PanelsState} from "./panels/state";
 import { RibbonMenuState } from "./ribbonMenu/state";
 import { viewportManagerState } from "./viewports/state";

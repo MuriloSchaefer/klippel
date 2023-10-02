@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import { IconButtonProps } from "@mui/material";
+import type { IconButtonProps } from "@mui/material";
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Modal from '@mui/material/Modal';

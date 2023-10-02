@@ -7,7 +7,7 @@ import {
   updateNode,
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { createListenerMiddleware } from "@reduxjs/toolkit";
-import { MaterialsModuleState } from "@system/modules/Materials/store/state";
+import type { MaterialsModuleState } from "@system/modules/Materials/store/state";
 import {
   addMaterial,
   addProxy,

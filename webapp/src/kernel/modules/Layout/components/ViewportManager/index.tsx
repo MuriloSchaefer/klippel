@@ -1,7 +1,7 @@
 import React, { MouseEvent, useCallback, useMemo } from "react";
 
 // UI
-import { BoxProps } from "@mui/material";
+import type { BoxProps } from "@mui/material";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tab from "@mui/material/Tab";

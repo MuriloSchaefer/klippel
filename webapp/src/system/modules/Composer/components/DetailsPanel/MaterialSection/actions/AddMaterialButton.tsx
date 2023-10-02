@@ -9,7 +9,7 @@ import useModule from "@kernel/hooks/useModule";
 import { IPointerModule } from "@kernel/modules/Pointer";
 import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
 
-import { IMaterialsModule } from "@system/modules/Materials";
+import type { IMaterialsModule } from "@system/modules/Materials";
 
 import useComposition from "../../../../hooks/useComposition";
 

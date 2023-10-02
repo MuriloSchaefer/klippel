@@ -16,7 +16,7 @@ import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 
 // QUESTION: how to share intefaces without direct import?
-import { IMaterialsModule } from "@system/modules/Materials";
+import type { IMaterialsModule } from "@system/modules/Materials";
 
 import {
   CompositionEdge,

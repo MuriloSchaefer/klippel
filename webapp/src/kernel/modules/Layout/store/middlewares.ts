@@ -1,4 +1,4 @@
-import { PaletteMode } from "@mui/material";
+import type { PaletteMode } from "@mui/material";
 import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
 import { switchTheme, themeSwitched } from "./actions";
 

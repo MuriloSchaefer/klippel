@@ -27,7 +27,7 @@ import {
   Proxy,
   RestrictionNode,
 } from "../store/composition/state";
-import { CompoundValue } from "@system/modules/Converter/typings";
+import type { CompoundValue } from "@system/modules/Converter/typings";
 import { ISVGModule } from "@kernel/modules/SVG";
 
 interface CompositionActions {
