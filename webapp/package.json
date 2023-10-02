@@ -92,6 +92,7 @@
     "tsconfig-paths": "^3.13.0",
     "typescript": "^4.9.4",
     "vite": "^4.0.0",
+    "vite-plugin-pwa": "^0.16.5",
     "vite-plugin-svgr": "^3.0.0",
     "vite-tsconfig-paths": "^3.5.1"
   }
