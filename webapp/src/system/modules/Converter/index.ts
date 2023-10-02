@@ -2,10 +2,15 @@ import { IModule } from "@kernel/modules/base";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import { startModule } from "./kernelCalls";
 import ScaleSlider from "./components/ScaleSlider";
+import UnitSelector from "./components/UnitSelector";
+import CompoundSelector from "./components/CompoundSelector";
+import { useScales } from "./hooks/useScales";
 
 export interface IConverterModule extends IModule {
     components: {
         ScaleSlider: typeof ScaleSlider;
+        CompoundSelector: typeof CompoundSelector;
+        UnitSelector: typeof UnitSelector;
     },
     store: {
         actions: {
@@ -16,6 +21,7 @@ export interface IConverterModule extends IModule {
         }
     }
     hooks: {
+        useScales: typeof useScales
     }
 }
 const module: IConverterModule = {
@@ -23,7 +29,9 @@ const module: IConverterModule = {
     version: MODULE_VERSION,
     depends_on: ['Graph'],
     components: {
-        ScaleSlider
+        ScaleSlider,
+        CompoundSelector,
+        UnitSelector
     },
     store: {
         actions: {
@@ -32,7 +40,7 @@ const module: IConverterModule = {
         reducers: {
         },
     },
-    hooks: {},
+    hooks: {useScales},
     constants: {},
     kernelCalls: {
         startModule: startModule,

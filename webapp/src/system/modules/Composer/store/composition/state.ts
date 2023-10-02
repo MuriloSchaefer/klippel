@@ -1,7 +1,7 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
-import { Value } from "@system/modules/Converter/typings";
+import { CompoundValue } from "@system/modules/Converter/typings";
 
 export interface MaterialTypeNode extends Node {
   type: "MATERIAL_TYPE";
@@ -37,8 +37,8 @@ export interface MaterialNode extends Node {
 export interface OperationNode extends Node {
   type: "OPERATION";
   label: string;
-  time_taken: Value;
-  cost: Value;
+  time_taken: CompoundValue;
+  cost: CompoundValue;
 }
 
 export type RestrictionNode = AllowOnlyRestrictionNode | SameAsRestrictionNode;

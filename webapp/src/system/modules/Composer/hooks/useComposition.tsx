@@ -27,7 +27,7 @@ import {
   Proxy,
   RestrictionNode,
 } from "../store/composition/state";
-import { UnitValue } from "@system/modules/Converter/typings";
+import { CompoundValue } from "@system/modules/Converter/typings";
 import { ISVGModule } from "@kernel/modules/SVG";
 
 interface CompositionActions {
@@ -42,7 +42,7 @@ interface CompositionActions {
   updateRestriction(materialId:string, restrictionId: string, changes:Partial<RestrictionNode>): void;
 
   removeOperation(operationId: string): void;
-  addOperation(label: string, cost: UnitValue, time_taken: UnitValue, partId: string): void;
+  addOperation(label: string, cost: CompoundValue, time_taken: CompoundValue, partId: string): void;
 
   changeMaterialType(materialUsageId: string, materialType: string): void;
   changeMaterial(materialUsageId: string, material: number): void;

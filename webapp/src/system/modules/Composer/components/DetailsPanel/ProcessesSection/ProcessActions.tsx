@@ -1,9 +1,11 @@
-import { Box, IconButton } from "@mui/material";
+import { Box, IconButtonProps } from "@mui/material";
 
-import TuneSharpIcon from "@mui/icons-material/TuneSharp";
 import RemoveProcessButton from "./RemoveProcessButton";
+import ConfigureProcessButton from "./ConfigureProcess/Button";
 
-const ProcessActions = (props: {compositionName: string, processId: string}) => {
+export interface ProcessActionProps extends IconButtonProps {compositionName: string, processId: string}
+
+const ProcessActions = (props: ProcessActionProps) => {
   return (
     <Box
       sx={{
@@ -16,9 +18,7 @@ const ProcessActions = (props: {compositionName: string, processId: string}) => 
       role="actions"
     >
       <RemoveProcessButton {...props}/>
-      <IconButton color="default" key="configure" id="configure-material" sx={{flexGrow: 2}}>
-        <TuneSharpIcon />
-      </IconButton>
+      <ConfigureProcessButton {...props} />
     </Box>
   );
 };

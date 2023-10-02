@@ -1,10 +1,16 @@
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
-import { Box, ListItem, ListItemText, Typography } from "@mui/material";
+import {
+  Box,
+  Divider,
+  ListItem,
+  ListItemText,
+  Typography,
+} from "@mui/material";
 import { OperationNode } from "../../../store/composition/state";
 
-import AccessTimeSharpIcon from '@mui/icons-material/AccessTimeSharp';
-import AttachMoneySharpIcon from '@mui/icons-material/AttachMoneySharp';
+import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
+import AttachMoneySharpIcon from "@mui/icons-material/AttachMoneySharp";
 
 const ProcessItem = ({
   graphId,
@@ -22,19 +28,34 @@ const ProcessItem = ({
     <ListItem>
       <ListItemText
         disableTypography={true}
-        primary={<Typography component="div">{node.label}</Typography>}
+        primary={
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              {node.label}
+            </Typography>
+            <Divider />
+          </Box>
+        }
         secondary={
-          <Typography component="div">
+          <Typography component="div" sx={{ padding: 1 }}>
             <Box
               sx={{
                 display: "flex",
-                alignItems: "center",
                 justifyContent: "space-between",
               }}
+              role="material-attributes"
+              aria-label="material attributes"
             >
-              <Box sx={{gap:1, display:'flex', flexWrap:'wrap', flexDirection:'row'}} role="material-attributes" aria-label="material attributes">
-                  <AccessTimeSharpIcon /> {node.time_taken.amount} {node.time_taken.unit}
-                  <AttachMoneySharpIcon /> {node.cost.amount} {node.cost.unit} {'by' in node.cost && `/ ${node.cost.by}`}
+              <Box sx={{ display: "flex", gap: 0.3, alignItems: "center" }}>
+                <AccessTimeSharpIcon /> {node.time_taken.quotient.amount}{" "}
+                {node.time_taken.quotient.unit} /{" "}
+                {node.time_taken.dividend.amount}{" "}
+                {node.time_taken.dividend.unit}
+              </Box>
+              <Box sx={{ display: "flex", gap: 0.3, alignItems: "center" }}>
+                <AttachMoneySharpIcon /> {node.cost.quotient.amount}{" "}
+                {node.cost.quotient.unit} / {node.cost.dividend.amount}{" "}
+                {node.cost.dividend.unit}
               </Box>
             </Box>
           </Typography>

@@ -17,9 +17,8 @@ export interface UnitValue {
 }
 
 export interface CompoundValue {
-    unit: Unit;
-    by: Unit;
-    amount: number;
+    quotient: UnitValue;
+    dividend: UnitValue;
 }
 
 export type Value = UnitValue | CompoundValue

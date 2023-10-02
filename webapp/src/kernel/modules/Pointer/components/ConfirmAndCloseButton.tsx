@@ -10,16 +10,17 @@ export interface ConfirmButtonProps extends PointerContainerActionProps {
 export const ConfirmAndCloseButton = ({
   closeContainer,
   handleConfirm,
+  ...props
 }: ConfirmButtonProps) => {
   return (
     <IconButton
+      {...props}
       color="success"
       key="accept"
       onClick={(e) => {
         handleConfirm();
         closeContainer && closeContainer(e);
       }}
-      tabIndex={3}
     >
       <CheckSharpIcon />
     </IconButton>
