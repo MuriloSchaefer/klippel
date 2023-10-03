@@ -9,12 +9,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // strategies: 'injectManifest',
+      // srcDir: 'src',
+      // filename: 'sw.ts',
       registerType: "autoUpdate",
       devOptions: {
         enabled: true,
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       }
     }),
     viteTsconfigPaths(),
@@ -25,9 +25,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id, { getModuleInfo }) => {
-          if (id.includes("@mui")) return "material";
+          //if (id.includes("@mui")) return "mui";
           if (id.includes("node_modules")) return "vendor";
-          if (id.includes("src/kernel")) return "kernel";
+          if (id.includes("src/kernel")) {
+
+            if (id.includes('App.tsx')) return // required to be in the index.js
+            return 'kernel'
+          };
           if (id.includes("src/system")) {
             const array = id.split("/");
             const moduleName =
