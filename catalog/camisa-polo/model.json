@@ -80,7 +80,9 @@
       "editableAttributes": ["materialType", "materialId"],
       "materialType": "malha",
       "materialId": "material-1",
-      "proxies": [{ "elem": "tecido-secundario-manga-direita", "attr": "fill" }],
+      "proxies": [
+        { "elem": "tecido-secundario-manga-direita", "attr": "fill" }
+      ],
       "position": {
         "x": 0,
         "y": 0
@@ -116,13 +118,12 @@
       "type": "OPERATION",
       "label": "Corte Material primario",
       "time_taken": {
-        "amount": 10,
-        "unit": "min"
+        "quotient": { "amount": 10, "unit": "min" },
+        "dividend": { "amount": 10, "unit": "un" }
       },
       "cost": {
-        "amount": 0.2,
-        "unit": "R$",
-        "by": "h"
+        "quotient": { "amount": 0.2, "unit": "R$" },
+        "dividend": { "amount": 1, "unit": "h" }
       },
       "position": {
         "x": 0,
@@ -134,13 +135,12 @@
       "type": "OPERATION",
       "label": "Corte Material secundario",
       "time_taken": {
-        "amount": 10,
-        "unit": "min"
+        "quotient": { "amount": 10, "unit": "min" },
+        "dividend": { "amount": 1, "unit": "un" }
       },
       "cost": {
-        "amount": 0.35,
-        "unit": "R$",
-        "by": "h"
+        "quotient": { "amount": 0.5, "unit": "R$" },
+        "dividend": { "amount": 1, "unit": "h" }
       },
       "position": {
         "x": 0,
@@ -495,7 +495,6 @@
       }
     },
 
-
     "costas": {
       "id": "costas",
       "type": "PART",
@@ -662,7 +661,6 @@
         "y": 0
       }
     },
-
 
     "gola": {
       "id": "gola",
@@ -897,8 +895,14 @@
       "targetId": "Material1MangaDireita",
       "id": "corteMaterial1MangaDireita->Material1MangaDireita",
       "quantity": {
-        "amount": 1,
-        "unit": "m2"
+        "quotient": {
+          "amount": 1.2,
+          "unit": "m2"
+        },
+        "dividend": {
+          "amount": 1,
+          "unit": "un"
+        }
       }
     },
     "mangaDireita->corteMaterial2MangaDireita": {
@@ -913,8 +917,14 @@
       "targetId": "Material2MangaDireita",
       "id": "corteMaterial2MangaDireita->Material2MangaDireita",
       "quantity": {
-        "amount": 0.5,
-        "unit": "m2"
+        "quotient": {
+          "amount": 0.5,
+          "unit": "m2"
+        },
+        "dividend": {
+          "amount": 1,
+          "unit": "un"
+        }
       }
     },
 
@@ -1020,7 +1030,6 @@
       "id": "Material1barraMangaEsquerda->Material1barraMangaEsquerdaRestriction1"
     },
 
-
     "garment->costas": {
       "type": "COMPOSED_OF",
       "sourceId": "garment",
@@ -1112,7 +1121,6 @@
       "id": "material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"
     },
 
-
     "garment->gola": {
       "type": "COMPOSED_OF",
       "sourceId": "garment",
@@ -1194,6 +1202,14 @@
         "mangaDireita->corteMaterial1MangaDireita",
         "mangaDireita->corteMaterial2MangaDireita"
       ]
+    },
+    "corteMaterial1MangaDireita": {
+      "inputs": ["mangaDireita->corteMaterial1MangaDireita"],
+      "outputs": ["corteMaterial1MangaDireita->Material1MangaDireita"]
+    },
+    "corteMaterial2MangaDireita": {
+      "inputs": ["mangaDireita->corteMaterial2MangaDireita"],
+      "outputs": ["corteMaterial2MangaDireita->Material2MangaDireita"]
     },
     "Material1MangaDireita": {
       "inputs": [
@@ -1320,7 +1336,9 @@
       ]
     },
     "material1-ombro-esquerdo-frente-restriction-1": {
-      "inputs": ["material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"],
+      "inputs": [
+        "material1-ombro-esquerdo-frente->material1-ombro-esquerdo-frente-restriction-1"
+      ],
       "outputs": []
     },
     "material1-ombro-direito-frente": {
@@ -1330,7 +1348,9 @@
       ]
     },
     "material1-ombro-direito-frente-restriction-1": {
-      "inputs": ["material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1"],
+      "inputs": [
+        "material1-ombro-direito-frente->material1-ombro-direito-frente-restriction-1"
+      ],
       "outputs": []
     },
     "barra-frente": {
@@ -1339,10 +1359,14 @@
     },
     "material1-barra-frente": {
       "inputs": ["barra-frente->material1-barra-frente"],
-      "outputs": ["material1-barra-frente->material1-barra-frente-restriction-1"]
+      "outputs": [
+        "material1-barra-frente->material1-barra-frente-restriction-1"
+      ]
     },
-    "material1-barra-frente-restriction-1":{
-      "inputs": ["material1-barra-frente->material1-barra-frente-restriction-1"],
+    "material1-barra-frente-restriction-1": {
+      "inputs": [
+        "material1-barra-frente->material1-barra-frente-restriction-1"
+      ],
       "outputs": []
     },
     "material1-frente": {
@@ -1362,7 +1386,6 @@
       "outputs": []
     },
 
-
     "costas": {
       "inputs": ["garment->costas"],
       "outputs": [
@@ -1381,7 +1404,7 @@
       "inputs": ["costas->ombro-direito-costas"],
       "outputs": ["ombro-direito-costas->material1-ombro-direito-costas"]
     },
-    "barra-costas":{
+    "barra-costas": {
       "inputs": ["costas->barra-costas"],
       "outputs": ["barra-costas->material1-barra-costas"]
     },
@@ -1404,10 +1427,14 @@
     },
     "material1-barra-costas": {
       "inputs": ["barra-costas->material1-barra-costas"],
-      "outputs": ["material1-barra-costas->material1-barra-costas-restriction-1"]
+      "outputs": [
+        "material1-barra-costas->material1-barra-costas-restriction-1"
+      ]
     },
-    "material1-barra-costas-restriction-1":{
-      "inputs": ["material1-barra-costas->material1-barra-costas-restriction-1"],
+    "material1-barra-costas-restriction-1": {
+      "inputs": [
+        "material1-barra-costas->material1-barra-costas-restriction-1"
+      ],
       "outputs": []
     },
     "material1-ombro-esquerdo-costas": {
@@ -1417,7 +1444,9 @@
       ]
     },
     "material1-ombro-esquerdo-costas-restriction-1": {
-      "inputs": ["material1-ombro-esquerdo-costas->material1-ombro-esquerdo-costas-restriction-1"],
+      "inputs": [
+        "material1-ombro-esquerdo-costas->material1-ombro-esquerdo-costas-restriction-1"
+      ],
       "outputs": []
     },
     "material1-ombro-direito-costas": {
@@ -1427,7 +1456,9 @@
       ]
     },
     "material1-ombro-direito-costas-restriction-1": {
-      "inputs": ["material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"],
+      "inputs": [
+        "material1-ombro-direito-costas->material1-ombro-direito-costas-restriction-1"
+      ],
       "outputs": []
     },
 
