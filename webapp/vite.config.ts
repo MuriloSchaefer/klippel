@@ -15,6 +15,24 @@ export default defineConfig({
       registerType: "autoUpdate",
       devOptions: {
         enabled: true,
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+        ]
       }
     }),
     viteTsconfigPaths(),
@@ -36,6 +54,15 @@ export default defineConfig({
             const array = id.split("/");
             const moduleName =
               array[array.findIndex((p) => p === "modules") + 1];
+
+            if (id.includes("Composer")) {
+              // custom split for big components
+              if (id.includes('store')) return `system/${moduleName}/store`
+              if (id.includes('components')) return `system/${moduleName}/components`
+              if (id.includes('hooks')) return `system/${moduleName}/hooks`
+            }
+
+            
             return `system/${moduleName}`;
           }
         },
