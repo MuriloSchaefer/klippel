@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useLayoutEffect, useMemo, useRef } from "react";
 
 import useGraph from "../hooks/useGraph";
 import { useGraphEditor } from "../hooks/useGraphEditor";
@@ -51,7 +51,7 @@ const GraphViewer = ({ graphId }: { graphId: string }) => {
     height: dimensions?.height ?? 0,
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!dimensions || !svgRef.current) return;
 
     graphEditor.render(adaptedGraph, svgRef.current);

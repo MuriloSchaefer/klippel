@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 export const useResizeObserver = (ref: React.RefObject<HTMLDivElement>) => {
     const [dimensions, setDimensions] = useState<DOMRectReadOnly | undefined>();
   
-    useEffect(() => {
+    useLayoutEffect(() => {
       if (!ref.current) return;
   
       const observeTarget = ref.current;
