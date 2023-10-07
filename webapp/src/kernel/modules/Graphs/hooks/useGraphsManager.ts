@@ -4,12 +4,12 @@ import { addEdge, addNode, removeEdge, removeNode, resetGraph, updateNode } from
 
 import {createGraph as createGraphAction} from "../store/graphsManager/actions"
 import { newGraphState } from "../store/state";
-import { DEFAULT_EDGES, Graph, GraphActions } from "./useGraph";
+import { DEFAULT_EDGES, Graph } from "./useGraph";
 import Node from "../interfaces/Node";
 
 export interface GraphsManager extends Manager {
     functions: {
-        createGraph: (graphId: string) => Graph
+        createGraph: (graphId: string) => Graph 
         resetGraph: (graphId: string) => void
     }
 }
@@ -41,6 +41,9 @@ const useGraphsManager = (): GraphsManager => {
                       },
                       addEdge: (edge) => {
                         dispatch(addEdge({ graphId, edge }));
+                      },
+                      updateEdge: (edgeId, changes) => {
+                        console.error('Not implemented yet')
                       },
                       removeEdge: (id) => {
                         dispatch(removeEdge({ graphId, edgeId: id }));

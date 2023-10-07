@@ -29,6 +29,7 @@ export interface GraphActions {
   removeNode(id: string): void;
   updateNode(node: any): void; // QUESTION: how to set the type here
   addEdge(edge: Edge): void;
+  updateEdge(edgeId: string, changes: Partial<Edge>):void;
   removeEdge(id: string): void;
   nodeExists(id: string): boolean;
 
@@ -52,10 +53,10 @@ export interface GraphActions {
     id?: string,
   ): string;
 }
-export interface Graph<T = GraphState> {
+export interface Graph<T = GraphState, A = GraphActions> {
   id: string;
   state: T | undefined;
-  actions: GraphActions;
+  actions: A;
 }
 
 export const DEFAULT_EDGES: EdgeMap = { inputs: {}, outputs: {} };
@@ -106,6 +107,14 @@ const useGraph = <G = GraphState, R = G>(
       },
       addEdge: (edge) => {
         dispatch(addEdge({ graphId, edge }));
+      },
+      updateEdge: (edgeId, changes) => {
+        const currentEdge = innerState?.edges[edgeId]
+        if (currentEdge){
+          dispatch(removeEdge({ graphId, edgeId: edgeId }));
+          const updatedEdge = {...currentEdge, ...changes}
+          dispatch(addEdge({ graphId,  edge: updatedEdge}));
+        }
       },
       removeEdge: (id) => {
         dispatch(removeEdge({ graphId, edgeId: id }));

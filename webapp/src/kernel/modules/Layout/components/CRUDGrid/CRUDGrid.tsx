@@ -116,6 +116,13 @@ const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
       },
     },
   },
+  // "& .MuiDataGrid-virtualScroller": {
+  //   width: '100%'
+  // },
+  // "& .MuiDataGrid-cell--editing": {
+  //   width: '100%',
+  //   maxWidth: '100vh'
+  // }
 }));
 const NoRows = () => (
   <Box
@@ -140,8 +147,7 @@ const CustomToolbar = ({handleAddRecord, addLabel}: {handleAddRecord: () => void
         {addLabel || "Adicionar"}
       </Button>
       <div>
-        <GridToolbarFilterButton />
-        <GridToolbarDensitySelector />
+        <GridToolbarDensitySelector  />
       </div>
     </GridToolbarContainer>
   )
@@ -266,7 +272,6 @@ export const CRUDGrid = ({
     <>
     <StyledDataGrid
         editMode="row"
-        density="compact"
         hideFooter={true}
         autoHeight={true}
         rowModesModel={rowModesModel}
@@ -284,10 +289,6 @@ export const CRUDGrid = ({
             field: "actions",
             type: "actions",
             headerName: "Actions",
-            //width: 'min-content',
-            flex: 2,
-            minWidth: 80,
-            maxWidth: 200,
             cellClassName: "actions",
             getActions: ({ id }) => {
               const row = rows.find((row) => row.id === id);

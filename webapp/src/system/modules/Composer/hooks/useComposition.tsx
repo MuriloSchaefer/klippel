@@ -2,9 +2,12 @@ import { createSelector } from "reselect";
 import _ from "lodash";
 
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/Graphs";
-import { ILayoutModule } from "@kernel/modules/Layout";
-import { Store } from "@kernel/modules/Store";
+import type { ISVGModule } from "@kernel/modules/SVG";
+import type { IGraphModule } from "@kernel/modules/Graphs";
+import type { ILayoutModule } from "@kernel/modules/Layout";
+import type { Store } from "@kernel/modules/Store";
+
+import type { CompoundValue } from "@system/modules/Converter/typings";
 
 import {
   addMaterialType,
@@ -21,19 +24,19 @@ import {
   AllowOnlyRestrictionNode,
   CompositionGraph,
   CompositionState,
+  ConsumesEdge,
   MaterialUsageNode,
   OperationNode,
   PartNode,
   Proxy,
   RestrictionNode,
 } from "../store/composition/state";
-import type { CompoundValue } from "@system/modules/Converter/typings";
-import { ISVGModule } from "@kernel/modules/SVG";
 
 interface CompositionActions {
   addPart(name: string, domId: string, parentName?: string): void;
   removePart(partId: string): void;
   selectPart(partName: string): void;
+
   addMaterialUsage(label: string, partId:string, allowedMaterialTypes: string[]): void;
   removeMaterialUsage(materialUsageId: string): void;
 
@@ -43,6 +46,9 @@ interface CompositionActions {
 
   removeOperation(operationId: string): void;
   addOperation(label: string, cost: CompoundValue, time_taken: CompoundValue, partId: string): void;
+  addMaterialConsuption(operationId: string, materialId:string, quantity: CompoundValue): void;
+  deleteMaterialConsuption(consuptionId: string):void
+  updateMaterialConsuption(consuptionId: string, changes: Partial<ConsumesEdge>): void
 
   changeMaterialType(materialUsageId: string, materialType: string): void;
   changeMaterial(materialUsageId: string, material: number): void;
@@ -92,10 +98,9 @@ const useComposition = <C = Composition, R = C>(
     innerState?.graphId!,
     (g) => ({
       adjacencyList: g?.adjacencyList,
-      nodes: g?.nodes,
+      nodes: g?.nodes
     })
   );
-  const svg = useSVG(innerState?.svgPath!, svg => svg)
 
   return {
     state: compositionState,
@@ -222,6 +227,22 @@ const useComposition = <C = Composition, R = C>(
           outputs: {}
         };
         graph.actions.addNode(node, edges);
+      },
+      updateMaterialConsuption: (consumptionId, changes)=>{
+        graph.actions.updateEdge(consumptionId, changes)
+      },
+      deleteMaterialConsuption: (consumptionId)=>{
+        graph.actions.removeEdge(consumptionId)
+      },
+      addMaterialConsuption: (operationId, materialId, quantity)=>{
+        const edge: ConsumesEdge = {
+          id: `${operationId}->${materialId}`,
+          sourceId: operationId,
+          targetId: materialId,
+          type: 'CONSUMES',
+          quantity
+        }
+        graph.actions.addEdge(edge)
       },
       selectPart(partName) {
         dispatch(selectPart({ compositionName, partName }));

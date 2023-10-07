@@ -142,10 +142,8 @@ export const PointerContainer = ({
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                padding: 0,
-                flexGrow: 2,
                 justifyContent: "space-evenly",
-                alignContent: "space-evenly",
+                alignContent: "space-between",
                 borderLeft: `1px solid rgba(0,0,0, ${
                   quadrant % 2 == 1 ? 0 : 0.1
                 })`,
@@ -160,7 +158,7 @@ export const PointerContainer = ({
 
               {actions.map((a) =>
                 cloneElement(a, {
-                  sx: { flexGrow: "inherit" },
+                  // sx: { flexGrow: 1 },
                   size: "small",
                   closeContainer: handleClose,
                 })

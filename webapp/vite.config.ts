@@ -57,7 +57,7 @@ export default defineConfig({
 
             if (id.includes("Composer")) {
               // custom split for big components
-              if (id.includes('store')) return `system/${moduleName}/store`
+              // if (id.includes('store')) return `system/${moduleName}/store`
               if (id.includes('components')) return `system/${moduleName}/components`
               if (id.includes('hooks')) return `system/${moduleName}/hooks`
             }

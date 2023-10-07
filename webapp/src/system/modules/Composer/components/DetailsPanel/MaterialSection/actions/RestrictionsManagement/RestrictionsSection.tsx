@@ -122,9 +122,6 @@ export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
       minWidth: 200,
       maxWidth: 400,
       renderHeader: () => "Restrição",
-      // renderEditCell: (params: GridRenderEditCellParams) => (
-      //   <div>{params.row.id}</div>
-      // ),
     },
     {
       field: "attribute",
@@ -134,30 +131,7 @@ export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
       minWidth: 200,
       maxWidth: 400,
       renderHeader: () => "Atributo",
-      renderCell: ({ value }) => <>{value}</>,
-      // renderEditCell: ({ row, value, ...rest }: GridRenderEditCellParams) => {
-      //   return (
-      //     <FormControl
-      //       sx={{ m: 1, minWidth: 120, width: "min-content" }}
-      //       fullWidth
-      //       size="small"
-      //     >
-      //       <InputLabel id={`label`}>Atributo</InputLabel>
-      //       <Select
-      //         labelId={`label`}
-      //         id={`attribute-selector`}
-      //         value={value ?? ""}
-      //         label="Atributo"
-      //       >
-      //         {Object.keys(row).map((attr) => (
-      //           <MenuItem key={attr} value={attr}>
-      //             {attr}
-      //           </MenuItem>
-      //         ))}
-      //       </Select>
-      //     </FormControl>
-      //   );
-      // },
+      renderCell: ({ value }) => <>{value}</>
     },
     {
       field: "restrictionType",
@@ -166,11 +140,7 @@ export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
       width: 100,
       minWidth: 200,
       maxWidth: 400,
-      renderHeader: () => "Operador",
-      // renderCell: ({ value }) => (
-      //   <MaterialTypeSelector value={value} disabled multiple />
-      // ),
-      //renderEditCell: (params) => <CRUDMaterialTypeCell {...params}/>,
+      renderHeader: () => "Operador"
     },
     {
       field: "operand",

@@ -10,7 +10,7 @@ import UnitSelector from "./UnitSelector";
 interface CompoundSelectorProps extends Omit<BoxProps, "onChange"> {
   quotientUnitsAvailable: () => { value: string; label: string }[];
   dividendUnitsAvailable: () => { value: string; label: string }[];
-  label: string;
+  label?: string;
   value: CompoundValue;
   onChange: (v: CompoundValue) => void;
 }
@@ -26,9 +26,10 @@ export default function CompoundSelector({
   return (
     <Box
       role="compound-selector"
+      width={'min-content'}
       sx={{ display: "flex", gap: 2, alignItems: "baseline" }}
     >
-      <Typography gutterBottom>{label}</Typography>
+      {label && <Typography gutterBottom>{label}</Typography>}
       <UnitSelector
         key="quotient"
         id="quotient-selector"

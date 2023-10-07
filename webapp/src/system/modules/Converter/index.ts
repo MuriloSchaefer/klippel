@@ -5,12 +5,14 @@ import ScaleSlider from "./components/ScaleSlider";
 import UnitSelector from "./components/UnitSelector";
 import CompoundSelector from "./components/CompoundSelector";
 import { useScales } from "./hooks/useScales";
+import CompoundUnit from './components/CompondUnit';
 
 export interface IConverterModule extends IModule {
     components: {
         ScaleSlider: typeof ScaleSlider;
         CompoundSelector: typeof CompoundSelector;
         UnitSelector: typeof UnitSelector;
+        CompoundUnit: typeof CompoundUnit;
     },
     store: {
         actions: {
@@ -31,7 +33,8 @@ const module: IConverterModule = {
     components: {
         ScaleSlider,
         CompoundSelector,
-        UnitSelector
+        UnitSelector,
+        CompoundUnit
     },
     store: {
         actions: {

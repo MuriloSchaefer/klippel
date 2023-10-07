@@ -30,8 +30,8 @@ const ProcessItem = ({
       <ListItemText
         disableTypography={true}
         primary={
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+          <Box sx={{marginBottom:1}}>
+            <Typography>
               {node.label}
             </Typography>
             <Divider />

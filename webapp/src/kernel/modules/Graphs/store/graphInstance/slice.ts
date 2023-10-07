@@ -181,19 +181,41 @@ const slice = createSlice({
       .addCase(
         removeEdge,
         (state: GraphsManagerState, { payload: { graphId, edgeId } }) => {
-          const graph = state.graphs[graphId];
-          const edge = graph.edges[edgeId];
-          if (!edge) throw Error("Edge does not exist");
+          const edge = state.graphs[graphId].edges[edgeId]
 
-          delete graph.edges[edgeId];
-          graph.adjacencyList[edge.sourceId].outputs = graph.adjacencyList[
-            edge.sourceId
-          ].outputs.filter((id) => id !== edge.id);
-          graph.adjacencyList[edge.targetId].inputs = graph.adjacencyList[
-            edge.targetId
-          ].inputs.filter((id) => id !== edge.id);
-
-          return state;
+          return {
+            ...state,
+            graphs: {
+              ...state.graphs,
+              [graphId]: {
+                ...state.graphs[graphId],
+                adjacencyList: Object.entries(
+                  state.graphs[graphId].adjacencyList
+                ).reduce(
+                  (acc, [id, curr]) =>
+                    id === edge.sourceId || id === edge.targetId
+                      ? {
+                          ...acc,
+                          [id]: {
+                            inputs: curr.inputs.filter(
+                              (i) => i !== edgeId
+                            ),
+                            outputs: curr.outputs.filter(
+                              (i) => i !== edgeId
+                            ),
+                          },
+                        }
+                      : {...acc, [id]: curr},
+                  {}
+                ),
+                edges: Object.entries(state.graphs[graphId].edges).reduce(
+                  (acc, [id, curr]) =>
+                    id !== edgeId ? { ...acc, [id]: curr } : acc,
+                  {}
+                ),
+              },
+            },
+          };
         }
       )
       .addCase(

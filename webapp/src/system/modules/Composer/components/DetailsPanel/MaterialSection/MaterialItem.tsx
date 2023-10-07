@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import ListItem from '@mui/material/ListItem';
 import Typography from '@mui/material/Typography';
 import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
 
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
@@ -28,7 +29,13 @@ const MaterialItem = ({
     <ListItem role="material-info">
       <ListItemText
         disableTypography={true}
-        primary={<Typography component="div">{node.label}</Typography>}
+        primary={
+          <Box sx={{marginBottom:1}}>
+            <Typography>
+              {node.label}
+            </Typography>
+            <Divider />
+          </Box>}
         secondary={
           <Typography component="div">
             <Box

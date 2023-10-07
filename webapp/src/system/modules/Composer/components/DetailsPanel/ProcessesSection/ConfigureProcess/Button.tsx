@@ -1,15 +1,16 @@
 import { useCallback, useContext } from "react";
 import IconButton from "@mui/material/IconButton";
+import TuneSharpIcon from '@mui/icons-material/TuneSharp';
 
 import useModule from "@kernel/hooks/useModule";
-import { ILayoutModule } from "@kernel/modules/Layout";
-import { IPointerModule } from "@kernel/modules/Pointer";
-import { ConfirmButtonProps } from "@kernel/modules/Pointer/components/ConfirmAndCloseButton";
+import type { ILayoutModule } from "@kernel/modules/Layout";
+import type { IPointerModule } from "@kernel/modules/Pointer";
+import type { ConfirmButtonProps } from "@kernel/modules/Pointer/components/ConfirmAndCloseButton";
 
-import { ProcessActionProps } from "../ProcessActions";
-import { CompositionState } from '../../../../store/composition/state';
+import type { ProcessActionProps } from "../ProcessActions";
+import type { CompositionState } from '../../../../store/composition/state';
 import useComposition, { Composition } from '../../../../hooks/useComposition';
-import TuneSharpIcon from '@mui/icons-material/TuneSharp';
+import ConfigProcessContainer from "./Container";
 
 interface ConfirmProps extends Omit<ConfirmButtonProps, "handleConfirm"> {
     processId: string;
@@ -29,7 +30,18 @@ const ConfirmButton = ({
   const { rows } = useContext(CRUDGridContext);
 
   const handleConfirm = useCallback(() => {
-    
+    rows.filter(r => r.state === "deleted").forEach(edge => {
+      composition.actions.deleteMaterialConsuption(edge.id)
+    })
+
+    rows.filter(r => r.state === "modified").forEach(({id, targetId, quantity}) => {
+      composition.actions.updateMaterialConsuption(id, {targetId, quantity})
+    })
+
+    rows.filter(r => r.state === "added").forEach(edge => {
+      composition.actions.addMaterialConsuption(processId, edge.targetId, edge.quantity)
+    })
+
   }, [rows]);
 
   return (
@@ -60,7 +72,7 @@ const ConfigureProcessButton = ({
     <CRUDGridProvider initialRows={[]}>
       <PointerContainer
         component={
-          <>div</>
+          <ConfigProcessContainer processId={processId} compositionState={composition.state} />
         }
         actions={[
           <ConfirmButton

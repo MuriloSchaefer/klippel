@@ -1,6 +1,7 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+
 import type { CompoundValue } from "@system/modules/Converter/typings";
 
 export interface MaterialTypeNode extends Node {
@@ -79,6 +80,7 @@ export interface ProcessNeededEdge extends Edge {
 }
 export interface ConsumesEdge extends Edge {
   type: "CONSUMES";
+  quantity: CompoundValue
 }
 
 export type CompositionEdge =
