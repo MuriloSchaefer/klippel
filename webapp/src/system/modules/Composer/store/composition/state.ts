@@ -97,6 +97,7 @@ export interface CompositionState {
   name: string;
   viewportName: string;
   svgPath: string;
+  descriptionPath?: string;
   graphId: string;
   selectedPart?: string;
   debugViewport?: string;

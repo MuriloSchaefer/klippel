@@ -1,12 +1,11 @@
-import { CompositionState } from "./composition/state"
+import type { CompositionState } from "./composition/state"
 
-
-
-
+export type CompositionsList = Pick<CompositionState, 'name' | 'descriptionPath' | 'svgPath'>[]
 export type CompositionsMap = {[name: string]:CompositionState}
 
 export interface CompositionsManagerState {
     compositions: CompositionsMap
+    compositionsList: CompositionsList
 }
 
 export interface ComposerState {
@@ -15,6 +14,7 @@ export interface ComposerState {
 
 export const initialState: ComposerState = {
     compositionsManager: {
-        compositions: {}
+        compositions: {},
+        compositionsList: []
     }
 }

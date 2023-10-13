@@ -58,16 +58,20 @@ const slice = createSlice({
     );
     builder.addCase(
       SVGFetched,
-      (state: SVGModuleState, { payload: { path, content } }) => ({
-        ...state,
-        svgs: {
-          [path]: {
-            ...state.svgs[path],
-            progress: "completed",
-            content,
+      (state: SVGModuleState, { payload: { path, content } }) => {
+        
+        return {
+          ...state,
+          svgs: {
+            ...state.svgs,
+            [path]: {
+              ...state.svgs[path],
+              progress: "completed",
+              content,
+            },
           },
-        },
-      })
+        }
+      }
     );
     builder.addCase(
       addProxy,

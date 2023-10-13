@@ -9,12 +9,13 @@ import Layout from "./modules/Layout/components/WideLayout";
 
 // Kernel modules
 import SVG from "./modules/SVG";
+import pointerModule from "./modules/Pointer";
+import Markdown from "./modules/Markdown";
 
 // System modules
 import converterModule from "@system/modules/Converter";
 import materialsModule from "@system/modules/Materials";
 import composerModule from "@system/modules/Composer";
-import pointerModule from "./modules/Pointer";
 
 export interface InitializationConfig {
   extraModules: ModulesMap
@@ -34,7 +35,7 @@ const App = (): React.ReactElement => {
   });
 
   const builtInModules: ModulesMap = {
-    kernel: [SVG, pointerModule],
+    kernel: [SVG, pointerModule, Markdown],
     system: [converterModule, materialsModule, composerModule ]
   }
   

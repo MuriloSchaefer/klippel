@@ -1,3 +1,6 @@
+import type { CSSProperties } from "react";
+import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
+
 import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { destroyGraph } from "@kernel/modules/Graphs/store/graphsManager/actions";
 import {
@@ -5,9 +8,9 @@ import {
   removeFromGroup,
 } from "@kernel/modules/Layout/store/viewports/actions";
 import { SVGLoaded, addProxy } from "@kernel/modules/SVG/store/actions";
-import { SVGState } from "@kernel/modules/SVG/store/state";
-import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
-import { CSSProperties } from "react";
+import type { SVGState } from "@kernel/modules/SVG/store/state";
+
+
 import {
   createComposition,
   compositionCreated,
@@ -19,11 +22,68 @@ import {
   compositionClosed,
   loadProxies,
   proxiesLoaded,
+  listCompositions,
+  compositionsListed,
+  storeCompositionsList,
+  compositionsListStored,
 } from "./actions";
-import { ComposerState } from "./state";
+import type { ComposerState, CompositionsList } from "./state";
 import { debugViewportOpened, openDebugView } from "./composition/actions";
 
 const middlewares = createListenerMiddleware();
+
+middlewares.startListening({
+  actionCreator: listCompositions,
+  effect: async (
+    { payload },
+    listenerApi
+  ) => {
+    const { dispatch } = listenerApi;
+
+    //fetch list
+    const compositions: CompositionsList = [
+      {name: 'Camisa polo feminina', svgPath: 'catalog/camisa-polo/decorated.svg', descriptionPath:'catalog/camisa-polo/description.md'},
+      {name: 'Camisa polo masculina', svgPath: 'catalog/camisa-polo/decorated.svg', descriptionPath:'catalog/camisa-polo/description.md'},
+      {name: 'Camiseta baby look', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
+    ]
+
+    dispatch(storeCompositionsList(compositions))
+
+    dispatch(
+      compositionsListed(compositions)
+    ); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: storeCompositionsList,
+  effect: async (
+    { payload },
+    listenerApi
+  ) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(
+      compositionsListStored(payload)
+    ); // dispatch event
+  },
+});
+
 middlewares.startListening({
   actionCreator: createComposition,
   effect: async (

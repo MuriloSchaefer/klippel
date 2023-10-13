@@ -1,8 +1,8 @@
-import React, { PointerEvent, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { ReactSVG } from "react-svg";
 import { BeforeEach } from "@tanem/svg-injector";
 
-import Box from "@mui/material/Box";
+import Box, { BoxProps } from "@mui/material/Box";
 
 import { Store } from "@kernel/modules/Store";
 import useModule from "@kernel/hooks/useModule";
@@ -10,7 +10,7 @@ import useModule from "@kernel/hooks/useModule";
 import { selectSVGState } from "../store/selectors";
 
 type A4cm = [21, 29.7];
-interface SVGViewerProps {
+export type SVGViewerProps = BoxProps & {
   path: string;
   instanceName: string;
   beforeInjection?: BeforeEach;
@@ -25,7 +25,7 @@ interface SVGViewerProps {
     ```
 */
 
-const SVGViewer = ({ path, instanceName, beforeInjection }: SVGViewerProps) => {
+const SVGViewer = ({ path, instanceName, beforeInjection,sx, ...props }: SVGViewerProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
@@ -92,12 +92,13 @@ const SVGViewer = ({ path, instanceName, beforeInjection }: SVGViewerProps) => {
 
   return (
     <Box
+      {...props}
       role="svg-viewport"
       id={path}
       aria-label="SVG viewer"
       sx={{
+        ...sx,
         width: "100%",
-        height: "100%",
         display: "flex",
         alignItems: "top",
         justifyContent: "center",

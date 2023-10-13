@@ -1,10 +1,17 @@
 import { ACTION_TYPES } from "@kernel/contants";
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { CompositionState } from "./composition/state";
+import type { CompositionState } from "./composition/state";
+import type { CompositionsList } from "./state";
 
 
 // Commands
+export const listCompositions = createAction(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] List compositions`
+);
+export const storeCompositionsList = createAction<CompositionsList>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Store compositions list`
+);
 export const createComposition = createAction<{name: string, viewportName: string, svgPath: string, graphId: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Create composition`
 );
@@ -26,6 +33,12 @@ export const loadProxies = createAction<{compositionName: string, model: any}>(
 
 
 // Events
+export const compositionsListed = createAction<CompositionsList>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Compositions listed`
+);
+export const compositionsListStored = createAction<CompositionsList>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Stored compositions list`
+);
 export const compositionCreated = createAction<CompositionState>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Composition created`
 );

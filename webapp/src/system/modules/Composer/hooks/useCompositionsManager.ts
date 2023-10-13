@@ -1,11 +1,13 @@
-import useModule from "@kernel/hooks/useModule";
-import { Manager } from "@kernel/modules/base";
-import { IGraphModule } from "@kernel/modules/Graphs";
-import { ILayoutModule } from "@kernel/modules/Layout";
-import { Store } from "@kernel/modules/Store";
-import { ISVGModule } from "@kernel/modules/SVG";
 import _ from "lodash";
-import { createComposition } from "../store/actions";
+
+import useModule from "@kernel/hooks/useModule";
+import type { Manager } from "@kernel/modules/base";
+import type { IGraphModule } from "@kernel/modules/Graphs";
+import type { ILayoutModule } from "@kernel/modules/Layout";
+import type { Store } from "@kernel/modules/Store";
+import type { ISVGModule } from "@kernel/modules/SVG";
+
+import { createComposition, listCompositions } from "../store/actions";
 import { openDebugView } from "../store/composition/actions";
 import { CompositionState } from "../store/composition/state";
 import { selectComposerModule } from "../store/selectors";
@@ -13,6 +15,7 @@ import { selectComposerModule } from "../store/selectors";
 
 interface CompositionsManager extends Manager {
     functions: {
+        listCompositions(): void;
         createComposition(compositionName: string, modelPath: string): void;
         createDebugView(compositionName:string, viewportName: string): void;
         findComposition(filter: (composition: CompositionState)=>boolean): CompositionState | undefined
@@ -37,11 +40,14 @@ export const useCompositionsManager = (): CompositionsManager => {
 
     return {
         functions: {
+            listCompositions(){
+                dispatch(listCompositions())
+            },
             createComposition(title, modelPath){
                 // dispatch
                 const vpName = viewportManager.functions.addViewport(title, 'Composer', undefined, 'composition-')
                 
-                const path = `catalog/${modelPath}`
+                const path = modelPath
                 graphManager.functions.createGraph(vpName)
                 dispatch(createComposition({name: vpName, viewportName: vpName, svgPath: path, graphId: vpName}))
                 svgManager.functions.loadSVG(path, vpName)
