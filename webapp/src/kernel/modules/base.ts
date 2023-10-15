@@ -33,13 +33,16 @@ export interface KernelCalls {
 interface ManagersMap {
   [name: string]: <Args>(args: Args) => Manager
 }
+
+type ComponentsMap = {
+  [name: string]: React.FunctionComponent<any> 
+}
+
 export interface IModule{
   name: string;
   version: string;
   depends_on: string[];
-  components?: {
-    [name: string]: React.FunctionComponent<any>
-  };
+  components?: ComponentsMap;
   store?: {
     actions?: { 
       commands?: {[key: string]: any},

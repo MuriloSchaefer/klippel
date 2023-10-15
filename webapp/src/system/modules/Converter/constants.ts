@@ -1,6 +1,7 @@
 export const MODULE_NAME = "Converter";
 export const MODULE_VERSION = "0.0.1";
 
+export const CONVERSION_GRAPH_NAME = "conversion-graph"
 
 export const TIME_SCALE = {
     week: 'Semana',

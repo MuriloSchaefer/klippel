@@ -35,9 +35,7 @@ const ModelSelectionModal = ({
   closeModal,
   onModelSelection,
 }: ModelSelectionModalProps) => {
-  const SVGModule = useModule<ISVGModule>("SVG");
   const markdownModule = useModule<IMarkdownModule>("Markdown");
-
 
   const {
     components: { MarkdownReader },

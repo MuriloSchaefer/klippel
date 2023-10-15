@@ -1,5 +1,6 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
+import { GraphState } from "@kernel/modules/Graphs/store/state";
 
 
 export type Unit = string;
@@ -42,11 +43,11 @@ export interface ScaleNode extends Node {
     name: string
 }
 
-export interface NumeratorEdge extends Edge {
-    type: 'NUMERATOR'
+export interface QuotientEdge extends Edge {
+    type: 'QUOTIENT'
 }
-export interface DenominatorEdge extends Edge {
-    type: 'DENOMINATOR'
+export interface DividendEdge extends Edge {
+    type: 'DIVIDEND'
 }
 
 export interface ConvertsToEdge extends Edge {
@@ -58,4 +59,6 @@ export interface BelongsToSerieEdge extends Edge {
 }
 
 export type ConversionNodes = UnitNode | CompoundNode | ScaleNode
-export type ConvertionEdges = NumeratorEdge | DenominatorEdge | ConvertsToEdge | BelongsToSerieEdge
+export type ConvertionEdges = QuotientEdge | DividendEdge | ConvertsToEdge | BelongsToSerieEdge
+
+export type ConversionGraph = GraphState<ConversionNodes, ConvertionEdges>;

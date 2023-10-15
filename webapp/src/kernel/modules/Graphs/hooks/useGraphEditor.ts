@@ -12,7 +12,8 @@ import {
   select,
   zoom,
 } from "d3";
-import { D3Graph, D3Link, D3Node } from "../interfaces";
+import { D3Graph, D3Link, D3Node } from "@kernel/modules/SVG/interfaces";
+
 import stringToColor from "../utils/str2color";
 
 interface GraphEditorProps {

@@ -1,11 +1,13 @@
 import React, { useLayoutEffect, useMemo, useRef } from "react";
+import { useTheme } from "@mui/material/styles";
+
+
+import useModule from "@kernel/hooks/useModule";
+import type { D3Graph } from "@kernel/modules/SVG/interfaces";
+import type { ILayoutModule } from "@kernel/modules/Layout";
 
 import useGraph from "../hooks/useGraph";
 import { useGraphEditor } from "../hooks/useGraphEditor";
-import { D3Graph } from "../interfaces";
-import { useTheme } from "@mui/material/styles";
-import useModule from "@kernel/hooks/useModule";
-import { ILayoutModule } from "@kernel/modules/Layout";
 
 const GraphViewer = ({ graphId }: { graphId: string }) => {
   const {

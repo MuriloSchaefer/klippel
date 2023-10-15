@@ -6,9 +6,11 @@ import UnitSelector from "./components/UnitSelector";
 import CompoundSelector from "./components/CompoundSelector";
 import { useScales } from "./hooks/useScales";
 import CompoundUnit from './components/CompondUnit';
+import CoverterGraphViewport from "./components/Builder/ConverterGraphViewport";
 
 export interface IConverterModule extends IModule {
     components: {
+        CoverterGraphViewport: typeof CoverterGraphViewport;
         ScaleSlider: typeof ScaleSlider;
         CompoundSelector: typeof CompoundSelector;
         UnitSelector: typeof UnitSelector;
@@ -31,6 +33,7 @@ const module: IConverterModule = {
     version: MODULE_VERSION,
     depends_on: ['Graph'],
     components: {
+        CoverterGraphViewport,
         ScaleSlider,
         CompoundSelector,
         UnitSelector,

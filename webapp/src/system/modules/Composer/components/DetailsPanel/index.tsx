@@ -51,7 +51,7 @@ const ComposerDetailsPanel = ({graphId, selectedPart, compositionName}: {graphId
         summary="Lista de opcionais"
         sx={{flexGrow: 1}}
       >
-       
+       <></>
       </Accordion>
       <Accordion
         name="Materiais"
