@@ -1,4 +1,4 @@
-import { Selection, axisBottom, axisRight, scaleLinear } from "d3";
+import { Selection, axisBottom, axisRight, scaleLinear, zoom } from "d3";
 
 type AxisSettings = {
   range: number[];
@@ -30,8 +30,13 @@ export default <D = any>({
     .tickSize(width)
     .tickPadding(8 - width);
 
-  return (selection: Selection<SVGElement, D, any, any>) => {
+  return (
+    root: Selection<SVGSVGElement, D, any, any>,
+    selection: Selection<SVGElement, D, any, any>
+  ) => {
     const gridGroup = selection.append("g").attr("role", "grid");
+    const contentGroup = root.select('#content')
+    const overlaysGroup = root.select('#overlays');
 
     const gX = gridGroup
       .append("g")
@@ -47,5 +52,25 @@ export default <D = any>({
       .attr("stroke-dasharray", "6 1")
       .attr("stroke-width", "0.5px")
       .call(yAxis);
+
+    // add zoom
+    const zoomFunc = zoom<Element, D>()
+      .scaleExtent([-10, 40])
+      // .translateExtent([
+      //   [-100, -100],
+      //   [dimensions.width + 200, dimensions.height + 200],
+      // ])
+      .filter((event) => {
+        event.preventDefault();
+        return (!event.ctrlKey || event.type === "wheel") && !event.button;
+      })
+      .on("zoom", ({ transform }) => {
+        contentGroup.attr("transform", transform);
+        overlaysGroup.attr("transform", transform);
+        gX.call(xAxis.scale(transform.rescaleX(x)));
+        gY.call(yAxis.scale(transform.rescaleY(y)));
+      });
+    // @ts-ignore TODO: fix typing
+    root.call(zoomFunc);
   };
 };

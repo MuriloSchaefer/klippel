@@ -8,7 +8,7 @@ import { D3Graph } from "@kernel/modules/SVG/interfaces";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { ConversionGraph } from "../../typings";
 
-type D3ConversionGraphData = { graph: D3Graph; theme: Theme }
+type D3ConversionGraphData = { graph: D3Graph; theme: Theme };
 
 const Viewer = ({ graphId }: { graphId: string }) => {
   const {
@@ -21,7 +21,7 @@ const Viewer = ({ graphId }: { graphId: string }) => {
 
   const {
     hooks: { useD3Container },
-    d3Components: { Grid },
+    d3Components: { Grid, ChordPlot },
   } = useModule<ISVGModule>("SVG");
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -62,7 +62,7 @@ const Viewer = ({ graphId }: { graphId: string }) => {
 
   const theme = useTheme();
 
-  const [width, height] = [dimensions?.width ?? 700, dimensions?.height ?? 700]
+  const [width, height] = [dimensions?.width ?? 700, dimensions?.height ?? 700];
 
   const container = useD3Container<D3ConversionGraphData>()
     .width(width)
@@ -71,9 +71,20 @@ const Viewer = ({ graphId }: { graphId: string }) => {
       Grid<D3ConversionGraphData>({
         xSettings: { range: [-1, width + 1], domain: [-1, width + 1] },
         ySettings: { range: [-1, height + 1], domain: [-1, height + 1] },
-        dimensions: [width, height]
+        dimensions: [width, height],
       }),
     ])
+    .content([
+      ChordPlot({
+        dataTransform: () => [
+          // to black, blond, brown, red
+          [11975,  5871, 8916, 2868], // from black
+          [ 1951, 10048, 2060, 6171], // from blond
+          [ 8010, 16145, 8090, 8045], // from brown
+          [ 1013,   990,  940, 6907]  // from red
+        ],
+      }),
+    ]);
 
   useLayoutEffect(() => {
     if (!dimensions || !svgRef.current) return;

@@ -17,18 +17,20 @@ import { D3Graph, D3Link, D3Node } from "@kernel/modules/SVG/interfaces";
 import stringToColor from "../utils/str2color";
 
 interface GraphEditorProps {
-  nodeBorder: string,
-  width: number
-  height: number
+  nodeBorder: string;
+  width: number;
+  height: number;
 }
 
 interface GraphEditor {
-  render(graph: D3Graph, svg: SVGSVGElement):void;
+  render(graph: D3Graph, svg: SVGSVGElement): void;
 }
 
 export const useGraphEditor = ({
-  width, height, nodeBorder
-}: GraphEditorProps):GraphEditor => {
+  width,
+  height,
+  nodeBorder,
+}: GraphEditorProps): GraphEditor => {
   const x = scaleLinear()
     .domain([-1, width + 1])
     .range([-1, width + 1]);
@@ -55,7 +57,7 @@ export const useGraphEditor = ({
       .append("circle")
       .attr("r", (n) => n.radius)
       .attr("fill", (n) => stringToColor(n.group ?? ""))
-      .attr('stroke', nodeBorder)
+      .attr("stroke", nodeBorder);
 
     // label
     selection
@@ -93,17 +95,13 @@ export const useGraphEditor = ({
     selection: Selection<SVGGElement, D3Link, SVGGElement, D3Graph>
   ) {
     //circle
-    selection.append("line")
-    .attr("stroke-width", "1em")
-    .attr("stroke", "gray");
-
+    selection.append("line").attr("stroke-width", "1em").attr("stroke", "gray");
   }
 
-  function render(
-    svg: Selection<SVGSVGElement, D3Graph, null, undefined>
-  ) {
+  function render(svg: Selection<SVGSVGElement, D3Graph, null, undefined>) {
     svg.each((graph) => {
-      svg.attr("viewBox", [0, 0, width, height]);
+      svg
+        .attr("viewBox", [0,0, width, height])
 
       // clear all previous content on refresh
       // QUESTION: is there a better way?
@@ -118,16 +116,16 @@ export const useGraphEditor = ({
       const gX = gridGroup
         .append("g")
         .attr("class", "axis axis--x")
-        .attr('stroke-opacity', '0.3')
-        .attr('stroke-dasharray', '6 1')
-        .attr('stroke-width', '0.5px')
+        .attr("stroke-opacity", "0.3")
+        .attr("stroke-dasharray", "6 1")
+        .attr("stroke-width", "0.5px")
         .call(xAxis);
       const gY = gridGroup
         .append("g")
         .attr("class", "axis axis--y")
-        .attr('stroke-opacity', '0.3')
-        .attr('stroke-dasharray', '6 1')
-        .attr('stroke-width', '0.5px')
+        .attr("stroke-opacity", "0.3")
+        .attr("stroke-dasharray", "6 1")
+        .attr("stroke-width", "0.5px")
         .call(yAxis);
 
       // add zoom
@@ -155,7 +153,8 @@ export const useGraphEditor = ({
           "links",
           forceLink<D3Node, D3Link>(graph.links)
             .id((d) => d.id)
-            .distance(300).strength(1)
+            .distance(300)
+            .strength(1)
         )
         .force(
           "charge",
@@ -164,11 +163,11 @@ export const useGraphEditor = ({
         .force(
           "colide",
           forceCollide((n) => n.radius)
-        )
-        // .force(
-        //   "center",
-        //   forceCenter(dimensions.width / 2, dimensions.height / 2)
-        // );
+        );
+      // .force(
+      //   "center",
+      //   forceCenter(dimensions.width / 2, dimensions.height / 2)
+      // );
 
       const links = graphContainer
         .append("g")
@@ -177,15 +176,15 @@ export const useGraphEditor = ({
         .selectAll("g[role='link']")
         .data(graph.links)
         .join(
-            (enter) =>
-              enter
-                .append("g")
-                .attr("role", "link")
-                .attr("id", (l) => l.id)
-                .call(drawLink),
-            (update) => update,
-            (exit) => exit.remove()
-          );
+          (enter) =>
+            enter
+              .append("g")
+              .attr("role", "link")
+              .attr("id", (l) => l.id)
+              .call(drawLink),
+          (update) => update,
+          (exit) => exit.remove()
+        );
 
       const nodes = graphContainer
         .append("g")
@@ -214,19 +213,19 @@ export const useGraphEditor = ({
       simulation.on("tick", () => {
         nodes.attr("transform", (n) => `translate(${n.x}, ${n.y})`);
 
-        links.selectAll('line')
+        links
+          .selectAll("line")
           .attr("x1", (d: any) => d.source.x)
           .attr("y1", (d: any) => d.source.y)
           .attr("x2", (d: any) => d.target.x)
-          .attr("y2", (d: any) => d.target.y)
+          .attr("y2", (d: any) => d.target.y);
       });
       simulation.alpha(1);
     });
   }
   return {
-    render(graph, svg){
-
-      select(svg).datum(graph).call(render)
-    }
+    render(graph, svg) {
+      select(svg).datum(graph).call(render);
+    },
   };
 };

@@ -1,4 +1,5 @@
 import { IModule } from "../base";
+import ChordPlot from "./components/d3/ChordPlot";
 import D3Grid from "./components/d3/Grid";
 import SVGViewer from "./components/SVGViewer";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
@@ -15,6 +16,7 @@ export interface ISVGModule extends IModule {
   };
   d3Components: {
     Grid: typeof D3Grid;
+    ChordPlot: typeof ChordPlot;
   };
   hooks: {
     useD3Container: typeof useD3Container;
@@ -38,7 +40,7 @@ const module: ISVGModule = {
   components: {
     SVGViewer,
   },
-  d3Components: { Grid: D3Grid },
+  d3Components: { Grid: D3Grid, ChordPlot },
   hooks: {
     useD3Container,
     useSVGManager,

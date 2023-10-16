@@ -17,7 +17,7 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
+        globPatterns: ['**/*.{js,css,ico,png,svg,json,vue,txt,woff2}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -44,7 +44,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id, { getModuleInfo }) => {
-          //if (id.includes("@mui")) return "mui";
+          //if (id.includes("@react")) return "react";
+          //if (id.includes("@mui") || id.includes("react")) return "mui+react";
           if (id.includes("node_modules")) return "vendor";
           if (id.includes("src/kernel")) {
 
