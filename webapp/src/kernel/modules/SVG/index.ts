@@ -7,6 +7,7 @@ import useD3Container from "./hooks/useD3Container";
 import useSVG from "./hooks/useSVG";
 import useSVGManager from "./hooks/useSVGManager";
 import { startModule } from "./kernelCalls";
+import DependencyCircle from "./components/d3/DependencyCircle";
 
 export interface ISVGModule extends IModule {
   name: typeof MODULE_NAME;
@@ -17,6 +18,7 @@ export interface ISVGModule extends IModule {
   d3Components: {
     Grid: typeof D3Grid;
     ChordPlot: typeof ChordPlot;
+    DependencyCircle: typeof DependencyCircle;
   };
   hooks: {
     useD3Container: typeof useD3Container;
@@ -40,7 +42,7 @@ const module: ISVGModule = {
   components: {
     SVGViewer,
   },
-  d3Components: { Grid: D3Grid, ChordPlot },
+  d3Components: { Grid: D3Grid, ChordPlot, DependencyCircle },
   hooks: {
     useD3Container,
     useSVGManager,

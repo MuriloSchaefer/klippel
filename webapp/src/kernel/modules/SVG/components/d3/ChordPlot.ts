@@ -8,7 +8,7 @@ import {
   ribbonArrow,
 } from "d3";
 
-type Matrix = number[][];
+type Matrix = {matrix: number[][], names: string[]};
 
 type ChordPlotProps<D> = {
   dataTransform: (data: D) => Matrix;
@@ -22,15 +22,14 @@ export default <D = any>({ dataTransform }: ChordPlotProps<D>) => {
   ) => {
     const innerRadius = 200;
     const outerRadius = 210;
-    const matrix = dataTransform(data);
+    const {matrix, names} = dataTransform(data);
     const arcGen = arc().innerRadius(innerRadius).outerRadius(outerRadius);
 
     const gen = chord()
       .padAngle(5 / innerRadius)
       .sortSubgroups(descending);
     const d = gen(matrix);
-    const colors = quantize(interpolateRainbow, 5);
-    const names = ["Tempo", "Volume", "Area", "Comprimento"];
+    const colors = quantize(interpolateRainbow, names.length+1);
 
     const ribbonGenerator = ribbonArrow()
       .radius(innerRadius - 1)

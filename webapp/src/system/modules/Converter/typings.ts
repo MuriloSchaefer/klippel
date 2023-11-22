@@ -50,10 +50,22 @@ export interface DividendEdge extends Edge {
     type: 'DIVIDEND'
 }
 
-export interface ConvertsToEdge extends Edge {
+export interface LinearConversion extends Edge {
     type: 'CONVERTS_TO'
+    conversionType: 'multiplication' | 'division' 
     factor: number
 }
+
+export interface ParametrizedConversion extends Edge {
+    type: 'CONVERTS_TO'
+    conversionType: 'parametrized'
+    expression: string
+    params?: {
+        [name: string]: string
+    }
+}
+
+export type ConvertsToEdge = LinearConversion | ParametrizedConversion
 export interface BelongsToSerieEdge extends Edge {
     type: 'BELONGS_TO'
 }
