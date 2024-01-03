@@ -7,7 +7,7 @@ export const loadConversionGraph = createAction(
     `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Load conversion graph`
 );
 
-export const selectNode = createAction(
+export const selectNode = createAction<string>(
     `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Select node`
 );
 
@@ -16,6 +16,6 @@ export const selectNode = createAction(
 export const conversionGraphLoaded = createAction(
     `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Conversion graph loaded`
 );
-export const nodeSelected = createAction(
+export const nodeSelected = createAction<string>(
     `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Node selected`
 );

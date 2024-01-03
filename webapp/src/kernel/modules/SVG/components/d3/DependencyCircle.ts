@@ -3,20 +3,19 @@ import {
   ScaleLinear,
   Selection,
   curveBundle,
-  lineRadial,
   pie as d3Pie,
   arc as d3Arc,
   scaleLinear,
   scaleOrdinal,
   schemeCategory10,
-  range,
   ScaleOrdinal,
   select,
   PieArcDatum,
   Arc,
   DefaultArcObject,
+  line as d3Line,
 } from "d3";
-import _, { sum } from "lodash";
+import { sum } from "lodash";
 import { D3Component, D3Graph, D3Link, D3Node } from "../../interfaces";
 
 type Theme = "dark" | "light";
@@ -159,7 +158,7 @@ export default <
 
   let renderLink = (
     selection: Selection<
-      SVGGElement,
+      BaseType | SVGGElement,
       L & { sourceOffset: number; targetOffset: number },
       SVGGElement | BaseType,
       number
@@ -167,24 +166,27 @@ export default <
     scale: ScaleLinear<number, number, never>,
     colors: ScaleOrdinal<string, unknown, never>
   ) => {
-    // const line = lineRadial()
-    //   .radius(([_, y]) => y)
-    //   .angle(([x, _]) => x)
-    //   .curve(curveBundle.beta(0.95));
-    // console.log("test");
-
-    const data = selection.data();
-    console.log(data);
+    const line = d3Line().curve(curveBundle.beta(0.35));
 
     selection
-      .append("line")
+      .append("path")
       .attr("data-source", (d) => d.source)
       .attr("data-target", (d) => d.target)
-      .attr("x1", (d) => (_innerRadius - 10) * Math.sin(scale(d.sourceOffset)))
-      .attr("y1", (d) => (_innerRadius - 10) * -Math.cos(scale(d.sourceOffset)))
-      .attr("x2", (d) => (_innerRadius - 10) * Math.sin(scale(d.targetOffset)))
-      .attr("y2", (d) => (_innerRadius - 10) * -Math.cos(scale(d.targetOffset)))
-      .attr("width", 10)
+      .attr("d", (d) =>
+        line([
+          [
+            (_innerRadius - 10) * Math.sin(scale(d.sourceOffset)),
+            (_innerRadius - 10) * -Math.cos(scale(d.sourceOffset)),
+          ],
+          [0, 0],
+          [
+            (_innerRadius - 10) * Math.sin(scale(d.targetOffset)),
+            (_innerRadius - 10) * -Math.cos(scale(d.targetOffset)),
+          ],
+        ])
+      )
+      .attr("fill", "none")
+      .attr("stroke-width", 5)
       .attr("stroke", "url(#convertion-gradient)");
   };
 
@@ -201,12 +203,15 @@ export default <
           .append("defs")
           .append("linearGradient")
           .attr("id", "convertion-gradient")
-          .attr("x1", '0%')
-          .attr("x2", '100%')
-          .attr("y1", '0%')
-          .attr("y2", '0%')
+          .attr("x1", "0%")
+          .attr("x2", "100%")
+          .attr("y1", "0%")
+          .attr("y2", "0%");
 
-        const colors = [{color: "steelblue", offset: '0%'}, {color: 'red', offset: '100%'}]
+        const colors = [
+          { color: "steelblue", offset: "0%" },
+          { color: "red", offset: "100%" },
+        ];
         linearGradient
           .selectAll("stop")
           .data(colors)
@@ -216,7 +221,7 @@ export default <
 
         return linearGradient;
       });
-    console.log(root);
+
     const container = selection
       .selectAll(".dependency-circle")
       .data([1])
@@ -269,16 +274,17 @@ export default <
       .startAngle((d) => d.startAngle)
       .endAngle((d) => d.endAngle);
 
-    const groupsWrapper = container
-      .selectAll(".groups")
-      .data([1])
-      .join("g")
-      .attr("class", "groups");
     const linksWrapper = container
       .selectAll(".links")
       .data([1])
       .join("g")
       .attr("class", "links");
+      
+    const groupsWrapper = container
+      .selectAll(".groups")
+      .data([1])
+      .join("g")
+      .attr("class", "groups");
 
     const groupsContainer = groupsWrapper
       .selectAll(".group")
@@ -340,12 +346,16 @@ export default <
         })
       )
       .join(
-        (enter) => enter.append("g").call(renderLink, scale, colors),
-        (update) => update,
+        "g",
+        (update) => {
+          update.select("*").remove();
+          return update;
+        },
         (exit) => exit.remove()
       )
       .attr("class", "link")
-      .attr("id", (d) => d.id);
+      .attr("id", (d) => d.id)
+      .call(renderLink, scale, colors);
   }
 
   chart.innerRadius = (value: number) =>

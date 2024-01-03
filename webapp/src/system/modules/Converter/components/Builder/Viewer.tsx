@@ -1,4 +1,11 @@
-import React, { PointerEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, {
+  PointerEvent,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { useTheme } from "@mui/material/styles";
 import useModule from "@kernel/hooks/useModule";
@@ -11,6 +18,7 @@ import {
   ConversionNodes,
   ConvertionEdges,
 } from "../../typings";
+import useConverterManager from "../../hooks/useConverterManager";
 
 type D3ConversionGraphData = D3Graph & {
   nodes: ConversionNodes[];
@@ -31,6 +39,8 @@ const Viewer = ({ graphId }: { graphId: string }) => {
     d3Components: { Grid, DependencyCircle },
   } = useModule<ISVGModule>("SVG");
 
+  const converterManager = useConverterManager((s) => s);
+
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(wrapperRef);
@@ -43,20 +53,20 @@ const Viewer = ({ graphId }: { graphId: string }) => {
   const adaptedGraph: D3ConversionGraphData = useMemo(() => {
     if (!graph.state?.nodes) return { nodes: [], links: [] };
 
-    const getGroup = (n: ConversionNodes): string =>{
-      if (!graph.state) return 'Outros'
+    const getGroup = (n: ConversionNodes): string => {
+      if (!graph.state) return "Outros";
       const belongsTo = Object.values(graph.state.edges).find(
         (e) => e.sourceId === n.id && e.type === "BELONGS_TO"
-      )
-      if (belongsTo) return graph.state.nodes[belongsTo.targetId].name
-      return 'Outros'
-    }
+      );
+      if (belongsTo) return graph.state.nodes[belongsTo.targetId].name;
+      return "Outros";
+    };
 
     return {
       nodes: Object.values(graph.state.nodes).map((n) => ({
         ...n,
-        nodeLabel: 'abbreviation' in n ? n.abbreviation : n.name,
-        group:getGroup(n),
+        nodeLabel: "abbreviation" in n ? n.abbreviation : n.name,
+        group: getGroup(n),
         radius: 5,
         strength: 10,
         x: n.position.x,
@@ -71,17 +81,17 @@ const Viewer = ({ graphId }: { graphId: string }) => {
   }, [graph]);
 
   const theme = useTheme();
-  const [shallTranslate, setShallTranslate] = useState(true)
+  const [shallTranslate, setShallTranslate] = useState(true);
 
   const [width, height] = [dimensions?.width ?? 700, dimensions?.height ?? 700];
 
   const handleUnitSelection = useCallback((id: string) => {
-    console.log('select unit', id)
-  }, [])
+    converterManager.selectNode(id);
+  }, []);
 
   const handleScaleSelection = useCallback((id: string) => {
-    console.log('select scale', id)
-  }, [])
+    converterManager.selectNode(id);
+  }, []);
 
   const container = useD3Container<D3ConversionGraphData>()
     .width(width)
@@ -91,50 +101,52 @@ const Viewer = ({ graphId }: { graphId: string }) => {
         xSettings: { range: [-1, width + 1], domain: [-1, width + 1] },
         ySettings: { range: [-1, height + 1], domain: [-1, height + 1] },
         dimensions: [width, height],
-      }).transformZoom((root, zoomFunc)=>{
-        if(shallTranslate) {
+      }).transformZoom((root, zoomFunc) => {
+        if (shallTranslate) {
           // @ts-ignore TODO: fix typing
-          zoomFunc.translateBy(root, width/2, height/2)
-          setShallTranslate(false)
+          zoomFunc.translateBy(root, width / 2, height / 2);
+          setShallTranslate(false);
         }
       }).build,
     ])
     .content([
       DependencyCircle<D3ConversionGraphData, any, any>() // TODO: add typing for nodes and edges
         .innerRadius(Math.min(width, height) / 2 - 20)
-        .filterNode(n => n.type === 'UNIT')
-        .filterLink(l => l.type === 'CONVERTS_TO')
+        .filterNode((n) => n.type === "UNIT" || n.type === "COMPOUND_UNIT")
+        .filterLink((l) => l.type === "CONVERTS_TO")
         .renderGroup((selection, group, segment, colors, arc, innerRadius) => {
           selection
             .selectAll("path")
             .data([group])
             .join("path")
-            .attr('id', d => d.name)
-            .on('click', (e) => handleScaleSelection(e.target.id))
+            .attr("id", (d) => d.name)
+            .on("click", (e) => handleScaleSelection(e.target.id))
             .attr("class", "group-arc")
             // @ts-ignore TODO: fix typing
             .attr("fill", (d) => colors(group.name))
             // @ts-ignore TODO: fix typing
             .attr("d", (d, i) => arc(segment));
-      
+
           selection
             .selectAll("text")
             .data([group])
             .join("text")
             .attr("class", "group-text")
             .text((d) => d.name)
-            .attr('id', d => d.name)
-            .on('click', (e) => handleScaleSelection(e.target.id))
+            .attr("id", (d) => d.name)
+            .on("click", (e) => handleScaleSelection(e.target.id))
             // @ts-ignore TODO: fix typing
             .attr("fill", (d) => colors(d.name))
             .attr("text-anchor", (d, i) =>
-              (segment.endAngle + segment.startAngle) / 2 > Math.PI ? "end" : "start"
+              (segment.endAngle + segment.startAngle) / 2 > Math.PI
+                ? "end"
+                : "start"
             )
             .attr("transform", (d, i) => {
               // @ts-ignore TODO: fix typing
               const [x, y] = arc.centroid(segment);
               const h = Math.sqrt(x * x + y * y);
-      
+
               return `translate(${(x / h) * innerRadius * 1.3}, ${
                 (y / h) * innerRadius * 1.3
               })`;
@@ -142,15 +154,20 @@ const Viewer = ({ graphId }: { graphId: string }) => {
         })
         .renderNode((selection, scale, colors) => {
           selection
-          .append("text")
-          .text((d) => d.nodeLabel)
-          // @ts-ignore TODO: fix typing
-          .attr("fill", (d) => colors(d.group)).attr('text-anchor', 'middle')
-          .on('click', (e: PointerEvent<SVGTextElement>)=>{
+            .append("text")
+            .text((d) => d.nodeLabel)
             // @ts-ignore TODO: fix typing
-            handleUnitSelection(e.target.id)
-            e.stopPropagation()
-          })
+            .attr("fill", (d) =>
+              converterManager.state?.selectedNode === d.id
+                ? "white"
+                : colors(d.group)
+            )
+            .attr("text-anchor", "middle")
+            .on("pointerdown", (e: PointerEvent<SVGTextElement>, d) => {
+              // @ts-ignore TODO: fix typing
+              handleUnitSelection(d.id);
+              e.stopPropagation();
+            });
         })
         .theme(theme.palette.mode).build,
     ]);
