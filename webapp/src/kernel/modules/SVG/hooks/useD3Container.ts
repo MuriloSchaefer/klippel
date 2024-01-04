@@ -1,10 +1,7 @@
 import { Selection, select } from "d3";
+import { D3Component } from "../interfaces";
 
-type D3Component<D = any> = (
-  root: Selection<SVGSVGElement, D, any, any>,
-  selection: Selection<SVGElement, D, SVGSVGElement, D>,
-  datum: D
-) => void;
+
 
 type Underlay<D = any> = D3Component<D>;
 type Content<D = any> = D3Component<D>;
@@ -40,12 +37,12 @@ export default function <D = any>(): D3Container<D> {
   function render(selection: Selection<SVGSVGElement, D, null, undefined>) {
     selection.each((data) => {
       selection.attr("viewBox", [0,0, _width, _height])
-      const everything = selection.selectAll("*");
-      everything.remove();
+      // const everything = selection.selectAll("*");
+      // everything.remove();
 
-      const underlays = selection.append("g").attr("id", "underlays");
-      const content = selection.append("g").attr("id", "content");
-      const overlays = selection.append("g").attr("id", "overlays");
+      const underlays = selection.selectAll('#underlays').data([1]).join('g').attr("id", "underlays");
+      const content = selection.selectAll('#content').data([1]).join('g').attr("id", "content")
+      const overlays = selection.selectAll('#overlays').data([1]).join("g").attr("id", "overlays");
       
       // @ts-ignore TODO: fix typing
       _underlays.forEach((layer) => layer(selection, underlays, data)); // TODO: fix typing

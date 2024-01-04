@@ -66,9 +66,9 @@ export const DEFAULT_EDGES: EdgeMap = { inputs: {}, outputs: {} };
  * @param id The graph id.
  * @returns {Graph | undefined} The graph object. Returns undefined if the graph does not exist.
  */
-const useGraph = <G = GraphState, R = G>(
+const useGraph = <G extends GraphState = GraphState, R = G>(
   graphId: string,
-  graphSelector: (g: GraphState<any> | undefined) => R | undefined
+  graphSelector: (g: G | undefined) => R | undefined
 ): Graph<R> => {
   const storeModule = useModule<Store>("Store");
   const dispatch = storeModule.hooks.useAppDispatch();
@@ -76,7 +76,7 @@ const useGraph = <G = GraphState, R = G>(
 
   const selector = createSelector(
     (state: { Graph: GraphsManagerState } | undefined) =>
-      state?.Graph && state.Graph.graphs[graphId],
+      state?.Graph && state.Graph.graphs[graphId] as G,
     graphSelector
   );
   const graphState = useAppSelector<R | undefined>(selector);

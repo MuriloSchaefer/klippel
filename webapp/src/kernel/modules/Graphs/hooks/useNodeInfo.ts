@@ -10,7 +10,7 @@ interface NodeInfo<NT=Node, ET=Edge>{
     adjacencyList: NodeConnections
 }
 
-const useNodeInfo = <NT=Node, ET=Edge>(graphId: string, nodeId: string): NodeInfo<NT, ET> => {
+const useNodeInfo = <NT extends Node=Node, ET=Edge>(graphId: string, nodeId: string): NodeInfo<NT, ET> => {
   const graphModule = useModule<IGraphModule>("Graph");
   const { useGraph } = graphModule.hooks;
 
@@ -27,7 +27,7 @@ const useNodeInfo = <NT=Node, ET=Edge>(graphId: string, nodeId: string): NodeInf
   );
 
   return {
-    node: node.state,
+    node: node.state as NT,
     edges: edges.state ?? {},
     adjacencyList: adjacencyList.state ?? {inputs: [], outputs: []},
   };

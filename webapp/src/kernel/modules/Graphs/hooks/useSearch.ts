@@ -3,7 +3,7 @@ import Edge from "../interfaces/Edge";
 import Node from "../interfaces/Node";
 import useSearchResult from "./useSearchResult";
 
-const useSearch = <N = Node, E = Edge>(
+const useSearch = <N extends Node = Node, E extends Edge = Edge>(
   graphId: string,
   searchId: string,
   search: () => void

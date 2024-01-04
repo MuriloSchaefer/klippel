@@ -4,6 +4,7 @@ import { MODULE_NAME } from "../constants";
 import {
   initialState
 } from "./state";
+import { selectNode } from "./actions";
 
 
 const slice = createSlice({
@@ -11,9 +12,9 @@ const slice = createSlice({
     initialState: initialState,
     reducers: {},
     extraReducers: (builder) => {
-    //   builder.addCase(
-    //     switchTheme,
-    //     (state: ConverterState, { payload: { theme } }) => ({...state, theme}))
+      builder.addCase(
+        selectNode,
+        (state, { payload }) => ({...state, selectedNode: payload}))
         
     //   builder.addDefaultCase((state, action)=>({
     //     ...state, 

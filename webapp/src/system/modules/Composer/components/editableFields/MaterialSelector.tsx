@@ -5,7 +5,7 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import type { IMaterialsModule } from "@system/modules/Materials";
 
-import { MaterialNode, MaterialUsageNode } from "../../store/composition/state";
+import { CompositionGraph, MaterialNode, MaterialUsageNode } from "../../store/composition/state";
 import useComposition from "../../hooks/useComposition";
 
 const MaterialSelector = ({
@@ -23,9 +23,9 @@ const MaterialSelector = ({
 
   const composition = useComposition(graphId, (c) => c); // QUESTION: what if graphId != composition name?
 
-  const materialInfo = useGraph<MaterialUsageNode, MaterialNode>(
+  const materialInfo = useGraph<CompositionGraph, MaterialNode|undefined>(
     graphId,
-    (g) => g?.nodes[node.materialId]
+    (g) => g?.nodes[node.materialId] as MaterialNode
   );
 
   const handleMaterialChange = useCallback(

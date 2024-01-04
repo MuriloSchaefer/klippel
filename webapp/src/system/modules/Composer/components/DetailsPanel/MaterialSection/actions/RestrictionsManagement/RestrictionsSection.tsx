@@ -20,6 +20,7 @@ import type { IMaterialsModule } from "@system/modules/Materials";
 
 import {
   CompositionEdge,
+  CompositionGraph,
   MaterialUsageNode,
   RestrictionNode,
 } from "../../../../../store/composition/state";
@@ -73,9 +74,9 @@ export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
   const {
     state: node,
     actions: { search },
-  } = useGraph<MaterialUsageNode, CompositionEdge>(
+  } = useGraph<CompositionGraph, MaterialUsageNode | undefined>(
     compositionState.graphId,
-    (g) => g?.nodes[materialUsageId]
+    (g) => g?.nodes[materialUsageId] as MaterialUsageNode
   );
 
   const searchId = useMemo(()=> `${materialUsageId}/restrictions`, [materialUsageId])
@@ -98,7 +99,7 @@ export default ({ compositionState, materialUsageId }: RestrictionsProps) => {
       () => false, // stops only when checked all neighbours
       1, // search only neighbours
       `Get all restriction associated with ${
-        "label" in node ? node.label : node.id
+        node?.label ?? node.id
       }`,
       searchId
     );

@@ -1,4 +1,10 @@
-import { SimulationLinkDatum, SimulationNodeDatum } from "d3";
+import { Selection, SimulationLinkDatum, SimulationNodeDatum } from "d3";
+
+export type D3Component<D = any> = (
+  root: Selection<SVGSVGElement, D, any, any>,
+  selection: Selection<SVGElement, D, SVGSVGElement, D>,
+  datum: D
+) => void;
 
 export interface D3Node extends SimulationNodeDatum {
     id: string;
@@ -16,7 +22,7 @@ export interface D3Link extends SimulationLinkDatum<D3Node> {
     target: string;
   }
   
-export interface D3Graph {
-    nodes: D3Node[];
-    links: D3Link[];
+export interface D3Graph<N =D3Node, L=D3Link> {
+    nodes: N[];
+    links: L[];
   }

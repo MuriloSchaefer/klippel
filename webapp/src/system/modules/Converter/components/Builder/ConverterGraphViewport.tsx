@@ -11,11 +11,12 @@ import type { ViewportState } from "@kernel/modules/Layout/store/viewports/state
 import SettingsPanel from "./SettingsPanel";
 import { CONVERSION_GRAPH_NAME } from "../../constants";
 import Viewer from "./Viewer";
+import DetailsPanel from "./DetailsPanel";
 
 const ConverterGraphViewport = ({ name }: ViewportState) => {
   const layoutModule = useModule<ILayoutModule>("Layout");
 
-  const { ViewportNotificationsTray, DetailsPanel } =
+  const { ViewportNotificationsTray } =
     layoutModule.components;
 
   return (
@@ -36,9 +37,7 @@ const ConverterGraphViewport = ({ name }: ViewportState) => {
 
       <SettingsPanel />
 
-      <DetailsPanel>
-        <></>
-      </DetailsPanel>
+      <DetailsPanel />
     </Box>
   );
 };
