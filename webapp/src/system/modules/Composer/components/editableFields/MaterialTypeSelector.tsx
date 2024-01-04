@@ -8,6 +8,8 @@ import type { IMaterialsModule } from "@system/modules/Materials";
 import useComposition from "../../hooks/useComposition";
 import {
   CompositionEdge,
+  CompositionGraph,
+  CompositionNode,
   MaterialTypeNode,
   MaterialUsageNode,
   RestrictionNode,
@@ -28,9 +30,9 @@ const MaterialTypeSelector = ({
   } = useModule<IMaterialsModule>("Materials");
 
   const { useNodeInfo, useGraph, useSearch } = graphModule.hooks;
-  const graph = useGraph<MaterialUsageNode, CompositionEdge>(
+  const graph = useGraph<CompositionGraph, CompositionNode | undefined>(
     graphId,
-    (g) => g?.nodes[node.id]
+    (g) => g?.nodes[node.id] as CompositionNode
   );
 
   const searchId = useMemo(()=> `${node.id}/materialType/restrictions`, [node?.id])

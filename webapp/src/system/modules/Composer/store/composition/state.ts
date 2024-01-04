@@ -63,7 +63,8 @@ export type CompositionNode =
   | MaterialTypeNode
   | PartNode
   | MaterialUsageNode
-  | RestrictionNode;
+  | RestrictionNode
+  | MaterialNode;
 
 export interface ComposedOfEdge extends Edge {
   type: "COMPOSED_OF";

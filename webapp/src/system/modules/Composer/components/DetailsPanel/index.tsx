@@ -41,7 +41,7 @@ const ComposerDetailsPanel = ({graphId, selectedPart, compositionName}: {graphId
   const { DetailsPanel, Accordion } = layoutModule.components;
   const { useGraph } = graphModule.hooks;
 
-  const node = useGraph<CompositionGraph, PartNode>(graphId, g=> g?.nodes[selectedPart])
+  const node = useGraph<CompositionGraph, PartNode|undefined>(graphId, g=> g?.nodes[selectedPart] as PartNode)
 
   return (
     <DetailsPanel title={node.state?.label ?? selectedPart}>

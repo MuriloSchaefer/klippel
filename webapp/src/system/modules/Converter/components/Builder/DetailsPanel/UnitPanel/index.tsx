@@ -12,6 +12,7 @@ import type {
   UnitNode,
 } from "../../../../typings";
 import PropertiesAccordion from "./PropertiesAccordion";
+import ConvertFromAccordion from "./ConvertFromAccordion";
 
 export default () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -22,6 +23,7 @@ export default () => {
   return (
     <>
       <PropertiesAccordion />
+      <ConvertFromAccordion />
       {/* <Accordion
         name="Converte de"
         icon={<CallReceivedSharpIcon />}

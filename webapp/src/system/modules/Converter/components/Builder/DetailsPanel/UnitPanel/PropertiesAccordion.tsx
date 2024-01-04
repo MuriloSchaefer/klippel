@@ -30,7 +30,6 @@ const PropertiesAccordion = () => {
   const { useGraph } = graphModule.hooks;
 
   const manager = useConverterManager((s) => s.selectedNode);
-  console.log(manager.state)
   const storedState = useGraph<ConversionGraph, PropertiesState>(
     CONVERSION_GRAPH_NAME,
     (g) =>

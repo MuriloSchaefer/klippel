@@ -17,6 +17,7 @@ import type { CompoundValue } from "@system/modules/Converter/typings";
 
 import type { ConfigProcessProps } from "./Container";
 import type {
+  CompositionGraph,
   CompositionNode,
   ConsumesEdge,
   MaterialUsageNode,
@@ -87,7 +88,7 @@ export default ({ compositionState, processId }: ConfigProcessProps) => {
     }, {});
 
   const { state } = useGraph<
-    CompositionNode,
+    CompositionGraph,
     {
       edges: Edge[];
       nodes: NodesHashMap<CompositionNode>;
@@ -104,7 +105,7 @@ export default ({ compositionState, processId }: ConfigProcessProps) => {
       }
   );
 
-  const { state: usageEdges } = useGraph<MaterialUsageNode, ConsumesEdge[]>(
+  const { state: usageEdges } = useGraph<CompositionGraph, ConsumesEdge[]>(
     compositionState.graphId,
     (g) =>
       g?.edges &&

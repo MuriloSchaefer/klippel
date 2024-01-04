@@ -10,7 +10,7 @@ import type { IGraphModule } from "@kernel/modules/Graphs";
 import type Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import type { EdgesHashMap, NodesHashMap } from "@kernel/modules/Graphs/store/state";
 
-import type { CompositionNode } from "../../../../store/composition/state";
+import type { CompositionGraph, CompositionNode } from "../../../../store/composition/state";
 
 export const CRUDMaterialUsageEditCell = ({
   id,
@@ -36,7 +36,7 @@ export const CRUDMaterialUsageEditCell = ({
             if (filter.includes(id)) return {...acc, [id]: node}
             return acc
         }, {})
-  const {state} = useGraph<CompositionNode, {
+  const {state} = useGraph<CompositionGraph, {
     edges: Edge[],
     nodes: NodesHashMap<CompositionNode>
   }>(graphId, (g) => g && {

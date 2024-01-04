@@ -13,10 +13,11 @@ import ComposerSettingsPanel from "./SettingsPanel";
 import ComposerDetailsPanel from "./DetailsPanel";
 import FloatingButtons from "./FloatingButtons";
 import useComposition from "../hooks/useComposition";
-import { CompositionState } from "../store/composition/state";
+import { CompositionGraph, CompositionNode, CompositionState, PartNode } from '../store/composition/state';
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { IPointerModule } from "@kernel/modules/Pointer";
 import useCompositionsManager from "../hooks/useCompositionsManager";
+import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
 
 type CompositionInfo = Omit<CompositionState, "selectedPart" | "loading">;
 
@@ -74,14 +75,14 @@ export const ComposerViewport = ({
   const { graphId, svgPath, name, viewportName } = compositionInfo;
 
   const compositionManager = useCompositionsManager();
-  const nodes = useGraph(graphId, (g) => g?.nodes);
+  const nodes = useGraph<CompositionGraph, NodesHashMap<CompositionNode>|undefined>(graphId, (g) => g?.nodes);
   const svg = useSVG(svgPath, (svg) => svg?.instances[name]);
 
   const beforeInjectionHandle = useCallback(
     (svgRoot: SVGSVGElement) => {
       if (!nodes.state) return;
       Object.values(nodes.state)
-        .filter((n) => n.type === "PART")
+        .filter((n): n is PartNode => n.type === "PART")
         .forEach((n) => {
           if (n.domId) {
             const [element] = [...svgRoot?.querySelectorAll(`#${n.domId}`)];
