@@ -56,7 +56,7 @@ export const useGraphEditor = ({
     selection
       .append("circle")
       .attr("r", (n) => n.radius)
-      .attr("fill", (n) => stringToColor(n.group ?? ""))
+      .attr("fill", (n) => stringToColor(n.group.name ?? ""))
       .attr("stroke", nodeBorder);
 
     // label

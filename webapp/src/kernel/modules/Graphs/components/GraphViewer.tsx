@@ -1,13 +1,13 @@
 import React, { useLayoutEffect, useMemo, useRef } from "react";
 import { useTheme } from "@mui/material/styles";
 
-
 import useModule from "@kernel/hooks/useModule";
 import type { D3Graph } from "@kernel/modules/SVG/interfaces";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 
 import useGraph from "../hooks/useGraph";
 import { useGraphEditor } from "../hooks/useGraphEditor";
+import { CompoundNode, ConversionGraph, UnitNode } from "@system/modules/Converter/typings";
 
 const GraphViewer = ({ graphId }: { graphId: string }) => {
   const {
@@ -17,10 +17,10 @@ const GraphViewer = ({ graphId }: { graphId: string }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(wrapperRef);
 
-  const graph = useGraph(graphId, (g) => g);
+  const graph = useGraph<ConversionGraph>(graphId, (g) => g);
 
   const adaptedGraph: D3Graph = useMemo(() => {
-    if (!graph.state || !graph.state.nodes)
+    if (!graph?.state?.nodes)
       return {
         nodes: [],
         links: [],
@@ -29,7 +29,7 @@ const GraphViewer = ({ graphId }: { graphId: string }) => {
     return {
       nodes: Object.values(graph.state.nodes).map((n) => ({
         id: n.id,
-        group: n.type,
+        group: {id: `${n.id}-group`, name: n.type},
         nodeLabel: n?.label || n.id,
         strength: -400,
         x: n.position.x,
