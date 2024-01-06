@@ -55,6 +55,7 @@ type DependencyCircle<D = D3Graph, N extends D3Node = D3Node, L = D3Link> = {
     value: (
       selection: Selection<BaseType, unknown, HTMLElement, any>,
       group: {
+        id: string;
         name: string;
         nodes: IndexedN<N>[];
         size: number;
@@ -109,6 +110,7 @@ export default <
   let renderGroup = (
     selection: Selection<BaseType, unknown, HTMLElement, any>,
     group: {
+      id?: string;
       name: string;
       nodes: IndexedN<N>[];
       size: number;
@@ -232,29 +234,42 @@ export default <
     const nodes = g.nodes
       // @ts-ignore TODO: fix typing
       .filter(filterNode);
-    nodes.sort((a, b) => (a.group >= b.group ? -1 : 1));
+    nodes.sort((a, b) => (a.group.name >= b.group.name ? -1 : 1));
 
     const links = g.links.filter(filterLink);
 
     // separate nodes per group
     const groups = nodes.reduce(
       (acc, n, i) =>
-        n.group in acc
+        n.group.name in acc
           ? {
               ...acc,
-              [n.group]: [
-                ...acc[n.group],
-                { ...n, idx: i, offset: 0 } as IndexedN<N>,
-              ],
+              [n.group.name]: {
+                id: n.group.id,
+                name: n.group.name,
+                nodes: [
+                  ...acc[n.group.name].nodes,
+                  { ...n, idx: i, offset: 0 } as IndexedN<N>,
+                ],
+              },
             }
-          : { ...acc, [n.group]: [{ ...n, idx: i, offset: 0 } as IndexedN<N>] },
-      {} as { [group: string]: IndexedN<N>[] }
+          : {
+              ...acc,
+              [n.group.name]: {
+                id: n.group.id,
+                name: n.group.name,
+                nodes: [{ ...n, idx: i, offset: 0 } as IndexedN<N>],
+              },
+            },
+      {} as { [group: string]: {id?:string, name: string, nodes: IndexedN<N>[] } }
     );
+    console.log(groups)
 
-    const groupsArr = Object.entries(groups).map(([name, nodes]) => ({
-      name,
-      nodes,
-      size: nodes.length,
+    const groupsArr = Object.entries(groups).map(([name, g]) => ({
+      id: g.id,
+      name: name,
+      nodes: g.nodes,
+      size: g.nodes.length,
     }));
 
     const colors = scaleOrdinal()
@@ -279,7 +294,7 @@ export default <
       .data([1])
       .join("g")
       .attr("class", "links");
-      
+
     const groupsWrapper = container
       .selectAll(".groups")
       .data([1])
@@ -290,7 +305,7 @@ export default <
       .selectAll(".group")
       .data(groupsArr)
       .join("g")
-      .attr("id", (d) => d.name)
+      .attr("id", (d) => d.id ?? "other")
       .attr("class", "group");
 
     pieSegments.forEach((segment, i) => {
@@ -300,7 +315,7 @@ export default <
           .map((s) => s.value)
       );
       const group = groupsArr[i];
-      const groupContainer = select(`#${group.name}`).call(
+      const groupContainer = select(`#${group.id}`).call(
         renderGroup,
         group,
         segment,
@@ -383,6 +398,7 @@ export default <
     value: (
       selection: Selection<BaseType, unknown, HTMLElement, any>,
       group: {
+        id: string;
         name: string;
         nodes: IndexedN<N>[];
         size: number;

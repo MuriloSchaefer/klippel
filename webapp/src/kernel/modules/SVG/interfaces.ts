@@ -6,10 +6,10 @@ export type D3Component<D = any> = (
   datum: D
 ) => void;
 
-export interface D3Node extends SimulationNodeDatum {
+export type D3Node = SimulationNodeDatum & {
     id: string;
     nodeLabel: string;
-    group: string;
+    group: {id?: string, name: string};
     radius: number;
     strength: number;
     x: number;

@@ -1,21 +1,36 @@
-
-
-
 import useModule from "@kernel/hooks/useModule";
-import { ILayoutModule } from "@kernel/modules/Layout";
+import type { ILayoutModule } from "@kernel/modules/Layout";
+import type { IGraphModule } from "@kernel/modules/Graphs";
+
 import UnitPanel from "./UnitPanel";
+import { CONVERSION_GRAPH_NAME } from "../../../constants";
+import useConverterManager from '../../../hooks/useConverterManager';
+import { ConversionGraph, ConversionNodes } from "../../../typings";
+import ScalePanel from "./ScalePanel";
 
+export const DetailsPanel = () => {
+  const layoutModule = useModule<ILayoutModule>("Layout");
+  const graphModule = useModule<IGraphModule>("Graph");
 
-export const DetailsPanel = ()=> {
-    const layoutModule = useModule<ILayoutModule>("Layout");
+  const { DetailsPanel } = layoutModule.components;
+  const { useGraph } = graphModule.hooks;
 
-    const { DetailsPanel } = layoutModule.components;
-  
-    return (
-      <DetailsPanel>
-        <UnitPanel />
-      </DetailsPanel>
-    );
-}
+  const manager = useConverterManager((s) => s.selectedNode);
+  const selectedNode = useGraph<ConversionGraph, ConversionNodes | undefined>(
+    CONVERSION_GRAPH_NAME,
+    (g) => manager.state ? g?.nodes[manager.state] as ConversionNodes : undefined
+  );
 
-export default DetailsPanel
+  if (!selectedNode.state) return <></> // TODO: handle error
+
+  return (
+    <DetailsPanel>
+      <>
+      {selectedNode?.state?.type === 'UNIT' && <UnitPanel />}
+      {selectedNode?.state?.type === 'SCALE' && <ScalePanel />}
+      </>
+    </DetailsPanel>
+  );
+};
+
+export default DetailsPanel;

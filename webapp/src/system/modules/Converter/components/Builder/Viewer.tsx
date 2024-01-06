@@ -11,7 +11,7 @@ import { useTheme } from "@mui/material/styles";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { ISVGModule } from "@kernel/modules/SVG";
-import { D3Graph } from "@kernel/modules/SVG/interfaces";
+import { D3Graph, D3Link, D3Node } from "@kernel/modules/SVG/interfaces";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import {
   ConversionGraph,
@@ -20,10 +20,7 @@ import {
 } from "../../typings";
 import useConverterManager from "../../hooks/useConverterManager";
 
-type D3ConversionGraphData = D3Graph & {
-  nodes: ConversionNodes[];
-  links: ConvertionEdges[];
-};
+type D3ConversionGraphData = D3Graph<ConversionNodes & D3Node,ConvertionEdges & D3Link > 
 
 const Viewer = ({ graphId }: { graphId: string }) => {
   const {
@@ -53,13 +50,16 @@ const Viewer = ({ graphId }: { graphId: string }) => {
   const adaptedGraph: D3ConversionGraphData = useMemo(() => {
     if (!graph.state?.nodes) return { nodes: [], links: [] };
 
-    const getGroup = (n: ConversionNodes): string => {
-      if (!graph.state) return "Outros";
+    const getGroup = (n: ConversionNodes): {id?: string, name: string} => {
+      if (!graph.state) return {id: 'other', name:"Outros"};
       const belongsTo = Object.values(graph.state.edges).find(
         (e) => e.sourceId === n.id && e.type === "BELONGS_TO"
       );
-      if (belongsTo) return graph.state.nodes[belongsTo.targetId].name;
-      return "Outros";
+      if (belongsTo) {
+        const node = graph.state.nodes[belongsTo.targetId];
+        return { id: node.id, name: node.name }
+      }
+      return {id: 'other', name:"Outros"};
     };
 
     return {
@@ -115,15 +115,16 @@ const Viewer = ({ graphId }: { graphId: string }) => {
         .filterNode((n) => n.type === "UNIT" || n.type === "COMPOUND_UNIT")
         .filterLink((l) => l.type === "CONVERTS_TO")
         .renderGroup((selection, group, segment, colors, arc, innerRadius) => {
+
           selection
             .selectAll("path")
             .data([group])
             .join("path")
-            .attr("id", (d) => d.name)
-            .on("click", (e) => handleScaleSelection(e.target.id))
+            .attr("id", (d) => d.id)
+            .on("click", (e) => e.target.id !== "other" && handleScaleSelection(e.target.id))
             .attr("class", "group-arc")
             // @ts-ignore TODO: fix typing
-            .attr("fill", (d) => colors(group.name))
+            .attr("fill", (d) => colors(group.id))
             // @ts-ignore TODO: fix typing
             .attr("d", (d, i) => arc(segment));
 
@@ -133,10 +134,10 @@ const Viewer = ({ graphId }: { graphId: string }) => {
             .join("text")
             .attr("class", "group-text")
             .text((d) => d.name)
-            .attr("id", (d) => d.name)
-            .on("click", (e) => handleScaleSelection(e.target.id))
+            .attr("id", (d) => d.id)
+            .on("click", (e) => e.target.id !== "other" && handleScaleSelection(e.target.id))
             // @ts-ignore TODO: fix typing
-            .attr("fill", (d) => colors(d.name))
+            .attr("fill", (d) => colors(d.id))
             .attr("text-anchor", (d, i) =>
               (segment.endAngle + segment.startAngle) / 2 > Math.PI
                 ? "end"
@@ -159,8 +160,10 @@ const Viewer = ({ graphId }: { graphId: string }) => {
             // @ts-ignore TODO: fix typing
             .attr("fill", (d) =>
               converterManager.state?.selectedNode === d.id
-                ? "white"
-                : colors(d.group)
+                ? theme.palette.getContrastText(
+                  theme.palette.background.default
+                )
+                : colors(d.group.id)
             )
             .attr("text-anchor", "middle")
             .on("pointerdown", (e: PointerEvent<SVGTextElement>, d) => {
