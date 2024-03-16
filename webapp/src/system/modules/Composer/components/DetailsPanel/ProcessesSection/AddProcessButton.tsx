@@ -1,8 +1,8 @@
 import { FormEvent, useCallback, useMemo, useState } from "react";
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import AddSharpIcon from "@mui/icons-material/AddSharp";
 
@@ -29,57 +29,71 @@ export const AddProcessButton = ({
   const { CompoundSelector } = converterModule.components;
   const { useScales } = converterModule.hooks;
 
-  const scales = useScales()
   const composition = useComposition(compositionName, (c) => c?.selectedPart);
 
-  const formId = useMemo(()=> _.uniqueId('new-process-form'), [])
+  const formId = useMemo(() => _.uniqueId("new-process-form"), []);
   const [operation, setOperation] = useState<AddOperationPayload>({
     label: "",
-    cost: { quotient: {amount: 1, unit:'R$'},dividend: {amount:1, unit:'un'} },
-    time_taken: { quotient: {amount: 1, unit:'m'},dividend: {amount:1, unit:'un'} },
+    cost: {
+      quotient: { amount: 1, unit: "reais11" },
+      dividend: { amount: 1, unit: "unitario18" },
+    },
+    time_taken: {
+      quotient: { amount: 1, unit: "minutos249" },
+      dividend: { amount: 1, unit: "unitario18" },
+    },
   });
 
+  const handleSubmission = useCallback(
+    (evt: FormEvent<HTMLFormElement>) => {
+      evt.preventDefault();
+      evt.stopPropagation();
 
-  const handleSubmission = useCallback((evt: FormEvent<HTMLFormElement>) => {
-    evt.preventDefault()
-    evt.stopPropagation()
-
-    if (composition.state)
-      composition.actions.addOperation(
-        operation.label,
-        operation.cost,
-        operation.time_taken,
-        composition.state
-      );
-  }, [operation]);
+      if (composition.state)
+        composition.actions.addOperation(
+          operation.label,
+          operation.cost,
+          operation.time_taken,
+          composition.state
+        );
+    },
+    [operation]
+  );
 
   return (
     <PointerContainer
       component={
-        <Box component={'form'} onSubmit={handleSubmission} id={formId} sx={{ display: "flex", flexDirection: "column", flexGrow: 2, gap:1 }}>
+        <Box
+          component={"form"}
+          onSubmit={handleSubmission}
+          id={formId}
+          sx={{ display: "flex", flexDirection: "column", flexGrow: 2, gap: 1 }}
+        >
           <FormControl>
             <TextField
               id="name"
               label="Nome"
               variant="standard"
               sx={{ marginBottom: 1 }}
-              onChange={(evt) =>setOperation((old) => ({ ...old, label: evt.target.value }))}
+              onChange={(evt) =>
+                setOperation((old) => ({ ...old, label: evt.target.value }))
+              }
               value={operation.label}
             />
           </FormControl>
           <CompoundSelector
             id="time-taken"
             label="Tempo"
-            quotientUnitsAvailable={()=> scales.time}
-            dividendUnitsAvailable={()=> [{value:'un', label: 'Un'}]}
+            filterDividends={(unit) => unit.abbreviation === "un"}
+            filterQuotients={(_, scale)=> scale?.name === 'Temporal'}
             value={operation.time_taken}
-            onChange={(v) => setOperation(old => ({ ...old, time_taken: v }))}
+            onChange={(v) => setOperation((old) => ({ ...old, time_taken: v }))}
           />
           <CompoundSelector
             id="cost"
             label="Custo"
-            quotientUnitsAvailable={()=> [{value:'R$', label: 'R$'}, {value:'$', label: 'USD'}]}
-            dividendUnitsAvailable={()=> [{value:'un', label: 'Un'}]}
+            filterDividends={(unit, scale) => unit.abbreviation === "un" || scale?.name == 'Temporal'}
+            filterQuotients={(_, scale)=> scale?.name === 'Monetaria'}
             value={operation.cost}
             onChange={(v) => setOperation((old) => ({ ...old, cost: v }))}
           />
@@ -92,7 +106,7 @@ export const AddProcessButton = ({
           value={"Submit"}
           color="success"
           key="accept"
-          handleConfirm={()=>null}
+          handleConfirm={() => null}
         />,
       ]}
     >

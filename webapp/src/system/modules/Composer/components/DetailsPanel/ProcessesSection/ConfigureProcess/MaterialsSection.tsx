@@ -3,13 +3,20 @@ import _ from "lodash";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { GridColDef, GridRenderEditCellParams, useGridApiContext } from "@mui/x-data-grid";
+import {
+  GridColDef,
+  GridRenderEditCellParams,
+  useGridApiContext,
+} from "@mui/x-data-grid";
 
 import useModule from "@kernel/hooks/useModule";
 import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 import type Edge from "@kernel/modules/Graphs/interfaces/Edge";
-import type { EdgesHashMap, NodesHashMap } from "@kernel/modules/Graphs/store/state";
+import type {
+  EdgesHashMap,
+  NodesHashMap,
+} from "@kernel/modules/Graphs/store/state";
 
 // TODO: enforce to only allow import type from other systems modules
 import type { IConverterModule } from "@system/modules/Converter";
@@ -20,17 +27,14 @@ import type {
   CompositionGraph,
   CompositionNode,
   ConsumesEdge,
-  MaterialUsageNode,
 } from "../../../../store/composition/state";
-import CRUDMaterialUsageEditCell  from "./CRUDMaterialUsageEditCell";
-
+import CRUDMaterialUsageEditCell from "./CRUDMaterialUsageEditCell";
 
 function RenderEditCellQuantity({
   row,
   id,
-  field
+  field,
 }: GridRenderEditCellParams<ConsumesEdge>) {
-
   const apiRef = useGridApiContext();
 
   const converterModule = useModule<IConverterModule>("Converter");
@@ -39,26 +43,26 @@ function RenderEditCellQuantity({
     components: { CompoundSelector },
   } = converterModule;
 
-  const handleChange = useCallback((v: CompoundValue)=> {
-    apiRef.current.setEditCellValue({id, field, value: v})
-  }, [id])
-  
-  return <CompoundSelector
-  id="quantity"
-  quotientUnitsAvailable={() => [
-    { value: "cm", label: "cm" },
-    { value: "m", label: "m" },
-    { value: "cm2", label: "cm²" },
-    { value: "m2", label: "m²" },
-    { value: "cm3", label: "cm³" },
-    { value: "m3", label: "m³" },
-    { value: "ml", label: "ml" },
-    { value: "l", label: "l" },
-  ]}
-  dividendUnitsAvailable={() => [{ value: "un", label: "Un" }]}
-  value={row.quantity}
-  onChange={handleChange}
-/>;
+  const handleChange = useCallback(
+    (v: CompoundValue) => {
+      apiRef.current.setEditCellValue({ id, field, value: v });
+    },
+    [id]
+  );
+
+  return (
+    <CompoundSelector
+      id="quantity"
+      filterQuotients={(unit, scale) =>
+        scale?.name === "Comprimento" ||
+        scale?.name === "Volume" ||
+        scale?.name === "Area"
+      }
+      filterDividends={(unit, scale) => unit.abbreviation === "un"}
+      value={row.quantity}
+      onChange={handleChange}
+    />
+  );
 }
 
 export default ({ compositionState, processId }: ConfigProcessProps) => {
@@ -118,7 +122,7 @@ export default ({ compositionState, processId }: ConfigProcessProps) => {
 
   useEffect(() => {
     if (usageEdges?.length) {
-      setRows(usageEdges.map(ue => ({...ue, state: 'untouched'})));
+      setRows(usageEdges.map((ue) => ({ ...ue, state: "untouched" })));
     }
   }, usageEdges);
 
@@ -133,7 +137,7 @@ export default ({ compositionState, processId }: ConfigProcessProps) => {
       renderCell: ({ row: { targetId }, value }) => (
         <>{state.nodes[targetId]?.label}</>
       ),
-      renderEditCell: ({value, ...props}) => (
+      renderEditCell: ({ value, ...props }) => (
         <CRUDMaterialUsageEditCell
           value={value ?? props.row.targetId}
           partId={compositionState.selectedPart!}
@@ -147,13 +151,15 @@ export default ({ compositionState, processId }: ConfigProcessProps) => {
       field: "quantity",
       editable: true,
       flex: 2,
-      width:800,
-      minWidth:400,
+      width: 800,
+      minWidth: 400,
       align: "center",
-      headerAlign: 'center',
+      headerAlign: "center",
       renderHeader: () => "Quantidade",
       renderCell: ({ row: { quantity } }) => <CompoundUnit value={quantity} />,
-      renderEditCell: (props: GridRenderEditCellParams<ConsumesEdge>) => <RenderEditCellQuantity {...props}/>,
+      renderEditCell: (props: GridRenderEditCellParams<ConsumesEdge>) => (
+        <RenderEditCellQuantity {...props} />
+      ),
     },
   ];
 

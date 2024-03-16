@@ -1,15 +1,17 @@
+import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import Select, { SelectProps } from "@mui/material/Select";
 
-import Box from '@mui/material/Box';
-import {BoxProps, SelectChangeEvent} from '@mui/material';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
+import TextField, { TextFieldProps } from "@mui/material/TextField";
+import type { BoxProps, SelectChangeEvent } from "@mui/material";
 
-import TextField from '@mui/material/TextField';
-import { UnitValue } from "../typings";
+import type { UnitValue } from "../typings";
 
 export interface UnitSelectorProps extends Omit<BoxProps, "onChange"> {
   value: UnitValue;
   onChange: (v: UnitValue) => void;
+  selectorProps?: SelectProps;
+  textFieldProps?: TextFieldProps;
   children: React.ReactNode | React.ReactNode[];
 }
 
@@ -17,6 +19,8 @@ export default function UnitSelector({
   onChange,
   value,
   children,
+  selectorProps = { sx: {} },
+  textFieldProps = { sx: {} },
   ...props
 }: UnitSelectorProps) {
   return (
@@ -27,7 +31,7 @@ export default function UnitSelector({
           size="small"
           type="number"
           autoComplete="off"
-          sx={{ width: "min-content", minWidth: 80 }}
+          sx={{ ...selectorProps.sx, width: "max(min-content, 100px)", minWidth: 80 }}
           value={value.amount}
           onChange={(evt: React.ChangeEvent<HTMLInputElement>) =>
             onChange({ unit: value.unit, amount: evt.target.valueAsNumber })
@@ -39,14 +43,13 @@ export default function UnitSelector({
           id="unit-selector"
           inputProps={{ id: "unit" }}
           size="small"
-          sx={{ width: "min-content" }}
+          sx={{ ...textFieldProps.sx, width: "max(min-content, 100px)", minWidth: 100 }}
           onChange={(evt: SelectChangeEvent<string>) =>
             onChange({ amount: value.amount, unit: evt.target.value })
           }
           value={value.unit}
         >
           {children}
-          {/* <MenuItem value={"un"}>Un</MenuItem> */}
         </Select>
       </FormControl>
     </Box>
