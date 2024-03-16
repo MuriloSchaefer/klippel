@@ -53,6 +53,9 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: ./webapp
+      - name: Add CNAME
+        run: echo sandbox.klippel.app.br > ./CNAME
+        working-directory: ./webapp
         
       - name: Push
         uses: s0/git-publish-subdir-action@develop
