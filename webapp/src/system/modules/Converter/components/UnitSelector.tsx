@@ -31,7 +31,7 @@ export default function UnitSelector({
           size="small"
           type="number"
           autoComplete="off"
-          sx={{ ...selectorProps.sx, width: "max(min-content, 100px)", minWidth: 80 }}
+          sx={{ ...selectorProps.sx, width: "100px", minWidth: 80 }}
           value={value.amount}
           onChange={(evt: React.ChangeEvent<HTMLInputElement>) =>
             onChange({ unit: value.unit, amount: evt.target.valueAsNumber })

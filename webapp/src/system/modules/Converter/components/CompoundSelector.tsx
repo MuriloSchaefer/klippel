@@ -72,36 +72,38 @@ export default function CompoundSelector({
     <Box
       role="compound-selector"
       width={"min-content"}
-      sx={{ display: "flex", gap: 2, alignItems: "baseline" }}
+      sx={{ display: "flex", gap: 1, alignItems: "baseline"}}
     >
-      {label && <Typography gutterBottom>{label}</Typography>}
-      <UnitSelector
-        key="quotient"
-        id="quotient-selector"
-        value={value.quotient}
-        onChange={(v: UnitValue) => onChange({ ...value, quotient: v })}
-        sx={{ width: "max-content" }}
-      >
-        {filteredQuotients.map(({ id, name, abbreviation }) => (
-          <MenuItem key={id} value={id}>
-            {abbreviation}
-          </MenuItem>
-        ))}
-      </UnitSelector>
-      <span>/</span>
-      <UnitSelector
-        key="dividend"
-        id="dividend-selector"
-        value={value.dividend}
-        onChange={(v: UnitValue) => onChange({ ...value, dividend: v })}
-        //sx={{width: 'max-content'}}
-      >
-        {filteredDividends.map(({ id, name, abbreviation }) => (
-          <MenuItem key={id} value={id}>
-            {abbreviation}
-          </MenuItem>
-        ))}
-      </UnitSelector>
+      {label && <Typography gutterBottom sx={{minWidth: '50px'}}>{label}</Typography>}
+      <Box sx={{ display: "flex", gap: 1, alignItems: "baseline"}}>
+        <UnitSelector
+          key="quotient"
+          id="quotient-selector"
+          value={value.quotient}
+          onChange={(v: UnitValue) => onChange({ ...value, quotient: v })}
+          selectorProps={{ sx: {width: '10px'} }}
+        >
+          {filteredQuotients.map(({ id, name, abbreviation }) => (
+            <MenuItem key={id} value={id}>
+              {abbreviation}
+            </MenuItem>
+          ))}
+        </UnitSelector>
+        <span>/</span>
+        <UnitSelector
+          key="dividend"
+          id="dividend-selector"
+          value={value.dividend}
+          onChange={(v: UnitValue) => onChange({ ...value, dividend: v })}
+          sx={{width: 'max-content'}}
+        >
+          {filteredDividends.map(({ id, name, abbreviation }) => (
+            <MenuItem key={id} value={id}>
+              {abbreviation}
+            </MenuItem>
+          ))}
+        </UnitSelector>
+      </Box>
     </Box>
   );
 }

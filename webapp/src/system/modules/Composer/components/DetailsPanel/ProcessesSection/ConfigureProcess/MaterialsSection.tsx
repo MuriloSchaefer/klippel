@@ -152,7 +152,7 @@ export default ({ compositionState, processId }: ConfigProcessProps) => {
       editable: true,
       flex: 2,
       width: 800,
-      minWidth: 400,
+      minWidth: 500,
       align: "center",
       headerAlign: "center",
       renderHeader: () => "Quantidade",
@@ -183,8 +183,8 @@ export default ({ compositionState, processId }: ConfigProcessProps) => {
             sourceId: processId,
             targedId: "",
             quantity: {
-              quotient: { amount: 1, unit: "cm2" },
-              dividend: { amount: 1, unit: "un" },
+              quotient: { amount: 1, unit: "metrosquadrados17" },
+              dividend: { amount: 1, unit: "unitario18" },
             },
           };
         }}

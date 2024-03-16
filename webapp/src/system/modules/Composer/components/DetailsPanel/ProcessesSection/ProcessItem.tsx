@@ -1,17 +1,16 @@
-
-import Box from '@mui/material/Box';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import Typography from "@mui/material/Typography";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
 import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
 import AttachMoneySharpIcon from "@mui/icons-material/AttachMoneySharp";
 
-
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/Graphs";
+import type { IGraphModule } from "@kernel/modules/Graphs";
 
-import { OperationNode } from "../../../store/composition/state";
+import type { IConverterModule } from "@system/modules/Converter";
+import type { OperationNode } from "../../../store/composition/state";
 
 const ProcessItem = ({
   graphId,
@@ -21,19 +20,27 @@ const ProcessItem = ({
   nodeId: string;
 }) => {
   const graphModule = useModule<IGraphModule>("Graph");
+  const converterModule = useModule<IConverterModule>("Converter");
   const { useNodeInfo } = graphModule.hooks;
+  const { useUnits } = converterModule.hooks;
 
   const { node } = useNodeInfo<OperationNode>(graphId, nodeId);
+  const units = useUnits([
+    node.cost.dividend.unit,
+    node.cost.quotient.unit,
+    node.time_taken.dividend.unit,
+    node.time_taken.quotient.unit,
+  ]);
+
+  if (!units) return <></>; // TODO: add error handling
 
   return (
     <ListItem>
       <ListItemText
         disableTypography={true}
         primary={
-          <Box sx={{marginBottom:1}}>
-            <Typography>
-              {node.label}
-            </Typography>
+          <Box sx={{ marginBottom: 1 }}>
+            <Typography>{node.label}</Typography>
             <Divider />
           </Box>
         }
@@ -49,14 +56,15 @@ const ProcessItem = ({
             >
               <Box sx={{ display: "flex", gap: 0.3, alignItems: "center" }}>
                 <AccessTimeSharpIcon /> {node.time_taken.quotient.amount}{" "}
-                {node.time_taken.quotient.unit} /{" "}
+                {units[node.time_taken.quotient.unit].abbreviation} /{" "}
                 {node.time_taken.dividend.amount}{" "}
-                {node.time_taken.dividend.unit}
+                {units[node.time_taken.dividend.unit].abbreviation}
               </Box>
               <Box sx={{ display: "flex", gap: 0.3, alignItems: "center" }}>
                 <AttachMoneySharpIcon /> {node.cost.quotient.amount}{" "}
-                {node.cost.quotient.unit} / {node.cost.dividend.amount}{" "}
-                {node.cost.dividend.unit}
+                {units[node.cost.quotient.unit].abbreviation} /{" "}
+                {node.cost.dividend.amount}{" "}
+                {units[node.cost.dividend.unit].abbreviation}
               </Box>
             </Box>
           </Typography>

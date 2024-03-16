@@ -20,6 +20,7 @@ import {
   updateRestriction,
 } from "../store/composition/actions";
 import { ComposerState } from "../store/state";
+import type { IMaterialsModule } from '../../Materials/index';
 import {
   AllowOnlyRestrictionNode,
   CompositionGraph,
@@ -74,13 +75,13 @@ const useComposition = <C = Composition, R = C>(
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>("Graph");
-  const svgModule = useModule<ISVGModule>("SVG");
+  const materialsModule = useModule<IMaterialsModule>("Materials");
 
   const { useAppDispatch, useAppSelector } = storeModule.hooks;
   const dispatch = useAppDispatch();
   const panelsManager = layoutModule.hooks.usePanelsManager();
   const { useGraph } = graphModule.hooks;
-  const { useSVG } = svgModule.hooks;
+  const {useMaterials} = materialsModule.hooks
 
   const selector = createSelector(
     (state: { Composer: ComposerState } | undefined) =>
@@ -101,6 +102,8 @@ const useComposition = <C = Composition, R = C>(
       nodes: g?.nodes
     })
   );
+
+  const materials = useMaterials()
 
   return {
     state: compositionState,
@@ -136,6 +139,19 @@ const useComposition = <C = Composition, R = C>(
         graph.actions.removeNode(partId)
       },
       addMaterialUsage(label, partId, materialTypes){
+        materialTypes.forEach(type => {
+          if (!Object.values(graph.state?.nodes ?? {}).find(n => n.id === type)){
+            console.log('adding type node')
+            graph.actions.addNode({
+              id: type,
+              type: 'MATERIAL_TYPE',
+              label: materials[type].label,
+
+            })
+          }
+
+        })
+
         const nodeId = _.uniqueId(`material-usage-`)
         const materialUsageNode: MaterialUsageNode = {
           type: "MATERIAL_USAGE",

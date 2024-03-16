@@ -4,6 +4,7 @@ import MaterialTypeSelector from "./components/selectors/MaterialType";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import { startModule } from "./kernelCalls";
 import CRUDMaterialTypeCell from "./components/selectors/CRUDMaterialTypeCell";
+import useMaterials from "./hooks/useMaterials";
 
 export interface IMaterialsModule extends IModule {
     components: {
@@ -20,6 +21,7 @@ export interface IMaterialsModule extends IModule {
         }
     }
     hooks: {
+        useMaterials: typeof useMaterials
     }
 }
 const module: IMaterialsModule = {
@@ -38,7 +40,7 @@ const module: IMaterialsModule = {
         reducers: {
         },
     },
-    hooks: {},
+    hooks: {useMaterials},
     constants: {},
     kernelCalls: {
         startModule: startModule,

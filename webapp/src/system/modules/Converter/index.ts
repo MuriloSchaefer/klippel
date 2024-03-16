@@ -5,6 +5,7 @@ import ScaleSlider from "./components/ScaleSlider";
 import UnitSelector from "./components/UnitSelector";
 import CompoundSelector from "./components/CompoundSelector";
 import { useScales } from "./hooks/useScales";
+import useUnits from "./hooks/useUnits";
 import CompoundUnit from './components/CompondUnit';
 import CoverterGraphViewport from "./components/Builder/ConverterGraphViewport";
 
@@ -25,7 +26,8 @@ export interface IConverterModule extends IModule {
         }
     }
     hooks: {
-        useScales: typeof useScales
+        useScales: typeof useScales,
+        useUnits: typeof useUnits
     }
 }
 const module: IConverterModule = {
@@ -46,7 +48,7 @@ const module: IConverterModule = {
         reducers: {
         },
     },
-    hooks: {useScales},
+    hooks: {useScales,useUnits},
     constants: {},
     kernelCalls: {
         startModule: startModule,
