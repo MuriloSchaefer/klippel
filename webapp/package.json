@@ -34,11 +34,11 @@
   },
   "scripts": {
     "start": "vite --host",
-    "build": "tsc && vite build --base=./",
+    "build": "tsc && vite build --base=./ && echo sandbox.klippel.app.br > ./dist/CNAME",
     "test": "jest",
     "serve": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist && echo sandbox.klippel.app.br > ./dist/CNAME"
+    "deploy": "gh-pages -d dist"
   },
   "eslintConfig": {
     "extends": "react-app"
