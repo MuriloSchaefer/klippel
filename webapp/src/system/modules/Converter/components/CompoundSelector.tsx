@@ -1,32 +1,77 @@
+import { BoxProps } from "@mui/material";
+import Box from "@mui/material/Box";
+import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 import {
-  BoxProps,
-} from "@mui/material";
-import Box from '@mui/material/Box';
-import MenuItem from '@mui/material/MenuItem';
-import Typography from '@mui/material/Typography';
-import { CompoundValue, UnitValue } from "../typings";
+  CompoundValue,
+  ConversionGraph,
+  ScaleNode,
+  UnitNode,
+  UnitValue,
+} from "../typings";
 import UnitSelector from "./UnitSelector";
+import { IGraphModule } from "@kernel/modules/Graphs";
+import useModule from "@kernel/hooks/useModule";
+import { CONVERSION_GRAPH_NAME } from "../constants";
+import { useMemo } from "react";
 
 interface CompoundSelectorProps extends Omit<BoxProps, "onChange"> {
-  quotientUnitsAvailable: () => { value: string; label: string }[];
-  dividendUnitsAvailable: () => { value: string; label: string }[];
-  label?: string;
-  value: CompoundValue;
-  onChange: (v: CompoundValue) => void;
+  readonly label?: string;
+  readonly value: CompoundValue;
+  readonly onChange: (v: CompoundValue) => void;
+  readonly filterQuotients?: (unit: UnitNode, scale?: ScaleNode) => boolean;
+  readonly filterDividends?: (unit: UnitNode, scale?: ScaleNode) => boolean;
 }
 
+type NodeNScale = UnitNode & {
+  scale?: ScaleNode;
+};
+
 export default function CompoundSelector({
-  quotientUnitsAvailable,
-  dividendUnitsAvailable,
   label,
   value,
   onChange,
+  filterQuotients = () => true,
+  filterDividends = () => true,
 }: CompoundSelectorProps) {
+  const graphModule = useModule<IGraphModule>("Graph");
+
+  const { useGraph } = graphModule.hooks;
+
+  const storedState = useGraph<ConversionGraph, NodeNScale[]>(
+    CONVERSION_GRAPH_NAME,
+    (g) =>
+      Object.values(g?.nodes ?? {})
+        .filter((n): n is UnitNode => n.type === "UNIT")
+        .map((node) => ({
+          ...node,
+          scale: Object.values(g?.nodes ?? {})
+            .filter((n): n is ScaleNode => n.type === "SCALE")
+            .find((s) =>
+              g?.adjacencyList[node.id].outputs.includes(
+                `${node.id} -> ${s.id}`
+              )
+            ),
+        }))
+  );
+
+  const filteredQuotients = useMemo(
+    () =>
+      storedState?.state?.filter((unit) => filterQuotients(unit, unit.scale)) ??
+      [],
+    [storedState.state, filterQuotients]
+  );
+  const filteredDividends = useMemo(
+    () =>
+      storedState?.state?.filter((unit) => filterDividends(unit, unit.scale)) ??
+      [],
+    [storedState.state, filterQuotients]
+  );
 
   return (
     <Box
       role="compound-selector"
-      width={'min-content'}
+      width={"min-content"}
       sx={{ display: "flex", gap: 2, alignItems: "baseline" }}
     >
       {label && <Typography gutterBottom>{label}</Typography>}
@@ -35,9 +80,12 @@ export default function CompoundSelector({
         id="quotient-selector"
         value={value.quotient}
         onChange={(v: UnitValue) => onChange({ ...value, quotient: v })}
+        sx={{ width: "max-content" }}
       >
-        {quotientUnitsAvailable().map(({ value, label }) => (
-          <MenuItem key={value} value={value}>{label}</MenuItem>
+        {filteredQuotients.map(({ id, name, abbreviation }) => (
+          <MenuItem key={id} value={id}>
+            {abbreviation}
+          </MenuItem>
         ))}
       </UnitSelector>
       <span>/</span>
@@ -46,9 +94,12 @@ export default function CompoundSelector({
         id="dividend-selector"
         value={value.dividend}
         onChange={(v: UnitValue) => onChange({ ...value, dividend: v })}
+        //sx={{width: 'max-content'}}
       >
-        {dividendUnitsAvailable().map(({ value, label }) => (
-          <MenuItem key={value} value={value}>{label}</MenuItem>
+        {filteredDividends.map(({ id, name, abbreviation }) => (
+          <MenuItem key={id} value={id}>
+            {abbreviation}
+          </MenuItem>
         ))}
       </UnitSelector>
     </Box>

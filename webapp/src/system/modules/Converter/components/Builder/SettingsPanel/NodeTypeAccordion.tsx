@@ -5,14 +5,9 @@ import ListItem from "@mui/material/ListItem";
 
 import NewUnitButton from "./NewUnitButton";
 import NewScaleButton from "./NewScaleButton";
+import NewCompositeUnitButton from "./NewCompositeUnitButton";
 
 export default () => {
-
-  const NODE_TYPES = [
-    {key: 'unit', component: <NewUnitButton />},
-    {key: 'scale', component: <NewScaleButton />},
-  ];
-
   return (
     <List
       role="list-options"
@@ -21,9 +16,17 @@ export default () => {
         overflow: "auto",
       }}
     >
-      {NODE_TYPES.map(({key, component}) => (
-        <ListItem key={key} disableGutters>{component}</ListItem>
-      ))}
+      <ListItem key="unit" disableGutters>
+        <NewUnitButton />
+      </ListItem>
+
+      <ListItem key="compositeUnit" disableGutters>
+        <NewCompositeUnitButton />
+      </ListItem>
+
+      <ListItem key="scale" disableGutters>
+        <NewScaleButton />
+      </ListItem>
     </List>
   );
 };
