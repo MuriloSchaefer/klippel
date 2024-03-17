@@ -1,19 +1,23 @@
+import { useMemo } from "react";
+
 import { BoxProps } from "@mui/material";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+
+import { IGraphModule } from "@kernel/modules/Graphs";
+import useModule from "@kernel/hooks/useModule";
+
 import {
   CompoundValue,
   ConversionGraph,
+  NodeNScale,
   ScaleNode,
   UnitNode,
   UnitValue,
 } from "../typings";
-import UnitSelector from "./UnitSelector";
-import { IGraphModule } from "@kernel/modules/Graphs";
-import useModule from "@kernel/hooks/useModule";
+import UnitAmountSelector from "./UnitAmountSelector";
 import { CONVERSION_GRAPH_NAME } from "../constants";
-import { useMemo } from "react";
 
 interface CompoundSelectorProps extends Omit<BoxProps, "onChange"> {
   readonly label?: string;
@@ -22,10 +26,6 @@ interface CompoundSelectorProps extends Omit<BoxProps, "onChange"> {
   readonly filterQuotients?: (unit: UnitNode, scale?: ScaleNode) => boolean;
   readonly filterDividends?: (unit: UnitNode, scale?: ScaleNode) => boolean;
 }
-
-type NodeNScale = UnitNode & {
-  scale?: ScaleNode;
-};
 
 export default function CompoundSelector({
   label,
@@ -76,7 +76,7 @@ export default function CompoundSelector({
     >
       {label && <Typography gutterBottom sx={{minWidth: '50px'}}>{label}</Typography>}
       <Box sx={{ display: "flex", gap: 1, alignItems: "baseline"}}>
-        <UnitSelector
+        <UnitAmountSelector
           key="quotient"
           id="quotient-selector"
           value={value.quotient}
@@ -88,9 +88,9 @@ export default function CompoundSelector({
               {abbreviation}
             </MenuItem>
           ))}
-        </UnitSelector>
+        </UnitAmountSelector>
         <span>/</span>
-        <UnitSelector
+        <UnitAmountSelector
           key="dividend"
           id="dividend-selector"
           value={value.dividend}
@@ -102,7 +102,7 @@ export default function CompoundSelector({
               {abbreviation}
             </MenuItem>
           ))}
-        </UnitSelector>
+        </UnitAmountSelector>
       </Box>
     </Box>
   );

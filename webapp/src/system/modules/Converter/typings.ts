@@ -74,3 +74,7 @@ export type ConversionNodes = UnitNode | CompoundNode | ScaleNode
 export type ConvertionEdges = QuotientEdge | DividendEdge | ConvertsToEdge | BelongsToSerieEdge
 
 export type ConversionGraph = GraphState<ConversionNodes, ConvertionEdges>;
+
+export type NodeNScale = UnitNode & {
+    scale?: ScaleNode;
+  };

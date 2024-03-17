@@ -1,6 +1,6 @@
 # Klippel app
 
-[![pages-build-deployment](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages)](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MuriloSchaefer_composer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=MuriloSchaefer_composer)
+[![Deploy](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages)](https://github.com/MuriloSchaefer/composer/actions/workflows/pages/pages-build-deployment) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MuriloSchaefer_composer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=MuriloSchaefer_composer)
 
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=MuriloSchaefer_composer&metric=bugs)](https://sonarcloud.io/summary/new_code?id=MuriloSchaefer_composer)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=MuriloSchaefer_composer&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=MuriloSchaefer_composer)
