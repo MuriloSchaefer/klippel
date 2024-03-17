@@ -35,8 +35,10 @@ export interface UnitNode extends Node {
 
 export interface CompoundNode extends Node {
     type: 'COMPOUND_UNIT'
-    abbreviation: Unit
-    name: string 
+    quotientUnitId: string;
+    dividendUnitId: string;
+    abbreviation: string;
+    name: string;
 }
 export interface ScaleNode extends Node {
     type: 'SCALE'
@@ -52,20 +54,20 @@ export interface DividendEdge extends Edge {
 
 export interface LinearConversion extends Edge {
     type: 'CONVERTS_TO'
-    conversionType: 'multiplication' | 'division' 
+    conversionType: 'factor' 
     factor: number
 }
 
-export interface ParametrizedConversion extends Edge {
+export interface ExpressionConversion extends Edge {
     type: 'CONVERTS_TO'
-    conversionType: 'parametrized'
+    conversionType: 'expression'
     expression: string
     params?: {
         [name: string]: string
     }
 }
 
-export type ConvertsToEdge = LinearConversion | ParametrizedConversion
+export type ConvertsToEdge = LinearConversion | ExpressionConversion
 export interface BelongsToSerieEdge extends Edge {
     type: 'BELONGS_TO'
 }

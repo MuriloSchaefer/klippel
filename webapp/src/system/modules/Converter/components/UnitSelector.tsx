@@ -5,14 +5,14 @@ import { CONVERSION_GRAPH_NAME } from "../constants";
 import { useMemo } from "react";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
-import Select, { SelectChangeEvent, SelectProps } from "@mui/material/Select";
+import Select, { SelectProps } from "@mui/material/Select";
 
 type UnitSelectorProps = SelectProps<string> & {
     value?: string
   filterUnits?: (unit: UnitNode, scale?: ScaleNode) => boolean;
 };
 
-export default ({ value, filterUnits = () => true, ...props }: UnitSelectorProps) => {
+export default ({ value, onChange, filterUnits = () => true, ...props }: UnitSelectorProps) => {
   const graphModule = useModule<IGraphModule>("Graph");
 
   const { useGraph } = graphModule.hooks;
@@ -47,7 +47,7 @@ export default ({ value, filterUnits = () => true, ...props }: UnitSelectorProps
         inputProps={{ id: "unit" }}
         size="small"
         sx={{ width: "max(min-content, 100px)", minWidth: 100 }}
-        onChange={(evt: SelectChangeEvent<string>) => console.log(evt)}
+        onChange={onChange}
         value={value}
         {...props}
       >

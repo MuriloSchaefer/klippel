@@ -7,16 +7,15 @@ import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 
 import useConverterManager from "../../../hooks/useConverterManager";
+import UnitSelector from "../../UnitSelector";
 
 type NewCompositeUnitForm = {
-  name?: string;
-  abbreviation?: string;
-  scale?: string;
+  quotientUnit: string;
+  dividendUnit: string;
 };
 const FORM_INITIAL_STATE: NewCompositeUnitForm = {
-  name: undefined,
-  abbreviation: undefined,
-  scale: undefined,
+  quotientUnit: "",
+  dividendUnit: "",
 };
 
 export default () => {
@@ -28,8 +27,7 @@ export default () => {
   const [form, setForm] = useState<NewCompositeUnitForm>(FORM_INITIAL_STATE);
 
   const handleClick = useCallback(() => {
-    if (!form.name || !form.abbreviation) return;
-    manager.addUnit(form.name, form.abbreviation, form.scale);
+    manager.addCompoundUnit(form.quotientUnit, form.dividendUnit)
     setForm(FORM_INITIAL_STATE);
   }, [form, manager]);
 
@@ -39,11 +37,23 @@ export default () => {
         <Box
           sx={{
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-evenly",
             gap: 1,
           }}
         >
-          
+          <UnitSelector
+            value={form.quotientUnit}
+            onChange={(evt, v) =>
+              setForm((old) => ({ ...old, quotientUnit: evt.target.value }))
+            }
+          />
+          <span>/</span>
+          <UnitSelector value={form.dividendUnit} 
+            onChange={(evt, v) =>
+              setForm((old) => ({ ...old, dividendUnit: evt.target.value }))
+            }/>
         </Box>
       }
       actions={[

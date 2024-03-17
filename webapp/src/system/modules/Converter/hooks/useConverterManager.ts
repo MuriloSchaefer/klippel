@@ -6,7 +6,7 @@ import type { Store } from "@kernel/modules/Store";
 import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 
-import { ConversionGraph, ScaleNode, UnitNode } from "../typings";
+import { CompoundNode, ConversionGraph, DividendEdge, QuotientEdge, ScaleNode, UnitNode } from "../typings";
 import { CONVERSION_GRAPH_NAME } from "../constants";
 import { selectNode } from "../store/actions";
 import { ConverterState } from "../store/state";
@@ -20,6 +20,8 @@ export type ConverterManager<R> = {
     abbreviation: string,
     scale?: string
   ) => void;
+  addCompoundUnit: (quotientUnit: string, dividendUnit: string) => void;
+  updateCompoundUnit: (id:string, quotientUnit: string, dividendUnit: string) => void;
   addScale: (name: string) => void;
   selectNode: (nodeId: string) => void;
   state: R;
@@ -94,6 +96,45 @@ export const useConverterManager = <R = ConverterState>(
           targetId: scale,
         });
       } else if (belongsToEdge) graph.actions.removeEdge(belongsToEdge.id);
+    },
+    addCompoundUnit: (quotiendUnit, dividendUnit) => {
+      const quotient = graph.state?.nodes[quotiendUnit] as UnitNode
+      const dividend = graph.state?.nodes[dividendUnit] as UnitNode
+      const unitId = `${quotient.abbreviation} / ${dividend.abbreviation}`;
+      const exists = graph.state?.nodes[unitId]
+      if (exists) {
+        console.error('unit already exists! skipping it.')
+        return
+      }
+      const node: CompoundNode = {
+        id: unitId,
+        type: 'COMPOUND_UNIT',
+        position: {x:0, y:0},
+        quotientUnitId: quotiendUnit,
+        dividendUnitId: dividendUnit,
+        abbreviation: unitId,
+        name: `${quotient.name} per ${dividend.name}`
+      }
+      const quotientEdge: QuotientEdge = {
+        id: `${unitId}->${quotiendUnit}`,
+        type: 'QUOTIENT',
+        sourceId: unitId,
+        targetId: quotiendUnit,
+      }
+      const dividendEdge: DividendEdge = {
+        id: `${unitId}->${dividendUnit}`,
+        type: 'DIVIDEND',
+        sourceId: unitId,
+        targetId: dividendUnit,
+      }
+
+      graph.actions.addNode(node)
+
+      graph.actions.addEdge(quotientEdge)
+      graph.actions.addEdge(dividendEdge)
+    },
+    updateCompoundUnit: (id, quotientUnit, dividendUnit) => {
+
     },
     addScale: (name) => {
       graph.actions.addNode({

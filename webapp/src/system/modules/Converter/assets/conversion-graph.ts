@@ -206,7 +206,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         x: 0,
         y: 0
       },
-      abbreviation: 's'
+      abbreviation: 'seg'
     },
     minutos249: {
       type: 'UNIT',
@@ -216,7 +216,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         x: 0,
         y: 0
       },
-      abbreviation: 'm'
+      abbreviation: 'min'
     },
     hora250: {
       type: 'UNIT',
@@ -246,7 +246,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         x: 0,
         y: 0
       },
-      abbreviation: 'm'
+      abbreviation: 'mes'
     },
     semana253: {
       type: 'UNIT',
@@ -257,6 +257,93 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         y: 0
       },
       abbreviation: 'sem'
+    },
+    peso5: {
+      type: 'SCALE',
+      id: 'peso5',
+      name: 'Peso',
+      position: {
+        x: 0,
+        y: 0
+      }
+    },
+    kilogramas6: {
+      type: 'UNIT',
+      id: 'kilogramas6',
+      name: 'Kilogramas',
+      position: {
+        x: 0,
+        y: 0
+      },
+      abbreviation: 'Kg'
+    },
+    gramas7: {
+      type: 'UNIT',
+      id: 'gramas7',
+      name: 'gramas',
+      position: {
+        x: 0,
+        y: 0
+      },
+      abbreviation: 'g'
+    },
+    miligramas8: {
+      type: 'UNIT',
+      id: 'miligramas8',
+      name: 'miligramas',
+      position: {
+        x: 0,
+        y: 0
+      },
+      abbreviation: 'mg'
+    },
+    'un / min': {
+      id: 'un / min',
+      type: 'COMPOUND_UNIT',
+      position: {
+        x: 0,
+        y: 0
+      },
+      quotientUnitId: 'unitario18',
+      dividendUnitId: 'minutos249',
+      abbreviation: 'un / min',
+      name: 'unitario per minutos'
+    },
+    'R$ / h': {
+      id: 'R$ / h',
+      type: 'COMPOUND_UNIT',
+      position: {
+        x: 0,
+        y: 0
+      },
+      quotientUnitId: 'reais11',
+      dividendUnitId: 'hora250',
+      abbreviation: 'R$ / h',
+      name: 'reais per hora'
+    },
+    'R$ / un': {
+      id: 'R$ / un',
+      type: 'COMPOUND_UNIT',
+      position: {
+        x: 0,
+        y: 0
+      },
+      quotientUnitId: 'reais11',
+      dividendUnitId: 'unitario18',
+      abbreviation: 'R$ / un',
+      name: 'reais per unitario'
+    },
+    'un / h': {
+      id: 'un / h',
+      type: 'COMPOUND_UNIT',
+      position: {
+        x: 0,
+        y: 0
+      },
+      quotientUnitId: 'unitario18',
+      dividendUnitId: 'hora250',
+      abbreviation: 'un / h',
+      name: 'unitario per hora'
     }
   },
   edges: {
@@ -373,6 +460,72 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: 'BELONGS_TO',
       sourceId: 'semana253',
       targetId: 'temporal247'
+    },
+    'kilogramas6 -> peso5': {
+      id: 'kilogramas6 -> peso5',
+      type: 'BELONGS_TO',
+      sourceId: 'kilogramas6',
+      targetId: 'peso5'
+    },
+    'gramas7 -> peso5': {
+      id: 'gramas7 -> peso5',
+      type: 'BELONGS_TO',
+      sourceId: 'gramas7',
+      targetId: 'peso5'
+    },
+    'miligramas8 -> peso5': {
+      id: 'miligramas8 -> peso5',
+      type: 'BELONGS_TO',
+      sourceId: 'miligramas8',
+      targetId: 'peso5'
+    },
+    'un / min->unitario18': {
+      id: 'un / min->unitario18',
+      type: 'QUOTIENT',
+      sourceId: 'un / min',
+      targetId: 'unitario18'
+    },
+    'un / min->minutos249': {
+      id: 'un / min->minutos249',
+      type: 'DIVIDEND',
+      sourceId: 'un / min',
+      targetId: 'minutos249'
+    },
+    'R$ / h->reais11': {
+      id: 'R$ / h->reais11',
+      type: 'QUOTIENT',
+      sourceId: 'R$ / h',
+      targetId: 'reais11'
+    },
+    'R$ / h->hora250': {
+      id: 'R$ / h->hora250',
+      type: 'DIVIDEND',
+      sourceId: 'R$ / h',
+      targetId: 'hora250'
+    },
+    'R$ / un->reais11': {
+      id: 'R$ / un->reais11',
+      type: 'QUOTIENT',
+      sourceId: 'R$ / un',
+      targetId: 'reais11'
+    },
+    'R$ / un->unitario18': {
+      id: 'R$ / un->unitario18',
+      type: 'DIVIDEND',
+      sourceId: 'R$ / un',
+      targetId: 'unitario18'
+    },
+    'un / h->unitario18': {
+      id: 'un / h->unitario18',
+      type: 'QUOTIENT',
+      sourceId: 'un / h',
+      targetId: 'unitario18'
+    },
+    'un / h->hora250': {
+      id: 'un / h->hora250',
+      type: 'DIVIDEND',
+      sourceId: 'un / h',
+      targetId: 'hora250'
     }
   },
   adjacencyList: {
@@ -417,7 +570,10 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       outputs: []
     },
     reais11: {
-      inputs: [],
+      inputs: [
+        'R$ / h->reais11',
+        'R$ / un->reais11'
+      ],
       outputs: [
         'reais11 -> monetaria10'
       ]
@@ -464,7 +620,11 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       ]
     },
     unitario18: {
-      inputs: [],
+      inputs: [
+        'un / min->unitario18',
+        'R$ / un->unitario18',
+        'un / h->unitario18'
+      ],
       outputs: []
     },
     capacidade5: {
@@ -513,13 +673,18 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       ]
     },
     minutos249: {
-      inputs: [],
+      inputs: [
+        'un / min->minutos249'
+      ],
       outputs: [
         'minutos249 -> temporal247'
       ]
     },
     hora250: {
-      inputs: [],
+      inputs: [
+        'R$ / h->hora250',
+        'un / h->hora250'
+      ],
       outputs: [
         'hora250 -> temporal247'
       ]
@@ -540,6 +705,60 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       inputs: [],
       outputs: [
         'semana253 -> temporal247'
+      ]
+    },
+    peso5: {
+      inputs: [
+        'kilogramas6 -> peso5',
+        'gramas7 -> peso5',
+        'miligramas8 -> peso5'
+      ],
+      outputs: []
+    },
+    kilogramas6: {
+      inputs: [],
+      outputs: [
+        'kilogramas6 -> peso5'
+      ]
+    },
+    gramas7: {
+      inputs: [],
+      outputs: [
+        'gramas7 -> peso5'
+      ]
+    },
+    miligramas8: {
+      inputs: [],
+      outputs: [
+        'miligramas8 -> peso5'
+      ]
+    },
+    'un / min': {
+      inputs: [],
+      outputs: [
+        'un / min->unitario18',
+        'un / min->minutos249'
+      ]
+    },
+    'R$ / h': {
+      inputs: [],
+      outputs: [
+        'R$ / h->reais11',
+        'R$ / h->hora250'
+      ]
+    },
+    'R$ / un': {
+      inputs: [],
+      outputs: [
+        'R$ / un->reais11',
+        'R$ / un->unitario18'
+      ]
+    },
+    'un / h': {
+      inputs: [],
+      outputs: [
+        'un / h->unitario18',
+        'un / h->hora250'
       ]
     }
   },

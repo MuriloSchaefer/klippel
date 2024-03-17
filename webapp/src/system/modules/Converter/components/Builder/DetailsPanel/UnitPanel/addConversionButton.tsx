@@ -25,7 +25,7 @@ export default ({ from, to }: { from?: string; to?: string }) => {
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
   const [form, setForm] = useState<ConversionForm>({
-    type: "multiplication",
+    type: "factor",
     from: from,
     to: to,
   });
@@ -43,6 +43,7 @@ export default ({ from, to }: { from?: string; to?: string }) => {
             flexDirection: "column",
             gap: 1,
           }}
+          role="conversion-form"
         >
           <Box
             role="conversion-type"
@@ -65,9 +66,8 @@ export default ({ from, to }: { from?: string; to?: string }) => {
               }
               aria-label="Platform"
             >
-              <ToggleButton value="division">Divisão</ToggleButton>
-              <ToggleButton value="multiplication">Multiplicação</ToggleButton>
-              <ToggleButton value="parametrized">Parametrizada</ToggleButton>
+              <ToggleButton value="">Fator</ToggleButton>
+              <ToggleButton value="expresssion">Expressão</ToggleButton>
             </ToggleButtonGroup>
           </Box>
           <Box
