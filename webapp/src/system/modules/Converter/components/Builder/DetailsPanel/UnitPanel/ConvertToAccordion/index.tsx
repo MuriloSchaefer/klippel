@@ -9,7 +9,6 @@ import useUnits from "../../../../../hooks/useUnits";
 
 const ConvertToAccordion = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
-  const graphModule = useModule<IGraphModule>("Graph");
 
   const manager = useConverterManager((s) => s.selectedNode);
   const units = useUnits([manager.state!]);

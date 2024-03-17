@@ -8,11 +8,11 @@ import type { BoxProps, SelectChangeEvent } from "@mui/material";
 import type { UnitValue } from "../typings";
 
 export interface UnitSelectorProps extends Omit<BoxProps, "onChange"> {
-  value: UnitValue;
-  onChange: (v: UnitValue) => void;
-  selectorProps?: SelectProps;
-  textFieldProps?: TextFieldProps;
-  children: React.ReactNode | React.ReactNode[];
+  readonly value: UnitValue;
+  readonly onChange: (v: UnitValue) => void;
+  readonly selectorProps?: SelectProps;
+  readonly textFieldProps?: TextFieldProps;
+  readonly children: React.ReactNode | React.ReactNode[];
 }
 
 export default function UnitAmountSelector({

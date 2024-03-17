@@ -2,7 +2,6 @@ import { createSelector } from "reselect";
 import _ from "lodash";
 
 import useModule from "@kernel/hooks/useModule";
-import type { ISVGModule } from "@kernel/modules/SVG";
 import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 import type { Store } from "@kernel/modules/Store";
