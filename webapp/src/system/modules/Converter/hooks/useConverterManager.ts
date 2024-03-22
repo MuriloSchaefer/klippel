@@ -6,7 +6,7 @@ import type { Store } from "@kernel/modules/Store";
 import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 
-import { CompoundNode, ConversionGraph, DividendEdge, QuotientEdge, ScaleNode, UnitNode } from "../typings";
+import { CompoundNode, ConversionGraph, ConvertsToEdge, DividendEdge, ExpressionConversion, LinearConversion, QuotientEdge, ScaleNode, UnitNode } from "../typings";
 import { CONVERSION_GRAPH_NAME } from "../constants";
 import { selectNode } from "../store/actions";
 import { ConverterState } from "../store/state";
@@ -24,6 +24,7 @@ export type ConverterManager<R> = {
   updateCompoundUnit: (id:string, quotientUnit: string, dividendUnit: string) => void;
   addScale: (name: string) => void;
   selectNode: (nodeId: string) => void;
+  addConversion: (type: ConvertsToEdge["conversionType"], from: string, to: string, factor?: number, expression?: string) => void;
   state: R;
 };
 
@@ -144,6 +145,38 @@ export const useConverterManager = <R = ConverterState>(
         position: { x: 0, y: 0 },
       } as ScaleNode);
     },
+    addConversion: (type, from, to, factor, expression) => {
+      console.log(type, from, to, factor, expression)
+      let edge: LinearConversion | ExpressionConversion;
+      if (type === "factor"){
+        if (!factor){
+          console.error('Factor required to add factor conversion! Skipping')
+          return
+        }
+        edge = {
+          type: 'CONVERTS_TO',
+          conversionType: 'factor',
+          factor,
+          id: `${from}->${to}`,
+          sourceId: from,
+          targetId: to
+        }
+      } else {
+        if(!expression){
+          console.error('Expression required to add expression conversion! Skipping')
+          return
+        }
+        edge = {
+          type: 'CONVERTS_TO',
+          conversionType: 'expression',
+          expression,
+          id: `${from}->${to}`,
+          sourceId: from,
+          targetId: to
+        }
+      }
+      graph.actions.addEdge(edge)
+    }
   };
 };
 

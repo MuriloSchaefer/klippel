@@ -6,8 +6,8 @@ export default () => {
   return (
     <>
       <PropertiesAccordion />
-      <ConvertFromAccordion />
       <ConvertToAccordion />
+      <ConvertFromAccordion />
     </>
   );
 };

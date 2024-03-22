@@ -188,8 +188,9 @@ export default <
         ])
       )
       .attr("fill", "none")
-      .attr("stroke-width", 5)
-      .attr("stroke", "url(#convertion-gradient)");
+      .attr("stroke-width", 1)
+      //.attr('marker-end', 'url(#arrow)')
+      .attr("stroke", "white");
   };
 
   function chart(
@@ -201,14 +202,26 @@ export default <
       .selectAll("defs")
       .data([1])
       .join((enter) => {
-        let linearGradient = enter
-          .append("defs")
+        let defs = enter.append('defs')
+        let linearGradient = defs
           .append("linearGradient")
           .attr("id", "convertion-gradient")
           .attr("x1", "0%")
           .attr("x2", "100%")
           .attr("y1", "0%")
           .attr("y2", "0%");
+
+        
+        defs
+          .append("marker")
+          .attr("id", "arrow")
+          .attr('viewBox', [0, 0, 5, 5])
+          .attr('markerWidth', 5)
+          .attr('markerHeight', 5)
+          .attr('orient', 'auto-start-reverse')
+          .append('path')
+          .attr('d', d3Line()([[0, 0], [0, 5], [5, 5]]))
+          .attr('stroke', 'white');
 
         const colors = [
           { color: "steelblue", offset: "0%" },

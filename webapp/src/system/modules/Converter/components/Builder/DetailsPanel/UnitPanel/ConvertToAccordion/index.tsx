@@ -2,10 +2,10 @@ import CallReceivedSharpIcon from "@mui/icons-material/CallReceivedSharp";
 
 import useModule from "@kernel/hooks/useModule";
 import type { ILayoutModule } from "@kernel/modules/Layout";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 
 import useConverterManager from "../../../../../hooks/useConverterManager";
 import useUnits from "../../../../../hooks/useUnits";
+import AddConversionButton from "../addConversionButton";
 
 const ConvertToAccordion = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -23,7 +23,7 @@ const ConvertToAccordion = () => {
       icon={<CallReceivedSharpIcon sx={{transform: 'rotate(180)'}}/>}
       summary={`${unit.name} pode ser convertida em`}
     >
-      <></>
+    <AddConversionButton from={unit.id} />
     </Accordion>
   );
 };

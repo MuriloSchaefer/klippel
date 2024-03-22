@@ -526,6 +526,62 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: 'DIVIDEND',
       sourceId: 'un / h',
       targetId: 'hora250'
+    },
+    'metrosquadrados17->kilogramas6': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade * rendimento',
+      id: 'metrosquadrados17->kilogramas6',
+      sourceId: 'metrosquadrados17',
+      targetId: 'kilogramas6'
+    },
+    'mes252->semana253': {
+      type: 'CONVERTS_TO',
+      conversionType: 'factor',
+      factor: 4,
+      id: 'mes252->semana253',
+      sourceId: 'mes252',
+      targetId: 'semana253'
+    },
+    'mes252->dia251': {
+      type: 'CONVERTS_TO',
+      conversionType: 'factor',
+      factor: 30,
+      id: 'mes252->dia251',
+      sourceId: 'mes252',
+      targetId: 'dia251'
+    },
+    'dia251->hora250': {
+      type: 'CONVERTS_TO',
+      conversionType: 'factor',
+      factor: 24,
+      id: 'dia251->hora250',
+      sourceId: 'dia251',
+      targetId: 'hora250'
+    },
+    'hora250->minutos249': {
+      type: 'CONVERTS_TO',
+      conversionType: 'factor',
+      factor: 60,
+      id: 'hora250->minutos249',
+      sourceId: 'hora250',
+      targetId: 'minutos249'
+    },
+    'semana253->dia251': {
+      type: 'CONVERTS_TO',
+      conversionType: 'factor',
+      factor: 7,
+      id: 'semana253->dia251',
+      sourceId: 'semana253',
+      targetId: 'dia251'
+    },
+    'minutos249->segundos248': {
+      type: 'CONVERTS_TO',
+      conversionType: 'factor',
+      factor: 60,
+      id: 'minutos249->segundos248',
+      sourceId: 'minutos249',
+      targetId: 'segundos248'
     }
   },
   adjacencyList: {
@@ -616,7 +672,8 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
     metrosquadrados17: {
       inputs: [],
       outputs: [
-        'metrosquadrados17 -> area16'
+        'metrosquadrados17 -> area16',
+        'metrosquadrados17->kilogramas6'
       ]
     },
     unitario18: {
@@ -667,44 +724,59 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       outputs: []
     },
     segundos248: {
-      inputs: [],
+      inputs: [
+        'minutos249->segundos248'
+      ],
       outputs: [
         'segundos248 -> temporal247'
       ]
     },
     minutos249: {
       inputs: [
-        'un / min->minutos249'
+        'un / min->minutos249',
+        'hora250->minutos249'
       ],
       outputs: [
-        'minutos249 -> temporal247'
+        'minutos249 -> temporal247',
+        'minutos249->segundos248'
       ]
     },
     hora250: {
       inputs: [
         'R$ / h->hora250',
-        'un / h->hora250'
+        'un / h->hora250',
+        'dia251->hora250'
       ],
       outputs: [
-        'hora250 -> temporal247'
+        'hora250 -> temporal247',
+        'hora250->minutos249'
       ]
     },
     dia251: {
-      inputs: [],
+      inputs: [
+        'mes252->dia251',
+        'semana253->dia251'
+      ],
       outputs: [
-        'dia251 -> temporal247'
+        'dia251 -> temporal247',
+        'dia251->hora250'
       ]
     },
     mes252: {
       inputs: [],
       outputs: [
-        'mes252 -> temporal247'
+        'mes252 -> temporal247',
+        'mes252->semana253',
+        'mes252->dia251'
       ]
     },
     semana253: {
-      inputs: [],
+      inputs: [
+        'mes252->semana253'
+      ],
       outputs: [
-        'semana253 -> temporal247'
+        'semana253 -> temporal247',
+        'semana253->dia251'
       ]
     },
     peso5: {
@@ -716,7 +788,9 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       outputs: []
     },
     kilogramas6: {
-      inputs: [],
+      inputs: [
+        'metrosquadrados17->kilogramas6'
+      ],
       outputs: [
         'kilogramas6 -> peso5'
       ]
