@@ -12,9 +12,9 @@ import Button from "@mui/material/Button";
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 
-import UnitSelector from "../../../UnitSelector";
-import type { ConvertsToEdge } from "../../../../typings";
-import useConverterManager from "../../../../hooks/useConverterManager";
+import UnitSelector from "../../UnitSelector";
+import type { ConvertsToEdge } from "../../../typings";
+import useConverterManager from "../../../hooks/useConverterManager";
 
 type ConversionForm = {
   type: ConvertsToEdge["conversionType"];
@@ -105,6 +105,7 @@ export default ({ from = "", to = "" }: { from?: string; to?: string }) => {
               onChange={(evt) =>
                 setForm((f) => ({ ...f, from: evt.target.value }))
               }
+              formControlProps={{sx: {flexGrow: 1}}}
             />
           </Box>
           <Box
@@ -121,6 +122,7 @@ export default ({ from = "", to = "" }: { from?: string; to?: string }) => {
               value={form.to}
               disabled={!!to}
               filterUnits={(unit) => unit.id !== form.from}
+              formControlProps={{sx: {flexGrow: 1}}}
               onChange={(evt) =>{
                 console.log('changing')
 
@@ -144,6 +146,7 @@ export default ({ from = "", to = "" }: { from?: string; to?: string }) => {
                 <Input
                   value={form.factor}
                   type="number"
+                  sx={{width: 'max-content', flexGrow: 1}}
                   onChange={(evt) =>
                     setForm((f) => ({ ...f, factor: +evt.target.value }))
                   }
@@ -169,6 +172,7 @@ export default ({ from = "", to = "" }: { from?: string; to?: string }) => {
                     onChange={(evt) =>
                       setForm((f) => ({ ...f, expression: evt.target.value }))
                     }
+                    sx={{width: 'max-content', flexGrow: 1}}
                     startAdornment={
                       <InputAdornment position="start">=</InputAdornment>
                     }

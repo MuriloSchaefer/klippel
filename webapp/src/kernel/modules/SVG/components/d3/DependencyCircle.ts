@@ -328,7 +328,7 @@ export default <
           .map((s) => s.value)
       );
       const group = groupsArr[i];
-      const groupContainer = select(`#${group.id}`).call(
+      const groupContainer = select(`g[id="${group.id}"]`).call(
         renderGroup,
         group,
         segment,
@@ -364,8 +364,8 @@ export default <
       .selectAll(".link")
       .data(
         links.map((l) => {
-          const source = container.select(`#${l.source}`);
-          const target = container.select(`#${l.target}`);
+          const source = container.select(`g[id="${l.source}"]`);
+          const target = container.select(`g[id="${l.target}"]`);
           return {
             ...l,
             sourceOffset: +source.attr("data-offset"),

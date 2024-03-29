@@ -3,6 +3,7 @@ import type { ILayoutModule } from "@kernel/modules/Layout";
 import type { IGraphModule } from "@kernel/modules/Graphs";
 
 import UnitPanel from "./UnitPanel";
+import CompositePanel from "./CompositePanel";
 import { CONVERSION_GRAPH_NAME } from "../../../constants";
 import useConverterManager from '../../../hooks/useConverterManager';
 import { ConversionGraph, ConversionNodes } from "../../../typings";
@@ -28,6 +29,7 @@ export const DetailsPanel = () => {
       <>
       {selectedNode?.state?.type === 'UNIT' && <UnitPanel />}
       {selectedNode?.state?.type === 'SCALE' && <ScalePanel />}
+      {selectedNode?.state?.type === 'COMPOUND_UNIT' && <CompositePanel />}
       </>
     </DetailsPanel>
   );

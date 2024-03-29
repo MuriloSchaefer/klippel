@@ -170,7 +170,7 @@ export const useConverterManager = <R = ConverterState>(
           type: 'CONVERTS_TO',
           conversionType: 'expression',
           expression,
-          id: `${from}->${to}`,
+          id: `${from}-[conv]->${to}`,
           sourceId: from,
           targetId: to
         }

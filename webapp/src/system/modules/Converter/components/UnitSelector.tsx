@@ -3,16 +3,17 @@ import type { IGraphModule } from "@kernel/modules/Graphs";
 import { ConversionGraph, NodeNScale, ScaleNode, UnitNode } from "../typings";
 import { CONVERSION_GRAPH_NAME } from "../constants";
 import { useMemo } from "react";
-import FormControl from "@mui/material/FormControl";
+import FormControl, { FormControlProps } from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectProps } from "@mui/material/Select";
 
 type UnitSelectorProps = SelectProps<string> & {
     value?: string
   filterUnits?: (unit: UnitNode, scale?: ScaleNode) => boolean;
+  formControlProps?: FormControlProps
 };
 
-export default ({ value, onChange, filterUnits = () => true, ...props }: UnitSelectorProps) => {
+export default ({ value, onChange, filterUnits = () => true,formControlProps, ...props }: UnitSelectorProps) => {
   const graphModule = useModule<IGraphModule>("Graph");
 
   const { useGraph } = graphModule.hooks;
@@ -21,7 +22,7 @@ export default ({ value, onChange, filterUnits = () => true, ...props }: UnitSel
     CONVERSION_GRAPH_NAME,
     (g) =>
       Object.values(g?.nodes ?? {})
-        .filter((n): n is UnitNode => n.type === "UNIT")
+        .filter((n): n is UnitNode => n.type === "UNIT" || n.type === "COMPOUND_UNIT")
         .map((node) => ({
           ...node,
           scale: Object.values(g?.nodes ?? {})
@@ -41,7 +42,7 @@ export default ({ value, onChange, filterUnits = () => true, ...props }: UnitSel
   );
 
   return (
-    <FormControl>
+    <FormControl {...formControlProps}>
       <Select
         id="unit-selector"
         inputProps={{ id: "unit" }}

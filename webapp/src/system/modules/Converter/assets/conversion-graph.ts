@@ -344,6 +344,18 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       dividendUnitId: 'hora250',
       abbreviation: 'un / h',
       name: 'unitario per hora'
+    },
+    'm² / Kg': {
+      id: 'm² / Kg',
+      type: 'COMPOUND_UNIT',
+      position: {
+        x: 0,
+        y: 0
+      },
+      quotientUnitId: 'metrosquadrados17',
+      dividendUnitId: 'kilogramas6',
+      abbreviation: 'm² / Kg',
+      name: 'metros quadrados per Kilogramas'
     }
   },
   edges: {
@@ -582,6 +594,82 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       id: 'minutos249->segundos248',
       sourceId: 'minutos249',
       targetId: 'segundos248'
+    },
+    'un / h-[conv]->hora250': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'unidades * (quantidadeQuociente / quantidadeDividendo)',
+      id: 'un / h-[conv]->hora250',
+      sourceId: 'un / h',
+      targetId: 'hora250'
+    },
+    'R$ / un-[conv]->reais11': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'unidades * (quantidadeQuociente / quantidadeDividendo)',
+      id: 'R$ / un-[conv]->reais11',
+      sourceId: 'R$ / un',
+      targetId: 'reais11'
+    },
+    'R$ / un-[conv]->unitario18': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'reais / (quantidadeQuociente / quantidadeDividendo)',
+      id: 'R$ / un-[conv]->unitario18',
+      sourceId: 'R$ / un',
+      targetId: 'unitario18'
+    },
+    'un / min-[conv]->un / h': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: '(quantidadeQuociente / quantidadeDividendo) * 60',
+      id: 'un / min-[conv]->un / h',
+      sourceId: 'un / min',
+      targetId: 'un / h'
+    },
+    'R$ / h-[conv]->reais11': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'horas * (quantidadeQuociente / quantidadeDividendo)',
+      id: 'R$ / h-[conv]->reais11',
+      sourceId: 'R$ / h',
+      targetId: 'reais11'
+    },
+    'un / h-[conv]->unitario18': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'horas / (quantidadeQuociente / quantidadeDividendo)',
+      id: 'un / h-[conv]->unitario18',
+      sourceId: 'un / h',
+      targetId: 'unitario18'
+    },
+    'm² / Kg->metrosquadrados17': {
+      id: 'm² / Kg->metrosquadrados17',
+      type: 'QUOTIENT',
+      sourceId: 'm² / Kg',
+      targetId: 'metrosquadrados17'
+    },
+    'm² / Kg->kilogramas6': {
+      id: 'm² / Kg->kilogramas6',
+      type: 'DIVIDEND',
+      sourceId: 'm² / Kg',
+      targetId: 'kilogramas6'
+    },
+    'm² / Kg-[conv]->kilogramas6': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'metros * (quantidadeQuociente / quantidadeDividendo)',
+      id: 'm² / Kg-[conv]->kilogramas6',
+      sourceId: 'm² / Kg',
+      targetId: 'kilogramas6'
+    },
+    'm² / Kg-[conv]->metrosquadrados17': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'kilos / (quantidadeQuociente / quantidadeDividendo)',
+      id: 'm² / Kg-[conv]->metrosquadrados17',
+      sourceId: 'm² / Kg',
+      targetId: 'metrosquadrados17'
     }
   },
   adjacencyList: {
@@ -628,7 +716,9 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
     reais11: {
       inputs: [
         'R$ / h->reais11',
-        'R$ / un->reais11'
+        'R$ / un->reais11',
+        'R$ / un-[conv]->reais11',
+        'R$ / h-[conv]->reais11'
       ],
       outputs: [
         'reais11 -> monetaria10'
@@ -670,7 +760,10 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       outputs: []
     },
     metrosquadrados17: {
-      inputs: [],
+      inputs: [
+        'm² / Kg->metrosquadrados17',
+        'm² / Kg-[conv]->metrosquadrados17'
+      ],
       outputs: [
         'metrosquadrados17 -> area16',
         'metrosquadrados17->kilogramas6'
@@ -680,7 +773,9 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       inputs: [
         'un / min->unitario18',
         'R$ / un->unitario18',
-        'un / h->unitario18'
+        'un / h->unitario18',
+        'R$ / un-[conv]->unitario18',
+        'un / h-[conv]->unitario18'
       ],
       outputs: []
     },
@@ -745,7 +840,8 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       inputs: [
         'R$ / h->hora250',
         'un / h->hora250',
-        'dia251->hora250'
+        'dia251->hora250',
+        'un / h-[conv]->hora250'
       ],
       outputs: [
         'hora250 -> temporal247',
@@ -789,7 +885,9 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
     },
     kilogramas6: {
       inputs: [
-        'metrosquadrados17->kilogramas6'
+        'metrosquadrados17->kilogramas6',
+        'm² / Kg->kilogramas6',
+        'm² / Kg-[conv]->kilogramas6'
       ],
       outputs: [
         'kilogramas6 -> peso5'
@@ -811,28 +909,45 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       inputs: [],
       outputs: [
         'un / min->unitario18',
-        'un / min->minutos249'
+        'un / min->minutos249',
+        'un / min-[conv]->un / h'
       ]
     },
     'R$ / h': {
       inputs: [],
       outputs: [
         'R$ / h->reais11',
-        'R$ / h->hora250'
+        'R$ / h->hora250',
+        'R$ / h-[conv]->reais11'
       ]
     },
     'R$ / un': {
       inputs: [],
       outputs: [
         'R$ / un->reais11',
-        'R$ / un->unitario18'
+        'R$ / un->unitario18',
+        'R$ / un-[conv]->reais11',
+        'R$ / un-[conv]->unitario18'
       ]
     },
     'un / h': {
-      inputs: [],
+      inputs: [
+        'un / min-[conv]->un / h'
+      ],
       outputs: [
         'un / h->unitario18',
-        'un / h->hora250'
+        'un / h->hora250',
+        'un / h-[conv]->hora250',
+        'un / h-[conv]->unitario18'
+      ]
+    },
+    'm² / Kg': {
+      inputs: [],
+      outputs: [
+        'm² / Kg->metrosquadrados17',
+        'm² / Kg->kilogramas6',
+        'm² / Kg-[conv]->kilogramas6',
+        'm² / Kg-[conv]->metrosquadrados17'
       ]
     }
   },
