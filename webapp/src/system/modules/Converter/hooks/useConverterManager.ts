@@ -25,6 +25,7 @@ export type ConverterManager<R> = {
   addScale: (name: string) => void;
   selectNode: (nodeId: string) => void;
   addConversion: (type: ConvertsToEdge["conversionType"], from: string, to: string, factor?: number, expression?: string) => void;
+  removeConversion: (id: string) => void;
   state: R;
 };
 
@@ -176,6 +177,9 @@ export const useConverterManager = <R = ConverterState>(
         }
       }
       graph.actions.addEdge(edge)
+    },
+    removeConversion: (id: string) => {
+      graph.actions.removeEdge(id)
     }
   };
 };

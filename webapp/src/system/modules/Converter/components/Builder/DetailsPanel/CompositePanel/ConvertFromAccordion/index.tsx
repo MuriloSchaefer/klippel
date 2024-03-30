@@ -6,6 +6,7 @@ import type { ILayoutModule } from "@kernel/modules/Layout";
 import useConverterManager from "../../../../../hooks/useConverterManager";
 import useUnits from "../../../../../hooks/useUnits";
 import AddConversionButton from "../../addConversionButton";
+import ConversionList from "../../ConversionList";
 
 const ConvertFromAccordion = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -24,6 +25,7 @@ const ConvertFromAccordion = () => {
       summary={`Quais unidades podem ser convertidas em ${unit.name}`}
     >
       <AddConversionButton to={unit.id} />
+      <ConversionList  unitId={unit.id} type="inputs"/>
     </Accordion>
   );
 };

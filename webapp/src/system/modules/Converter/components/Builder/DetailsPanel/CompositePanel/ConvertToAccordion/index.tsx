@@ -6,6 +6,7 @@ import type { ILayoutModule } from "@kernel/modules/Layout";
 import useConverterManager from "../../../../../hooks/useConverterManager";
 import useUnits from "../../../../../hooks/useUnits";
 import AddConversionButton from "../../addConversionButton";
+import ConversionList from "../../ConversionList";
 
 const ConvertToAccordion = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -23,7 +24,8 @@ const ConvertToAccordion = () => {
       icon={<CallReceivedSharpIcon sx={{transform: 'rotate(180)'}}/>}
       summary={`${unit.name} pode ser convertida em`}
     >
-    <AddConversionButton from={unit.id} />
+      <AddConversionButton from={unit.id} />
+      <ConversionList  unitId={unit.id} type="outputs"/>
     </Accordion>
   );
 };

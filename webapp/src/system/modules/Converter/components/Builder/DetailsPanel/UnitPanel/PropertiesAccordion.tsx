@@ -63,6 +63,7 @@ const PropertiesAccordion = () => {
       name="Propriedades"
       icon={<SettingsIcon />}
       summary={`Propriedades da unidade`}
+      sx={{flexGrow: 1}}
     >
       <Paper
         variant="outlined"
