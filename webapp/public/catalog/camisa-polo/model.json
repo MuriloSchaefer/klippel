@@ -1082,6 +1082,162 @@
         "x": 0,
         "y": 0
       }
+    },
+    "papel": {
+      "id": "papel",
+      "type": "MATERIAL_TYPE",
+      "label": "Papel",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-117": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-117",
+      "label": "Papel modelagem",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-18",
+      "materialType": "papel",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": []
+    },
+    "material-usage-117-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-117-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["papel"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-18": {
+      "id": "material-18",
+      "type": "MATERIAL",
+      "label": "Bobina Plotter",
+      "materialId": 18,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "operation-119": {
+      "id": "operation-119",
+      "type": "OPERATION",
+      "label": "Ajuste e impressão da Modelagem",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "cost": {
+        "quotient": {
+          "unit": "reais11",
+          "amount": 5
+        },
+        "dividend": {
+          "amount": 1,
+          "unit": "hora250"
+        }
+      },
+      "time_taken": {
+        "quotient": {
+          "amount": 1,
+          "unit": "hora250"
+        },
+        "dividend": {
+          "unit": "unitario18",
+          "amount": 100
+        }
+      }
+    },
+    "botao": {
+      "id": "botao",
+      "type": "MATERIAL_TYPE",
+      "label": "Botão",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-131": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-131",
+      "label": "Botões",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-17",
+      "materialType": "botao",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": []
+    },
+    "material-usage-131-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-131-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["botao"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-17": {
+      "id": "material-17",
+      "type": "MATERIAL",
+      "label": "Botão Transparente",
+      "materialId": 17,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-16": {
+      "id": "material-16",
+      "type": "MATERIAL",
+      "label": "Botão Transparente",
+      "materialId": 16,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "operation-133": {
+      "id": "operation-133",
+      "type": "OPERATION",
+      "label": "Pregar botões",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "cost": {
+        "quotient": {
+          "unit": "reais11",
+          "amount": 5
+        },
+        "dividend": {
+          "unit": "unitario18",
+          "amount": 48
+        }
+      },
+      "time_taken": {
+        "quotient": {
+          "unit": "minutos249",
+          "amount": 2
+        },
+        "dividend": {
+          "amount": 1,
+          "unit": "unitario18"
+        }
+      }
     }
   },
   "edges": {
@@ -1671,6 +1827,72 @@
       "sourceId": "material-usage-309",
       "targetId": "material-8",
       "type": "CONSUMES"
+    },
+    "garment->material-usage-117": {
+      "id": "garment->material-usage-117",
+      "sourceId": "garment",
+      "targetId": "material-usage-117",
+      "type": "MADE_OF"
+    },
+    "material-usage-117->material-usage-117-restriction-1": {
+      "id": "material-usage-117->material-usage-117-restriction-1",
+      "sourceId": "material-usage-117",
+      "targetId": "material-usage-117-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "material-usage-117->material-18": {
+      "id": "material-usage-117->material-18",
+      "sourceId": "material-usage-117",
+      "targetId": "material-18",
+      "type": "CONSUMES"
+    },
+    "garment->operation-119": {
+      "id": "garment->operation-119",
+      "sourceId": "garment",
+      "targetId": "operation-119",
+      "type": "PROCESS_NEEDED"
+    },
+    "operation-119->material-usage-117": {
+      "id": "operation-119->material-usage-117",
+      "sourceId": "operation-119",
+      "targetId": "material-usage-117",
+      "type": "CONSUMES",
+      "quantity": {
+        "quotient": {
+          "unit": "metros5",
+          "amount": 5
+        },
+        "dividend": {
+          "unit": "unitario18",
+          "amount": 100
+        }
+      }
+    },
+    "gola->material-usage-131": {
+      "id": "gola->material-usage-131",
+      "sourceId": "gola",
+      "targetId": "material-usage-131",
+      "type": "MADE_OF"
+    },
+    "material-usage-131->material-usage-131-restriction-1": {
+      "id": "material-usage-131->material-usage-131-restriction-1",
+      "sourceId": "material-usage-131",
+      "targetId": "material-usage-131-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "material-usage-131->material-17": {
+      "id": "material-usage-131->material-17",
+      "sourceId": "material-usage-131",
+      "targetId": "material-17",
+      "type": "CONSUMES"
+    },
+    "gola->operation-133": {
+      "id": "gola->operation-133",
+      "sourceId": "gola",
+      "targetId": "operation-133",
+      "type": "PROCESS_NEEDED"
     }
   },
   "adjacencyList": {
@@ -1687,7 +1909,9 @@
         "garment -> M-grade-45",
         "garment -> G-grade-46",
         "garment -> GG-grade-47",
-        "garment -> EG-grade-48"
+        "garment -> EG-grade-48",
+        "garment->material-usage-117",
+        "garment->operation-119"
       ]
     },
     "mangaDireita": {
@@ -1917,7 +2141,9 @@
         "gola->material1-gola",
         "gola->material2-gola",
         "gola->material3-gola",
-        "gola->material4-gola"
+        "gola->material4-gola",
+        "gola->material-usage-131",
+        "gola->operation-133"
       ]
     },
     "material1-gola": {
@@ -2133,6 +2359,59 @@
     },
     "material-usage-309-restriction-1": {
       "inputs": ["material-usage-309->material-usage-309-restriction-1"],
+      "outputs": []
+    },
+    "papel": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-usage-117": {
+      "inputs": [
+        "garment->material-usage-117",
+        "operation-119->material-usage-117"
+      ],
+      "outputs": [
+        "material-usage-117->material-usage-117-restriction-1",
+        "material-usage-117->material-18"
+      ]
+    },
+    "material-usage-117-restriction-1": {
+      "inputs": ["material-usage-117->material-usage-117-restriction-1"],
+      "outputs": []
+    },
+    "material-18": {
+      "inputs": ["material-usage-117->material-18"],
+      "outputs": []
+    },
+    "operation-119": {
+      "inputs": ["garment->operation-119"],
+      "outputs": ["operation-119->material-usage-117"]
+    },
+    "botao": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-usage-131": {
+      "inputs": ["gola->material-usage-131"],
+      "outputs": [
+        "material-usage-131->material-usage-131-restriction-1",
+        "material-usage-131->material-17"
+      ]
+    },
+    "material-usage-131-restriction-1": {
+      "inputs": ["material-usage-131->material-usage-131-restriction-1"],
+      "outputs": []
+    },
+    "material-17": {
+      "inputs": ["material-usage-131->material-17"],
+      "outputs": []
+    },
+    "material-16": {
+      "inputs": [],
+      "outputs": []
+    },
+    "operation-133": {
+      "inputs": ["gola->operation-133"],
       "outputs": []
     }
   }

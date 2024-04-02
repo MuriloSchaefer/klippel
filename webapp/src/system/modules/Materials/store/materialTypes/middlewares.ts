@@ -30,7 +30,7 @@ middlewares.startListening({
                         gramaturaUnidade: 'string',
 
                         rendimento: 'number',
-                        rendimentoUInidade: 'string',
+                        rendimentoUnidade: 'string',
 
                         trama: 'string'
                     },
@@ -103,6 +103,48 @@ middlewares.startListening({
                     selector: {
                         principal: 'nome',
                         extra: 'espessura'
+                    }
+                }
+            },
+        },
+        botao: {
+            name: 'botao',
+            label: 'Botão',
+            latestSchema: '0.0.1',
+            schemas: {
+                '0.0.1': {
+                    version: '0.0.1',
+                    attributes: {
+                        categoria: 'string',
+                        nome: 'string',
+                        tamanho: 'number',
+                        cor: 'color'
+                    },
+                    selector: {
+                        principal: 'nome',
+                        extra: 'tamanho'
+                    }
+                }
+            },
+        },
+        papel: {
+            name: 'papel',
+            label: 'Papel',
+            latestSchema: '0.0.1',
+            schemas: {
+                '0.0.1': {
+                    version: '0.0.1',
+                    attributes: {
+                        categoria: 'string',
+                        nome: 'string',
+                        comprimento: 'number',
+                        comprimentoUnidade: 'string',
+                        largura: 'number',
+                        larguraUnidade: 'string'
+                    },
+                    selector: {
+                        principal: 'categoria',
+                        extra: 'nome'
                     }
                 }
             },

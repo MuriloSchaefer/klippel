@@ -544,6 +544,71 @@ middlewares.startListening({
             }
         },
         
+        16: {
+            id: 16,
+            type: 'botao',
+            suppliers: ['Linhas General'],
+            industry: 'Linhas General',
+            externalId: '28',
+            externalURL: 'https://linhasgeneral.com.br/inicio/28-botao-transparente-tamanho-18-c144-un.html',
+            images: ['https://linhasgeneral.com.br/135-large_default/botao-transparente-tamanho-18-c144-un.jpg'],
+            
+            description: "Botão",
+            schemaVersion: '0.0.1',
+            attributes: {
+                categoria: 'Transparente',
+                nome: 'Botão Transparente',
+                tamanho: 18,
+                cor: {
+                    id:'003-01',
+                    hex: '#ffffffff',
+                    label: 'Transparente'
+                }
+            },
+        },
+        17: {
+            id: 17,
+            type: 'botao',
+            suppliers: ['Linhas General'],
+            industry: 'Linhas General',
+            externalId: '28',
+            externalURL: 'https://linhasgeneral.com.br/inicio/132-botao-transparente-tamanho-18-c144-un.html',
+            images: ['https://linhasgeneral.com.br/135-large_default/botao-transparente-tamanho-18-c144-un.jpg'],
+            
+            description: "Botão",
+            schemaVersion: '0.0.1',
+            attributes: {
+                categoria: 'Transparente',
+                nome: 'Botão Transparente',
+                tamanho: 20,
+                cor: {
+                    id:'003-01',
+                    hex: '#ffffffff',
+                    label: 'Transparente'
+                }
+            },
+        },
+
+        18: {
+            id: 18,
+            type: 'papel',
+            suppliers: ['KGepel'],
+            industry: 'KGepel',
+            externalId: '5902.007.110',
+            externalURL: 'https://kgepel.com.br/linha-especial/sulfite-bobina-75g-914mm-c-50mt/',
+            images: ['https://kgepel.com.br/wp-content/uploads/2023/10/BOBINAS-PLOTER-1-scaled.jpg'],
+            
+            description: "Descubra a excelência em impressão com nosso Sulfite em Bobina para Impressão Plotter, um produto de 75g que redefine os padrões de qualidade. Com uma largura padrão de 914mm e uma metragem linear de 50 metros, esse sulfite oferece a base perfeita para suas necessidades de impressão",
+            schemaVersion: '0.0.1',
+            attributes: {
+                categoria: 'Bobina Plotter',
+                nome: 'SULFITE BOBINA 75G 914MM c/ 50mt',
+                comprimento: 50,
+                comprimentoUnidade: 'm',
+                largura: 914,
+                larguraUnidade: 'mm'
+            },
+        },
 
         
     }
