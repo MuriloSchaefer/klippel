@@ -82,7 +82,7 @@ export const useConverterManager = <R = ConverterState>(
       }
     },
     updateUnit: (id, name, abbreviation, scale) => {
-      graph.actions.updateNode({ id, name, abbreviation });
+      graph.actions.updateNode({ id, name, abbreviation } as UnitNode);
       const belongsToEdge = graph.state?.adjacencyList[id].outputs
         .filter((o) => graph.state?.edges[o].type === "BELONGS_TO")
         .map((o) => graph.state?.edges[o])

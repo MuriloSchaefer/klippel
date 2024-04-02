@@ -4,7 +4,6 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import SaveSharpIcon from "@mui/icons-material/SaveSharp";
 import RotateLeftSharpIcon from "@mui/icons-material/RotateLeftSharp";
 import PreviewSharpIcon from "@mui/icons-material/PreviewSharp";
-import OpenInFullRoundedIcon from "@mui/icons-material/OpenInFullRounded";
 import ListSharpIcon from "@mui/icons-material/ListSharp";
 
 import Paper from "@mui/material/Paper";
@@ -13,14 +12,15 @@ import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 import type { GarmentNode } from "../../../store/composition/state";
 import type { IMarkdownModule } from "@kernel/modules/Markdown";
 
+import GraduationAccordion from "./GraduationAccordion";
 import MaterialsList from "../MaterialSection/MaterialsList";
 import ProcessesList from "../ProcessesSection/ProcessesList";
-import useComposition from "@system/modules/Composer/hooks/useComposition";
+import useComposition from "../../../hooks/useComposition";
+import { CompositionInfo } from "../../../interfaces";
 
 type PropertiesForm = {
   name: string;
@@ -32,11 +32,8 @@ export default ({
   graphId,
   selectedPart,
   compositionName,
-}: {
+}: CompositionInfo & {
   node: GarmentNode;
-  graphId: string;
-  selectedPart: string;
-  compositionName: string;
 }) => {
   const layoutModule = useModule<ILayoutModule>("Layout");
 
@@ -147,8 +144,8 @@ export default ({
             </IconButton>
             <SystemModal
               component={
-                <MarkdownReader content={propertiesForm.description}/>
-            }
+                <MarkdownReader content={propertiesForm.description} />
+              }
               button={
                 <IconButton
                   color="warning"
@@ -177,14 +174,11 @@ export default ({
           </Box>
         </Paper>
       </Accordion>
-      <Accordion
-        name="Graduação"
-        icon={<OpenInFullRoundedIcon />}
-        summary="Graduação da peça"
-        sx={{ flexGrow: 1 }}
-      >
-        <></>
-      </Accordion>
+      <GraduationAccordion
+        graphId={graphId}
+        compositionName={compositionName}
+        selectedPart={selectedPart}
+      />
       <Accordion
         name="Materiais"
         icon={<ListSharpIcon />}

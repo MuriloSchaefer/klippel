@@ -15,7 +15,6 @@ export interface GarmentNode extends Node {
 }
 export interface GradeNode extends Node {
   type: "GRADE";
-  label: string;
   abbreviation: string;
 }
 export interface PartNode extends Node {
@@ -70,7 +69,8 @@ export type CompositionNode =
   | PartNode
   | MaterialUsageNode
   | RestrictionNode
-  | MaterialNode;
+  | MaterialNode
+  | GradeNode;
 
 export interface ComposedOfEdge extends Edge {
   type: "COMPOSED_OF";
@@ -101,7 +101,8 @@ export type CompositionEdge =
   | RestrictedByEdge
   | MadeOfEdge
   | ProcessNeededEdge
-  | ConsumesEdge;
+  | ConsumesEdge
+  | HasGradeEdge;
 
 export type CompositionGraph = GraphState<CompositionNode, CompositionEdge>;
 

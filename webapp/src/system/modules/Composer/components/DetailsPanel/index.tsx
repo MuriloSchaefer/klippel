@@ -16,8 +16,9 @@ import useComposition from "../../hooks/useComposition";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { CompositionGraph, PartNode } from "../../store/composition/state";
 import GarmentPanel from "./GarmentPanel";
+import { CompositionInfo } from "../../interfaces";
 
-const ComposerDetailLoader = ({ graphId }: { graphId: string }) => {
+const ComposerDetailLoader = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
@@ -53,11 +54,7 @@ const ComposerDetailsPanel = ({
   graphId,
   selectedPart,
   compositionName,
-}: {
-  graphId: string;
-  selectedPart: string;
-  compositionName: string;
-}) => {
+}: CompositionInfo) => {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>("Graph");
 

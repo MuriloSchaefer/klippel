@@ -138,9 +138,9 @@ export const ComposerViewport = ({
             sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}
           />
         </ViewportNotificationsTray>
-        <ComposerSettingsPanel />
 
-        <ComposerDetailsPanel graphId={graphId} />
+        <ComposerSettingsPanel />
+        <ComposerDetailsPanel />
       </Box>
       <FloatingButtons />
     </>

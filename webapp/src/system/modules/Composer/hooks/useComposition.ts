@@ -19,7 +19,8 @@ import {
   updateRestriction,
 } from "../store/composition/actions";
 import { ComposerState } from "../store/state";
-import type { IMaterialsModule } from '../../Materials/index';
+import type { IMaterialsModule } from "../../Materials/index";
+import { GradeNode, HasGradeEdge } from "../store/composition/state";
 import {
   AllowOnlyRestrictionNode,
   CompositionGraph,
@@ -34,30 +35,53 @@ import {
 } from "../store/composition/state";
 
 interface CompositionActions {
-  changeProperties(name:string, description: string): void;
+  changeProperties(name: string, description: string): void;
+  addGrade(abbreviation: string, order: number): void;
+  removeGrade(id: string): void;
+  reorderGrade(id: string, newOrder: number): void;
 
   addPart(name: string, domId: string, parentName?: string): void;
   removePart(partId: string): void;
   selectPart(partName: string): void;
 
-  addMaterialUsage(label: string, partId:string, allowedMaterialTypes: string[]): void;
+  addMaterialUsage(
+    label: string,
+    partId: string,
+    allowedMaterialTypes: string[]
+  ): void;
   removeMaterialUsage(materialUsageId: string): void;
 
-  removeRestriction(materialId:string, restrictionId:string): void;
-  addRestriction(materialId:string, restriction:RestrictionNode): void;
-  updateRestriction(materialId:string, restrictionId: string, changes:Partial<RestrictionNode>): void;
+  removeRestriction(materialId: string, restrictionId: string): void;
+  addRestriction(materialId: string, restriction: RestrictionNode): void;
+  updateRestriction(
+    materialId: string,
+    restrictionId: string,
+    changes: Partial<RestrictionNode>
+  ): void;
 
   removeOperation(operationId: string): void;
-  addOperation(label: string, cost: CompoundValue, time_taken: CompoundValue, partId: string): void;
-  addMaterialConsuption(operationId: string, materialId:string, quantity: CompoundValue): void;
-  deleteMaterialConsuption(consuptionId: string):void
-  updateMaterialConsuption(consuptionId: string, changes: Partial<ConsumesEdge>): void
+  addOperation(
+    label: string,
+    cost: CompoundValue,
+    time_taken: CompoundValue,
+    partId: string
+  ): void;
+  addMaterialConsuption(
+    operationId: string,
+    materialId: string,
+    quantity: CompoundValue
+  ): void;
+  deleteMaterialConsuption(consuptionId: string): void;
+  updateMaterialConsuption(
+    consuptionId: string,
+    changes: Partial<ConsumesEdge>
+  ): void;
 
   changeMaterialType(materialUsageId: string, materialType: string): void;
   changeMaterial(materialUsageId: string, material: number): void;
 
-  addProxy(proxy: Proxy, materialId:string): void;
-  deleteProxy(proxyId: string, materialId:string): void;
+  addProxy(proxy: Proxy, materialId: string): void;
+  deleteProxy(proxyId: string, materialId: string): void;
   updateProxy(): void;
 }
 export interface Composition<T = CompositionState> {
@@ -83,7 +107,7 @@ const useComposition = <C = Composition, R = C>(
   const dispatch = useAppDispatch();
   const panelsManager = layoutModule.hooks.usePanelsManager();
   const { useGraph } = graphModule.hooks;
-  const {useMaterials} = materialsModule.hooks
+  const { useMaterials } = materialsModule.hooks;
 
   const selector = createSelector(
     (state: { Composer: ComposerState } | undefined) =>
@@ -101,20 +125,80 @@ const useComposition = <C = Composition, R = C>(
     innerState?.graphId!,
     (g) => ({
       adjacencyList: g?.adjacencyList,
-      nodes: g?.nodes
+      nodes: g?.nodes,
+      edges: g?.edges
     })
   );
 
-  const materials = useMaterials()
+  const materials = useMaterials();
 
   return {
     state: compositionState,
     actions: {
-      changeProperties(name, description){
-        const rootNode = graph.state?.nodes?.garment as GarmentNode
-        if (!rootNode) throw Error('root node not found')
-        const updatedNode = {...rootNode, label: name, description }
-        graph.actions.updateNode(updatedNode)
+      changeProperties(name, description) {
+        const rootNode = graph.state?.nodes?.garment as GarmentNode;
+        if (!rootNode) throw Error("root node not found");
+        const updatedNode = { ...rootNode, label: name, description };
+        graph.actions.updateNode(updatedNode);
+      },
+      addGrade(abbreviation, order) {
+        const id = _.uniqueId(`${abbreviation}-grade-`);
+        const grade: GradeNode = {
+          type: "GRADE",
+          id,
+          abbreviation,
+          position: { x: 0, y: 0 },
+        };
+        graph.actions.addNode(grade);
+        const edge: HasGradeEdge = {
+          type: "HAS_GRADE",
+          id: `garment -> ${id}`,
+          sourceId: "garment",
+          targetId: id,
+          order,
+        };
+        graph.actions.addEdge(edge);
+      },
+      reorderGrade(id, newOrder) {
+        // change order of grade
+        graph.actions.updateEdge(`garment -> ${id}`, {
+          order: newOrder,
+        } as Partial<HasGradeEdge>);
+
+        // shift all subsequent grades
+        Object.values(graph.state?.edges ?? {})
+          .filter(
+            (e): e is HasGradeEdge =>
+              e.type === "HAS_GRADE" && e.order >= newOrder
+          )
+          .sort((a, b) => a.order - b.order)
+          .forEach((e) =>
+            graph.actions.updateEdge(e.id, {
+              order: e.order + 1,
+            } as Partial<HasGradeEdge>)
+          );
+      },
+      removeGrade(id) {
+        // remove grade node
+        if (!graph.state?.edges || !graph.state.adjacencyList) throw Error('edges not defined')
+        const adj = graph.state.adjacencyList[id]
+        const edgeId = adj.inputs.at(0)
+        if (!edgeId) throw Error('edges not found')
+        const {order: oldOrder} = graph.state.edges[edgeId] as HasGradeEdge
+        graph.actions.removeNode(id)
+
+        // adjust ordering
+        Object.values(graph.state?.edges ?? {})
+          .filter(
+            (e): e is HasGradeEdge =>
+              e.type === "HAS_GRADE" && e.order > oldOrder
+          )
+          .sort((a, b) => a.order - b.order)
+          .forEach((e) =>
+            graph.actions.updateEdge(e.id, {
+              order: e.order -1,
+            } as Partial<HasGradeEdge>)
+          );
       },
       addPart(name, domId, parentName) {
         const newPart: PartNode = {
@@ -136,109 +220,117 @@ const useComposition = <C = Composition, R = C>(
                 type: "COMPOSED_OF",
               },
             },
-            outputs: {}
+            outputs: {},
           };
         }
         graph.actions.addNode(newPart, edges);
       },
-      removePart(partId){
+      removePart(partId) {
         // TODO: remove all material usage, operations
         // TODO: link subparts to the parent node
-        graph.actions.removeNode(partId)
+        graph.actions.removeNode(partId);
       },
-      addMaterialUsage(label, partId, materialTypes){
-        materialTypes.forEach(type => {
-          if (!Object.values(graph.state?.nodes ?? {}).find(n => n.id === type)){
-            console.log('adding type node')
+      addMaterialUsage(label, partId, materialTypes) {
+        materialTypes.forEach((type) => {
+          if (
+            !Object.values(graph.state?.nodes ?? {}).find((n) => n.id === type)
+          ) {
+            console.log("adding type node");
             graph.actions.addNode({
               id: type,
-              type: 'MATERIAL_TYPE',
+              type: "MATERIAL_TYPE",
               label: materials[type].label,
-
-            })
+            });
           }
+        });
 
-        })
-
-        const nodeId = _.uniqueId(`material-usage-`)
+        const nodeId = _.uniqueId(`material-usage-`);
         const materialUsageNode: MaterialUsageNode = {
           type: "MATERIAL_USAGE",
           id: nodeId,
           label: label,
-          editableAttributes: ['materialType', 'materialId'],
+          editableAttributes: ["materialType", "materialId"],
           materialId: "material-12",
-          materialType: materialTypes[0] ?? 'malha', // TODO: allow null values
-          position: {x: 0, y: 0},
+          materialType: materialTypes[0] ?? "malha", // TODO: allow null values
+          position: { x: 0, y: 0 },
           proxies: [],
-        }
-        const restrictionNodeId = `${nodeId}-restriction-1`
-        
+        };
+        const restrictionNodeId = `${nodeId}-restriction-1`;
 
         const edgeId = `${partId}->${nodeId}`;
         const edges = {
-            inputs: {
-              [edgeId]: {
-                id: edgeId,
-                sourceId: partId,
-                targetId: nodeId,
-                type: "MADE_OF",
-              },
+          inputs: {
+            [edgeId]: {
+              id: edgeId,
+              sourceId: partId,
+              targetId: nodeId,
+              type: "MADE_OF",
             },
-            outputs: {}
-          };
+          },
+          outputs: {},
+        };
         graph.actions.addNode(materialUsageNode, edges);
 
         // add default restrictions
         const materialDefaultRestrictions: AllowOnlyRestrictionNode = {
           type: "RESTRICTION",
-          restrictionType: 'allowOnly',
-          attribute: 'materialType',
+          restrictionType: "allowOnly",
+          attribute: "materialType",
           id: restrictionNodeId,
-          label: 'Permitido apenas',
+          label: "Permitido apenas",
           operand: materialTypes,
-          position: {x: 0, y: 0},
-        }
-        const restrictionEdgeId = `${nodeId}->${restrictionNodeId}`
+          position: { x: 0, y: 0 },
+        };
+        const restrictionEdgeId = `${nodeId}->${restrictionNodeId}`;
         const restrictionEdges = {
           inputs: {
             [restrictionEdgeId]: {
               id: restrictionEdgeId,
               sourceId: nodeId,
               targetId: restrictionNodeId,
-              attr:'materialType',
+              attr: "materialType",
               type: "RESTRICTED_BY",
             },
           },
-          outputs: {}
+          outputs: {},
         };
         graph.actions.addNode(materialDefaultRestrictions, restrictionEdges);
       },
-      removeMaterialUsage(materialUsageId){
-        graph.actions.removeNode(materialUsageId)
+      removeMaterialUsage(materialUsageId) {
+        graph.actions.removeNode(materialUsageId);
       },
-      addRestriction(materialId, restriction){
+      addRestriction(materialId, restriction) {
         dispatch(addRestriction({ compositionName, materialId, restriction }));
       },
-      updateRestriction(materialId, restrictionId, changes){
-        dispatch(updateRestriction({ compositionName, materialId, restrictionId, changes }));
+      updateRestriction(materialId, restrictionId, changes) {
+        dispatch(
+          updateRestriction({
+            compositionName,
+            materialId,
+            restrictionId,
+            changes,
+          })
+        );
       },
-      removeRestriction(materialId, restrictionId){
-        dispatch(deleteRestriction({ compositionName, materialId, restrictionId }));
+      removeRestriction(materialId, restrictionId) {
+        dispatch(
+          deleteRestriction({ compositionName, materialId, restrictionId })
+        );
       },
-      removeOperation(operationId){
-        graph.actions.removeNode(operationId)
+      removeOperation(operationId) {
+        graph.actions.removeNode(operationId);
       },
-      addOperation(label, cost, time_taken, partId){
-        const nodeId = _.uniqueId(`operation-`)
-        const edgeId = `${partId}->${nodeId}`
+      addOperation(label, cost, time_taken, partId) {
+        const nodeId = _.uniqueId(`operation-`);
+        const edgeId = `${partId}->${nodeId}`;
         const node: OperationNode = {
           id: nodeId,
           type: "OPERATION",
           label: label,
-          position: {x: 0, y: 0},
+          position: { x: 0, y: 0 },
           cost: cost,
-          time_taken: time_taken
-        }
+          time_taken: time_taken,
+        };
         const edges = {
           inputs: {
             [edgeId]: {
@@ -248,25 +340,25 @@ const useComposition = <C = Composition, R = C>(
               type: "PROCESS_NEEDED",
             },
           },
-          outputs: {}
+          outputs: {},
         };
         graph.actions.addNode(node, edges);
       },
-      updateMaterialConsuption: (consumptionId, changes)=>{
-        graph.actions.updateEdge(consumptionId, changes)
+      updateMaterialConsuption: (consumptionId, changes) => {
+        graph.actions.updateEdge(consumptionId, changes);
       },
-      deleteMaterialConsuption: (consumptionId)=>{
-        graph.actions.removeEdge(consumptionId)
+      deleteMaterialConsuption: (consumptionId) => {
+        graph.actions.removeEdge(consumptionId);
       },
-      addMaterialConsuption: (operationId, materialId, quantity)=>{
+      addMaterialConsuption: (operationId, materialId, quantity) => {
         const edge: ConsumesEdge = {
           id: `${operationId}->${materialId}`,
           sourceId: operationId,
           targetId: materialId,
-          type: 'CONSUMES',
-          quantity
-        }
-        graph.actions.addEdge(edge)
+          type: "CONSUMES",
+          quantity,
+        };
+        graph.actions.addEdge(edge);
       },
       selectPart(partName) {
         dispatch(selectPart({ compositionName, partName }));
@@ -299,14 +391,14 @@ const useComposition = <C = Composition, R = C>(
         );
       },
 
-      addProxy(proxy, materialId){
-        dispatch(addProxy({compositionName, materialId, proxy}))
+      addProxy(proxy, materialId) {
+        dispatch(addProxy({ compositionName, materialId, proxy }));
       },
-      deleteProxy(proxyId, materialId){
-        dispatch(deleteProxy({compositionName, materialId, proxyId}))
+      deleteProxy(proxyId, materialId) {
+        dispatch(deleteProxy({ compositionName, materialId, proxyId }));
         //svg.actions.deleteProxy(proxyId, compositionName)
       },
-      updateProxy(){},
+      updateProxy() {},
     },
   };
 };
