@@ -29,6 +29,7 @@ import {
 } from "./actions";
 import type { ComposerState, CompositionsList } from "./state";
 import { debugViewportOpened, openDebugView } from "./composition/actions";
+import { MaterialsState } from '../../Materials/store/materials/state';
 
 const middlewares = createListenerMiddleware();
 
@@ -227,8 +228,9 @@ middlewares.startListening({
   ) => {
     const { dispatch, getState } = listenerApi;
     const {
-      Composer: { compositionsManager },
-    } = getState() as { Composer: ComposerState };
+      Composer: { compositionsManager }, 
+      Materials: {materials}
+    } = getState() as { Composer: ComposerState, Materials: {materials: MaterialsState} };
 
     const composition =
       compositionsManager.compositions[payload.compositionName];
@@ -237,13 +239,15 @@ middlewares.startListening({
     const nodes = payload.model.nodes;
     Object.values(nodes).forEach((node: any) => {
       if (!("proxies" in node)) return;
+      const materialId = nodes[node.materialId].materialId
+      const material = materials[materialId]
       const proxies: { [id: string]: CSSProperties } = node.proxies.reduce(
         (
           acc: { [id: string]: CSSProperties },
           curr: { elem: string; attr: string }
         ) => ({
           ...acc,
-          [curr.elem]: { ...acc[curr.elem], [curr.attr]: "grey" },
+          [curr.elem]: { ...acc[curr.elem], [curr.attr]: material.attributes['cor'].hex },
         }),
         {}
       );
