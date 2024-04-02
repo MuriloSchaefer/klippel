@@ -27,7 +27,7 @@ export interface EdgeMap {
 export interface GraphActions {
   addNode(node: Omit<Node, "position">, edges?: EdgeMap): void;
   removeNode(id: string): void;
-  updateNode(node: any): void; // QUESTION: how to set the type here
+  updateNode(node: Node): void; // QUESTION: how to set the type here
   addEdge(edge: Edge): void;
   updateEdge(edgeId: string, changes: Partial<Edge>):void;
   removeEdge(id: string): void;

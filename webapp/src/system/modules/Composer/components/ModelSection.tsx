@@ -20,17 +20,16 @@ export const ModelSection = () => {
   }, []);
 
   return (
-    <>
-      <SystemModal
-        component={
-          <ModelSelectionModal onModelSelection={handleModelSelection} />
-        }
-      >
+    <SystemModal
+      component={
+        <ModelSelectionModal onModelSelection={handleModelSelection} />
+      }
+      button={
         <IconButton>
           <FileOpenIcon />
         </IconButton>
-      </SystemModal>
-    </>
+      }
+    />
   );
 };
 

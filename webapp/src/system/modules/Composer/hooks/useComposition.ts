@@ -25,6 +25,7 @@ import {
   CompositionGraph,
   CompositionState,
   ConsumesEdge,
+  GarmentNode,
   MaterialUsageNode,
   OperationNode,
   PartNode,
@@ -33,6 +34,8 @@ import {
 } from "../store/composition/state";
 
 interface CompositionActions {
+  changeProperties(name:string, description: string): void;
+
   addPart(name: string, domId: string, parentName?: string): void;
   removePart(partId: string): void;
   selectPart(partName: string): void;
@@ -107,6 +110,12 @@ const useComposition = <C = Composition, R = C>(
   return {
     state: compositionState,
     actions: {
+      changeProperties(name, description){
+        const rootNode = graph.state?.nodes?.garment as GarmentNode
+        if (!rootNode) throw Error('root node not found')
+        const updatedNode = {...rootNode, label: name, description }
+        graph.actions.updateNode(updatedNode)
+      },
       addPart(name, domId, parentName) {
         const newPart: PartNode = {
           type: "PART",
@@ -278,7 +287,7 @@ const useComposition = <C = Composition, R = C>(
         graph.actions.updateNode({
           id: materialUsageId,
           materialType: materialType,
-        });
+        } as MaterialUsageNode);
       },
       changeMaterial(materialUsageId, materialId) {
         dispatch(

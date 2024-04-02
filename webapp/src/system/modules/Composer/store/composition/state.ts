@@ -11,6 +11,12 @@ export interface MaterialTypeNode extends Node {
 export interface GarmentNode extends Node {
   type: "GARMENT";
   label: string;
+  description: string;
+}
+export interface GradeNode extends Node {
+  type: "GRADE";
+  label: string;
+  abbreviation: string;
 }
 export interface PartNode extends Node {
   type: "PART";
@@ -69,6 +75,12 @@ export type CompositionNode =
 export interface ComposedOfEdge extends Edge {
   type: "COMPOSED_OF";
 }
+
+export interface HasGradeEdge extends Edge {
+  type: "HAS_GRADE";
+  order: number
+}
+
 export interface MadeOfEdge extends Edge {
   type: "MADE_OF";
 }

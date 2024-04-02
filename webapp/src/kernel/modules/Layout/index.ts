@@ -17,6 +17,7 @@ import CRUDGrid from "./components/CRUDGrid/CRUDGrid";
 import CRUDGridProvider, { CRUDGridContext } from "./components/CRUDGrid/CRUDGridProvider";
 import CRUDBooleanCell from "./components/CRUDGrid/BooleanCell";
 import { useResizeObserver } from "./hooks/useResizeObserver";
+import CustomTextArea from "./components/CustomFields/TextArea";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -30,6 +31,7 @@ export interface ILayoutModule extends IModule {
     CRUDGridProvider: typeof CRUDGridProvider,
     CRUDBooleanCell: typeof CRUDBooleanCell,
     CRUDGrid: typeof CRUDGrid,
+    CustomTextArea: typeof CustomTextArea,
   },
   contexts: {
     CRUDGridContext: typeof CRUDGridContext,
@@ -70,6 +72,7 @@ const LayoutModule: ILayoutModule = {
     CRUDGrid,
     CRUDBooleanCell,
     CRUDGridProvider,
+    CustomTextArea
   },
   contexts: {CRUDGridContext},
   hooks: {

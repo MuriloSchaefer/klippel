@@ -1,5 +1,4 @@
-import type { SxProps } from "@mui/material";
-import Box from '@mui/material/Box';
+import type { ButtonProps, SxProps } from "@mui/material";
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
@@ -12,12 +11,13 @@ export interface SystemModalProps {
 const SystemModal = ({
   title,
   component,
-  children,
+  button,
   sx = {},
 }: {
   title?: string | React.ReactElement;
   component: React.ReactElement<SystemModalProps>;
-  children: React.ReactNode | React.ReactNode[];
+  button: React.ReactElement<ButtonProps>;
+  // children: React.ReactNode | React.ReactNode[];
   sx?: SxProps;
 }) => {
   const [open, setOpen] = useState(false);
@@ -52,7 +52,8 @@ const SystemModal = ({
           {React.cloneElement(component, { closeModal: handleClose })}
         </Paper>
       </Modal>
-      <Box onClick={handleOpen}>{children}</Box>
+      {React.cloneElement(button, {onClick: handleOpen})}
+      {/* <Box onClick={handleOpen}>{children}</Box> */}
     </>
   );
 };

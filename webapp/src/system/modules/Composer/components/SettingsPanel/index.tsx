@@ -10,6 +10,7 @@ import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 
 import CompositionTree from "./CompositionTree";
+import MaterialList from "./MaterialList";
 
 const ComposerSettingsPanel = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -28,9 +29,16 @@ const ComposerSettingsPanel = () => {
       </Accordion>
 
       <Accordion
-        name="Sumário"
+        name="Materiais"
         icon={<ShortTextSharpIcon />}
-        summary="Resumo da peça"
+        summary="Lista de materiais necessários"
+      >
+        <MaterialList />
+      </Accordion>
+      <Accordion
+        name="Prazos"
+        icon={<AccessTimeSharpIcon />}
+        summary="tempo de produção"
       >
         <></>
       </Accordion>
@@ -38,13 +46,6 @@ const ComposerSettingsPanel = () => {
         name="Valores"
         icon={<SellSharpIcon />}
         summary="Preço da peça"
-      >
-        <></>
-      </Accordion>
-      <Accordion
-        name="Prazos"
-        icon={<AccessTimeSharpIcon />}
-        summary="tempo de produção"
       >
         <></>
       </Accordion>

@@ -1,19 +1,23 @@
+import { useCallback, useEffect, useState } from "react";
+
 import SettingsIcon from "@mui/icons-material/Settings";
 import SaveSharpIcon from "@mui/icons-material/SaveSharp";
 import RotateLeftSharpIcon from "@mui/icons-material/RotateLeftSharp";
 
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import useModule from "@kernel/hooks/useModule";
-import { ILayoutModule } from "@kernel/modules/Layout";
-import ScaleSelector from "../../../ScaleSelector";
-import { useCallback, useEffect, useState } from "react";
-import { IGraphModule } from "@kernel/modules/Graphs";
+import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
 
+import useModule from "@kernel/hooks/useModule";
+import type { ILayoutModule } from "@kernel/modules/Layout";
+import type { IGraphModule } from "@kernel/modules/Graphs";
+
+
+import ScaleSelector from "../../../ScaleSelector";
 import useConverterManager from "../../../../hooks/useConverterManager";
 import { CONVERSION_GRAPH_NAME } from "../../../../constants";
 import { ConversionGraph, UnitNode } from "../../../../typings";
-import { IconButton, TextField } from "@mui/material";
 
 type PropertiesState = UnitNode & { scale?: string };
 

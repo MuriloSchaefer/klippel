@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import CloseSharp from "@mui/icons-material/CloseSharp";
-import Box from '@mui/material/Box';
+import Box, { BoxProps } from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
@@ -14,15 +14,19 @@ import { DETAILS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
 import { selectDetailsPanel } from "../../store/panels/selectors";
 
+type DetailsPanelProps = BoxProps & {
+  title?: string;
+  display?: boolean
+  children: React.ReactElement | React.ReactElement[];
+}
+
 export const DetailsPanel = ({
   title,
   display,
   children,
-}: {
-  title?: string;
-  display?: boolean
-  children: React.ReactElement | React.ReactElement[];
-}) => {
+  sx,
+  ...props
+}: DetailsPanelProps) => {
   const ref = document.getElementById(DETAILS_PANEL_ID);
   const isPortrait = useMediaQuery('(orientation: portrait)')
 
@@ -49,11 +53,13 @@ export const DetailsPanel = ({
       aria-label="details panel"
       display={panelState.state === 'opened' ? 'flex' : 'none'}
       sx={{
+        ...sx,
         flexDirection: 'column',
         padding: 1,
         gap: 1,
         minWidth: '15vw',
       }}
+      {...props}
     >
       <Box
         role="panel-header"
