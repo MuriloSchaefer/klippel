@@ -6,7 +6,7 @@ import useComposition from "../../../hooks/useComposition";
 import DeleteForeverSharpIcon from "@mui/icons-material/DeleteForeverSharp";
 
 export const RemoveProcessButton = ({compositionName, processId}: {compositionName: string, processId: string}) => {
-  const composition = useComposition(compositionName, c=>c)
+  const composition = useComposition({compositionName}, c=>c)
 
 
   const handleDelete = useCallback(() => {

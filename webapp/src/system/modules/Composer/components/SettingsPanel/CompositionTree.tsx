@@ -208,7 +208,7 @@ export default function CompositionTree() {
     }),
     []
   );
-  const composition = useComposition(activeViewport!, selector);
+  const composition = useComposition({viewportName: activeViewport!}, selector);
   const graph = useGraph<CompositionGraph, AdjacencyList>(
     activeViewport!,
     (g) => g?.adjacencyList

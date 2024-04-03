@@ -239,7 +239,11 @@ middlewares.startListening({
     const nodes = payload.model.nodes;
     Object.values(nodes).forEach((node: any) => {
       if (!("proxies" in node)) return;
-      const materialId = nodes[node.materialId].materialId
+      const materialNode = nodes[node.materialId]
+      if (!materialNode) {
+        console.warn(`Missing material node ${node.materialId}! parsing material id`)
+      }
+      const materialId = materialNode?.materialId ?? node.materialId.split('-')[1]
       const material = materials[materialId]
       const proxies: { [id: string]: CSSProperties } = node.proxies.reduce(
         (

@@ -11,13 +11,13 @@ import { Store } from "@kernel/modules/Store";
 
 import ComposerSettingsPanel from "./SettingsPanel";
 import ComposerDetailsPanel from "./DetailsPanel";
-import FloatingButtons from "./FloatingButtons";
 import useComposition from "../hooks/useComposition";
 import { CompositionGraph, CompositionNode, CompositionState, PartNode } from '../store/composition/state';
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { IPointerModule } from "@kernel/modules/Pointer";
 import useCompositionsManager from "../hooks/useCompositionsManager";
 import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
+import { IOrderModule } from "@system/modules/Orders";
 
 type CompositionInfo = Omit<CompositionState, "selectedPart" | "loading">;
 
@@ -34,7 +34,7 @@ export const ComposerViewportLoader = () => {
     (c: CompositionState | undefined) => c as CompositionInfo,
     [activeViewport]
   );
-  const composition = useComposition(activeViewport!, selector);
+  const composition = useComposition({viewportName: activeViewport!}, selector);
 
   if (!activeViewport || !composition.state)
     // TODO: add loading
@@ -69,7 +69,10 @@ export const ComposerViewport = ({
   } = useModule<IGraphModule>("Graph");
 
   const layoutModule = useModule<ILayoutModule>("Layout");
+  const ordersModule = useModule<IOrderModule>("Orders");
 
+
+  const {BudgetFloatingButton} = ordersModule.components
   const { ViewportNotificationsTray } = layoutModule.components;
 
   const { graphId, svgPath, name, viewportName } = compositionInfo;
@@ -142,7 +145,7 @@ export const ComposerViewport = ({
         <ComposerSettingsPanel />
         <ComposerDetailsPanel />
       </Box>
-      <FloatingButtons />
+      <BudgetFloatingButton />
     </>
   );
 };

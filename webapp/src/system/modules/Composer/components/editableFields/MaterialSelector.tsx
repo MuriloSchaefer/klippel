@@ -21,7 +21,7 @@ const MaterialSelector = ({
   const graphModule = useModule<IGraphModule>("Graph");
   const { useGraph } = graphModule.hooks;
 
-  const composition = useComposition(graphId, (c) => c); // QUESTION: what if graphId != composition name?
+  const composition = useComposition({compositionName: graphId}, (c) => c); // QUESTION: what if graphId != composition name?
 
   const materialInfo = useGraph<CompositionGraph, MaterialNode|undefined>(
     graphId,

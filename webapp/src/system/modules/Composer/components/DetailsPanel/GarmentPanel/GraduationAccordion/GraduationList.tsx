@@ -48,7 +48,7 @@ export default function GraduationList({
       .filter((n): n is DecoratedGrade => _.isNumber(n?.order))
       .sort((a, b) => a?.order - b?.order);
   });
-  const composition = useComposition(compositionName, c=> c?.selectedPart)
+  const composition = useComposition({compositionName}, c=> c?.selectedPart)
 
   const handleGradeDeletion = useCallback((id: string)=> {
     composition.actions.removeGrade(id)

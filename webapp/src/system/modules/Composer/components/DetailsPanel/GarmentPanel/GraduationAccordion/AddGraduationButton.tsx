@@ -29,7 +29,7 @@ export const AddGraduationButton = ({
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const {useGraph} = graphModule.hooks
 
-  const composition = useComposition(compositionName, (c) => c?.selectedPart);
+  const composition = useComposition({compositionName}, (c) => c?.selectedPart);
   const existingGrades = useGraph(graphId, (g) => {
     if (!g) return [];
     return Object.values(g.nodes)

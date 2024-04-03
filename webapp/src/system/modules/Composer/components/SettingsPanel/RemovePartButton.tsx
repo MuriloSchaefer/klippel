@@ -11,7 +11,7 @@ export const RemovePartButton = ({
 }: {
   compositionName: string;
 }) => {
-  const composition = useComposition(compositionName, (c) => c?.selectedPart);
+  const composition = useComposition({compositionName}, (c) => c?.selectedPart);
 
   const handleSubmit = useCallback((e: MouseEvent) => {
     //composition.actions.addPart(form.name, form.domId, composition.state);

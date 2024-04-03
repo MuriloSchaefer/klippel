@@ -25,7 +25,7 @@ export const AddPartButton = ({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
-  const composition = useComposition(compositionName, (c) => c?.selectedPart);
+  const composition = useComposition({compositionName}, (c) => c?.selectedPart);
 
   const [form, setForm] = useState<AddPartForm>({
     name: "",

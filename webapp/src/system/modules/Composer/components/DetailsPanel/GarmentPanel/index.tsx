@@ -51,7 +51,7 @@ export default ({
     description: node.description ?? "",
   });
 
-  const composition = useComposition(compositionName, (c) => c);
+  const composition = useComposition({compositionName}, (c) => c);
 
   const handleSaveProperties = useCallback(() => {
     composition.actions.changeProperties(

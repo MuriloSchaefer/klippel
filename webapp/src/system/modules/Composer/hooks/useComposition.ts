@@ -95,7 +95,10 @@ export interface NonNullComposition<T = CompositionState> {
 }
 
 const useComposition = <C = Composition, R = C>(
-  compositionName: string,
+  filter: {
+    compositionName?: string,
+    viewportName?: string
+  },
   compositionSelector: (composition: CompositionState | undefined) => R
 ): Composition<R> => {
   const storeModule = useModule<Store>("Store");
@@ -109,16 +112,22 @@ const useComposition = <C = Composition, R = C>(
   const { useGraph } = graphModule.hooks;
   const { useMaterials } = materialsModule.hooks;
 
+  const defaultSelector = (state: { Composer: ComposerState } | undefined) => {
+    if (!state) return
+    const {compositionName, viewportName} = filter
+    if (compositionName) return state.Composer.compositionsManager.compositions[compositionName]
+    if (viewportName) return Object.values(state.Composer.compositionsManager.compositions).find(c => c.viewportName === viewportName)
+    console.warn('either compositionName or viewportName shall be provided')
+  }
+
   const selector = createSelector(
-    (state: { Composer: ComposerState } | undefined) =>
-      state && state.Composer.compositionsManager.compositions[compositionName],
+    defaultSelector,
     compositionSelector
   );
   const compositionState = useAppSelector(selector);
 
   const innerState = useAppSelector(
-    (state: { Composer: ComposerState } | undefined) =>
-      state && state.Composer.compositionsManager.compositions[compositionName]
+    defaultSelector
   );
 
   const graph = useGraph<CompositionGraph, Partial<CompositionGraph>>(
@@ -300,12 +309,12 @@ const useComposition = <C = Composition, R = C>(
         graph.actions.removeNode(materialUsageId);
       },
       addRestriction(materialId, restriction) {
-        dispatch(addRestriction({ compositionName, materialId, restriction }));
+        dispatch(addRestriction({ compositionName: innerState!.name, materialId, restriction }));
       },
       updateRestriction(materialId, restrictionId, changes) {
         dispatch(
           updateRestriction({
-            compositionName,
+            compositionName: innerState!.name,
             materialId,
             restrictionId,
             changes,
@@ -314,7 +323,7 @@ const useComposition = <C = Composition, R = C>(
       },
       removeRestriction(materialId, restrictionId) {
         dispatch(
-          deleteRestriction({ compositionName, materialId, restrictionId })
+          deleteRestriction({ compositionName: innerState!.name, materialId, restrictionId })
         );
       },
       removeOperation(operationId) {
@@ -361,7 +370,7 @@ const useComposition = <C = Composition, R = C>(
         graph.actions.addEdge(edge);
       },
       selectPart(partName) {
-        dispatch(selectPart({ compositionName, partName }));
+        dispatch(selectPart({ compositionName: innerState!.name, partName }));
         panelsManager.functions.openDetails();
       },
       changeMaterialType(materialUsageId, materialType) {
@@ -392,15 +401,17 @@ const useComposition = <C = Composition, R = C>(
       },
 
       addProxy(proxy, materialId) {
-        dispatch(addProxy({ compositionName, materialId, proxy }));
+        dispatch(addProxy({ compositionName: innerState!.name, materialId, proxy }));
       },
       deleteProxy(proxyId, materialId) {
-        dispatch(deleteProxy({ compositionName, materialId, proxyId }));
+        dispatch(deleteProxy({ compositionName: innerState!.name, materialId, proxyId }));
         //svg.actions.deleteProxy(proxyId, compositionName)
       },
       updateProxy() {},
     },
   };
 };
+
+
 
 export default useComposition;

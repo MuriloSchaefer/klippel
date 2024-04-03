@@ -73,7 +73,7 @@ const MaterialTypeSelector = ({
     node.materialType
   );
 
-  const composition = useComposition(graphId, (c) => c); // QUESTION: what if graphId != composition name?
+  const composition = useComposition({compositionName: graphId}, (c) => c); // QUESTION: what if graphId != composition name?
 
   const handleMaterialTypeChange = useCallback(
     (event: SelectChangeEvent) =>

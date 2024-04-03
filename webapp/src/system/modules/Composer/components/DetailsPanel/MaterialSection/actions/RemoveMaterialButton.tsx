@@ -8,7 +8,7 @@ import useComposition from "../../../../hooks/useComposition";
 import { MaterialActionProps } from "./types";
 
 export const RemoveMaterialButton = ({compositionName, materialUsageId}: MaterialActionProps) => {
-  const composition = useComposition(compositionName, c=>c)
+  const composition = useComposition({compositionName}, c=>c)
 
 
   const handleDelete = useCallback(() => {

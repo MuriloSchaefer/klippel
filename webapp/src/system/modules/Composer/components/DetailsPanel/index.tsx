@@ -33,7 +33,7 @@ const ComposerDetailLoader = () => {
     }),
     []
   );
-  const composition = useComposition(activeViewport!, selector);
+  const composition = useComposition({viewportName: activeViewport!}, selector);
 
   if (
     !composition.state?.selectedPart ||

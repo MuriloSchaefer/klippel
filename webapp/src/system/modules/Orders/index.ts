@@ -1,15 +1,19 @@
 import { IModule } from "@kernel/modules/base";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
 import { startModule } from "./kernelCalls";
-import useComposition from "./hooks/useComposition";
+import useBudgetManager from "./hooks/useBudgetManager";
+import BudgetFloatingButton from "./components/BudgetFloatingButton";
 
 
-export interface IComposerModule extends IModule {
+export interface IOrderModule extends IModule {
   name: typeof MODULE_NAME,
   version: typeof MODULE_VERSION,
   components: {
+    BudgetFloatingButton: typeof BudgetFloatingButton
   },
-  hooks: {useComposition: typeof useComposition}
+  hooks: {
+    useBudgetManager: typeof useBudgetManager
+  }
 }
 
 /**
@@ -20,13 +24,14 @@ export interface IComposerModule extends IModule {
  * ui state management,
  * etc.
  */
-const module: IComposerModule = {
+const module: IOrderModule = {
   name: MODULE_NAME,
   version: MODULE_VERSION,
-  depends_on: ['Layout', 'Graph', 'SVG', 'Materials', 'Converter'],
+  depends_on: ['Composer'],
   components: {
+    BudgetFloatingButton
   },
-  hooks:{useComposition},
+  hooks: {useBudgetManager},
   kernelCalls: {
     startModule,
     restartModule(){},

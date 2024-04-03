@@ -29,7 +29,7 @@ export const AddProcessButton = ({
   const { CompoundSelector } = converterModule.components;
   const { useScales } = converterModule.hooks;
 
-  const composition = useComposition(compositionName, (c) => c?.selectedPart);
+  const composition = useComposition({compositionName}, (c) => c?.selectedPart);
 
   const formId = useMemo(() => _.uniqueId("new-process-form"), []);
   const [operation, setOperation] = useState<AddOperationPayload>({

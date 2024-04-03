@@ -45,7 +45,7 @@ export const AddMaterialButton = ({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
-  const composition = useComposition(compositionName, (c) => c?.selectedPart);
+  const composition = useComposition({compositionName}, (c) => c?.selectedPart);
 
   const [label, setLabel] = useState<string>("");
   const [materialTypes, setMaterialTypes] = useState<string[]>([]);

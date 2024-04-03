@@ -50,7 +50,7 @@ const LinkMaterialButton = ({
   compositionName,
   materialUsageId,
 }: MaterialActionProps) => {
-  const composition = useComposition(compositionName, (c) => c);
+  const composition = useComposition({compositionName}, (c) => c);
   const pointerModule = useModule<IPointerModule>("Pointer");
   const layoutModule = useModule<ILayoutModule>("Layout");
 

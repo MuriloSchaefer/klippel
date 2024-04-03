@@ -16,6 +16,7 @@ import Markdown from "./modules/Markdown";
 import converterModule from "@system/modules/Converter";
 import materialsModule from "@system/modules/Materials";
 import composerModule from "@system/modules/Composer";
+import ordersModule from "@system/modules/Orders";
 
 export interface InitializationConfig {
   extraModules: ModulesMap
@@ -36,7 +37,7 @@ const App = (): React.ReactElement => {
 
   const builtInModules: ModulesMap = {
     kernel: [SVG, pointerModule, Markdown],
-    system: [converterModule, materialsModule, composerModule ]
+    system: [converterModule, materialsModule, composerModule, ordersModule ]
   }
   
   return (
