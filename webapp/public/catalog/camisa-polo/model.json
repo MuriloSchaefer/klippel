@@ -913,19 +913,6 @@
         "y": 0
       }
     },
-    "material-usage-265": {
-      "type": "MATERIAL_USAGE",
-      "id": "material-usage-265",
-      "label": "Barra",
-      "editableAttributes": ["materialType", "materialId"],
-      "materialId": "material-12",
-      "materialType": "malha",
-      "position": {
-        "x": 0,
-        "y": 0
-      },
-      "proxies": []
-    },
     "material-usage-265-restriction-1": {
       "type": "RESTRICTION",
       "restrictionType": "allowOnly",
@@ -937,19 +924,6 @@
         "x": 0,
         "y": 0
       }
-    },
-    "material-usage-266": {
-      "type": "MATERIAL_USAGE",
-      "id": "material-usage-266",
-      "label": "Barra",
-      "editableAttributes": ["materialType", "materialId"],
-      "materialId": "material-12",
-      "materialType": "malha",
-      "position": {
-        "x": 0,
-        "y": 0
-      },
-      "proxies": []
     },
     "material-usage-266-restriction-1": {
       "type": "RESTRICTION",
@@ -1237,6 +1211,38 @@
           "amount": 1,
           "unit": "unitario18"
         }
+      }
+    },
+    "material-usage-141-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-141-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["malha", "tecido"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-13": {
+      "id": "material-13",
+      "type": "MATERIAL",
+      "label": "Tricoline Amélie",
+      "materialId": 13,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-15": {
+      "id": "material-15",
+      "type": "MATERIAL",
+      "label": "Tricoline Amélie",
+      "materialId": 15,
+      "position": {
+        "x": 0,
+        "y": 0
       }
     }
   },
@@ -1720,38 +1726,6 @@
       "attr": "materialType",
       "type": "RESTRICTED_BY"
     },
-    "material-usage-248->material-14": {
-      "id": "material-usage-248->material-14",
-      "sourceId": "material-usage-248",
-      "targetId": "material-14",
-      "type": "CONSUMES"
-    },
-    "frente->material-usage-265": {
-      "id": "frente->material-usage-265",
-      "sourceId": "frente",
-      "targetId": "material-usage-265",
-      "type": "MADE_OF"
-    },
-    "material-usage-265->material-usage-265-restriction-1": {
-      "id": "material-usage-265->material-usage-265-restriction-1",
-      "sourceId": "material-usage-265",
-      "targetId": "material-usage-265-restriction-1",
-      "attr": "materialType",
-      "type": "RESTRICTED_BY"
-    },
-    "frente->material-usage-266": {
-      "id": "frente->material-usage-266",
-      "sourceId": "frente",
-      "targetId": "material-usage-266",
-      "type": "MADE_OF"
-    },
-    "material-usage-266->material-usage-266-restriction-1": {
-      "id": "material-usage-266->material-usage-266-restriction-1",
-      "sourceId": "material-usage-266",
-      "targetId": "material-usage-266-restriction-1",
-      "attr": "materialType",
-      "type": "RESTRICTED_BY"
-    },
     "mangaDireita->material-usage-267": {
       "id": "mangaDireita->material-usage-267",
       "sourceId": "mangaDireita",
@@ -1893,6 +1867,12 @@
       "sourceId": "gola",
       "targetId": "operation-133",
       "type": "PROCESS_NEEDED"
+    },
+    "material-usage-248->material-14": {
+      "id": "material-usage-248->material-14",
+      "sourceId": "material-usage-248",
+      "targetId": "material-14",
+      "type": "CONSUMES"
     }
   },
   "adjacencyList": {
@@ -2017,9 +1997,7 @@
         "frente->material1-ombro-direito-frente",
         "frente->material1-frente",
         "frente->material2-frente",
-        "frente->material-usage-248",
-        "frente->material-usage-265",
-        "frente->material-usage-266"
+        "frente->material-usage-248"
       ]
     },
     "ombro-esquerdo-frente": {
@@ -2301,20 +2279,12 @@
       "inputs": ["material-usage-248->material-usage-248-restriction-1"],
       "outputs": []
     },
-    "material-usage-265": {
-      "inputs": ["frente->material-usage-265"],
-      "outputs": ["material-usage-265->material-usage-265-restriction-1"]
-    },
     "material-usage-265-restriction-1": {
-      "inputs": ["material-usage-265->material-usage-265-restriction-1"],
+      "inputs": [],
       "outputs": []
     },
-    "material-usage-266": {
-      "inputs": ["frente->material-usage-266"],
-      "outputs": ["material-usage-266->material-usage-266-restriction-1"]
-    },
     "material-usage-266-restriction-1": {
-      "inputs": ["material-usage-266->material-usage-266-restriction-1"],
+      "inputs": [],
       "outputs": []
     },
     "material-usage-267": {
@@ -2412,6 +2382,18 @@
     },
     "operation-133": {
       "inputs": ["gola->operation-133"],
+      "outputs": []
+    },
+    "material-usage-141-restriction-1": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-13": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-15": {
+      "inputs": [],
       "outputs": []
     }
   }
