@@ -9,7 +9,7 @@ import SettingsPanel from "./components/Panels/SettingsPanel";
 import DetailsPanel from "./components/Panels/DetailsPanel";
 import { Accordion } from "./components/Panels/Accordion";
 import usePanelsManager from "./hooks/usePanelsManager";
-import { getViewportState, selectActiveViewport } from "./store/viewports/selectors";
+import { getViewportGroups, getViewportState, selectActiveViewport } from "./store/viewports/selectors";
 import ViewportNotificationsTray from "./components/SystemTray/ViewportNotificationsTray";
 import SystemModal from "./components/SystemModal";
 
@@ -18,6 +18,7 @@ import CRUDGridProvider, { CRUDGridContext } from "./components/CRUDGrid/CRUDGri
 import CRUDBooleanCell from "./components/CRUDGrid/BooleanCell";
 import { useResizeObserver } from "./hooks/useResizeObserver";
 import CustomTextArea from "./components/CustomFields/TextArea";
+import ColorPicker from "./components/ColorPicker";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -32,6 +33,7 @@ export interface ILayoutModule extends IModule {
     CRUDBooleanCell: typeof CRUDBooleanCell,
     CRUDGrid: typeof CRUDGrid,
     CustomTextArea: typeof CustomTextArea,
+    ColorPicker: typeof ColorPicker
   },
   contexts: {
     CRUDGridContext: typeof CRUDGridContext,
@@ -46,7 +48,8 @@ export interface ILayoutModule extends IModule {
   store: {
     selectors: {
       selectActiveViewport: typeof selectActiveViewport,
-      getViewportState: typeof getViewportState
+      getViewportState: typeof getViewportState,
+      getViewportGroups: typeof getViewportGroups
     }
   }
 }
@@ -72,7 +75,8 @@ const LayoutModule: ILayoutModule = {
     CRUDGrid,
     CRUDBooleanCell,
     CRUDGridProvider,
-    CustomTextArea
+    CustomTextArea,
+    ColorPicker
   },
   contexts: {CRUDGridContext},
   hooks: {
@@ -85,7 +89,8 @@ const LayoutModule: ILayoutModule = {
   store: {
     selectors: {
       selectActiveViewport,
-      getViewportState
+      getViewportState,
+      getViewportGroups
     }
   },
   kernelCalls: {

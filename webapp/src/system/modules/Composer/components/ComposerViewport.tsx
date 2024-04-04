@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import _ from "lodash";
 
 import Box from "@mui/material/Box";
@@ -18,6 +18,8 @@ import { IPointerModule } from "@kernel/modules/Pointer";
 import useCompositionsManager from "../hooks/useCompositionsManager";
 import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
 import { IOrderModule } from "@system/modules/Orders";
+
+import type { BudgetFloatingButtonActions } from "@system/modules/Orders/typings";
 
 type CompositionInfo = Omit<CompositionState, "selectedPart" | "loading">;
 
@@ -75,11 +77,17 @@ export const ComposerViewport = ({
   const {BudgetFloatingButton} = ordersModule.components
   const { ViewportNotificationsTray } = layoutModule.components;
 
-  const { graphId, svgPath, name, viewportName } = compositionInfo;
+  const { graphId, svgPath, name, viewportName, budget } = compositionInfo;
 
   const compositionManager = useCompositionsManager();
   const nodes = useGraph<CompositionGraph, NodesHashMap<CompositionNode>|undefined>(graphId, (g) => g?.nodes);
   const svg = useSVG(svgPath, (svg) => svg?.instances[name]);
+
+
+  const allowedActions: BudgetFloatingButtonActions[] = useMemo(()=>{
+    if (!budget) return ['create-budget', 'add-to-budget']
+    return ['convert-to-order', 'delete-budget']
+  }, [budget])
 
   const beforeInjectionHandle = useCallback(
     (svgRoot: SVGSVGElement) => {
@@ -145,7 +153,7 @@ export const ComposerViewport = ({
         <ComposerSettingsPanel />
         <ComposerDetailsPanel />
       </Box>
-      <BudgetFloatingButton />
+      <BudgetFloatingButton allowedActions={allowedActions} />
     </>
   );
 };

@@ -12,6 +12,7 @@ import {
   addMaterialType,
   addProxy,
   addRestriction,
+  addToBudget,
   changeMaterial,
   deleteProxy,
   deleteRestriction,
@@ -39,6 +40,7 @@ interface CompositionActions {
   addGrade(abbreviation: string, order: number): void;
   removeGrade(id: string): void;
   reorderGrade(id: string, newOrder: number): void;
+  addToBudget(id: string, budgetId: string): void;
 
   addPart(name: string, domId: string, parentName?: string): void;
   removePart(partId: string): void;
@@ -149,6 +151,11 @@ const useComposition = <C = Composition, R = C>(
         if (!rootNode) throw Error("root node not found");
         const updatedNode = { ...rootNode, label: name, description };
         graph.actions.updateNode(updatedNode);
+      },
+      addToBudget(id, budgetId){
+        const grades = Object.values(graph.state?.nodes ?? {}).filter(n => n.type === 'GRADE').map(n => n.id)
+
+        dispatch(addToBudget({compositionName: id, budgetId, gradesInfo: grades}))
       },
       addGrade(abbreviation, order) {
         const id = _.uniqueId(`${abbreviation}-grade-`);

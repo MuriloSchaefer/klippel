@@ -107,6 +107,13 @@ export type CompositionEdge =
 export type CompositionGraph = GraphState<CompositionNode, CompositionEdge>;
 
 type Loader = "not-started" | "started" | "completed";
+
+type BudgetInfo = {
+  budgetId: string
+  grades: {
+    [name: string]: number
+  }
+}
 export interface CompositionState {
   name: string;
   viewportName: string;
@@ -119,6 +126,7 @@ export interface CompositionState {
     loadSVG: Loader;
     loadModel: Loader;
   };
+  budget: BudgetInfo | undefined
 }
 
 export const newCompositionState: Omit<
@@ -129,4 +137,5 @@ export const newCompositionState: Omit<
     loadSVG: "not-started",
     loadModel: "not-started",
   },
+  budget: undefined
 };

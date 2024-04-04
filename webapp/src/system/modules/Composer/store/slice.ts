@@ -12,7 +12,7 @@ import { newCompositionState } from "./composition/state";
 import { initialState, ComposerState } from "./state";
 
 import instanceSlice from "./composition/slice";
-import { openDebugView, selectPart, unselectPart } from "./composition/actions";
+import { addToBudget, openDebugView, selectPart, unselectPart } from "./composition/actions";
 
 const slice = createSlice({
   name: MODULE_NAME,
@@ -192,6 +192,23 @@ const slice = createSlice({
     }));
 
     builder.addCase(openDebugView, (state: ComposerState, action) => ({
+      ...state,
+      compositionsManager: {
+        ...state.compositionsManager,
+        compositions: {
+          ...state.compositionsManager.compositions,
+
+          [action.payload.compositionName]: instanceSlice.reducer(
+            state.compositionsManager.compositions[
+              action.payload.compositionName
+            ],
+            action
+          ),
+        },
+      },
+    }));
+
+    builder.addCase(addToBudget, (state: ComposerState, action) => ({
       ...state,
       compositionsManager: {
         ...state.compositionsManager,

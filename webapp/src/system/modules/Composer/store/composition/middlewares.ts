@@ -9,9 +9,11 @@ import {
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import type { MaterialsModuleState } from "@system/modules/Materials/store/state";
 import {
+  addedToBudget,
   addMaterial,
   addProxy,
   addRestriction,
+  addToBudget,
   changeMaterial,
   deleteProxy,
   deleteRestriction,
@@ -471,6 +473,18 @@ middlewares.startListening({
       })
     );
     dispatch(proxyAdded(payload)); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: addToBudget,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(addedToBudget({
+      budgetId: payload.budgetId,
+      compositionName: payload.compositionName
+    })); // dispatch event
   },
 });
 

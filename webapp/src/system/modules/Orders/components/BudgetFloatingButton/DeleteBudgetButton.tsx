@@ -16,9 +16,9 @@ type CreateBudgetForm = {
   color: string;
 };
 
-const info = actions["create-budget"]
+const info = actions["delete-budget"]
 
-export default function CreateBudgetButton() {
+export default function DeleteBudgetButton() {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const layoutModule = useModule<ILayoutModule>("Layout");
 
