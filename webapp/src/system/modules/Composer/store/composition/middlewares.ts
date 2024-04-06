@@ -14,9 +14,11 @@ import {
   addProxy,
   addRestriction,
   addToBudget,
+  changeGradeCounter,
   changeMaterial,
   deleteProxy,
   deleteRestriction,
+  gradeCounterChanged,
   materialAdded,
   materialChanged,
   partSelected,
@@ -485,6 +487,16 @@ middlewares.startListening({
       budgetId: payload.budgetId,
       compositionName: payload.compositionName
     })); // dispatch event
+  },
+});
+
+
+middlewares.startListening({
+  actionCreator: changeGradeCounter,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(gradeCounterChanged(payload)); // dispatch event
   },
 });
 

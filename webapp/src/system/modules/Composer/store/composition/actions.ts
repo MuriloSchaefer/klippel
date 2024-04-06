@@ -24,6 +24,10 @@ export const unselectPart = createAction<{compositionName: string}>(
 export const addToBudget = createAction<{compositionName: string, budgetId: string, gradesInfo: string[]}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Add to budget`
 );
+export const changeGradeCounter = createAction<{compositionName: string, gradeId: string, counter: number}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Change grade counter`
+);
+
 
 
 export const addProxy = createAction<{compositionName:string, materialId:string, proxy: Proxy}>(
@@ -103,4 +107,7 @@ export const debugViewportClosed = createAction<{compositionName: string, viewpo
 );
 export const addedToBudget = createAction<{compositionName: string, budgetId: string}>( 
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Added to budget`
+)
+export const gradeCounterChanged = createAction<{compositionName: string, gradeId: string, counter: number}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Grade counter changed`
 )

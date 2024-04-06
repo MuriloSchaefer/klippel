@@ -12,7 +12,13 @@ import { newCompositionState } from "./composition/state";
 import { initialState, ComposerState } from "./state";
 
 import instanceSlice from "./composition/slice";
-import { addToBudget, openDebugView, selectPart, unselectPart } from "./composition/actions";
+import {
+  addToBudget,
+  changeGradeCounter,
+  openDebugView,
+  selectPart,
+  unselectPart,
+} from "./composition/actions";
 
 const slice = createSlice({
   name: MODULE_NAME,
@@ -47,7 +53,7 @@ const slice = createSlice({
           ...state,
           compositionsManager: {
             ...state.compositionsManager,
-            compositionsList: action.payload
+            compositionsList: action.payload,
           },
         };
       })
@@ -89,8 +95,10 @@ const slice = createSlice({
             },
           },
         };
-      })
-      builder.addCase(SVGLoaded, (state: ComposerState, { payload: { path } }) => {
+      });
+    builder.addCase(
+      SVGLoaded,
+      (state: ComposerState, { payload: { path } }) => {
         const composition = Object.values(
           state.compositionsManager.compositions
         ).find((comp) => comp.svgPath === path);
@@ -111,51 +119,52 @@ const slice = createSlice({
             },
           },
         };
-      })
-      builder.addCase(
-        fetchModel,
-        (state: ComposerState, { payload: { compositionName } }) => {
-          return {
-            ...state,
-            compositionsManager: {
-              ...state.compositionsManager,
-              compositions: {
-                ...state.compositionsManager.compositions,
-                [compositionName]: {
-                  ...state.compositionsManager.compositions[compositionName],
-                  loading: {
-                    ...state.compositionsManager.compositions[compositionName]
-                      .loading,
-                    loadModel: "started",
-                  },
-                },
-              },
-            },
-          };
-        }
-      )
-      builder.addCase(modelStored, (state: ComposerState, { payload }) => {
+      }
+    );
+    builder.addCase(
+      fetchModel,
+      (state: ComposerState, { payload: { compositionName } }) => {
         return {
           ...state,
           compositionsManager: {
             ...state.compositionsManager,
             compositions: {
               ...state.compositionsManager.compositions,
-              [payload.compositionName]: {
-                ...state.compositionsManager.compositions[
-                  payload.compositionName
-                ],
+              [compositionName]: {
+                ...state.compositionsManager.compositions[compositionName],
                 loading: {
-                  ...state.compositionsManager.compositions[
-                    payload.compositionName
-                  ].loading,
-                  loadModel: "completed",
+                  ...state.compositionsManager.compositions[compositionName]
+                    .loading,
+                  loadModel: "started",
                 },
               },
             },
           },
         };
-      });
+      }
+    );
+    builder.addCase(modelStored, (state: ComposerState, { payload }) => {
+      return {
+        ...state,
+        compositionsManager: {
+          ...state.compositionsManager,
+          compositions: {
+            ...state.compositionsManager.compositions,
+            [payload.compositionName]: {
+              ...state.compositionsManager.compositions[
+                payload.compositionName
+              ],
+              loading: {
+                ...state.compositionsManager.compositions[
+                  payload.compositionName
+                ].loading,
+                loadModel: "completed",
+              },
+            },
+          },
+        },
+      };
+    });
 
     // instance actions
     builder.addCase(selectPart, (state: ComposerState, action) => ({
@@ -209,6 +218,23 @@ const slice = createSlice({
     }));
 
     builder.addCase(addToBudget, (state: ComposerState, action) => ({
+      ...state,
+      compositionsManager: {
+        ...state.compositionsManager,
+        compositions: {
+          ...state.compositionsManager.compositions,
+
+          [action.payload.compositionName]: instanceSlice.reducer(
+            state.compositionsManager.compositions[
+              action.payload.compositionName
+            ],
+            action
+          ),
+        },
+      },
+    }));
+
+    builder.addCase(changeGradeCounter, (state: ComposerState, action) => ({
       ...state,
       compositionsManager: {
         ...state.compositionsManager,

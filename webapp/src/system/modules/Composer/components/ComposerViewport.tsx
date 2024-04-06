@@ -12,7 +12,12 @@ import { Store } from "@kernel/modules/Store";
 import ComposerSettingsPanel from "./SettingsPanel";
 import ComposerDetailsPanel from "./DetailsPanel";
 import useComposition from "../hooks/useComposition";
-import { CompositionGraph, CompositionNode, CompositionState, PartNode } from '../store/composition/state';
+import type {
+  CompositionGraph,
+  CompositionNode,
+  CompositionState,
+  PartNode,
+} from "../store/composition/state";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { IPointerModule } from "@kernel/modules/Pointer";
 import useCompositionsManager from "../hooks/useCompositionsManager";
@@ -20,6 +25,7 @@ import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
 import { IOrderModule } from "@system/modules/Orders";
 
 import type { BudgetFloatingButtonActions } from "@system/modules/Orders/typings";
+import GradesCounter from "./GradesCounter";
 
 type CompositionInfo = Omit<CompositionState, "selectedPart" | "loading">;
 
@@ -36,7 +42,10 @@ export const ComposerViewportLoader = () => {
     (c: CompositionState | undefined) => c as CompositionInfo,
     [activeViewport]
   );
-  const composition = useComposition({viewportName: activeViewport!}, selector);
+  const composition = useComposition(
+    { viewportName: activeViewport! },
+    selector
+  );
 
   if (!activeViewport || !composition.state)
     // TODO: add loading
@@ -73,21 +82,22 @@ export const ComposerViewport = ({
   const layoutModule = useModule<ILayoutModule>("Layout");
   const ordersModule = useModule<IOrderModule>("Orders");
 
-
-  const {BudgetFloatingButton} = ordersModule.components
+  const { BudgetFloatingButton } = ordersModule.components;
   const { ViewportNotificationsTray } = layoutModule.components;
 
   const { graphId, svgPath, name, viewportName, budget } = compositionInfo;
 
   const compositionManager = useCompositionsManager();
-  const nodes = useGraph<CompositionGraph, NodesHashMap<CompositionNode>|undefined>(graphId, (g) => g?.nodes);
+  const nodes = useGraph<
+    CompositionGraph,
+    NodesHashMap<CompositionNode> | undefined
+  >(graphId, (g) => g?.nodes);
   const svg = useSVG(svgPath, (svg) => svg?.instances[name]);
 
-
-  const allowedActions: BudgetFloatingButtonActions[] = useMemo(()=>{
-    if (!budget) return ['create-budget', 'add-to-budget']
-    return ['convert-to-order', 'delete-budget']
-  }, [budget])
+  const allowedActions: BudgetFloatingButtonActions[] = useMemo(() => {
+    if (!budget) return ["create-budget", "add-to-budget"];
+    return ["convert-to-order", "delete-budget"];
+  }, [budget]);
 
   const beforeInjectionHandle = useCallback(
     (svgRoot: SVGSVGElement) => {
@@ -153,7 +163,23 @@ export const ComposerViewport = ({
         <ComposerSettingsPanel />
         <ComposerDetailsPanel />
       </Box>
-      <BudgetFloatingButton allowedActions={allowedActions} />
+      <Box
+        sx={{
+          position: "absolute",
+          display: "flex",
+          flexDirection: "row-reverse",
+          justifyContent: "space-between",
+          gap: 1,
+          padding: 1,
+          alignItems: "end",
+          bottom: 10,
+          width: "100%",
+          pointerEvents: 'none'
+        }}
+      >
+        <BudgetFloatingButton allowedActions={allowedActions} />
+        {budget && <GradesCounter compositionName={name} graphId={graphId} />}
+      </Box>
     </>
   );
 };

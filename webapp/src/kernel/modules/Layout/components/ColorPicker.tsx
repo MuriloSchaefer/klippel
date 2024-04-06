@@ -21,11 +21,11 @@ export default function ColorPicker(
     <Box sx={{ position: "relative" }}>
       <Box
         sx={{
-          borderRadius: 1,
-          width: "50px",
-          height: "50px",
-          backgroundColor: color,
           ...sx,
+          borderRadius: 1,
+          backgroundColor: color,
+          minWidth: '10px',
+          minHeight: '10px'
         }}
         onClick={() => setShowDialog((curr) => !curr)}
       />

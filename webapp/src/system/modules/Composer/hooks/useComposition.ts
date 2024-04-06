@@ -13,6 +13,7 @@ import {
   addProxy,
   addRestriction,
   addToBudget,
+  changeGradeCounter,
   changeMaterial,
   deleteProxy,
   deleteRestriction,
@@ -40,6 +41,7 @@ interface CompositionActions {
   addGrade(abbreviation: string, order: number): void;
   removeGrade(id: string): void;
   reorderGrade(id: string, newOrder: number): void;
+  changeGradeCounter(id: string, counter: number): void;
   addToBudget(id: string, budgetId: string): void;
 
   addPart(name: string, domId: string, parentName?: string): void;
@@ -98,8 +100,8 @@ export interface NonNullComposition<T = CompositionState> {
 
 const useComposition = <C = Composition, R = C>(
   filter: {
-    compositionName?: string,
-    viewportName?: string
+    compositionName?: string;
+    viewportName?: string;
   },
   compositionSelector: (composition: CompositionState | undefined) => R
 ): Composition<R> => {
@@ -115,29 +117,28 @@ const useComposition = <C = Composition, R = C>(
   const { useMaterials } = materialsModule.hooks;
 
   const defaultSelector = (state: { Composer: ComposerState } | undefined) => {
-    if (!state) return
-    const {compositionName, viewportName} = filter
-    if (compositionName) return state.Composer.compositionsManager.compositions[compositionName]
-    if (viewportName) return Object.values(state.Composer.compositionsManager.compositions).find(c => c.viewportName === viewportName)
-    console.warn('either compositionName or viewportName shall be provided')
-  }
+    if (!state) return;
+    const { compositionName, viewportName } = filter;
+    if (compositionName)
+      return state.Composer.compositionsManager.compositions[compositionName];
+    if (viewportName)
+      return Object.values(
+        state.Composer.compositionsManager.compositions
+      ).find((c) => c.viewportName === viewportName);
+    console.warn("either compositionName or viewportName shall be provided");
+  };
 
-  const selector = createSelector(
-    defaultSelector,
-    compositionSelector
-  );
+  const selector = createSelector(defaultSelector, compositionSelector);
   const compositionState = useAppSelector(selector);
 
-  const innerState = useAppSelector(
-    defaultSelector
-  );
+  const innerState = useAppSelector(defaultSelector);
 
   const graph = useGraph<CompositionGraph, Partial<CompositionGraph>>(
     innerState?.graphId!,
     (g) => ({
       adjacencyList: g?.adjacencyList,
       nodes: g?.nodes,
-      edges: g?.edges
+      edges: g?.edges,
     })
   );
 
@@ -152,10 +153,14 @@ const useComposition = <C = Composition, R = C>(
         const updatedNode = { ...rootNode, label: name, description };
         graph.actions.updateNode(updatedNode);
       },
-      addToBudget(id, budgetId){
-        const grades = Object.values(graph.state?.nodes ?? {}).filter(n => n.type === 'GRADE').map(n => n.id)
+      addToBudget(id, budgetId) {
+        const grades = Object.values(graph.state?.nodes ?? {})
+          .filter((n) => n.type === "GRADE")
+          .map((n) => n.id);
 
-        dispatch(addToBudget({compositionName: id, budgetId, gradesInfo: grades}))
+        dispatch(
+          addToBudget({ compositionName: id, budgetId, gradesInfo: grades })
+        );
       },
       addGrade(abbreviation, order) {
         const id = _.uniqueId(`${abbreviation}-grade-`);
@@ -196,12 +201,13 @@ const useComposition = <C = Composition, R = C>(
       },
       removeGrade(id) {
         // remove grade node
-        if (!graph.state?.edges || !graph.state.adjacencyList) throw Error('edges not defined')
-        const adj = graph.state.adjacencyList[id]
-        const edgeId = adj.inputs.at(0)
-        if (!edgeId) throw Error('edges not found')
-        const {order: oldOrder} = graph.state.edges[edgeId] as HasGradeEdge
-        graph.actions.removeNode(id)
+        if (!graph.state?.edges || !graph.state.adjacencyList)
+          throw Error("edges not defined");
+        const adj = graph.state.adjacencyList[id];
+        const edgeId = adj.inputs.at(0);
+        if (!edgeId) throw Error("edges not found");
+        const { order: oldOrder } = graph.state.edges[edgeId] as HasGradeEdge;
+        graph.actions.removeNode(id);
 
         // adjust ordering
         Object.values(graph.state?.edges ?? {})
@@ -212,9 +218,12 @@ const useComposition = <C = Composition, R = C>(
           .sort((a, b) => a.order - b.order)
           .forEach((e) =>
             graph.actions.updateEdge(e.id, {
-              order: e.order -1,
+              order: e.order - 1,
             } as Partial<HasGradeEdge>)
           );
+      },
+      changeGradeCounter(id, counter) {
+        dispatch(changeGradeCounter({ compositionName: innerState?.name!, gradeId: id, counter }));
       },
       addPart(name, domId, parentName) {
         const newPart: PartNode = {
@@ -316,7 +325,13 @@ const useComposition = <C = Composition, R = C>(
         graph.actions.removeNode(materialUsageId);
       },
       addRestriction(materialId, restriction) {
-        dispatch(addRestriction({ compositionName: innerState!.name, materialId, restriction }));
+        dispatch(
+          addRestriction({
+            compositionName: innerState!.name,
+            materialId,
+            restriction,
+          })
+        );
       },
       updateRestriction(materialId, restrictionId, changes) {
         dispatch(
@@ -330,7 +345,11 @@ const useComposition = <C = Composition, R = C>(
       },
       removeRestriction(materialId, restrictionId) {
         dispatch(
-          deleteRestriction({ compositionName: innerState!.name, materialId, restrictionId })
+          deleteRestriction({
+            compositionName: innerState!.name,
+            materialId,
+            restrictionId,
+          })
         );
       },
       removeOperation(operationId) {
@@ -408,17 +427,23 @@ const useComposition = <C = Composition, R = C>(
       },
 
       addProxy(proxy, materialId) {
-        dispatch(addProxy({ compositionName: innerState!.name, materialId, proxy }));
+        dispatch(
+          addProxy({ compositionName: innerState!.name, materialId, proxy })
+        );
       },
       deleteProxy(proxyId, materialId) {
-        dispatch(deleteProxy({ compositionName: innerState!.name, materialId, proxyId }));
+        dispatch(
+          deleteProxy({
+            compositionName: innerState!.name,
+            materialId,
+            proxyId,
+          })
+        );
         //svg.actions.deleteProxy(proxyId, compositionName)
       },
       updateProxy() {},
     },
   };
 };
-
-
 
 export default useComposition;

@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Grow from "@mui/material/Grow";
@@ -55,11 +55,11 @@ export default function BudgetFloatingButton({
   const [selected, setSelected] = useState<BudgetFloatingButtonActions>(
     allowedActions[0] ?? "create-budget"
   );
-  useEffect(()=>{
-    if (allowedActions.length && !allowedActions.includes(selected)){
-      setSelected(allowedActions[0])
+  useEffect(() => {
+    if (allowedActions.length && !allowedActions.includes(selected)) {
+      setSelected(allowedActions[0]);
     }
-  }, [allowedActions])
+  }, [allowedActions]);
 
   const handleMenuItemClick = (
     event: React.MouseEvent<HTMLLIElement, MouseEvent>,
@@ -87,7 +87,11 @@ export default function BudgetFloatingButton({
   if (!composition.state || !allowedActions.length) return <></>; // TODO: what to do in this case?
 
   return (
-    <Box sx={{ position: "absolute", bottom: 10, right: 10 }}>
+    <Box
+      sx={{
+        pointerEvents: "all",
+      }}
+    >
       <ButtonGroup
         variant="contained"
         ref={anchorRef}

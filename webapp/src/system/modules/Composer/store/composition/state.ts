@@ -108,7 +108,7 @@ export type CompositionGraph = GraphState<CompositionNode, CompositionEdge>;
 
 type Loader = "not-started" | "started" | "completed";
 
-type BudgetInfo = {
+export type BudgetInfo = {
   budgetId: string
   grades: {
     [name: string]: number
