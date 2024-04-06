@@ -9,6 +9,12 @@ export const selectActiveViewport = createSelector(
 
 const getViewportManagerState = (state: { Layout: LayoutState }) =>
   state.Layout.viewportManager;
+
+export const getViewportGroups = createSelector(
+  (state: { Layout: LayoutState }) => state.Layout.viewportManager,
+  (state) => state?.groups
+);
+
 export const selectViewportStates = createSelector(
   getViewportManagerState,
   (state) => state && state.viewports

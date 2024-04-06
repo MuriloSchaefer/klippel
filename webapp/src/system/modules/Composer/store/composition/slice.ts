@@ -1,6 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
-import { openDebugView, selectPart, unselectPart } from "./actions";
+import {
+  addToBudget,
+  changeGradeCounter,
+  openDebugView,
+  selectPart,
+  unselectPart,
+} from "./actions";
 import { CompositionState } from "./state";
 
 const slice = createSlice({
@@ -13,6 +19,26 @@ const slice = createSlice({
       (state: CompositionState, { payload: { partName } }) => ({
         ...state,
         selectedPart: partName,
+      })
+    );
+    builder.addCase(
+      addToBudget,
+      (state: CompositionState, { payload: { budgetId, gradesInfo } }) => ({
+        ...state,
+        budget: {
+          budgetId,
+          grades: gradesInfo.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {}),
+        },
+      })
+    );
+    builder.addCase(
+      changeGradeCounter,
+      (state: CompositionState, { payload: { gradeId, counter } }) => ({
+        ...state,
+        budget: state.budget ? {
+          ...state.budget,
+          grades: {...state.budget.grades, [gradeId]: counter}
+        } : undefined
       })
     );
     builder.addCase(unselectPart, (state: CompositionState) => ({

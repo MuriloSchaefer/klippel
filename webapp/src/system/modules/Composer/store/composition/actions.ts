@@ -21,6 +21,12 @@ export const selectPart = createAction<{compositionName: string, partName: strin
 export const unselectPart = createAction<{compositionName: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Unselect part`
 );
+export const addToBudget = createAction<{compositionName: string, budgetId: string, gradesInfo: string[]}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Add to budget`
+);
+export const changeGradeCounter = createAction<{compositionName: string, gradeId: string, counter: number}>(
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Change grade counter`
+);
 
 
 
@@ -99,3 +105,9 @@ export const debugViewportOpened = createAction<{compositionName: string, viewpo
 export const debugViewportClosed = createAction<{compositionName: string, viewportName: string}>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Debug viewport closed`
 );
+export const addedToBudget = createAction<{compositionName: string, budgetId: string}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Added to budget`
+)
+export const gradeCounterChanged = createAction<{compositionName: string, gradeId: string, counter: number}>( 
+    `[${MODULE_NAME}:Compositions:${ACTION_TYPES.EVENT}] Grade counter changed`
+)

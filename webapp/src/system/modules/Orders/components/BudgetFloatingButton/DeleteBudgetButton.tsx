@@ -10,30 +10,29 @@ import type { IPointerModule } from "@kernel/modules/Pointer";
 import { actions } from "./constants";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import useBudgetManager from "../../hooks/useBudgetManager";
-import { useTheme } from "@mui/material";
 
 type CreateBudgetForm = {
   label: string;
   color: string;
 };
 
-const info = actions["create-budget"];
+const info = actions["delete-budget"]
 
-export default function CreateBudgetButton() {
-  const theme = useTheme();
+export default function DeleteBudgetButton() {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const layoutModule = useModule<ILayoutModule>("Layout");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { ColorPicker } = layoutModule.components;
 
+
   const [form, setForm] = useState<CreateBudgetForm>({ label: "", color: "" });
+  
+  const manager = useBudgetManager()
 
-  const manager = useBudgetManager();
-
-  const handleCreateBudget = useCallback(() => {
-    manager.createBudget(form.label, form.color);
-  }, [form.color, form.label, manager]);
+  const handleCreateBudget = useCallback(()=> {
+    manager.createBudget(form.label, form.color)
+  }, [form.color, form.label, manager])
 
   return (
     <PointerContainer
@@ -57,16 +56,8 @@ export default function CreateBudgetButton() {
           }}
         >
           <ColorPicker
-            sx={{
-              width: "40px",
-              height: "40px",
-              border: `1px solid ${theme.palette.getContrastText(
-                theme.palette.background.default
-              )}`,
-            }}
-            colorChange={(color) =>
-              setForm((curr) => ({ ...curr, color: color.hex }))
-            }
+            sx={{ width: "40px", height: "40px" }}
+            colorChange={(color) => setForm((curr) => ({ ...curr, color: color.hex }))}
           />
           <TextField
             id="part-name"

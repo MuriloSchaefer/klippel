@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Grow from "@mui/material/Grow";
@@ -18,31 +18,52 @@ import type { Store } from "@kernel/modules/Store";
 
 import type { IComposerModule } from "@system/modules/Composer";
 
-import { labels } from "./constants";
-import CreateBudgetButton from './CreateBudgetButton';
+import { actions } from "./constants";
+import CreateBudgetButton from "./CreateBudgetButton";
 import AddToBudgetButton from "./AddToBudgetButton";
+import ConvertToOrderButton from "./ConvertToOrderButton";
+import DeleteBudgetButton from "./DeleteBudgetButton";
+import { BudgetFloatingButtonActions } from "../../typings";
 
+type BudgetFloatingButtonProps = {
+  readonly allowedActions: BudgetFloatingButtonActions[];
+};
 
-type Actions = "create-budget" | "add-to-budget";
-
-export default function BudgetFloatingButton() {
+export default function BudgetFloatingButton({
+  allowedActions = [
+    "create-budget",
+    "add-to-budget",
+    "convert-to-order",
+    "delete-budget",
+  ],
+}: BudgetFloatingButtonProps) {
   const storeModule = useModule<Store>("Store");
-  const layoutModule = useModule<ILayoutModule>('Layout');
-  const composerModule = useModule<IComposerModule>('Composer');
+  const layoutModule = useModule<ILayoutModule>("Layout");
+  const composerModule = useModule<IComposerModule>("Composer");
 
-  const { useAppSelector} = storeModule.hooks
-  const {useComposition} = composerModule.hooks
-  const {selectActiveViewport} = layoutModule.store.selectors
-  const activeViewport = useAppSelector(selectActiveViewport)
-  const composition = useComposition({viewportName: activeViewport}, c=>c)
+  const { useAppSelector } = storeModule.hooks;
+  const { useComposition } = composerModule.hooks;
+  const { selectActiveViewport } = layoutModule.store.selectors;
+  const activeViewport = useAppSelector(selectActiveViewport);
+  const composition = useComposition(
+    { viewportName: activeViewport },
+    (c) => c
+  );
 
-  const [open, setOpen] = React.useState(false);
-  const anchorRef = React.useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = React.useState<Actions>("create-budget");
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState<BudgetFloatingButtonActions>(
+    allowedActions[0] ?? "create-budget"
+  );
+  useEffect(() => {
+    if (allowedActions.length && !allowedActions.includes(selected)) {
+      setSelected(allowedActions[0]);
+    }
+  }, [allowedActions]);
 
   const handleMenuItemClick = (
     event: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    action: Actions
+    action: BudgetFloatingButtonActions
   ) => {
     setSelected(action);
     setOpen(false);
@@ -63,19 +84,29 @@ export default function BudgetFloatingButton() {
     setOpen(false);
   };
 
-  if (!composition.state) return <></> // TODO: what to do in this case? 
+  if (!composition.state || !allowedActions.length) return <></>; // TODO: what to do in this case?
 
   return (
-    <Box sx={{ position: "absolute", bottom: 10, right: 10 }}>
+    <Box
+      sx={{
+        pointerEvents: "all",
+      }}
+    >
       <ButtonGroup
         variant="contained"
         ref={anchorRef}
         aria-label="budget button"
       >
-        {selected === 'create-budget' && <CreateBudgetButton/>}
-        {selected === 'add-to-budget' && <AddToBudgetButton/>}
-
-        <Button size="small" aria-haspopup="menu" onClick={handleToggle}>
+        {selected === "create-budget" && <CreateBudgetButton />}
+        {selected === "add-to-budget" && <AddToBudgetButton />}
+        {selected === "convert-to-order" && <ConvertToOrderButton />}
+        {selected === "delete-budget" && <DeleteBudgetButton />}
+        <Button
+          size="small"
+          aria-haspopup="menu"
+          onClick={handleToggle}
+          color={actions[selected].color}
+        >
           <ArrowDropDownIcon />
         </Button>
       </ButtonGroup>
@@ -100,24 +131,24 @@ export default function BudgetFloatingButton() {
             <Paper>
               <ClickAwayListener onClickAway={handleClose}>
                 <MenuList id="split-button-menu" autoFocusItem>
-                  <MenuItem
-                    key="create-budget"
-                    selected={"create-budget" === selected}
-                    onClick={(event) =>
-                      handleMenuItemClick(event, "create-budget")
-                    }
-                  >
-                    {labels["create-budget"]}
-                  </MenuItem>
-                  <MenuItem
-                    key="add-to-budget"
-                    selected={"add-to-budget" === selected}
-                    onClick={(event) =>
-                      handleMenuItemClick(event, "add-to-budget")
-                    }
-                  >
-                    {labels["add-to-budget"]}
-                  </MenuItem>
+                  {allowedActions.map((allowed) => {
+                    const info = actions[allowed];
+                    return (
+                      <MenuItem
+                        key={info.id}
+                        selected={info.id === selected}
+                        onClick={(event) =>
+                          handleMenuItemClick(
+                            event,
+                            info.id as BudgetFloatingButtonActions
+                          )
+                        }
+                        color={info.color}
+                      >
+                        {info.label}
+                      </MenuItem>
+                    );
+                  })}
                 </MenuList>
               </ClickAwayListener>
             </Paper>

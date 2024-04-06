@@ -9,12 +9,16 @@ import {
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import type { MaterialsModuleState } from "@system/modules/Materials/store/state";
 import {
+  addedToBudget,
   addMaterial,
   addProxy,
   addRestriction,
+  addToBudget,
+  changeGradeCounter,
   changeMaterial,
   deleteProxy,
   deleteRestriction,
+  gradeCounterChanged,
   materialAdded,
   materialChanged,
   partSelected,
@@ -471,6 +475,28 @@ middlewares.startListening({
       })
     );
     dispatch(proxyAdded(payload)); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: addToBudget,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(addedToBudget({
+      budgetId: payload.budgetId,
+      compositionName: payload.compositionName
+    })); // dispatch event
+  },
+});
+
+
+middlewares.startListening({
+  actionCreator: changeGradeCounter,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(gradeCounterChanged(payload)); // dispatch event
   },
 });
 
