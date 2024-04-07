@@ -24,12 +24,30 @@ middlewares.startListening({
                 categoria: 'Tubular',
                 nome: 'Malha PV',
 
-                largura: 120,
-                larguraUnidade: 'cm',
-                gramatura: 170,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 2.5,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 120,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 170,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 2.5,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -60,13 +78,30 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Tubular',
                 nome: 'Malha PV',
-
-                largura: 120,
-                larguraUnidade: 'cm',
-                gramatura: 170,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 2.5,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 120,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 170,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 2.5,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -97,13 +132,30 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Tubular',
                 nome: 'Malha PV',
-
-                largura: 120,
-                larguraUnidade: 'cm',
-                gramatura: 170,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 2.5,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 120,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 170,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 2.5,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -134,13 +186,30 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Tubular',
                 nome: 'Malha PV',
-
-                largura: 120,
-                larguraUnidade: 'cm',
-                gramatura: 170,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 2.5,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 120,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 170,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 2.5,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -171,13 +240,30 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Tubular',
                 nome: 'Malha PV',
-
-                largura: 120,
-                larguraUnidade: 'cm',
-                gramatura: 170,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 2.5,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 120,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 170,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 2.5,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -207,13 +293,30 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Colegial',
                 nome: 'Malha colegial',
-
-                largura: 152,
-                larguraUnidade: 'cm',
-                gramatura: 295,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 2.23,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 152,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 295,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 2.23,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -243,12 +346,30 @@ middlewares.startListening({
                 categoria: 'Colegial',
                 nome: 'Malha colegial',
 
-                largura: 152,
-                larguraUnidade: 'cm',
-                gramatura: 295,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 2.23,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 152,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 295,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 2.23,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -279,12 +400,30 @@ middlewares.startListening({
                 categoria: 'Piquet',
                 nome: 'Piquet ingles PA',
 
-                largura: 184,
-                larguraUnidade: 'cm',
-                gramatura: 165,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 3.30,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 184,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 165,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 3.30,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -314,12 +453,30 @@ middlewares.startListening({
                 categoria: 'Piquet',
                 nome: 'Piquet ingles PA',
 
-                largura: 184,
-                larguraUnidade: 'cm',
-                gramatura: 165,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 3.30,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 184,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 165,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 3.30,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -361,21 +518,39 @@ middlewares.startListening({
             type: 'malha',
             suppliers: ['Sajama'],
             industry: 'Sajama',
-            externalId: '05006/02',
-            externalURL: 'https://www.sajama.com.br/produtos.php?totReg=1&idx=4&ctg=4&sctg=0&txpesq=',
-            images: [],
+            externalId: '05006',
+            externalURL: 'https://www.sajama.com.br/malha-30/1-penteado',
+            images: ['https://lirp.cdn-website.com/54ea075d/dms3rep/multi/opt/6494+AZUL+BB-3361c999-1920w.JPG'],
             
             schemaVersion: '0.0.1',
             attributes: {
                 categoria: 'Tubular',
                 nome: 'Malha 30/1 Penteada',
 
-                largura: 120,
-                larguraUnidade: 'cm',
-                gramatura: 165,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 3.40,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 120,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 165,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 3.40,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
@@ -395,27 +570,45 @@ middlewares.startListening({
             type: 'malha',
             suppliers: ['Sajama'],
             industry: 'Sajama',
-            externalId: '05006/02',
-            externalURL: 'https://www.sajama.com.br/produtos.php?totReg=1&idx=4&ctg=4&sctg=0&txpesq=',
-            images: [],
+            externalId: '05006',
+            externalURL: 'https://www.sajama.com.br/malha-30/1-penteado',
+            images: ['https://lirp.cdn-website.com/54ea075d/dms3rep/multi/opt/7374+LIM%C3%83O-f144e819-1920w.JPG'],
             
             schemaVersion: '0.0.1',
             attributes: {
                 categoria: 'Tubular',
                 nome: 'Malha 30/1 Penteada',
 
-                largura: 120,
-                larguraUnidade: 'cm',
-                gramatura: 165,
-                gramaturaUnidade: 'g/m2',
-                rendimento: 3.40,
-                rendimentoUInidade: 'm/kg',
+                largura: {
+                    amount: 120,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 165,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
+                rendimento: {
+                    quotient: {
+                        amount: 3.40,
+                        unit: 'metros5'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'kilogramas6'
+                    }
+                },
                 trama: 'desconhecido',
 
                 cor: {
-                    id:'7375',
-                    hex: '#02420b',
-                    label: 'Bandeira'
+                    id:'7374',
+                    hex: '#84E225',
+                    label: 'Limão'
                 },
             },
             composition: {
@@ -440,11 +633,20 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Tricoline',
                 nome: 'Tricoline Amélie',
-
-                largura: 135,
-                larguraUnidade: 'cm',
-                gramatura: 139,
-                gramaturaUnidade: 'g/m2',
+                largura: {
+                    amount: 135,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 139,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
                 
                 trama: 'Maquinetada',
 
@@ -479,11 +681,20 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Tricoline',
                 nome: 'Tricoline Amélie',
-
-                largura: 135,
-                larguraUnidade: 'cm',
-                gramatura: 139,
-                gramaturaUnidade: 'g/m2',
+                largura: {
+                    amount: 135,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 139,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
                 
                 trama: 'Maquinetada',
 
@@ -518,11 +729,20 @@ middlewares.startListening({
             attributes: {
                 categoria: 'Tricoline',
                 nome: 'Tricoline Amélie',
-
-                largura: 135,
-                larguraUnidade: 'cm',
-                gramatura: 139,
-                gramaturaUnidade: 'g/m2',
+                largura: {
+                    amount: 135,
+                    unit: 'centimetros7'
+                },
+                gramatura: {
+                    quotient: {
+                        amount: 139,
+                        unit: 'gramas7'
+                    },
+                    dividend: {
+                        amount: 1,
+                        unit: 'metrosquadrados17'
+                    }
+                },
                 
                 trama: 'Maquinetada',
 

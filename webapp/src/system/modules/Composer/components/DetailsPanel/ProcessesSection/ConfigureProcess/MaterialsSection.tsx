@@ -58,7 +58,7 @@ function RenderEditCellQuantity({
         scale?.name === "Volume" ||
         scale?.name === "Area"
       }
-      filterDividends={(unit, scale) => unit.abbreviation === "un"}
+      filterDividends={(unit, scale) => unit.abbreviation === "un" || unit.abbreviation === 'pedido'}
       value={row.quantity}
       onChange={handleChange}
     />

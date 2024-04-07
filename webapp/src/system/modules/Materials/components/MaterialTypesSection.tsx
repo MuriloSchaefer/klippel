@@ -1,13 +1,13 @@
 import Button from "@mui/material/Button"
 import { useCallback } from "react";
-import useMaterialsManager from "../hooks/useMaterialsManager";
+import useMaterialsTypesManager from "../hooks/useMaterialsTypesManager";
 
 
 
 export const MaterialTypesSection = () => {
 
 
-    const compositionsManager = useMaterialsManager()
+    const compositionsManager = useMaterialsTypesManager()
 
     const handleModelSelection = useCallback((name:string, path:string)=>{
         // compositionsManager.functions.createComposition(name, path)

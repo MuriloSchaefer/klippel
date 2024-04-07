@@ -9,7 +9,7 @@ interface MaterialsManager extends Manager {
   };
 }
 
-const useMaterialsManager = (): MaterialsManager => {
+const useMaterialsTypesManager = (): MaterialsManager => {
   const storeModule = useModule<Store>("Store");
   const { useAppDispatch } = storeModule.hooks;
   const dispatch = useAppDispatch();
@@ -22,4 +22,4 @@ const useMaterialsManager = (): MaterialsManager => {
   };
 };
 
-export default useMaterialsManager;
+export default useMaterialsTypesManager;

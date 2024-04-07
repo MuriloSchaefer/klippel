@@ -106,7 +106,6 @@ const Layout = () => {
               borderTop: 0,
               borderRight: 1,
               borderColor: "divider",
-              overflow: "auto",
               "@media (orientation: portrait)": {
                 borderTop: 1,
                 borderColor: "divider",

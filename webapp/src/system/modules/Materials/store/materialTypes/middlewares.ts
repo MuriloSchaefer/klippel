@@ -23,14 +23,9 @@ middlewares.startListening({
                         nome: 'string',
                         cor: 'color',
                         
-                        largura: 'number',
-                        larguraUnidade: 'string',
-
-                        gramatura: 'number',
-                        gramaturaUnidade: 'string',
-
-                        rendimento: 'number',
-                        rendimentoUnidade: 'string',
+                        largura: 'unitValue',
+                        gramatura: 'compoundValue',
+                        rendimento: 'compoundValue',
 
                         trama: 'string'
                     },
@@ -54,11 +49,8 @@ middlewares.startListening({
                         nome: 'string',
                         cor: 'color',
 
-                        largura: 'number',
-                        larguraUnidade: 'string',
-                        
-                        gramatura: 'number',
-                        gramaturaUnidade: 'string',
+                        largura: 'unitValue',
+                        gramatura: 'compoundValue',
 
                         trama: 'string'
                     },

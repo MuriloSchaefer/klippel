@@ -114,7 +114,7 @@ const useComposition = <C = Composition, R = C>(
   const dispatch = useAppDispatch();
   const panelsManager = layoutModule.hooks.usePanelsManager();
   const { useGraph } = graphModule.hooks;
-  const { useMaterials } = materialsModule.hooks;
+  const { useMaterialTypes } = materialsModule.hooks;
 
   const defaultSelector = (state: { Composer: ComposerState } | undefined) => {
     if (!state) return;
@@ -142,7 +142,7 @@ const useComposition = <C = Composition, R = C>(
     })
   );
 
-  const materials = useMaterials();
+  const materialTypeDefinitions = useMaterialTypes();
 
   return {
     state: compositionState,
@@ -264,7 +264,7 @@ const useComposition = <C = Composition, R = C>(
             graph.actions.addNode({
               id: type,
               type: "MATERIAL_TYPE",
-              label: materials[type].label,
+              label: materialTypeDefinitions[type].label,
             });
           }
         });
