@@ -15,6 +15,7 @@
     "babel-plugin-direct-import": "^1.0.0",
     "d3": "^7.8.4",
     "install-peerdeps": "^3.0.3",
+    "jse-eval": "^1.5.2",
     "lodash": "^4.17.21",
     "react": "^18.0.0",
     "react-color": "^2.19.3",

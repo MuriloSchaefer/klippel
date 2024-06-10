@@ -1,24 +1,30 @@
 import { useCallback, useState } from "react";
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
 import AddSharpIcon from "@mui/icons-material/AddSharp";
 
 import useModule from "@kernel/hooks/useModule";
 import { IPointerModule } from "@kernel/modules/Pointer";
-import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
 
 import type { IMaterialsModule } from "@system/modules/Materials";
 
 import useComposition from "../../../../hooks/useComposition";
 
-const Container = ({ isOpen, labelState: [label, setLabel], materialTypes, handleMaterialTypeChange }: PointerContainerProps & {labelState: [string, React.Dispatch<React.SetStateAction<string>>], materialTypes: string[], handleMaterialTypeChange: (event: any) => void}) => {
+const Container = ({
+  labelState: [label, setLabel],
+  materialTypes,
+  handleMaterialTypeChange,
+}: {
+  labelState: [string, React.Dispatch<React.SetStateAction<string>>];
+  materialTypes: string[];
+  handleMaterialTypeChange: (event: any) => void;
+}) => {
   const {
     components: { MaterialTypeSelector },
   } = useModule<IMaterialsModule>("Materials");
 
-  if (!isOpen) return <></>
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 2 }}>
       <MaterialTypeSelector
@@ -45,7 +51,10 @@ export const AddMaterialButton = ({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
-  const composition = useComposition({compositionName}, (c) => c?.selectedPart);
+  const composition = useComposition(
+    { compositionName },
+    (c) => c?.selectedPart
+  );
 
   const [label, setLabel] = useState<string>("");
   const [materialTypes, setMaterialTypes] = useState<string[]>([]);
@@ -67,7 +76,13 @@ export const AddMaterialButton = ({
 
   return (
     <PointerContainer
-      component={<Container materialTypes={materialTypes} handleMaterialTypeChange={handleMaterialTypeChange} labelState={[label, setLabel]}/> }
+      component={
+        <Container
+          materialTypes={materialTypes}
+          handleMaterialTypeChange={handleMaterialTypeChange}
+          labelState={[label, setLabel]}
+        />
+      }
       actions={[
         <ConfirmAndCloseButton
           color="success"

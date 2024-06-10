@@ -131,6 +131,7 @@ middlewares.startListening({
     let results: Omit<SearchResult, 'outdated'> = {
       findings: [],
       visited: [],
+      path: []
     };
     switch (action.strategy) {
       case "dfs":
@@ -139,6 +140,7 @@ middlewares.startListening({
           action.nodeStart,
           action.validate,
           action.stopCriteria,
+          action.getNeighbours,
           action.depth
         )};
         break;

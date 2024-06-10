@@ -11,7 +11,6 @@ export interface RestrictionsProps extends PointerContainerProps {
 }
 
 const AddRestrictionContainer = (props: RestrictionsProps) => {
-  if (!props.isOpen) return <div></div>
   return (
     <Box role="add-restriction-container" sx={{ height: "max-content", display:'flex', gap: 2, justifyContent: 'space-between', flexDirection: 'column', padding: 1 }}>
       <RestrictionsSection {...props} />

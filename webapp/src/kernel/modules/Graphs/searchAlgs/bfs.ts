@@ -47,6 +47,7 @@ const bfs = (
   return {
     findings: findings,
     visited: visited,
+    path: [] // TODO: implement path return
   };
 };
 

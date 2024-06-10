@@ -3,17 +3,16 @@ import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
 
 
-export type Unit = string;
 export type Scale = {
     name: string;
-    base: Unit
+    base: string
     factors: {
-        [unit: Unit]: number
+        [unit: string]: number
     }
 }
 
 export interface UnitValue {
-    unit: Unit;
+    unit: string;
     amount: number;
 }
 
@@ -29,7 +28,7 @@ export type Value = UnitValue | CompoundValue
 // Graph nodes
 export interface UnitNode extends Node {
     type: 'UNIT'
-    abbreviation: Unit
+    abbreviation: string
     name: string 
 }
 

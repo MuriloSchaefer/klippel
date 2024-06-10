@@ -12,6 +12,7 @@ export interface SearchPayload {
   nodeStart: string;
   validate: (node: Node, graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean;
   stopCriteria: (node: Node, graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean;
+  getNeighbours: (node: Node, graph: GraphSearch) => string[]
   label: string;
   depth?: number | undefined;
 }
