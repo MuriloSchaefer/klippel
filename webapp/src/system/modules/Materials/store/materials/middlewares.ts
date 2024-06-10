@@ -63,6 +63,10 @@ middlewares.startListening({
             caracteristics: {
                 'anti-pilling': true,
                 'tubular': true,
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         2: {
@@ -117,6 +121,10 @@ middlewares.startListening({
             caracteristics: {
                 'anti-pilling': true,
                 'tubular': true,
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         3: {
@@ -171,6 +179,10 @@ middlewares.startListening({
             caracteristics: {
                 'anti-pilling': true,
                 'tubular': true,
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         4: {
@@ -225,6 +237,10 @@ middlewares.startListening({
             caracteristics: {
                 'anti-pilling': true,
                 'tubular': true,
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         5: {
@@ -277,6 +293,10 @@ middlewares.startListening({
                 CV: 0.33
             },
             caracteristics: {
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
 
@@ -330,6 +350,10 @@ middlewares.startListening({
                 CO: 0.35
             },
             caracteristics: {
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         7: {
@@ -383,6 +407,10 @@ middlewares.startListening({
                 CO: 0.35
             },
             caracteristics: {
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
 
@@ -437,6 +465,10 @@ middlewares.startListening({
                 CO: 0.53
             },
             caracteristics: {
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         9: {
@@ -490,6 +522,10 @@ middlewares.startListening({
                 CO: 0.53
             },
             caracteristics: {
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
 
@@ -511,6 +547,10 @@ middlewares.startListening({
                     label: 'Royal'
                 },
             },
+            stock: {
+                amount: 4,
+                unit: 'unitario18'
+            }
         },
 
         11: {
@@ -563,6 +603,10 @@ middlewares.startListening({
                 CO: 1
             },
             caracteristics: {
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         12: {
@@ -615,6 +659,10 @@ middlewares.startListening({
                 CO: 1
             },
             caracteristics: {
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
 
@@ -665,6 +713,10 @@ middlewares.startListening({
                 fio: 40,
                 protecaoUV: true,
                 agulha: '70/80 - Ponta Arredondada'
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         14: {
@@ -713,6 +765,10 @@ middlewares.startListening({
                 fio: 40,
                 protecaoUV: true,
                 agulha: '70/80 - Ponta Arredondada'
+            },
+            stock: {
+                amount: 0,
+                unit: 'kilogramas6'
             }
         },
         15: {
@@ -761,6 +817,10 @@ middlewares.startListening({
                 fio: 40,
                 protecaoUV: true,
                 agulha: '70/80 - Ponta Arredondada'
+            },
+            stock: {
+                amount: 10,
+                unit: 'kilogramas6'
             }
         },
         
@@ -770,8 +830,8 @@ middlewares.startListening({
             suppliers: ['Linhas General'],
             industry: 'Linhas General',
             externalId: '28',
-            externalURL: 'https://linhasgeneral.com.br/inicio/28-botao-transparente-tamanho-18-c144-un.html',
-            images: ['https://linhasgeneral.com.br/135-large_default/botao-transparente-tamanho-18-c144-un.jpg'],
+            externalURL: 'https://linhasgeneral.com.br/inicio/28-botao-transparente-tamanho-18-c144-unitario18.html',
+            images: ['https://linhasgeneral.com.br/135-large_default/botao-transparente-tamanho-18-c144-unitario18.jpg'],
             
             description: "Botão",
             schemaVersion: '0.0.1',
@@ -785,6 +845,10 @@ middlewares.startListening({
                     label: 'Transparente'
                 }
             },
+            stock: {
+                amount: 10,
+                unit: 'unitario18'
+            }
         },
         17: {
             id: 17,
@@ -792,8 +856,8 @@ middlewares.startListening({
             suppliers: ['Linhas General'],
             industry: 'Linhas General',
             externalId: '28',
-            externalURL: 'https://linhasgeneral.com.br/inicio/132-botao-transparente-tamanho-18-c144-un.html',
-            images: ['https://linhasgeneral.com.br/135-large_default/botao-transparente-tamanho-18-c144-un.jpg'],
+            externalURL: 'https://linhasgeneral.com.br/inicio/132-botao-transparente-tamanho-18-c144-unitario18.html',
+            images: ['https://linhasgeneral.com.br/135-large_default/botao-transparente-tamanho-18-c144-unitario18.jpg'],
             
             description: "Botão",
             schemaVersion: '0.0.1',
@@ -807,6 +871,10 @@ middlewares.startListening({
                     label: 'Transparente'
                 }
             },
+            stock: {
+                amount: 10,
+                unit: 'unitario18'
+            }
         },
 
         18: {
@@ -828,6 +896,10 @@ middlewares.startListening({
                 largura: 914,
                 larguraUnidade: 'mm'
             },
+            stock: {
+                amount: 40,
+                unit: 'm'
+            }
         },
 
         

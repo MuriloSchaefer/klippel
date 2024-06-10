@@ -8,6 +8,7 @@ import { useScales } from "./hooks/useScales";
 import useUnits from "./hooks/useUnits";
 import CompoundUnit from './components/CompondUnit';
 import CoverterGraphViewport from "./components/Builder/ConverterGraphViewport";
+import useConverter from "./hooks/useConverter";
 
 export interface IConverterModule extends IModule {
     components: {
@@ -27,7 +28,8 @@ export interface IConverterModule extends IModule {
     }
     hooks: {
         useScales: typeof useScales,
-        useUnits: typeof useUnits
+        useUnits: typeof useUnits,
+        useConverter: typeof useConverter
     }
 }
 const module: IConverterModule = {
@@ -48,7 +50,7 @@ const module: IConverterModule = {
         reducers: {
         },
     },
-    hooks: {useScales,useUnits},
+    hooks: {useScales,useUnits, useConverter},
     constants: {},
     kernelCalls: {
         startModule: startModule,

@@ -144,13 +144,13 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                     }}
                   >
                     <span>{vp.title}</span>
-                    <IconButton size="small" component="span">
-                      <CloseSharpIcon
-                        sx={{ width: 0.5, marginLeft: 1 }}
-                        onClick={(e) => {
+                    <IconButton size="small" component="span" onClick={(e) => {
                           e.stopPropagation();
                           handleCloseViewport(vp.name);
-                        }}
+                        }}>
+                      <CloseSharpIcon
+                        sx={{ width: 0.5, marginLeft: 1 }}
+                        
                       />
                     </IconButton>
                   </Box>

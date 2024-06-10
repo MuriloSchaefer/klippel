@@ -48,6 +48,7 @@ export interface GraphActions {
       currFindings: Node[],
       visitedNodes: Node[]
     ) => boolean,
+    getNeighbours: (node: Node, graph: GraphSearch) => string[],
     depth?: number,
     label?: string,
     id?: string,
@@ -122,7 +123,7 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
       nodeExists: (nodeId) =>
         innerState ? nodeId in innerState.nodes : false,
 
-      search: (strategy, nodeStart, validate, stopCriteria, depth, label, id) => {
+      search: (strategy, nodeStart, validate, stopCriteria, getNeighbours, depth, label, id) => {
         const resultPath = id ?? _.uniqueId("search");
         dispatch(
           search({
@@ -132,6 +133,7 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
             nodeStart,
             validate,
             stopCriteria,
+            getNeighbours,
             depth,
             label: label ?? resultPath,
           })

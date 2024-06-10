@@ -10,10 +10,10 @@ import React, {
 import { ErrorBoundary } from "react-error-boundary";
 
 import type { IconButtonProps } from "@mui/material";
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Modal from '@mui/material/Modal';
-import Paper from '@mui/material/Paper';
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Modal from "@mui/material/Modal";
+import Paper from "@mui/material/Paper";
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 import DragIndicatorSharpIcon from "@mui/icons-material/DragIndicatorSharp";
 
@@ -24,7 +24,6 @@ export interface PointerContainerActionProps extends IconButtonProps {
 }
 
 export interface PointerContainerProps {
-  isOpen?: boolean;
 }
 
 export const PointerContainer = ({
@@ -136,6 +135,7 @@ export const PointerContainer = ({
               flexGrow: 1,
               flexDirection: quadrant % 2 == 1 ? "row" : "row-reverse",
             }}
+            onClick={(evt) => evt.stopPropagation()}
           >
             <Box
               role="pointer-panel-actions"
@@ -183,9 +183,11 @@ export const PointerContainer = ({
                 alignContent: "center",
               }}
             >
-              <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
-                {React.cloneElement(component, { isOpen: open })}
-              </ErrorBoundary>
+              {open ? (
+                <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
+                  {component}
+                </ErrorBoundary>
+              ) : null}
             </Box>
           </Box>
         </Paper>

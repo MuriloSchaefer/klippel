@@ -1,10 +1,11 @@
+import { UnitValue } from "@system/modules/Converter/typings"
 import { FibersABV } from "../../typings"
 
 export type CompositionMap = {
     [abv in FibersABV]?: number
 }
 
-export interface MaterialState {
+export interface MaterialState{
     id: number,
     type: string,
     schemaVersion: string
@@ -21,6 +22,7 @@ export interface MaterialState {
         [name: string]: any
     },
     composition?: CompositionMap,
+    stock: UnitValue;
 }
 export interface MaterialsState {
     [id: number]: MaterialState

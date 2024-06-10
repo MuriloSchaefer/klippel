@@ -106,7 +106,6 @@ export default ({
             />
             <CustomTextArea
               id="description"
-              key="description"
               wrapperProps={{ sx: { width: "100%" } }}
               minRows={3}
               name="Outlined"

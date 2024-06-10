@@ -29,7 +29,6 @@ interface LinkMaterialContainerProps extends PointerContainerProps {
 const LinkMaterialContainer = ({
   compositionState,
   materialUsageId,
-  isOpen
 }: LinkMaterialContainerProps) => {
   const graphModule = useModule<IGraphModule>("Graph");
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -67,8 +66,6 @@ const LinkMaterialContainer = ({
       ),
     [adaptedProxies]
   );
-
-  if (!isOpen) return <></>
 
   return (
     <Box role="link-material-container" sx={{ height: "max-content" }}>

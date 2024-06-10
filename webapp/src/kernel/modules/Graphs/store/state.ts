@@ -21,6 +21,7 @@ export interface SearchResult<N=Node> {
     outdated: boolean
     findings: N[]
     visited: N[]
+    path: string[]
 }
 export interface SearchResults {
   [name: string]: SearchResult

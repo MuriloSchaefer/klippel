@@ -70,7 +70,6 @@ type TextAreaProps = TextareaAutosizeProps & {
 };
 
 export default function CustomTextArea({
-  key = "textarea",
   wrapperProps,
   ...props
 }: TextAreaProps) {
@@ -79,7 +78,6 @@ export default function CustomTextArea({
   return (
     <Box role="textarea-wrapper" {...wrapperProps}>
       <Textarea
-        key={key}
         theme={theme}
         aria-label="minimum height"
         minRows={3}

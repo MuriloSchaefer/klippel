@@ -11,7 +11,6 @@ export interface ConfigProcessProps extends PointerContainerProps {
 }
 
 const ConfigProcessContainer = (props: ConfigProcessProps) => {
-  if (!props.isOpen) return <div></div>;
   return (
     <Box
       role="material-usage-container"

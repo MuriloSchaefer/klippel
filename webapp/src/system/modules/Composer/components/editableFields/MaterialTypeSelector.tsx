@@ -52,7 +52,12 @@ const MaterialTypeSelector = ({
         });
         return result;
       },
-      () => false, // stops only when checked all neighbours
+      () => false, // stops only when checked all neighbours,
+      (node, graph) => {
+        // get neighbours
+        const links = [...graph.adjacencyList[node.id].inputs, ...graph.adjacencyList[node.id].outputs]
+        return Object.values(graph.edges).filter(e => links.includes(e.id)).map(e => e.targetId)
+      },
       1, // search only neighbours
       `Get all restriction associated with ${node.label}`,
       searchId

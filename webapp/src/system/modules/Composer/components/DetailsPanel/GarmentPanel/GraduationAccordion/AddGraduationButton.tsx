@@ -56,9 +56,7 @@ export const AddGraduationButton = ({
   });
 
   const handleSubmission = useCallback(
-    (evt: FormEvent<HTMLFormElement>) => {
-      evt.preventDefault();
-      evt.stopPropagation();
+    () => {
 
       if (composition.state)
         composition.actions.addGrade(
@@ -74,7 +72,6 @@ export const AddGraduationButton = ({
       component={
         <Box
           component={"form"}
-          onSubmit={handleSubmission}
           id={formId}
           sx={{ display: "flex", flexDirection: "column", flexGrow: 2, gap: 1 }}
         >
@@ -99,7 +96,7 @@ export const AddGraduationButton = ({
           value={"Submit"}
           color="success"
           key="accept"
-          handleConfirm={() => null}
+          handleConfirm={handleSubmission}
         />,
       ]}
     >
