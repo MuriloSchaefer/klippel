@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import {
+  addGradeToBudget,
   addToBudget,
   changeGradeCounter,
   openDebugView,
@@ -31,6 +32,18 @@ const slice = createSlice({
         },
       })
     );
+
+    builder.addCase(
+      addGradeToBudget,
+      (state: CompositionState, { payload: { gradeId } }) => ({
+        ...state,
+        budget: {
+          ...state.budget!,
+          grades: {...state.budget?.grades, [gradeId]: 0},
+        },
+      })
+    );
+    
     builder.addCase(
       changeGradeCounter,
       (state: CompositionState, { payload: { gradeId, counter } }) => ({
