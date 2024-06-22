@@ -4,18 +4,16 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
-import useMediaQuery from "@mui/material/useMediaQuery";
+import List from "@mui/material/List";
 import { styled } from "@mui/system";
-import { useTheme } from "@mui/material/styles";
 
 import useModule from "@kernel/hooks/useModule";
 import type { SystemModalProps } from "@kernel/modules/Layout/components/SystemModal";
-import type { ISVGModule } from "@kernel/modules/SVG";
 
 import { useCompositionsList } from "../hooks/useCompositionsList";
 import ModelPreview from "./ModelPreview";
 import { IMarkdownModule } from "@kernel/modules/Markdown";
-import { List, ListItem, ListItemText } from "@mui/material";
+import { ListItem, ListItemText } from "@mui/material";
 
 type ModelSelectionModalProps = SystemModalProps & {
   onModelSelection: (name: string, path: string) => void;
@@ -28,6 +26,23 @@ const StyledModal = styled(Box)`
 
   @media (orientation: portrait) {
     flex-direction: column;
+  }
+`;
+
+const StyledList = styled(List)`
+
+  overflow: auto;
+  display:block;
+  width: min-content;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+
+  @media (orientation: portrait) {
+    height: 200px;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0px 16px;
   }
 `;
 
@@ -60,21 +75,27 @@ const ModelSelectionModal = ({
         width: "85vw",
         overflow: "hidden",
         maxHeight: "85vh",
+        minHeight: "50vh",
+        
         p: 2,
       }}
     >
-      <StyledModal role="model-selector-container" sx={{ gap: 1 }}>
-        <List
+      <StyledModal role="model-selector-container" sx={{ gap: 1,  display:'flex', }}>
+        <StyledList
           role="list-options"
           sx={{
-            paddingRight: 5,
-            overflow: "auto",
+            gap: 1,
+            width:'30%'
           }}
         >
           {compositions.map((c) => (
-            <ListItem key={_.uniqueId()} disableGutters>
+            <ListItem
+              key={_.uniqueId()}
+              disableGutters
+              sx={{ width: "fit-content" }}
+            >
               <ListItemText
-                primary={c.name}
+                primary={<Box sx={{  }}>{c.name}</Box>}
                 secondary={null}
                 id={c.name}
                 color={
@@ -89,12 +110,11 @@ const ModelSelectionModal = ({
                 }
                 sx={{
                   cursor: "pointer",
-                  flexGrow: 1,
                 }}
               />
             </ListItem>
           ))}
-        </List>
+        </StyledList>
 
         <Box sx={{ overflow: "auto", width: "100%" }}>
           {selectedOption ? (

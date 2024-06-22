@@ -44,23 +44,6 @@ middlewares.startListening({
     //fetch list
     const compositions: CompositionsList = [
       {name: 'Camisa polo feminina', svgPath: 'catalog/camisa-polo/decorated.svg', descriptionPath:'catalog/camisa-polo/description.md'},
-      {name: 'Camisa polo masculina', svgPath: 'catalog/camisa-polo/decorated.svg', descriptionPath:'catalog/camisa-polo/description.md'},
-      {name: 'Camiseta baby look', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camiseta gola v', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisa social', svgPath: 'catalog/camisa-polo/decorated.svg'},
-      {name: 'Camisete social', svgPath: 'catalog/camisa-polo/decorated.svg'},
     ]
 
     dispatch(storeCompositionsList(compositions))
