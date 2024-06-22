@@ -106,7 +106,7 @@ export const ComposerViewport = ({
         .filter((n): n is PartNode => n.type === "PART")
         .forEach((n) => {
           if (n.domId) {
-            const [element] = [...svgRoot?.querySelectorAll(`#${n.domId}`)];
+            const [element] = [...(svgRoot?.querySelectorAll(`#${n.domId}`) ?? [])];
             element.addEventListener("click", (e) => {
               e.stopPropagation();
               selectPart(n.id);
