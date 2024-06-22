@@ -9,6 +9,7 @@ import type { Store } from "@kernel/modules/Store";
 import type { CompoundValue } from "@system/modules/Converter/typings";
 
 import {
+  addGradeToBudget,
   addMaterialType,
   addProxy,
   addRestriction,
@@ -179,6 +180,13 @@ const useComposition = <C = Composition, R = C>(
           order,
         };
         graph.actions.addEdge(edge);
+        dispatch(
+          addGradeToBudget({
+            compositionName: innerState?.name!,
+            budgetId: innerState?.budget?.budgetId!,
+            gradeId: id,
+          })
+        );
       },
       reorderGrade(id, newOrder) {
         // change order of grade
@@ -223,7 +231,13 @@ const useComposition = <C = Composition, R = C>(
           );
       },
       changeGradeCounter(id, counter) {
-        dispatch(changeGradeCounter({ compositionName: innerState?.name!, gradeId: id, counter }));
+        dispatch(
+          changeGradeCounter({
+            compositionName: innerState?.name!,
+            gradeId: id,
+            counter,
+          })
+        );
       },
       addPart(name, domId, parentName) {
         const newPart: PartNode = {

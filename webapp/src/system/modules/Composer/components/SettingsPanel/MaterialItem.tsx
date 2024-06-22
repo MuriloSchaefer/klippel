@@ -211,7 +211,7 @@ export default function Item({
                   variant="caption"
                   color={theme.palette[stockColor].main}
                 >
-                  ({material.stock.amount} {material.stock.unit} em estoque)
+                  ({material.stock.amount} {stockUnit?.abbreviation} em estoque)
                 </Typography>
               </Box>
             </Box>

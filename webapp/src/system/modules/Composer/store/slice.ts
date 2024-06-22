@@ -13,6 +13,7 @@ import { initialState, ComposerState } from "./state";
 
 import instanceSlice from "./composition/slice";
 import {
+  addGradeToBudget,
   addToBudget,
   changeGradeCounter,
   openDebugView,
@@ -218,6 +219,23 @@ const slice = createSlice({
     }));
 
     builder.addCase(addToBudget, (state: ComposerState, action) => ({
+      ...state,
+      compositionsManager: {
+        ...state.compositionsManager,
+        compositions: {
+          ...state.compositionsManager.compositions,
+
+          [action.payload.compositionName]: instanceSlice.reducer(
+            state.compositionsManager.compositions[
+              action.payload.compositionName
+            ],
+            action
+          ),
+        },
+      },
+    }));
+
+    builder.addCase(addGradeToBudget, (state: ComposerState, action) => ({
       ...state,
       compositionsManager: {
         ...state.compositionsManager,
