@@ -1,25 +1,23 @@
-
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 
-import Box from '@mui/material/Box';
-import Switch from '@mui/material/Switch';
-import Typography from '@mui/material/Typography';
-import {
-  GridRenderEditCellParams,
-} from "@mui/x-data-grid";
-
+import Box from "@mui/material/Box";
+import Switch from "@mui/material/Switch";
+import Typography from "@mui/material/Typography";
+import { GridRenderEditCellParams } from "@mui/x-data-grid";
+import InputAdornment from "@mui/material/InputAdornment";
+import ColorizeSharpIcon from "@mui/icons-material/ColorizeSharp";
 
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { PointerContainerProps } from "@kernel/modules/Pointer/components/PointerContainer";
 
-
 import {
   CompositionState,
   MaterialUsageNode,
 } from "../../../../store/composition/state";
+import { useTheme } from "@mui/material/styles";
 
 interface LinkMaterialContainerProps extends PointerContainerProps {
   compositionState: CompositionState;
@@ -33,10 +31,14 @@ const LinkMaterialContainer = ({
   const graphModule = useModule<IGraphModule>("Graph");
   const layoutModule = useModule<ILayoutModule>("Layout");
 
+  const [pickingElement, setPickingElement] = useState(false)
+  const theme = useTheme()
+
   const { useNodeInfo } = graphModule.hooks;
 
   const { CRUDGridContext } = layoutModule.contexts;
-  const { CRUDGrid, CRUDBooleanCell } = layoutModule.components;
+  const { CRUDGrid, CRUDBooleanCell, CRUDTextFieldCell } =
+    layoutModule.components;
 
   const { node } = useNodeInfo<MaterialUsageNode>(
     compositionState.graphId,
@@ -60,7 +62,7 @@ const LinkMaterialContainer = ({
         Object.entries(adaptedProxies).map(([elem, proxy]) => ({
           ...proxy,
           elem,
-          state: 'untouched',
+          state: "untouched",
           id: _.uniqueId("proxy-"),
         }))
       ),
@@ -79,7 +81,11 @@ const LinkMaterialContainer = ({
       </Typography>
       <CRUDGrid
         addLabel="Adicionar vínculo"
-        newRecord={() => ({id: _.uniqueId("proxy-"), stroke:false, fill:false})}
+        newRecord={() => ({
+          id: _.uniqueId("proxy-"),
+          stroke: false,
+          fill: false,
+        })}
         columns={[
           {
             field: "elem",
@@ -89,9 +95,26 @@ const LinkMaterialContainer = ({
             minWidth: 200,
             maxWidth: 200,
             renderHeader: () => "Elemento",
-            // renderEditCell: (params: GridRenderEditCellParams) => (
-            //   <CustomEditComponent {...params} />
-            // ),
+            renderEditCell: (params: GridRenderEditCellParams) => (
+              <CRUDTextFieldCell
+                {...params}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment
+                      position="end"
+                      sx={{ cursor: "pointer", color: pickingElement ? theme.palette.secondary.main : undefined }}
+                      onClick={(evt) => {
+                        console.log("clicked", evt);
+                        setPickingElement(true)
+                      }}
+                    >
+                      <ColorizeSharpIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
+              />
+            ),
           },
           {
             field: "stroke",
@@ -101,7 +124,7 @@ const LinkMaterialContainer = ({
             minWidth: 100,
             maxWidth: 200,
             renderHeader: () => "Contorno",
-            renderCell: ({value})=> <Switch checked={value} disabled/>,
+            renderCell: ({ value }) => <Switch checked={value} disabled />,
             renderEditCell: (params: GridRenderEditCellParams) => (
               <CRUDBooleanCell {...params} />
             ),
@@ -114,7 +137,7 @@ const LinkMaterialContainer = ({
             minWidth: 100,
             maxWidth: 200,
             renderHeader: () => "Preenchimento",
-            renderCell: ({value})=> <Switch checked={value} disabled/>,
+            renderCell: ({ value }) => <Switch checked={value} disabled />,
             renderEditCell: (params: GridRenderEditCellParams) => (
               <CRUDBooleanCell {...params} />
             ),

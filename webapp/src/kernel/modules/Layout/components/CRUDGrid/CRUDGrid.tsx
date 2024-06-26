@@ -1,6 +1,6 @@
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 import {
   DataGrid,
   DataGridProps,
@@ -138,20 +138,26 @@ const NoRows = () => (
   </Box>
 );
 
-const CustomToolbar = ({handleAddRecord, addLabel}: {handleAddRecord: () => void, addLabel: string}) => {
+const CustomToolbar = ({
+  handleAddRecord,
+  addLabel,
+}: {
+  handleAddRecord: () => void;
+  addLabel: string;
+}) => {
   return (
     <GridToolbarContainer
       sx={{ display: "flex", justifyContent: "space-around" }}
     >
-      <Button startIcon={<AddSharpIcon />} onPointerUp={handleAddRecord}> 
+      <Button startIcon={<AddSharpIcon />} onPointerUp={handleAddRecord}>
         {addLabel || "Adicionar"}
       </Button>
       <div>
-        <GridToolbarDensitySelector  />
+        <GridToolbarDensitySelector />
       </div>
     </GridToolbarContainer>
-  )
-}
+  );
+};
 
 type CRUDGridRow = GridValidRowModel & {
   state: "untouched" | "modified" | "added" | "deleted";
@@ -181,7 +187,7 @@ export const CRUDGrid = ({
       ...oldModel,
       [rec.id]: { mode: GridRowModes.Edit, fieldToFocus: "id" },
     }));
-  }
+  };
 
   const handleEditClick = useCallback(
     (id: GridRowId) => () => {
@@ -269,93 +275,89 @@ export const CRUDGrid = ({
   );
 
   return (
-    <>
     <StyledDataGrid
-        editMode="row"
-        hideFooter={true}
-        autoHeight={true}
-        rowModesModel={rowModesModel}
-        getRowClassName={(params) => `state--${params.row.state}`}
-        onRowEditStop={handleRowEditStop}
-        processRowUpdate={processRowUpdate}
-        slotProps={{toolbar: {handleAddRecord, addLabel}}}
-        slots={{
-          noRowsOverlay: NoRows,
-          toolbar: CustomToolbar,
-        }}
-        columns={[
-          ...columns,
-          {
-            field: "actions",
-            type: "actions",
-            headerName: "Actions",
-            cellClassName: "actions",
-            getActions: ({ id }) => {
-              const row = rows.find((row) => row.id === id);
-              if (!row) return [];
-              const isInEditMode =
-                rowModesModel[id]?.mode === GridRowModes.Edit;
+      editMode="row"
+      hideFooter={true}
+      autoHeight={true}
+      rowModesModel={rowModesModel}
+      getRowClassName={(params) => `state--${params.row.state}`}
+      onRowEditStop={handleRowEditStop}
+      processRowUpdate={processRowUpdate}
+      slotProps={{ toolbar: { handleAddRecord, addLabel } }}
+      slots={{
+        noRowsOverlay: NoRows,
+        toolbar: CustomToolbar,
+      }}
+      columns={[
+        ...columns,
+        {
+          field: "actions",
+          type: "actions",
+          headerName: "Actions",
+          cellClassName: "actions",
+          getActions: ({ id }) => {
+            const row = rows.find((row) => row.id === id);
+            if (!row) return [];
+            const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
 
-              if (isInEditMode) {
-                return [
-                  <GridActionsCellItem
-                    icon={<SaveIcon />}
-                    label="Save"
-                    key="save"
-                    id={`save-${id}`}
-                    sx={{
-                      color: "primary.main",
-                    }}
-                    onClick={() => handleSaveClick(id)}
-                  />,
-                  <GridActionsCellItem
-                    icon={<CancelIcon />}
-                    label="Cancel"
-                    key="cancel"
-                    className="textPrimary"
-                    onClick={handleCancelClick(id)}
-                    color="inherit"
-                  />,
-                ];
-              }
-
-              if (row.state === "deleted")
-                return [
-                  <GridActionsCellItem
-                    icon={<RestoreSharpIcon />}
-                    label="Restore"
-                    key="restore"
-                    className="textPrimary"
-                    onClick={handleRestoreClick(id)}
-                    color="inherit"
-                  />,
-                ];
-
+            if (isInEditMode) {
               return [
                 <GridActionsCellItem
-                  icon={<EditIcon />}
-                  label="Edit"
-                  key="edit"
-                  className="textPrimary"
-                  onClick={handleEditClick(id)}
-                  color="inherit"
+                  icon={<SaveIcon />}
+                  label="Save"
+                  key="save"
+                  id={`save-${id}`}
+                  sx={{
+                    color: "primary.main",
+                  }}
+                  onClick={() => handleSaveClick(id)}
                 />,
                 <GridActionsCellItem
-                  icon={<DeleteIcon />}
-                  label="Delete"
-                  key="delete"
-                  onClick={handleDeleteClick(id)}
+                  icon={<CancelIcon />}
+                  label="Cancel"
+                  key="cancel"
+                  className="textPrimary"
+                  onClick={handleCancelClick(id)}
                   color="inherit"
                 />,
               ];
-            },
+            }
+
+            if (row.state === "deleted")
+              return [
+                <GridActionsCellItem
+                  icon={<RestoreSharpIcon />}
+                  label="Restore"
+                  key="restore"
+                  className="textPrimary"
+                  onClick={handleRestoreClick(id)}
+                  color="inherit"
+                />,
+              ];
+
+            return [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                label="Edit"
+                key="edit"
+                className="textPrimary"
+                onClick={handleEditClick(id)}
+                color="inherit"
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                label="Delete"
+                key="delete"
+                onClick={handleDeleteClick(id)}
+                color="inherit"
+              />,
+            ];
           },
-        ]}
-        {...props}
-        rows={rows}
-      />
-    </>
-      
+        },
+      ]}
+      {...props}
+      rows={rows}
+    />
   );
 };
 

@@ -30,6 +30,7 @@ export const useCompositionsManager = (): CompositionsManager => {
     const svgModule = useModule<ISVGModule>("SVG");
 
     const { useAppDispatch, useAppSelector } = storeModule.hooks;
+    const panelsManager = layoutModule.hooks.usePanelsManager()
     const dispatch = useAppDispatch()
 
     const viewportManager = layoutModule.hooks.useViewportManager()
@@ -46,6 +47,8 @@ export const useCompositionsManager = (): CompositionsManager => {
             createComposition(title, modelPath){
                 // dispatch
                 const vpName = viewportManager.functions.addViewport(title, 'Composer', undefined, 'composition-')
+                viewportManager.functions.selectViewport(vpName);
+                panelsManager.functions.openDetails()
                 
                 const path = modelPath
                 graphManager.functions.createGraph(vpName)

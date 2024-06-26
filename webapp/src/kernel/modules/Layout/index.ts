@@ -19,6 +19,7 @@ import CRUDBooleanCell from "./components/CRUDGrid/BooleanCell";
 import { useResizeObserver } from "./hooks/useResizeObserver";
 import CustomTextArea from "./components/CustomFields/TextArea";
 import ColorPicker from "./components/ColorPicker";
+import CRUDTextFieldCell from "./components/CRUDGrid/TextFieldCell";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -31,6 +32,7 @@ export interface ILayoutModule extends IModule {
     SystemModal: typeof SystemModal,
     CRUDGridProvider: typeof CRUDGridProvider,
     CRUDBooleanCell: typeof CRUDBooleanCell,
+    CRUDTextFieldCell: typeof CRUDTextFieldCell,
     CRUDGrid: typeof CRUDGrid,
     CustomTextArea: typeof CustomTextArea,
     ColorPicker: typeof ColorPicker
@@ -74,6 +76,7 @@ const LayoutModule: ILayoutModule = {
     SystemModal,
     CRUDGrid,
     CRUDBooleanCell,
+    CRUDTextFieldCell,
     CRUDGridProvider,
     CustomTextArea,
     ColorPicker
