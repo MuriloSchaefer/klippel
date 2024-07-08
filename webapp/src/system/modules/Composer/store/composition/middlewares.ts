@@ -34,7 +34,7 @@ import {
 } from "./actions";
 import { ComposerState } from "../state";
 import { MaterialNode, CompositionGraph, RestrictedByEdge } from "./state";
-import { detailsClosed } from "@kernel/modules/Layout/store/panels/actions";
+import { detailsClosed, openDetails } from "@kernel/modules/Layout/store/panels/actions";
 import { GraphsManagerState } from "@kernel/modules/Graphs/store/state";
 import {
   deleteProxy as deleteSVGProxy,
@@ -188,6 +188,8 @@ middlewares.startListening({
   actionCreator: selectPart,
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
+
+    dispatch(openDetails())
 
     dispatch(partSelected(payload)); // dispatch event
   },

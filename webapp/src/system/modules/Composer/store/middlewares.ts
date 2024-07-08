@@ -28,7 +28,7 @@ import {
   compositionsListStored,
 } from "./actions";
 import type { ComposerState, CompositionsList } from "./state";
-import { debugViewportOpened, openDebugView } from "./composition/actions";
+import { debugViewportOpened, openDebugView, selectPart } from "./composition/actions";
 import { MaterialsState } from '../../Materials/store/materials/state';
 
 const middlewares = createListenerMiddleware();
@@ -78,6 +78,7 @@ middlewares.startListening({
     const {
       Composer: { compositionsManager },
     } = getState() as { Composer: ComposerState };
+    dispatch(selectPart({ compositionName: payload.name, partName: 'garment' }));
 
     dispatch(
       compositionCreated(compositionsManager.compositions[payload.name])

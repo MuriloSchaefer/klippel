@@ -411,7 +411,6 @@ const useComposition = <C = Composition, R = C>(
       },
       selectPart(partName) {
         dispatch(selectPart({ compositionName: innerState!.name, partName }));
-        panelsManager.functions.openDetails();
       },
       changeMaterialType(materialUsageId, materialType) {
         // check if material type is in the graph

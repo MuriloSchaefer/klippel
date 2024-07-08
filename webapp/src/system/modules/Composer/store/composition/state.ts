@@ -137,5 +137,6 @@ export const newCompositionState: Omit<
     loadSVG: "not-started",
     loadModel: "not-started",
   },
+  selectedPart: undefined,
   budget: undefined
 };

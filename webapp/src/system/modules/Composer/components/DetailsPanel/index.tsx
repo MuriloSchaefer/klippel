@@ -33,14 +33,16 @@ const ComposerDetailLoader = () => {
     }),
     []
   );
-  const composition = useComposition({viewportName: activeViewport!}, selector);
+  const composition = useComposition(
+    { viewportName: activeViewport! },
+    selector
+  );
 
   if (
     !composition.state?.selectedPart ||
     !composition.state?.graphId ||
     !composition.state?.name
-  )
-    return null;
+  )return null;
   return (
     <ComposerDetailsPanel
       graphId={composition.state.graphId}
