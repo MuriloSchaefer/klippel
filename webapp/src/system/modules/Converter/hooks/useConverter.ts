@@ -123,7 +123,7 @@ export const useConverter = (): Converter | undefined => {
             : transformation.expression;
 
         const fn = compile(expression);
-        const identifiers = [...expression.matchAll(/[a-zA-Z]\w+/g)]
+        const identifiers = [...expression.matchAll(/[a-zA-Z]\w*/g)]
           .map(([v]) => v)
           .filter(
             (v) =>

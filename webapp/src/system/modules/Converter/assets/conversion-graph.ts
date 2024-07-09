@@ -380,6 +380,18 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       dividendUnitId: 'unitario18',
       abbreviation: 'm / un',
       name: 'metros per unitario'
+    },
+    'min / un': {
+      id: 'min / un',
+      type: 'COMPOUND_UNIT',
+      position: {
+        x: 0,
+        y: 0
+      },
+      quotientUnitId: 'minutos249',
+      dividendUnitId: 'unitario18',
+      abbreviation: 'min / un',
+      name: 'minutos per unitario'
     }
   },
   edges: {
@@ -599,46 +611,6 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       sourceId: 'R$ / un',
       targetId: 'reais11'
     },
-    'semana253-[conv]->dia251': {
-      type: 'CONVERTS_TO',
-      conversionType: 'expression',
-      expression: 'quantidade * 7',
-      id: 'semana253-[conv]->dia251',
-      sourceId: 'semana253',
-      targetId: 'dia251'
-    },
-    'semana253-[conv]->mes252': {
-      type: 'CONVERTS_TO',
-      conversionType: 'expression',
-      expression: 'quantidade / 4',
-      id: 'semana253-[conv]->mes252',
-      sourceId: 'semana253',
-      targetId: 'mes252'
-    },
-    'dia251-[conv]->hora250': {
-      type: 'CONVERTS_TO',
-      conversionType: 'expression',
-      expression: 'quantidade / 24',
-      id: 'dia251-[conv]->hora250',
-      sourceId: 'dia251',
-      targetId: 'hora250'
-    },
-    'hora250-[conv]->minutos249': {
-      type: 'CONVERTS_TO',
-      conversionType: 'expression',
-      expression: 'quantidade / 60',
-      id: 'hora250-[conv]->minutos249',
-      sourceId: 'hora250',
-      targetId: 'minutos249'
-    },
-    'minutos249-[conv]->segundos248': {
-      type: 'CONVERTS_TO',
-      conversionType: 'expression',
-      expression: 'quantidade / 60',
-      id: 'minutos249-[conv]->segundos248',
-      sourceId: 'minutos249',
-      targetId: 'segundos248'
-    },
     'm² / Kg-[conv]->kilogramas6': {
       type: 'CONVERTS_TO',
       conversionType: 'expression',
@@ -766,6 +738,106 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       id: 'm / un-[conv]->metros5',
       sourceId: 'm / un',
       targetId: 'metros5'
+    },
+    'min / un->minutos249': {
+      id: 'min / un->minutos249',
+      type: 'QUOTIENT',
+      sourceId: 'min / un',
+      targetId: 'minutos249'
+    },
+    'min / un->unitario18': {
+      id: 'min / un->unitario18',
+      type: 'DIVIDEND',
+      sourceId: 'min / un',
+      targetId: 'unitario18'
+    },
+    'min / un-[conv]->minutos249': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: '(quantidadeQuociente / quantidadeDividendo) * unidades',
+      id: 'min / un-[conv]->minutos249',
+      sourceId: 'min / un',
+      targetId: 'minutos249'
+    },
+    'R$ / h-[conv]->reais11': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: '(quantidadeDividendo / quantidadeQuociente) * h',
+      id: 'R$ / h-[conv]->reais11',
+      sourceId: 'R$ / h',
+      targetId: 'reais11'
+    },
+    'minutos249-[conv]->hora250': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade / 60',
+      id: 'minutos249-[conv]->hora250',
+      sourceId: 'minutos249',
+      targetId: 'hora250'
+    },
+    'minutos249-[conv]->segundos248': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade * 60',
+      id: 'minutos249-[conv]->segundos248',
+      sourceId: 'minutos249',
+      targetId: 'segundos248'
+    },
+    'segundos248-[conv]->minutos249': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade / 60',
+      id: 'segundos248-[conv]->minutos249',
+      sourceId: 'segundos248',
+      targetId: 'minutos249'
+    },
+    'hora250-[conv]->minutos249': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade * 60',
+      id: 'hora250-[conv]->minutos249',
+      sourceId: 'hora250',
+      targetId: 'minutos249'
+    },
+    'hora250-[conv]->dia251': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade / 24',
+      id: 'hora250-[conv]->dia251',
+      sourceId: 'hora250',
+      targetId: 'dia251'
+    },
+    'dia251-[conv]->semana253': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade / 5',
+      id: 'dia251-[conv]->semana253',
+      sourceId: 'dia251',
+      targetId: 'semana253'
+    },
+    'semana253-[conv]->dia251': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade * 5',
+      id: 'semana253-[conv]->dia251',
+      sourceId: 'semana253',
+      targetId: 'dia251'
+    },
+    'semana253-[conv]->mes252': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade / 4',
+      id: 'semana253-[conv]->mes252',
+      sourceId: 'semana253',
+      targetId: 'mes252'
+    },
+    'mes252-[conv]->semana253': {
+      type: 'CONVERTS_TO',
+      conversionType: 'expression',
+      expression: 'quantidade * 4',
+      id: 'mes252-[conv]->semana253',
+      sourceId: 'mes252',
+      targetId: 'semana253'
     }
   },
   adjacencyList: {
@@ -829,7 +901,8 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       inputs: [
         'R$ / h->reais11',
         'R$ / un->reais11',
-        'R$ / un-[conv]->reais11'
+        'R$ / un-[conv]->reais11',
+        'R$ / h-[conv]->reais11'
       ],
       outputs: [
         'reais11 -> monetaria10'
@@ -890,7 +963,8 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         'R$ / un->unitario18',
         'un / h->unitario18',
         'm² / un->unitario18',
-        'm / un->unitario18'
+        'm / un->unitario18',
+        'min / un->unitario18'
       ],
       outputs: []
     },
@@ -945,16 +1019,21 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         'minutos249-[conv]->segundos248'
       ],
       outputs: [
-        'segundos248 -> temporal247'
+        'segundos248 -> temporal247',
+        'segundos248-[conv]->minutos249'
       ]
     },
     minutos249: {
       inputs: [
         'un / min->minutos249',
+        'min / un->minutos249',
+        'min / un-[conv]->minutos249',
+        'segundos248-[conv]->minutos249',
         'hora250-[conv]->minutos249'
       ],
       outputs: [
         'minutos249 -> temporal247',
+        'minutos249-[conv]->hora250',
         'minutos249-[conv]->segundos248'
       ]
     },
@@ -962,20 +1041,22 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       inputs: [
         'R$ / h->hora250',
         'un / h->hora250',
-        'dia251-[conv]->hora250'
+        'minutos249-[conv]->hora250'
       ],
       outputs: [
         'hora250 -> temporal247',
-        'hora250-[conv]->minutos249'
+        'hora250-[conv]->minutos249',
+        'hora250-[conv]->dia251'
       ]
     },
     dia251: {
       inputs: [
+        'hora250-[conv]->dia251',
         'semana253-[conv]->dia251'
       ],
       outputs: [
         'dia251 -> temporal247',
-        'dia251-[conv]->hora250'
+        'dia251-[conv]->semana253'
       ]
     },
     mes252: {
@@ -983,11 +1064,15 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         'semana253-[conv]->mes252'
       ],
       outputs: [
-        'mes252 -> temporal247'
+        'mes252 -> temporal247',
+        'mes252-[conv]->semana253'
       ]
     },
     semana253: {
-      inputs: [],
+      inputs: [
+        'dia251-[conv]->semana253',
+        'mes252-[conv]->semana253'
+      ],
       outputs: [
         'semana253 -> temporal247',
         'semana253-[conv]->dia251',
@@ -1038,7 +1123,8 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       inputs: [],
       outputs: [
         'R$ / h->reais11',
-        'R$ / h->hora250'
+        'R$ / h->hora250',
+        'R$ / h-[conv]->reais11'
       ]
     },
     'R$ / un': {
@@ -1081,6 +1167,14 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         'm / un->metros5',
         'm / un->unitario18',
         'm / un-[conv]->metros5'
+      ]
+    },
+    'min / un': {
+      inputs: [],
+      outputs: [
+        'min / un->minutos249',
+        'min / un->unitario18',
+        'min / un-[conv]->minutos249'
       ]
     }
   },

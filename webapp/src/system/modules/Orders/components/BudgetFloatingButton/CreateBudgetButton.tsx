@@ -73,6 +73,7 @@ export default function CreateBudgetButton() {
             label="Nome"
             variant="standard"
             value={form.label}
+            sx={{minWidth:'100px'}}
             onChange={(v) =>
               setForm((curr) => ({ ...curr, label: v.target.value }))
             }

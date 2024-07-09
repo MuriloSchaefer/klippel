@@ -24,6 +24,7 @@ import type {
 } from "../../../store/composition/state";
 import useComposition from "../../../hooks/useComposition";
 import { IMaterialsModule } from "@system/modules/Materials";
+import { useMemo } from "react";
 
 const ProcessItem = ({
   graphId,
@@ -104,6 +105,41 @@ const ProcessItem = ({
     ),
   ]);
 
+
+  const timeRequired = useMemo(() => converter?.convert(
+    node.time_taken,
+    node.cost.dividend.unit,
+    {
+      unidades: Object.values(budget?.grades ?? {}).reduce(
+        (acc, s) => acc + s,
+        0
+      ),
+      pedidos: 1, // constant value
+    }
+  ) as UnitValue, [node.time_taken, node.cost, budget]);
+
+  
+  
+  const totalCost = useMemo(() => {
+    if (!units || !timeRequired) return 0;
+    
+    const context = {
+      unidades: Object.values(budget?.grades ?? {}).reduce(
+        (acc, s) => acc + s,
+        0
+      ),
+      [units[timeRequired.unit].abbreviation]: timeRequired.amount,
+      pedidos: 1, // constant value
+    }
+
+
+    return converter?.convert(
+      node.cost,
+      node.cost.quotient.unit,
+      context
+    ) as UnitValue
+  }, [node.cost, units, timeRequired, budget]);
+
   const materials = useMaterials(
     Object.values(usageEdges?.nodes ?? {}).map(
       (n) => +n.materialId.split("-")[1]
@@ -120,22 +156,67 @@ const ProcessItem = ({
           <Box
             sx={{
               display: "flex",
+              alignItems: 'center',
               justifyContent: "space-between",
             }}
           >
-            <Typography>{node.label}</Typography>
+            <Box sx={{width: 'max-content'}}><Typography>{node.label}</Typography></Box>
             <Box sx={{ display: "flex", justifyContent: "end", gap: 2 }}>
-              <Box sx={{ display: "flex", gap: 0.3, alignItems: "center" }}>
-                <AccessTimeSharpIcon /> {node.time_taken.quotient.amount}{" "}
-                {units[node.time_taken.quotient.unit].abbreviation} /{" "}
-                {node.time_taken.dividend.amount}{" "}
-                {units[node.time_taken.dividend.unit].abbreviation}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: 'column',
+                  maxWidth: "100px",
+                  gap: 0.3,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}><AccessTimeSharpIcon /> <span>Tempo</span></Box>
+                <Box sx={{color: theme.palette.getContrastText(theme.palette.background.paper), opacity: '50%'
+                }}>
+                  <span>
+                    {node.time_taken.quotient.amount}
+                    {units[node.time_taken.quotient.unit].abbreviation}
+                  </span>
+                  <span>{" "}/{" "}</span>
+                  <span>
+                    {node.time_taken.dividend.amount}
+                    {units[node.time_taken.dividend.unit].abbreviation}
+                  </span>
+                </Box>
+                {budget && timeRequired && <Box sx={{color: theme.palette.primary.main}} >
+                    {timeRequired.amount.toFixed(2)}{" "}
+                    {units[timeRequired.unit].abbreviation}</Box>}
               </Box>
-              <Box sx={{ display: "flex", gap: 0.3, alignItems: "center" }}>
-                <AttachMoneySharpIcon /> {node.cost.quotient.amount}{" "}
-                {units[node.cost.quotient.unit].abbreviation} /{" "}
-                {node.cost.dividend.amount}{" "}
-                {units[node.cost.dividend.unit].abbreviation}
+
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: 'column',
+                  maxWidth: "100px",
+                  gap: 0.3,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}><AttachMoneySharpIcon /> <span>Custo</span></Box>
+                <Box sx={{color: theme.palette.getContrastText(theme.palette.background.paper), opacity: '50%'
+                }}>
+                  <span>
+                    {node.cost.quotient.amount}
+                    {units[node.cost.quotient.unit].abbreviation}
+                  </span>
+                  <span>{" "}/{" "}</span>
+                  <span>
+                  {node.cost.dividend.amount}
+                  {units[node.cost.dividend.unit].abbreviation}
+                  </span>
+                </Box>
+                {budget && totalCost && <Box sx={{color: theme.palette.primary.main}} >
+                    {totalCost.amount.toFixed(2)}{" "}
+                    {units[totalCost.unit].abbreviation}</Box>}
               </Box>
             </Box>
           </Box>

@@ -2,9 +2,7 @@ import React, {
   MouseEvent,
   cloneElement,
   useCallback,
-  useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -38,7 +36,6 @@ export const PointerContainer = ({
   onClose?: (event: MouseEvent) => void;
 }) => {
   const [open, setOpen] = useState(false);
-  const [calculateOffset, setCalculateOffset] = useState(true);
 
   const { innerWidth: width, innerHeight: height } = window;
   const windowCenter = [width / 2, height / 2];
@@ -64,30 +61,6 @@ export const PointerContainer = ({
     () => getQuadrant(position.x, position.y),
     [position]
   );
-
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (open && calculateOffset && ref.current) {
-      const { clientWidth, clientHeight } = ref.current;
-      if (quadrant % 2 == 0) {
-        setPosition((curr) => ({
-          x: curr.x - clientWidth,
-          y: curr.y - clientHeight,
-        }));
-      } else if (quadrant > 2) {
-        setPosition((curr) => ({
-          x: curr.x,
-          y: curr.y - clientHeight,
-        }));
-      }
-
-      setCalculateOffset(false);
-    }
-
-    if (!open) {
-      setCalculateOffset(true);
-    }
-  }, [open, ref.current]);
 
   const handleOpen = useCallback((e: MouseEvent) => {
     setOpen(true);
@@ -125,11 +98,13 @@ export const PointerContainer = ({
             margin: 1,
             left: position.x,
             top: position.y, //getQuadrant(position.x, position.y) < 3 ? position.y : `calc(${position.y}px - 100%)`,
+            transform: `translate(${quadrant % 2 === 0 ? '-100%' : '0'}, ${quadrant > 2 ? '-100%' : '0'})`,
+            transition: 'width 1s ease-in-out',
+            transformOrigin: 'bottom right'
           }}
           elevation={6}
         >
           <Box
-            ref={ref}
             sx={{
               display: "flex",
               flexGrow: 1,
