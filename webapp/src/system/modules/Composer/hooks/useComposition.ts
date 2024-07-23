@@ -71,6 +71,15 @@ interface CompositionActions {
     time_taken: CompoundValue,
     partId: string
   ): void;
+  updateOperation(
+    operationId: string,
+    changes: {
+      label?: string;
+      cost?: CompoundValue;
+      time_taken?: CompoundValue;
+    }
+  ): void;
+
   addMaterialConsuption(
     operationId: string,
     materialId: string,
@@ -107,13 +116,11 @@ const useComposition = <C = Composition, R = C>(
   compositionSelector: (composition: CompositionState | undefined) => R
 ): Composition<R> => {
   const storeModule = useModule<Store>("Store");
-  const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>("Graph");
   const materialsModule = useModule<IMaterialsModule>("Materials");
 
   const { useAppDispatch, useAppSelector } = storeModule.hooks;
   const dispatch = useAppDispatch();
-  const panelsManager = layoutModule.hooks.usePanelsManager();
   const { useGraph } = graphModule.hooks;
   const { useMaterialTypes } = materialsModule.hooks;
 
@@ -392,6 +399,14 @@ const useComposition = <C = Composition, R = C>(
           outputs: {},
         };
         graph.actions.addNode(node, edges);
+      },
+      updateOperation(operationId, changes){
+        if (!graph.state){
+          console.error('updating a node without graph state')
+          return
+        }
+        const node = graph.state?.nodes![operationId]
+        graph?.actions.updateNode({...node, ...changes})
       },
       updateMaterialConsuption: (consumptionId, changes) => {
         graph.actions.updateEdge(consumptionId, changes);

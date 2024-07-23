@@ -6,6 +6,8 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
 import AttachMoneySharpIcon from "@mui/icons-material/AttachMoneySharp";
+import TextField  from "@mui/material/TextField";
+import FunctionsSharpIcon from '@mui/icons-material/FunctionsSharp';
 
 import useModule from "@kernel/hooks/useModule";
 import type { IGraphModule } from "@kernel/modules/Graphs";
@@ -39,6 +41,8 @@ const ProcessItem = ({
   const storeModule = useModule<Store>("Store");
   const materialModule = useModule<IMaterialsModule>("Materials");
 
+  const { CompoundSelector } = converterModule.components;
+
   const { useAppSelector } = storeModule.hooks;
   const { useNodeInfo, useGraph } = graphModule.hooks;
   const { useUnits, useConverter } = converterModule.hooks;
@@ -50,10 +54,10 @@ const ProcessItem = ({
   const activeViewport = useAppSelector(selectActiveViewport);
   const converter = useConverter();
 
-  const { state: budget } = useComposition(
-    { viewportName: activeViewport! },
-    (c) => c?.budget
-  );
+  const {
+    state: budget,
+    actions: { updateOperation },
+  } = useComposition({ viewportName: activeViewport! }, (c) => c?.budget);
 
   const { state: usageEdges } = useGraph<
     CompositionGraph,
@@ -105,39 +109,55 @@ const ProcessItem = ({
     ),
   ]);
 
+  const timeRequired = useMemo(
+    () =>
+      {
+        if (!units) return 0;
 
-  const timeRequired = useMemo(() => converter?.convert(
-    node.time_taken,
-    node.cost.dividend.unit,
-    {
-      unidades: Object.values(budget?.grades ?? {}).reduce(
-        (acc, s) => acc + s,
-        0
-      ),
-      pedidos: 1, // constant value
-    }
-  ) as UnitValue, [node.time_taken, node.cost, budget]);
+        const timeValue = converter?.convert(node.time_taken, node.time_taken.quotient.unit, {
+          unidades: Object.values(budget?.grades ?? {}).reduce(
+            (acc, s) => acc + s,
+            0
+          ),
+          pedidos: 1, 
+        }) as UnitValue
 
-  
-  
+        const unitValue = units[node.cost.dividend.unit].abbreviation === 'h' ? converter?.convert(timeValue, node.cost.dividend.unit, {
+          unidades: Object.values(budget?.grades ?? {}).reduce(
+            (acc, s) => acc + s,
+            0
+          ),
+
+          [units[timeValue.unit].abbreviation]: timeValue.amount,
+          pedidos: 1, 
+        }) as UnitValue : undefined
+
+
+        return {
+          timeRequired: timeValue,
+          costDividendUnit: unitValue
+        }
+      },
+    [node.time_taken, node.cost, budget]
+  );
+
   const totalCost = useMemo(() => {
     if (!units || !timeRequired) return 0;
-    
+
     const context = {
       unidades: Object.values(budget?.grades ?? {}).reduce(
         (acc, s) => acc + s,
         0
       ),
-      [units[timeRequired.unit].abbreviation]: timeRequired.amount,
-      pedidos: 1, // constant value
-    }
-
+      [units[timeRequired.costDividendUnit!.unit].abbreviation]: timeRequired.costDividendUnit!.amount,
+      pedidos: 1, 
+    };
 
     return converter?.convert(
       node.cost,
       node.cost.quotient.unit,
       context
-    ) as UnitValue
+    ) as UnitValue;
   }, [node.cost, units, timeRequired, budget]);
 
   const materials = useMaterials(
@@ -156,67 +176,60 @@ const ProcessItem = ({
           <Box
             sx={{
               display: "flex",
-              alignItems: 'center',
+              alignItems: "center",
               justifyContent: "space-between",
+              gap: 2
             }}
           >
-            <Box sx={{width: 'max-content'}}><Typography>{node.label}</Typography></Box>
+            <Box sx={{ flexGrow: 1}}>
+              <Typography>
+                <TextField
+                  id="name"
+                  label="Nome"
+                  variant="standard"
+                  sx={{ width: '100%' }}
+                  onChange={(evt) =>
+                    updateOperation?.(node.id, { label: evt.target.value })
+                  }
+                  value={node.label}
+                />
+              </Typography>
+            </Box>
             <Box sx={{ display: "flex", justifyContent: "end", gap: 2 }}>
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: 'column',
+                  flexDirection: "column",
                   maxWidth: "100px",
                   gap: 0.3,
                   flexWrap: "wrap",
                   alignItems: "center",
                 }}
               >
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}><AccessTimeSharpIcon /> <span>Tempo</span></Box>
-                <Box sx={{color: theme.palette.getContrastText(theme.palette.background.paper), opacity: '50%'
-                }}>
-                  <span>
-                    {node.time_taken.quotient.amount}
-                    {units[node.time_taken.quotient.unit].abbreviation}
-                  </span>
-                  <span>{" "}/{" "}</span>
-                  <span>
-                    {node.time_taken.dividend.amount}
-                    {units[node.time_taken.dividend.unit].abbreviation}
-                  </span>
-                </Box>
-                {budget && timeRequired && <Box sx={{color: theme.palette.primary.main}} >
+                {budget && timeRequired && (
+                  <Box sx={{ color: theme.palette.primary.main }}>
                     {timeRequired.amount.toFixed(2)}{" "}
-                    {units[timeRequired.unit].abbreviation}</Box>}
+                    {units[timeRequired.unit].abbreviation}
+                  </Box>
+                )}
               </Box>
-
 
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: 'column',
+                  flexDirection: "column",
                   maxWidth: "100px",
                   gap: 0.3,
                   flexWrap: "wrap",
                   alignItems: "center",
                 }}
               >
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}><AttachMoneySharpIcon /> <span>Custo</span></Box>
-                <Box sx={{color: theme.palette.getContrastText(theme.palette.background.paper), opacity: '50%'
-                }}>
-                  <span>
-                    {node.cost.quotient.amount}
-                    {units[node.cost.quotient.unit].abbreviation}
-                  </span>
-                  <span>{" "}/{" "}</span>
-                  <span>
-                  {node.cost.dividend.amount}
-                  {units[node.cost.dividend.unit].abbreviation}
-                  </span>
-                </Box>
-                {budget && totalCost && <Box sx={{color: theme.palette.primary.main}} >
+                {budget && totalCost && (
+                  <Box sx={{ color: theme.palette.primary.main }}>
                     {totalCost.amount.toFixed(2)}{" "}
-                    {units[totalCost.unit].abbreviation}</Box>}
+                    {units[totalCost.unit].abbreviation}
+                  </Box>
+                )}
               </Box>
             </Box>
           </Box>
@@ -231,15 +244,40 @@ const ProcessItem = ({
               flexDirection: "column",
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-              }}
-              role="material-attributes"
-              aria-label="material attributes"
-            ></Box>
             <Divider />
+            <Typography variant="h6" color={theme.palette.primary.main}>
+              Info
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AccessTimeSharpIcon />{" "}
+              <CompoundSelector
+                id="time-taken"
+                label="Tempo"
+                filterDividends={(unit) => unit.abbreviation === "un"}
+                filterQuotients={(_, scale) => scale?.name === "Temporal"}
+                value={node.time_taken}
+                onChange={(v) => updateOperation?.(node.id, { time_taken: v })}
+              />
+              <FunctionsSharpIcon />
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AttachMoneySharpIcon />{" "}
+              <CompoundSelector
+                id="cost"
+                label="Custo"
+                filterDividends={(unit, scale) =>
+                  unit.abbreviation === "un" || scale?.name == "Temporal"
+                }
+                filterQuotients={(_, scale) => scale?.name === "Monetaria"}
+                value={node.cost}
+                onChange={(v) => updateOperation?.(node.id, { cost: v })}
+              />
+              <FunctionsSharpIcon sx={{color: theme.palette.secondary.main}}/>
+            </Box>
+            <Divider />
+            <Typography variant="h6" color={theme.palette.primary.main}>
+              Materials
+            </Typography>
             <Box>
               {usageEdges?.edges.map((e) => (
                 <Box

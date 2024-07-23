@@ -27,7 +27,6 @@ export const AddProcessButton = ({
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { CompoundSelector } = converterModule.components;
-  const { useScales } = converterModule.hooks;
 
   const composition = useComposition({compositionName}, (c) => c?.selectedPart);
 
@@ -45,10 +44,7 @@ export const AddProcessButton = ({
   });
 
   const handleSubmission = useCallback(
-    (evt: FormEvent<HTMLFormElement>) => {
-      evt.preventDefault();
-      evt.stopPropagation();
-
+    () => {
       if (composition.state)
         composition.actions.addOperation(
           operation.label,
@@ -57,7 +53,7 @@ export const AddProcessButton = ({
           composition.state
         );
     },
-    [operation]
+    [operation, composition]
   );
 
   return (
@@ -65,7 +61,6 @@ export const AddProcessButton = ({
       component={        
         <Box
           component={"form"}
-          onSubmit={handleSubmission}
           id={formId}
           sx={{ display: "flex", flexDirection: "column", flexGrow: 2, gap: 1 }}
         >
@@ -106,7 +101,7 @@ export const AddProcessButton = ({
           value={"Submit"}
           color="success"
           key="accept"
-          handleConfirm={() => null}
+          handleConfirm={handleSubmission}
         />,
       ]}
     >

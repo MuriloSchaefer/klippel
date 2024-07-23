@@ -2,7 +2,6 @@ import React, {
   MouseEvent,
   cloneElement,
   useCallback,
-  useMemo,
   useState,
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -21,8 +20,7 @@ export interface PointerContainerActionProps extends IconButtonProps {
   closeContainer?: (e: MouseEvent) => void;
 }
 
-export interface PointerContainerProps {
-}
+export interface PointerContainerProps {}
 
 export const PointerContainer = ({
   children,
@@ -43,24 +41,18 @@ export const PointerContainer = ({
   const { position, setPosition, listeners } = useDraggable({
     initialPosition: { x: windowCenter[0], y: windowCenter[1] },
   });
-  const getQuadrant = useCallback(
-    (x: number, y: number) => {
-      const deltaX = x - windowCenter[0];
-      const deltaY = y - windowCenter[1];
+  const getQuadrant = (x: number, y: number) => {
+    const deltaX = x - windowCenter[0];
+    const deltaY = y - windowCenter[1];
 
-      if (deltaX < 0) {
-        return deltaY < 0 ? 1 : 3;
-      } else {
-        return deltaY < 0 ? 2 : 4;
-      }
-    },
-    [windowCenter]
-  );
+    if (deltaX < 0) {
+      return deltaY < 0 ? 1 : 3;
+    } else {
+      return deltaY < 0 ? 2 : 4;
+    }
+  };
 
-  const quadrant = useMemo(
-    () => getQuadrant(position.x, position.y),
-    [position]
-  );
+  const quadrant = getQuadrant(position.x, position.y);
 
   const handleOpen = useCallback((e: MouseEvent) => {
     setOpen(true);
@@ -97,10 +89,12 @@ export const PointerContainer = ({
             position: "fixed",
             margin: 1,
             left: position.x,
-            top: position.y, //getQuadrant(position.x, position.y) < 3 ? position.y : `calc(${position.y}px - 100%)`,
-            transform: `translate(${quadrant % 2 === 0 ? '-100%' : '0'}, ${quadrant > 2 ? '-100%' : '0'})`,
-            transition: 'width 1s ease-in-out',
-            transformOrigin: 'bottom right'
+            top: position.y,
+            transform: `translate(${
+              quadrant % 2 === 0 ? "-100%" : "0"
+            }, ${quadrant > 2 ? "-100%" : "0"})`,
+            transition: "width 1s ease-in-out",
+            transformOrigin: "bottom right",
           }}
           elevation={6}
         >
