@@ -1,25 +1,20 @@
 import {
   configureStore,
   ListenerMiddlewareInstance,
-  ListenerMiddleware,
 } from "@reduxjs/toolkit";
 import React, { Reducer, useCallback, useMemo, useState } from "react";
 import { Provider as ReduxProvider } from "react-redux";
 import {
   AnyAction,
   combineReducers,
-  compose,
-  MiddlewareAPI,
-  Store,
-  StoreEnhancer,
-  StoreEnhancerStoreCreator,
+  Store
 } from "redux";
 import CurrentReducersContext, { ReducersMap } from "../contexts";
 import slice from "../slice";
 
-import dynamicMiddlewares from "redux-dynamic-middlewares";
-import { addMiddleware } from "redux-dynamic-middlewares";
+import dynamicMiddlewares, { addMiddleware } from "redux-dynamic-middlewares";
 import ComponentsRegistryProvider from "./ComponentsRegistry";
+import { RxDBProvider } from "../contexts/RxDBRegistry";
 
 export interface DynamicStore extends Store {
   registerMiddleware: (listener: ListenerMiddlewareInstance) => void;
@@ -56,17 +51,19 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <ReduxProvider store={store}>
-      <CurrentReducersContext.Provider
-        value={{
-          currentReducers,
-          loadReducers,
-          registerMiddleware,
-        }}
-      >
-        <ComponentsRegistryProvider>{children}</ComponentsRegistryProvider>
-      </CurrentReducersContext.Provider>
-    </ReduxProvider>
+    <RxDBProvider>
+      <ReduxProvider store={store}>
+        <CurrentReducersContext.Provider
+          value={{
+            currentReducers,
+            loadReducers,
+            registerMiddleware,
+          }}
+        >
+          <ComponentsRegistryProvider>{children}</ComponentsRegistryProvider>
+        </CurrentReducersContext.Provider>
+      </ReduxProvider>
+    </RxDBProvider>
   );
 };
 

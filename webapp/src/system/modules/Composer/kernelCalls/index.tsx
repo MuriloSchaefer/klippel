@@ -10,8 +10,42 @@ import DebuggerViewport from "../components/DebuggerViewport";
 
 
 export function startModule({
-    managers: { storeManager,componentRegistryManager,layoutManager, ribbonMenuManager, viewportManager },
+    managers: { storeManager,componentRegistryManager,ribbonMenuManager },
+    db
   }: StartModuleProps){
+
+    // dbManager.createDB('product-catalog')
+    db.addCollections({
+      products: {
+        schema: {
+          title: 'products',
+          version: 0,
+          description: 'stores all the products catalog',
+          primaryKey: 'id',
+          type: "object",
+          properties: {
+            name: {type:'string'},
+            id: {type: 'string', maxLength: 36 },
+            rootFolder: {type: 'string'},
+            description: {type: 'string'},
+          }
+        },
+        migrationStrategies: {
+        }
+      }
+    }).then(async ({products})=>{
+      const results = await products.find({selector: {id: '1'}}).exec();
+      if (!results.length) {
+        products.insert({
+          name: 'Camisa feminina',
+          id: '1',
+          rootFolder: '{{home}}/catalog/camisa-feminina',
+          description: "#Title\n\nDescription here"
+        })
+      }
+    })
+
+
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
     storeManager.functions.registerMiddleware(middlewares)
     storeManager.functions.registerMiddleware(graphMiddlewares)

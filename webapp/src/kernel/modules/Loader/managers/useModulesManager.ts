@@ -13,7 +13,7 @@ export interface ModulesManager extends Manager {
     modulesLoaded: number,
     functions: {
         isModuleLoaded: (moduleName: string) => boolean
-        loadModule: (module: IModule) => void,
+        loadModule: (module: IModule) => Promise<void>|void,
         unloadModule: (moduleName: string) => void,
         reloadModule: (moduleName: string) => void
     }
@@ -30,12 +30,15 @@ export const useModulesManager = (): ModulesManager => {
     // CHALLENGE: try to make it easier to add new managers here without increasing coupling
     const {useLayoutManager, useRibbonMenuManager, useViewportManager} = layoutModule.hooks
     const {store, componentRegistry} = storeModule.managers
+    const {useDBManager, useDB} = storeModule.hooks
     
     const layoutManager = useLayoutManager()
     const ribbonMenuManager = useRibbonMenuManager()
     const viewportManager = useViewportManager()
     const storeManager = store()
     const componentRegistryManager = componentRegistry()
+    const dbManager = useDBManager();
+    const defaultDB = useDB();
 
     const dispatch = storeModule.hooks.useAppDispatch()
     const useAppSelector = storeModule.hooks.useAppSelector
@@ -57,11 +60,13 @@ export const useModulesManager = (): ModulesManager => {
                     dispatch,
                     managers: {
                         storeManager,
+                        dbManager,
                         componentRegistryManager,
                         layoutManager,
                         ribbonMenuManager,
                         viewportManager
-                    }
+                    },
+                    db: defaultDB
                 })
 
                 // emit event

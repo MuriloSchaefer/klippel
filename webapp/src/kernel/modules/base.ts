@@ -1,11 +1,12 @@
-import React, { ComponentType, ReactPortal, Reducer } from "react";
+import React, { Reducer } from "react";
 import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 import { StoreManager } from "./Store/hooks/useStoreManager";
-import { ModulesContextType } from "./Loader/context";
 import { LayoutManager } from "./Layout/hooks/useLayoutManager";
 import { RibbonMenuManager } from "./Layout/hooks/useRibbonMenuManager";
 import { ViewportManager } from "./Layout/hooks/useViewportManager";
 import { ComponentRegistryManager } from "./Store/hooks/useComponentRegistryManager";
+import { DBManager } from "./Store/hooks/useDBManager";
+import { RxDatabase } from "rxdb";
 
 export interface Manager {
   functions: {
@@ -13,19 +14,21 @@ export interface Manager {
   }
 }
 
-export interface StartModuleProps {
+export interface StartModuleProps <DBType extends RxDatabase=RxDatabase >{
   dispatch: any,
   managers: {
     storeManager: StoreManager
+    dbManager: DBManager
     componentRegistryManager: ComponentRegistryManager
     layoutManager: LayoutManager
     ribbonMenuManager: RibbonMenuManager
     viewportManager: ViewportManager
-  }
+  },
+  db: DBType
 }
 
 export interface KernelCalls {
-  startModule: (props: StartModuleProps) => void,
+  startModule: (props: StartModuleProps) => Promise<void> | void,
   restartModule: (storeManager: StoreManager) => void,
   shutdownModule: (storeManager: StoreManager) => void
 }

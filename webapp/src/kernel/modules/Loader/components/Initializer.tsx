@@ -148,8 +148,8 @@ const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }
         moduleManager.functions.loadModule(mod)
         setKernelModulesLoaded(kernelModulesLoaded+1)
     }
-    function loadExtraSystemModule(mod: IModule){
-        moduleManager.functions.loadModule(mod)
+    async function loadExtraSystemModule(mod: IModule){
+        await moduleManager.functions.loadModule(mod)
         setExtraModulesLoaded(extraModulesLoaded+1)
     }
     
