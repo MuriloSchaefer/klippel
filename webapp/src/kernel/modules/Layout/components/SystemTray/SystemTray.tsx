@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 
@@ -9,6 +9,7 @@ import { Store } from "@kernel/modules/Store";
 
 import { selectTheme } from "../../store/selectors";
 import useLayoutManager from "../../hooks/useLayoutManager";
+import Workspace from "./Workspace";
 
 const SystemTray = () => {
   const storeModule = useModule<Store>("Store");
@@ -16,14 +17,19 @@ const SystemTray = () => {
 
   const selectedTheme = useAppSelector(selectTheme);
 
-  const layoutManager = useLayoutManager()
+  const layoutManager = useLayoutManager();
 
   const handleThemeSwitch = useCallback(() => {
-    layoutManager.functions.setTheme(selectedTheme == "dark" ? "light" : "dark")
+    layoutManager.functions.setTheme(
+      selectedTheme == "dark" ? "light" : "dark"
+    );
   }, [selectedTheme]);
 
+
   return (
-    <Box role="system-tray-container">
+    <>
+      <Workspace />
+      
       <IconButton
         color="primary"
         aria-label="switch theme button"
@@ -35,7 +41,7 @@ const SystemTray = () => {
           <LightModeOutlinedIcon fontSize="small" />
         )}
       </IconButton>
-    </Box>
+    </>
   );
 };
 

@@ -5,7 +5,6 @@ import { LayoutManager } from "./Layout/hooks/useLayoutManager";
 import { RibbonMenuManager } from "./Layout/hooks/useRibbonMenuManager";
 import { ViewportManager } from "./Layout/hooks/useViewportManager";
 import { ComponentRegistryManager } from "./Store/hooks/useComponentRegistryManager";
-import { DBManager } from "./Store/hooks/useDBManager";
 import { RxDatabase } from "rxdb";
 
 export interface Manager {
@@ -14,17 +13,16 @@ export interface Manager {
   }
 }
 
-export interface StartModuleProps <DBType extends RxDatabase=RxDatabase >{
+export interface StartModuleProps{
   dispatch: any,
   managers: {
     storeManager: StoreManager
-    dbManager: DBManager
     componentRegistryManager: ComponentRegistryManager
     layoutManager: LayoutManager
     ribbonMenuManager: RibbonMenuManager
     viewportManager: ViewportManager
   },
-  db: DBType
+  db: RxDatabase
 }
 
 export interface KernelCalls {

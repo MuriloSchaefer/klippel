@@ -4,7 +4,8 @@ import useStoreManager from "./hooks/useStoreManager";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import useComponentRegistryManager from "./hooks/useComponentRegistryManager";
 import useDB from "./hooks/useDB";
-import useDBManager from './hooks/useDBManager';
+import useCurrentWorkspace from "./hooks/useCurrentWorkspace";
+import useCollection from './hooks/useCollection';
 
 
 export interface Store extends IModule {
@@ -14,7 +15,8 @@ export interface Store extends IModule {
         useAppDispatch: typeof useAppDispatch,
         useAppSelector: typeof useAppSelector,
         useDB: typeof useDB,
-        useDBManager: typeof useDBManager
+        useCollection: typeof useCollection,
+        useCurrentWorkspace: typeof useCurrentWorkspace
     },
     managers: {
         store: typeof useStoreManager
@@ -35,7 +37,8 @@ const module: Store = {
         useAppDispatch, 
         useAppSelector,
         useDB,
-        useDBManager
+        useCollection,
+        useCurrentWorkspace
     },
     kernelCalls: {
         startModule: () => undefined,

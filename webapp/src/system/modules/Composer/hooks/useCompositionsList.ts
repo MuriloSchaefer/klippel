@@ -4,26 +4,27 @@ import useModule from "@kernel/hooks/useModule";
 import type { Store } from "@kernel/modules/Store";
 
 import useCompositionsManager from "./useCompositionsManager";
-import type { ComposerState, CompositionsList } from "../store/state";
+import { Product } from "../interfaces";
+import { RxDocument } from "rxdb";
 
 
-export const useCompositionsList = (): CompositionsList => {
+export const useCompositionsList = (): Promise<RxDocument<Product>[]> => {
   const storeModule = useModule<Store>("Store");
 
-  const { useAppSelector } = storeModule.hooks;
+  const { useCollection } = storeModule.hooks;
+
+  const products = useCollection<Product>('products');
+  console.log(products)
   const compositionManager = useCompositionsManager();
 
-  const compositions = useAppSelector(
-    (state: { Composer: ComposerState }) =>
-      state.Composer.compositionsManager.compositionsList
-  );
+  const query = products.find()
   
 
   useLayoutEffect(() => {
     compositionManager.functions.listCompositions();
   }, []);
 
-  return compositions;
+  return query;
 };
 
 export default useCompositionsManager;

@@ -30,15 +30,14 @@ export const useModulesManager = (): ModulesManager => {
     // CHALLENGE: try to make it easier to add new managers here without increasing coupling
     const {useLayoutManager, useRibbonMenuManager, useViewportManager} = layoutModule.hooks
     const {store, componentRegistry} = storeModule.managers
-    const {useDBManager, useDB} = storeModule.hooks
+    const {useDB} = storeModule.hooks
     
     const layoutManager = useLayoutManager()
     const ribbonMenuManager = useRibbonMenuManager()
     const viewportManager = useViewportManager()
     const storeManager = store()
     const componentRegistryManager = componentRegistry()
-    const dbManager = useDBManager();
-    const defaultDB = useDB();
+    const db = useDB();
 
     const dispatch = storeModule.hooks.useAppDispatch()
     const useAppSelector = storeModule.hooks.useAppSelector
@@ -60,13 +59,12 @@ export const useModulesManager = (): ModulesManager => {
                     dispatch,
                     managers: {
                         storeManager,
-                        dbManager,
                         componentRegistryManager,
                         layoutManager,
                         ribbonMenuManager,
                         viewportManager
                     },
-                    db: defaultDB
+                    db
                 })
 
                 // emit event

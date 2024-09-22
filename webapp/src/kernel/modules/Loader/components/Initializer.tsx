@@ -17,7 +17,7 @@ import {IModule} from "../../base"
 
 const Initializer = ({ afterLoadComponent, extraModules={kernel:[], system:[]} }: { afterLoadComponent: React.ReactElement, extraModules: ModulesMap }) => {
     const moduleManager = module.managers.modules()
-    const graph = useGraph(GRAPH_NAME, (g) => g && g.id)
+    const graph = useGraph(GRAPH_NAME, (g) => g?.id)
 
     const [isInitializing, setIsInitializing] = useState(true)
     const [graphInitialized, setGraphInitialized] = useState(false)

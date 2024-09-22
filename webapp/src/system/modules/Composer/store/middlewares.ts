@@ -43,7 +43,7 @@ middlewares.startListening({
 
     //fetch list
     const compositions: CompositionsList = [
-      {name: 'Camisa polo feminina', svgPath: 'catalog/camisa-polo/decorated.svg', descriptionPath:'catalog/camisa-polo/description.md'},
+      {name: 'Camisa polo feminina', svgPath: 'workspaces/personalWorkspace/catalog/camisa-polo/decorated.svg', descriptionPath:'catalog/camisa-polo/description.md'},
     ]
 
     dispatch(storeCompositionsList(compositions))

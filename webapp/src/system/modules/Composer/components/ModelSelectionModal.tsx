@@ -57,6 +57,7 @@ const ModelSelectionModal = ({
   } = markdownModule;
 
   const compositions = useCompositionsList();
+  console.log(compositions)
 
   const [selectedOption, setSelectedOption] = useState<
     { name: string; path: string; descriptionPath?: string } | undefined

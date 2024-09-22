@@ -2,5 +2,6 @@
     "sonarlint.connectedMode.project": {
         "connectionId": "muriloschaefer",
         "projectKey": "MuriloSchaefer_composer"
-    }
+    },
+    "svg.preview.background": "transparent"
 }
