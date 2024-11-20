@@ -1,20 +1,19 @@
 import { useLayoutEffect } from "react";
+import Box, { BoxProps }  from "@mui/material/Box";
 
 import useModule from "@kernel/hooks/useModule";
 import type { ISVGModule } from "@kernel/modules/SVG";
-import type { SVGViewerProps } from "@kernel/modules/SVG/components/SVGViewer";
 
-type ModelPreviewProps = SVGViewerProps & {
+type ModelPreviewProps = BoxProps & {
     instanceName: string
     path: string
 }
 
-export default ({instanceName, path, ...props}: ModelPreviewProps) => {
+export default ({instanceName, path}: ModelPreviewProps) => {
 
     const SVGModule = useModule<ISVGModule>("SVG");
 
     const {
-        components: {SVGViewer},
       hooks: { useSVGManager },
     } = SVGModule;
     const svgManager = useSVGManager();
@@ -23,5 +22,5 @@ export default ({instanceName, path, ...props}: ModelPreviewProps) => {
         svgManager.functions.loadSVG(path, `${instanceName}-preview`)
     }, [])
 
-    return <SVGViewer {...props} instanceName={`${instanceName}-preview`} path={path} />
+    return <Box>Preview here</Box>
 }

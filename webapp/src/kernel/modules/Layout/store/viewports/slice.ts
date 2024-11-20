@@ -4,7 +4,7 @@ import {
   viewportManagerState, ViewportState
 } from "./state";
 import groupsSlice from './groups/slice'
-import { addToGroup, addViewport, closeViewport, removeFromGroup, renameViewport, selectViewport } from "./actions";
+import { addToGroup, addViewport, closeViewport, removeFromGroup, renameViewport, selectViewport, setExtrasViewport } from "./actions";
 
 
 const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManagerState>, string>({
@@ -40,6 +40,15 @@ const slice = createSlice<viewportManagerState, SliceCaseReducers<viewportManage
           ...state,
           viewports: Object.entries(state.viewports).reduce((newState, [name, vp])=>{
             if (name === oldName) return {...newState, [oldName]: {...vp, title: newName}}
+            return {...newState, [name]: vp}
+          }, {})
+        }
+      })
+      builder.addCase(setExtrasViewport, (state,{ payload: {name, extras} }) => {
+        return {
+          ...state,
+          viewports: Object.entries(state.viewports).reduce((newState, [vpName, vp])=>{
+            if (name === vpName) return {...newState, [name]: {...vp, extra: extras}}
             return {...newState, [name]: vp}
           }, {})
         }

@@ -6,16 +6,17 @@ export interface Proxies {
     [id: string]: CSSProperties
 } 
 
-export interface Settings {
+export interface SVGInstance {
     pan: [number, number]
     zoom: number,
     proxies: {
         [name: string]: Proxies
     }
+    content: string | undefined
 }
 
-interface InstancesMap {
-    [name: string]: Settings
+export interface InstancesMap {
+    [name: string]: SVGInstance
 }
 export interface SVGState {
     progress: Loader

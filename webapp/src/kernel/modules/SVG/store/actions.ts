@@ -44,6 +44,12 @@ export const deleteProxy = createAction<{
   id: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Delete proxy`);
 
+export const updateSVG = createAction<{
+  path: string;
+  instanceName: string;
+  document: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Update SVG`);
+
 // Events
 export const SVGFetched = createAction<{ path: string; content: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] SVG fetched`
@@ -66,3 +72,9 @@ export const proxyDeleted = createAction<{
   instanceName: string;
   id: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Proxy deleted`);
+
+export const SVGUpdated = createAction<{
+  path: string;
+  instanceName: string;
+  document: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] SVG Updated`);

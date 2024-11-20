@@ -26,3 +26,15 @@ export interface D3Graph<N =D3Node, L=D3Link> {
     nodes: N[];
     links: L[];
   }
+
+
+  export type EditorToolkit = {
+    tools: {
+      pickElement: {
+        type: 'SVGElement';
+        enabled: boolean;
+        getSelectables: (svgRoot: SVGSVGElement) => SVGElement[]
+        callback: (element: SVGElement) => void;
+      };
+    };
+  };

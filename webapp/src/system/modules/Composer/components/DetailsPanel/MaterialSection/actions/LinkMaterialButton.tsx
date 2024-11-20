@@ -12,10 +12,11 @@ import useComposition, { Composition } from "../../../../hooks/useComposition";
 import { CompositionState } from "../../../../store/composition/state";
 import LinkMaterialContainer from "./LinkMaterialContainer";
 import { MaterialActionProps } from "./types";
+import { ISVGModule } from "@kernel/modules/SVG";
 
-interface ConfirmProps extends Omit<ConfirmButtonProps, 'handleConfirm'> {materialUsageId:string, composition: Composition<CompositionState | undefined>}
+interface ConfirmProps extends Omit<ConfirmButtonProps, 'handleConfirm'> {onConfirm?: ()=>void, materialUsageId:string, composition: Composition<CompositionState | undefined>}
 
-const ConfirmButton = ({composition,materialUsageId, ...props}: ConfirmProps) => {
+const ConfirmButton = ({composition,materialUsageId,onConfirm, ...props}: ConfirmProps) => {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const layoutModule = useModule<ILayoutModule>("Layout");
 
@@ -39,6 +40,7 @@ const ConfirmButton = ({composition,materialUsageId, ...props}: ConfirmProps) =>
       if (r.fill)
         composition.actions.addProxy({elem:r.elem, attr: 'fill' }, materialUsageId)
     })
+    onConfirm?.()
   }, [rows]);
 
   return (
@@ -53,9 +55,15 @@ const LinkMaterialButton = ({
   const composition = useComposition({compositionName}, (c) => c);
   const pointerModule = useModule<IPointerModule>("Pointer");
   const layoutModule = useModule<ILayoutModule>("Layout");
+  const svgModule = useModule<ISVGModule>("SVG");
 
   const { PointerContainer } = pointerModule.components;
   const { CRUDGridProvider } = layoutModule.components;
+  const { useSVGEditorToolkit } = svgModule.hooks;
+
+  const {
+    cancelPickElement,
+  } = useSVGEditorToolkit();
 
   if (!composition.state) return <></>;
 
@@ -68,7 +76,8 @@ const LinkMaterialButton = ({
             materialUsageId={materialUsageId}
           />
         }
-        actions={[<ConfirmButton composition={composition} materialUsageId={materialUsageId} key="accept" />]}
+        onClose={cancelPickElement}
+        actions={[<ConfirmButton onConfirm={cancelPickElement} composition={composition} materialUsageId={materialUsageId} key="accept" />]}
       >
         <IconButton
           key="configure"

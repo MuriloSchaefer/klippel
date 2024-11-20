@@ -18,6 +18,9 @@ export const closeViewport = createAction<{name: string}>(
 export const renameViewport = createAction<{oldName: string, newName: string}>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Rename viewport`
 );
+export const setExtrasViewport = createAction<{name: string, extras: any}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Set extras options`
+);
 
 export const addToGroup = createAction<{viewportName: string, groupName: string}>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Add viewport to group`
@@ -39,6 +42,9 @@ export const viewportClosed = createAction<{name: string}>(
 );
 export const viewportRenamed = createAction<{oldName: string, newName: string}>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport renamed`
+);
+export const ExtrasViewportSet = createAction<{name: string, extras: any}>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Extras options set`
 );
 export const addedToGroup = createAction<{viewportName: string, groupName: string}>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport added to group`

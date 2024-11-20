@@ -276,7 +276,6 @@ export default <
             },
       {} as { [group: string]: {id?:string, name: string, nodes: IndexedN<N>[] } }
     );
-    console.log(groups)
 
     const groupsArr = Object.entries(groups).map(([name, g]) => ({
       id: g.id,

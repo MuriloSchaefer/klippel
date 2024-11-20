@@ -20,6 +20,7 @@ import { useResizeObserver } from "./hooks/useResizeObserver";
 import CustomTextArea from "./components/CustomFields/TextArea";
 import ColorPicker from "./components/ColorPicker";
 import CRUDTextFieldCell from "./components/CRUDGrid/TextFieldCell";
+import useActiveViewport from "./hooks/useActiveViewport";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -44,6 +45,7 @@ export interface ILayoutModule extends IModule {
     useLayoutManager: typeof useLayoutManager
     useRibbonMenuManager: typeof useRibbonMenuManager
     useViewportManager: typeof useViewportManager
+    useActiveViewport: typeof useActiveViewport
     usePanelsManager: typeof usePanelsManager
     useResizeObserver: typeof useResizeObserver
   },
@@ -86,6 +88,7 @@ const LayoutModule: ILayoutModule = {
     useLayoutManager,
     useRibbonMenuManager,
     useViewportManager,
+    useActiveViewport,
     usePanelsManager,
     useResizeObserver
   },

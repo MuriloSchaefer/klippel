@@ -1,56 +1,49 @@
-import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
-import { CSSProperties } from "react";
-import { createSelector } from "reselect";
-import { addProxy, deleteProxy, setPan, setZoom, updateProxy } from "../store/actions";
-import { SVGState, SVGModuleState } from "../store/state";
+import { useMemo } from "react";
 
-interface SVG<T = SVGState> {
-  state: T | undefined;
-  actions: {
-    setPan(instanceName: string, x: number, y: number): void
-    setZoom(instanceName: string, zoom: number): void;
-    addProxy(id: string, instanceName:string, styles: CSSProperties): void;
-    deleteProxy(id: string, instanceName:string): void;
-    updateProxy(id: string, instanceName: string, changes: Partial<CSSProperties>): void;
+import useModule from "@kernel/hooks/useModule";
+import type { Store } from "@kernel/modules/Store";
+
+import {
+  updateSVG,
+} from "../store/actions";
+import type { SVGInstance } from "../store/state";
+import { selectSVGState } from "../store/selectors";
+
+interface SVG {
+  state: {
+    instance: SVGInstance;
+    DOMroot: SVGSVGElement;
   };
+  transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement): void;
 }
 
-const useSVG = <S = SVG, R = S>(
-  path: string,
-  svgSelector: (svg: SVGState | undefined) => R | undefined
-): SVG<R> => {
+const useSVG = (path: string, instanceName: string): SVG | undefined => {
   const storeModule = useModule<Store>("Store");
 
   const { useAppDispatch } = storeModule.hooks;
   const dispatch = useAppDispatch();
   const useAppSelector = storeModule.hooks.useAppSelector;
 
-  const selector = createSelector(
-    (state: { SVG: SVGModuleState } | undefined) =>
-      state && state.SVG.svgs[path],
-    svgSelector
+  const state = useAppSelector(
+    (state) => selectSVGState(path)(state)?.instances[instanceName]
   );
-  const state = useAppSelector<R | undefined>(selector);
+
+  const parsedSVG = useMemo(() => {
+    if (!state?.content) return undefined;
+    const svgRoot = new DOMParser()
+      .parseFromString(state.content, "image/svg+xml")
+      .querySelector("svg");
+
+    return svgRoot;
+  }, [state?.content]);
+
+  if (!state || !parsedSVG) return; // TODO: add error handling
 
   return {
-    state: state,
-    actions: {
-      setPan(instanceName, x, y) {
-        dispatch(setPan({path, instanceName, x: x*-10, y: y*-10}))
-      },
-      setZoom(instanceName, zoom){
-        dispatch(setZoom({path, instanceName, zoom}))
-      },
-      addProxy(id, instanceName, styles) {
-        dispatch(addProxy({ path, instanceName, id, styles }));
-      },
-      deleteProxy(id, instanceName) {
-        dispatch(deleteProxy({ path, instanceName, id }));
-      },
-      updateProxy(id, instanceName, changes){
-        dispatch(updateProxy({ path, instanceName, id, changes }));
-      }
+    state: { instance: state, DOMroot: parsedSVG },
+    transform(fn) {
+      const serialized = new XMLSerializer().serializeToString(fn(parsedSVG));
+      dispatch(updateSVG({ path, instanceName, document: serialized }));
     },
   };
 };

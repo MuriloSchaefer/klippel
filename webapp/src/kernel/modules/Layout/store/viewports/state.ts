@@ -1,8 +1,9 @@
-export interface ViewportState {
+export interface ViewportState<S = any> {
     name: string
     title: string;
     type: string;
     group?: string
+    extra?: S
   }
   export interface ViewportGroupState {
     name: string;

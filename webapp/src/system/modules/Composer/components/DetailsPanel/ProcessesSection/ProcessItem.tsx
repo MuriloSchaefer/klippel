@@ -208,8 +208,8 @@ const ProcessItem = ({
               >
                 {budget && timeRequired && (
                   <Box sx={{ color: theme.palette.primary.main }}>
-                    {timeRequired.amount.toFixed(2)}{" "}
-                    {units[timeRequired.unit].abbreviation}
+                    {timeRequired.timeRequired.amount.toFixed(2)}{" "}
+                    {units[timeRequired.timeRequired.unit].abbreviation}
                   </Box>
                 )}
               </Box>

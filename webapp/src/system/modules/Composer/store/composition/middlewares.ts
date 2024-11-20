@@ -34,14 +34,19 @@ import {
 } from "./actions";
 import { ComposerState } from "../state";
 import { MaterialNode, CompositionGraph, RestrictedByEdge } from "./state";
-import { detailsClosed, openDetails } from "@kernel/modules/Layout/store/panels/actions";
+import {
+  detailsClosed,
+  openDetails,
+} from "@kernel/modules/Layout/store/panels/actions";
 import { GraphsManagerState } from "@kernel/modules/Graphs/store/state";
 import {
   deleteProxy as deleteSVGProxy,
   addProxy as addSVGProxy,
   updateProxy,
+  updateSVG,
 } from "@kernel/modules/SVG/store/actions";
 import { CSSProperties } from "react";
+import { SVGModuleState } from "@kernel/modules/SVG/store/state";
 
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
@@ -106,6 +111,7 @@ middlewares.startListening({
       Graph: GraphsManagerState;
       Composer: ComposerState;
       Materials: MaterialsModuleState;
+      SVG: SVGModuleState;
     };
 
     const composition =
@@ -138,16 +144,43 @@ middlewares.startListening({
         }),
         {} as { [id: string]: CSSProperties }
       );
-      Object.entries(allChanges).forEach(([id, changes]) => {
-        dispatch(
-          updateProxy({
-            path: composition.svgPath,
-            instanceName: composition.name,
-            id: id,
-            changes: changes,
-          })
-        );
-      });
+
+      const svgInstance =
+        state.SVG.svgs[composition.svgPath].instances[composition.name];
+      const originalContent = state.SVG.svgs[composition.svgPath].content;
+      const content = svgInstance.content || originalContent;
+      if (content) {
+        const svgRoot = new DOMParser()
+          .parseFromString(content, "image/svg+xml")
+          .querySelector("svg");
+        if (svgRoot) {
+          Object.entries(allChanges).forEach(([id, properties]) => {
+            const element = svgRoot?.getElementById(id);
+            Object.entries(properties).forEach(([attr, value]) => {
+              element?.setAttribute(attr, value);
+            });
+
+            dispatch(
+              updateProxy({
+                path: composition.svgPath,
+                instanceName: composition.name,
+                id: id,
+                changes: properties,
+              })
+            );
+      
+          });
+
+          const serialized = new XMLSerializer().serializeToString(svgRoot);
+          dispatch(
+            updateSVG({
+              path: composition.svgPath,
+              instanceName: composition.name,
+              document: serialized,
+            })
+          );
+        }
+      }
     }
 
     dispatch(
@@ -189,7 +222,7 @@ middlewares.startListening({
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
 
-    dispatch(openDetails())
+    dispatch(openDetails());
 
     dispatch(partSelected(payload)); // dispatch event
   },
@@ -485,13 +518,14 @@ middlewares.startListening({
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
 
-    dispatch(addedToBudget({
-      budgetId: payload.budgetId,
-      compositionName: payload.compositionName
-    })); // dispatch event
+    dispatch(
+      addedToBudget({
+        budgetId: payload.budgetId,
+        compositionName: payload.compositionName,
+      })
+    ); // dispatch event
   },
 });
-
 
 middlewares.startListening({
   actionCreator: changeGradeCounter,

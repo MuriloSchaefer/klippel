@@ -70,9 +70,7 @@ export const useConverterManager = <R = ConverterState>(
         position: { x: 0, y: 0 },
         abbreviation,
       } as UnitNode);
-      console.log(scale);
       if (scale) {
-        console.log("add scale");
         graph.actions.addEdge({
           id: `${unitId} -> ${scale}`,
           type: "BELONGS_TO",
@@ -147,7 +145,6 @@ export const useConverterManager = <R = ConverterState>(
       } as ScaleNode);
     },
     addConversion: (type, from, to, factor, expression) => {
-      console.log(type, from, to, factor, expression)
       let edge: LinearConversion | ExpressionConversion;
       if (type === "factor"){
         if (!factor){

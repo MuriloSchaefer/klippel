@@ -167,11 +167,15 @@ export const CRUDGrid = ({
   columns,
   addLabel,
   newRecord,
+  onSave,
+  onCancel,
   ...props
 }: Omit<DataGridProps, "rows"> & {
   columns: GridColDef<GridValidRowModel>[];
   newRecord: () => GridValidRowModel & { id: string };
   addLabel?: string;
+  onSave?:()=>void
+  onCancel?:()=>void
 }) => {
   const { rows, setRows } = useContext(CRUDGridContext);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
@@ -231,6 +235,7 @@ export const CRUDGrid = ({
         ...currModes,
         [id]: { mode: GridRowModes.View },
       }));
+      onSave?.()
     },
     [rows]
   );
@@ -270,6 +275,7 @@ export const CRUDGrid = ({
       if (editedRow && editedRow.state === "added") {
         setRows((rows) => rows.filter((row) => row.id !== id));
       }
+      onCancel?.()
     },
     [rows]
   );
