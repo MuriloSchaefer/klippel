@@ -1,6 +1,5 @@
 // External imports
 import React from "react";
-import { useRegisterSW } from "virtual:pwa-register/react";
 
 // Internal imports
 import ModulesProvider, { ModulesMap } from "./modules/Loader/components/Provider";
@@ -23,17 +22,6 @@ export interface InitializationConfig {
 }
 
 const App = (): React.ReactElement => {
-
-  const intervalMS = 60 * 60 * 1000;
-
-  const updateServiceWorker = useRegisterSW({
-    onRegistered(r) {
-      r &&
-        setInterval(() => {
-          r.update();
-        }, intervalMS);
-    },
-  });
 
   const builtInModules: ModulesMap = {
     kernel: [SVG, pointerModule, Markdown],
