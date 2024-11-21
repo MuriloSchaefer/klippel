@@ -2,6 +2,7 @@ import React, {
   MouseEvent,
   cloneElement,
   useCallback,
+  useMemo,
   useState,
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -22,11 +23,119 @@ export interface PointerContainerActionProps extends IconButtonProps {
 
 export interface PointerContainerProps {}
 
+const ModalContent = ({
+  component,
+  position,
+  actions,
+  handleClose,
+}: {
+  handleClose: (e: MouseEvent) => void;
+  component: React.ReactElement<PointerContainerProps>;
+  position: {
+    x: number;
+    y: number;
+  };
+  actions: React.ReactElement<PointerContainerActionProps>[];
+}) => {
+  const { innerWidth: width, innerHeight: height } = window;
+  const windowCenter = [width / 2, height / 2];
+
+  const getQuadrant = (x: number, y: number) => {
+    const deltaX = x - windowCenter[0];
+    const deltaY = y - windowCenter[1];
+
+    if (deltaX < 0) {
+      return deltaY < 0 ? 1 : 3;
+    } else {
+      return deltaY < 0 ? 2 : 4;
+    }
+  };
+
+  const quadrant = useMemo(
+    () => getQuadrant(position.x, position.y),
+    []
+  );
+
+  return (
+    <Paper
+      sx={{
+        position: "fixed",
+        margin: 1,
+        left: position.x,
+        top: position.y,
+        transform: `translate(${quadrant % 2 === 0 ? "-100%" : "0"}, ${
+          quadrant > 2 ? "-100%" : "0"
+        })`,
+        transition: "width 1s ease-in-out",
+        transformOrigin: "bottom right",
+      }}
+      elevation={6}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexGrow: 1,
+          flexDirection: quadrant % 2 == 1 ? "row" : "row-reverse",
+        }}
+        onClick={(evt) => evt.stopPropagation()}
+      >
+        <Box
+          role="pointer-panel-actions"
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-evenly",
+            alignContent: "space-between",
+            borderLeft: `1px solid rgba(0,0,0, ${quadrant % 2 == 1 ? 0 : 0.1})`,
+            borderRight: `1px solid rgba(0,0,0, ${
+              quadrant % 2 == 1 ? 0.1 : 0
+            })`,
+          }}
+        >
+          <IconButton sx={{ cursor: "grab" }} size="small" id="drag-panel">
+            <DragIndicatorSharpIcon />
+          </IconButton>
+
+          {actions.map((a) =>
+            cloneElement(a, {
+              // sx: { flexGrow: 1 },
+              size: "small",
+              closeContainer: handleClose,
+            })
+          )}
+
+          <IconButton
+            color="error"
+            key="reject"
+            onClick={handleClose}
+            size="small"
+            id="close-panel"
+          >
+            <CloseSharpIcon />
+          </IconButton>
+        </Box>
+        <Box
+          role="pointer-panel-content"
+          sx={{
+            padding: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignContent: "center",
+          }}
+        >
+          <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
+            {component}
+          </ErrorBoundary>
+        </Box>
+      </Box>
+    </Paper>
+  );
+};
+
 export const PointerContainer = ({
   children,
-  component,
-  actions,
   onClose,
+  ...props
 }: {
   children: React.ReactElement;
   component: React.ReactElement<PointerContainerProps>;
@@ -41,22 +150,10 @@ export const PointerContainer = ({
   const { position, setPosition, listeners } = useDraggable({
     initialPosition: { x: windowCenter[0], y: windowCenter[1] },
   });
-  const getQuadrant = (x: number, y: number) => {
-    const deltaX = x - windowCenter[0];
-    const deltaY = y - windowCenter[1];
-
-    if (deltaX < 0) {
-      return deltaY < 0 ? 1 : 3;
-    } else {
-      return deltaY < 0 ? 2 : 4;
-    }
-  };
-
-  const quadrant = getQuadrant(position.x, position.y);
 
   const handleOpen = useCallback((e: MouseEvent) => {
-    setOpen(true);
     setPosition({ x: e.clientX, y: e.clientY });
+    setOpen(true);
     e.stopPropagation();
   }, []);
 
@@ -84,82 +181,15 @@ export const PointerContainer = ({
         }}
         {...listeners}
       >
-        <Paper
-          sx={{
-            position: "fixed",
-            margin: 1,
-            left: position.x,
-            top: position.y,
-            transform: `translate(${
-              quadrant % 2 === 0 ? "-100%" : "0"
-            }, ${quadrant > 2 ? "-100%" : "0"})`,
-            transition: "width 1s ease-in-out",
-            transformOrigin: "bottom right",
-          }}
-          elevation={6}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexGrow: 1,
-              flexDirection: quadrant % 2 == 1 ? "row" : "row-reverse",
-            }}
-            onClick={(evt) => evt.stopPropagation()}
-          >
-            <Box
-              role="pointer-panel-actions"
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-evenly",
-                alignContent: "space-between",
-                borderLeft: `1px solid rgba(0,0,0, ${
-                  quadrant % 2 == 1 ? 0 : 0.1
-                })`,
-                borderRight: `1px solid rgba(0,0,0, ${
-                  quadrant % 2 == 1 ? 0.1 : 0
-                })`,
-              }}
-            >
-              <IconButton sx={{ cursor: "grab" }} size="small" id="drag-panel">
-                <DragIndicatorSharpIcon />
-              </IconButton>
-
-              {actions.map((a) =>
-                cloneElement(a, {
-                  // sx: { flexGrow: 1 },
-                  size: "small",
-                  closeContainer: handleClose,
-                })
-              )}
-
-              <IconButton
-                color="error"
-                key="reject"
-                onClick={handleClose}
-                size="small"
-                id="close-panel"
-              >
-                <CloseSharpIcon />
-              </IconButton>
-            </Box>
-            <Box
-              role="pointer-panel-content"
-              sx={{
-                padding: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignContent: "center",
-              }}
-            >
-              {open ? (
-                <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
-                  {component}
-                </ErrorBoundary>
-              ) : null}
-            </Box>
-          </Box>
-        </Paper>
+        {open ? (
+          <ModalContent
+            position={position}
+            handleClose={handleClose}
+            {...props}
+          />
+        ) : (
+          <></>
+        )}
       </Modal>
       {cloneElement(children, { onClick: handleOpen })}
     </>
