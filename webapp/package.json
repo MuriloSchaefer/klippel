@@ -37,8 +37,8 @@
     "styled-components": "^5.3.3"
   },
   "scripts": {
-    "electron-start": "electron-vite preview",
-    "electron-dev": "electron-vite dev --watch",
+    "electron-start": "electron-vite preview --mode development",
+    "electron-dev": "electron-vite dev --watch --mode development --sourcemap",
     "electron-prebuild": "electron-vite build",
     "start": "vite --host",
     "build": "tsc && vite build --base=./ && echo sandbox.klippel.app.br > ./dist/CNAME",
@@ -67,6 +67,7 @@
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@jest/globals": "^29.3.1",
+    "@swc/core": "^1.9.2",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
@@ -109,8 +110,14 @@
     "vite-tsconfig-paths": "^3.5.1"
   },
   "paths": {
-    "@": ["./src/*"],
-    "@kernel": ["./src/kernel/*"],
-    "@system": ["./src/system/*"]
+    "@": [
+      "./src/*"
+    ],
+    "@kernel": [
+      "./src/kernel/*"
+    ],
+    "@system": [
+      "./src/system/*"
+    ]
   }
 }
