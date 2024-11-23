@@ -30,6 +30,7 @@ export interface D3Graph<N =D3Node, L=D3Link> {
 
   export type EditorToolkit = {
     tools: {
+      hightlightedElements: string[]
       pickElement: {
         type: 'SVGElement';
         enabled: boolean;
