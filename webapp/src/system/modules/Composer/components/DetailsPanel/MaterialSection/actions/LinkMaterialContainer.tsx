@@ -1,15 +1,10 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-} from "react";
+import React, { useCallback, useContext, useEffect, useMemo } from "react";
 import { uniqueId } from "lodash";
 
 import Box from "@mui/material/Box";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
-import { GridRenderEditCellParams, useGridApiContext } from "@mui/x-data-grid";
+import { GridRenderEditCellParams, GridRow, GridRowProps, useGridApiContext, useGridApiRef } from "@mui/x-data-grid";
 import InputAdornment from "@mui/material/InputAdornment";
 import ColorizeSharpIcon from "@mui/icons-material/ColorizeSharp";
 
@@ -28,6 +23,26 @@ import { ISVGModule } from "@kernel/modules/SVG";
 interface LinkMaterialContainerProps extends PointerContainerProps {
   compositionState: CompositionState;
   materialUsageId: string;
+}
+
+const Row = ({ children, row, ...props }: GridRowProps) => {
+  const svgModule = useModule<ISVGModule>("SVG");
+  const api = useGridApiContext()
+  const { useSVGEditorToolkit } = svgModule.hooks;
+  const {
+    highlightElement,
+    unHighlightElement
+  } = useSVGEditorToolkit();
+
+  const onHoverIn = useCallback(()=>{
+    if (row) highlightElement(api.current.getRow(row.id).elem)
+  }, [row?.ref])
+  const onHoverOut = useCallback(()=>{
+    if (row) unHighlightElement(api.current.getRow(row.id).elem)
+  }, [row?.ref])
+  return <GridRow data-test="row" {...props} onPointerOver={onHoverIn} onPointerOut={onHoverOut} >
+  {children}
+</GridRow>
 }
 
 const LinkMaterialContainer = ({
@@ -115,6 +130,15 @@ const LinkMaterialContainer = ({
           stroke: false,
           fill: false,
         })}
+        onRecordAdded={(record, api) => {
+          handlePickButton((selected) => {
+            api.setEditCellValue({
+              field: "elem",
+              id: record.id,
+              value: selected.id,
+            });
+          });
+        }}
         onSave={cancelPickElement}
         onCancel={cancelPickElement}
         columns={[
@@ -186,6 +210,9 @@ const LinkMaterialContainer = ({
             ),
           },
         ]}
+        slots={{
+          row: Row,
+        }}
       />
     </Box>
   );

@@ -3,16 +3,19 @@ import { EditorToolkit } from "../interfaces";
 
 export type EditorToolkitType = {
   state: EditorToolkit;
+  highlightElement: (id: string) => void;
+  unHighlightElement: (id: string) => void;
   pickElement: (
     type: "SVGElement",
     getSelectables: (svgRoot: SVGSVGElement) => SVGElement[],
     callback: (element: SVGElement) => void
   ) => void;
-  cancelPickElement: ()=>void
+  cancelPickElement: () => void;
 };
 const INITIAL_VALUE: EditorToolkitType = {
   state: {
     tools: {
+      hightlightedElements: [],
       pickElement: {
         type: "SVGElement",
         enabled: false,
@@ -21,8 +24,10 @@ const INITIAL_VALUE: EditorToolkitType = {
       },
     },
   },
+  highlightElement: () => null,
+  unHighlightElement: () => null,
   pickElement: () => null,
-  cancelPickElement: ()=>null
+  cancelPickElement: () => null,
 };
 
 export const EditorToolkitContext =
@@ -37,8 +42,31 @@ export const Provider = ({
   const values = useMemo<EditorToolkitType>(
     () => ({
       state,
-      cancelPickElement: () =>{
-        console.log('canceling')
+      highlightElement: (id) => {
+        if (id && !state.tools.hightlightedElements.includes(id)){
+          setState((state) => ({
+            ...state,
+            tools: {
+              ...state.tools,
+              hightlightedElements: [...state.tools.hightlightedElements, id],
+            },
+          }));
+          
+        }
+      },
+      unHighlightElement: (id) => {
+        setState((state) => ({
+          ...state,
+          tools: {
+            ...state.tools,
+            hightlightedElements: state.tools.hightlightedElements.filter(
+              (e) => e !== id
+            ),
+          },
+        }));
+      },
+      cancelPickElement: () => {
+        console.log("canceling");
         setState((state) => ({
           ...state,
           tools: {
@@ -65,7 +93,7 @@ export const Provider = ({
                   },
                 }));
                 callback(selected);
-              }
+              },
             },
           },
         });
@@ -74,17 +102,17 @@ export const Provider = ({
     [state]
   );
 
-  useEffect(()=>{
-    return ()=>{
-        setState((state) => ({
+  useEffect(() => {
+    return () => {
+      setState((state) => ({
         ...state,
         tools: {
-            ...state.tools,
-            pickElement: INITIAL_VALUE.state.tools.pickElement,
+          ...state.tools,
+          pickElement: INITIAL_VALUE.state.tools.pickElement,
         },
-        }));
-    }
-  }, [])
+      }));
+    };
+  }, []);
 
   return (
     <EditorToolkitContext.Provider value={values}>

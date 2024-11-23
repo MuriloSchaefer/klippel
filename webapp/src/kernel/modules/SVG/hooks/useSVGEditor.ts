@@ -90,6 +90,7 @@ export const useSVGEditor = ({
     svgState?.content,
     parsedSVG,
     tools.pickElement.enabled,
+    tools.hightlightedElements,
     svgState?.proxies,
   ]);
 
@@ -203,6 +204,18 @@ export const useSVGEditor = ({
         elem?.setAttribute(attr, value as string);
       });
     });
+
+    // hightlighted elements
+    if (tools.hightlightedElements){
+      tools.hightlightedElements.forEach(id => {
+
+        const e = parsedSVG.getElementById(id)
+        if (e){
+          e.setAttribute('fill', "url(#pick-hatch-pattern)")
+
+        }
+      })
+    }
 
     // attach tool listeners
     if (tools.pickElement.enabled && tools.pickElement.type === 'SVGElement'){

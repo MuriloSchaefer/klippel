@@ -14,13 +14,14 @@ export default ({instanceName, path}: ModelPreviewProps) => {
     const SVGModule = useModule<ISVGModule>("SVG");
 
     const {
-      hooks: { useSVGManager },
+      hooks: { useSVGManager, useSVG },
     } = SVGModule;
     const svgManager = useSVGManager();
+    const _state = useSVG(path, instanceName)
     
     useLayoutEffect(()=>{
         svgManager.functions.loadSVG(path, `${instanceName}-preview`)
     }, [])
 
-    return <Box>Preview here</Box>
+    return <Box>Preview</Box>
 }
