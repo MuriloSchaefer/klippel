@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: 'webapp/package-lock.json'
 
@@ -28,19 +28,8 @@ jobs:
         run: npm install
         working-directory: webapp
 
-      - name: build-linux
-        if: matrix.os == 'ubuntu-latest'
-        run: npm run build:linux
-        working-directory: webapp
-
-      - name: build-mac
-        if: matrix.os == 'macos-latest'
-        run: npm run build:mac
-        working-directory: webapp
-
-      - name: build-win
-        if: matrix.os == 'windows-latest'
-        run: npm run build:win
+      - name: build
+        run: npm run package
         working-directory: webapp
 
       - name: release
@@ -59,4 +48,4 @@ jobs:
             dist/*.yml
             dist/*.blockmap
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DEPLOY_KEY }}

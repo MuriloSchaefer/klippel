@@ -12,6 +12,7 @@
 /build
 dist
 dev-dist
+out
 
 # misc
 .DS_Store
