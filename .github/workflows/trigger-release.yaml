@@ -17,6 +17,7 @@ jobs:
 
         # add semantic version as a git tag
       - name: Add tag version
+        id: version
         uses: paulhatch/semantic-version@v5.3.0
         with:
           # The prefix to use to identify tags
@@ -46,3 +47,13 @@ jobs:
           # Prevents pre-v1.0.0 version from automatically incrementing the major version.
           # If enabled, when the major version is 0, major releases will be treated as minor and minor as patch. Note that the version_type output is unchanged.
           enable_prerelease_mode: true
+
+      - name: Cancel if Unchanged
+        if: ${{ ! steps.version.outputs.changed }}
+        run: |
+            gh run cancel ${{ github.run_id }}
+            gh run watch ${{ github.run_id }}
+        env:
+            GITHUB_TOKEN: ${{ secrets.DEPLOY_KEY }}
+      - name: echo new version
+        run: echo ${{steps.version.outputs.version_tag}}
