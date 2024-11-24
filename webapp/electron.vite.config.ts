@@ -41,8 +41,6 @@ export default defineConfig({
         },
         output: {
           manualChunks: (id, { getModuleInfo }) => {
-            //if (id.includes("@react")) return "react";
-            //if (id.includes("@mui") || id.includes("react")) return "mui+react";
             if (id.includes("node_modules")) return "vendor";
             if (id.includes("src/kernel")) {
   
