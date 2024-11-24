@@ -37,7 +37,7 @@ jobs:
           # 'changed' output will true. Enter multiple paths separated by spaces.
           change_path: "webapp"
           # Named version, will be used as suffix for name version tag
-          namespace: webapp
+          # namespace: webapp
           # If this is set to true, *every* commit will be treated as a new version.
           bump_each_commit: false
           # If true, the body of commits will also be searched for major/minor patterns to determine the version type.
@@ -57,3 +57,14 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.DEPLOY_KEY }}
       - name: echo new version
         run: echo ${{steps.version.outputs.version_tag}}
+
+      - name: Create tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{steps.version.outputs.version_tag}}',
+              sha: context.sha
+            })
