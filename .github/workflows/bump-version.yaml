@@ -12,10 +12,16 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
       - name: Check out Git repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{steps.extract_branch.outputs.branch}}
 
         # add semantic version as a git tag
       - name: Add tag version
@@ -67,12 +73,12 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.DEPLOY_KEY }}
-          commit-message: Release ${{steps.version.outputs.version}}
+          commit-message: v${{steps.version.outputs.version}}
           sign-commits: true
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           signoff: true
-          branch: version/${{steps.version.outputs.version}}
+          branch: v/${{steps.version.outputs.version}}
           delete-branch: true
           title: '[New version] ${{steps.version.outputs.version_tag}} '
           body: |
@@ -85,7 +91,7 @@ jobs:
             ${{steps.version.outputs.version_tag}}
           assignees: MuriloSchaefer
           reviewers: MuriloSchaefer
-          base: 'stable'
+          base: ${{steps.extract_branch.outputs.branch}}
           draft: false
     #   - name: Create tag
     #     uses: actions/github-script@v5
