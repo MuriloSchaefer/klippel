@@ -59,6 +59,7 @@ jobs:
 
       - name: Update version
         run: npm version ${{steps.version.outputs.major}}.${{steps.version.outputs.patch}}.${{steps.version.outputs.minor}}
+        working-directory: webapp
 
       - name: Create Pull Request
         id: cpr
@@ -66,6 +67,7 @@ jobs:
         with:
           token: ${{ secrets.DEPLOY_KEY }}
           commit-message: Update version
+          sign-commits: true
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           signoff: true
