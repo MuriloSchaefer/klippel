@@ -85,6 +85,7 @@ jobs:
             ${{steps.version.outputs.version_tag}}
           assignees: MuriloSchaefer
           reviewers: MuriloSchaefer
+          base: 'stable'
           draft: false
     #   - name: Create tag
     #     uses: actions/github-script@v5

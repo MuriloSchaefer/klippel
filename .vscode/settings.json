@@ -2,5 +2,8 @@
     "sonarlint.connectedMode.project": {
         "connectionId": "muriloschaefer",
         "projectKey": "MuriloSchaefer_composer"
-    }
+    },
+    "github-actions.workflows.pinned.workflows": [
+        ".github/workflows/bump-version.yaml"
+    ]
 }
