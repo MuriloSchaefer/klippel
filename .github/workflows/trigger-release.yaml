@@ -58,7 +58,7 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.DEPLOY_KEY }}
 
       - name: Update version
-        run: npm version ${{steps.version.outputs.major}}.${{steps.version.outputs.patch}}.${{steps.version.outputs.minor}}
+        run: npm version ${{steps.version.outputs.version}}
         working-directory: webapp
 
       - name: Create Pull Request
@@ -66,7 +66,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.DEPLOY_KEY }}
-          commit-message: Update version
+          commit-message: Release ${{steps.version.outputs.version}}
           sign-commits: true
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
