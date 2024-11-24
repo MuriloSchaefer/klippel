@@ -87,9 +87,6 @@ jobs:
             ${{steps.version.outputs.version_tag}}
           assignees: MuriloSchaefer
           reviewers: MuriloSchaefer
-          team-reviewers: |
-            developers
-            qa-team
           draft: false
     #   - name: Create tag
     #     uses: actions/github-script@v5
