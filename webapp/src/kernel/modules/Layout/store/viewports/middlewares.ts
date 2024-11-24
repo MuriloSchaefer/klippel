@@ -10,6 +10,8 @@ import {
   addToGroup,
   addedToGroup,
   removeFromGroup,
+  setExtrasViewport,
+  ExtrasViewportSet,
 } from "./actions";
 
 const middlewares = createListenerMiddleware();
@@ -42,6 +44,14 @@ middlewares.startListening({
   effect: async ({ payload: { name } }, listenerApi) => {
     const { dispatch } = listenerApi;
     dispatch(viewportClosed({ name })); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: setExtrasViewport,
+  effect: async (action, listenerApi) => {
+    const { dispatch } = listenerApi;
+    dispatch(ExtrasViewportSet); // dispatch event
   },
 });
 

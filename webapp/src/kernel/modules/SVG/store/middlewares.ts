@@ -8,6 +8,8 @@ import {
   proxyUpdated,
   SVGFetched,
   SVGLoaded,
+  SVGUpdated,
+  updateSVG,
   updateProxy,
 } from "./actions";
 import { SVGModuleState } from "./state";
@@ -70,6 +72,13 @@ middlewares.startListening({
   actionCreator: deleteProxy,
   effect: async ({ payload }, { dispatch }) => {
     dispatch(proxyDeleted(payload)); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: updateSVG,
+  effect: async ({ payload }, { dispatch }) => {
+    dispatch(SVGUpdated(payload)); // dispatch event
   },
 });
 

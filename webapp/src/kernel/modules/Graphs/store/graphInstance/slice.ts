@@ -167,7 +167,6 @@ const slice = createSlice({
       .addCase(
         addEdge,
         (state: GraphsManagerState, { payload: { graphId, edge } }) => {
-          if (edge.type === "CONSUMES") console.log(edge)
           const graph = state.graphs[graphId];
           const edge_exists = graph.edges[edge.id];
           if (edge_exists) throw Error("Edge already exists");

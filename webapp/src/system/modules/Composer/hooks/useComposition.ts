@@ -187,13 +187,15 @@ const useComposition = <C = Composition, R = C>(
           order,
         };
         graph.actions.addEdge(edge);
-        dispatch(
-          addGradeToBudget({
-            compositionName: innerState?.name!,
-            budgetId: innerState?.budget?.budgetId!,
-            gradeId: id,
-          })
-        );
+        if (innerState?.budget){
+          dispatch(
+            addGradeToBudget({
+              compositionName: innerState.name,
+              budgetId: innerState.budget.budgetId,
+              gradeId: id,
+            })
+          );
+        }
       },
       reorderGrade(id, newOrder) {
         // change order of grade
@@ -281,7 +283,6 @@ const useComposition = <C = Composition, R = C>(
           if (
             !Object.values(graph.state?.nodes ?? {}).find((n) => n.id === type)
           ) {
-            console.log("adding type node");
             graph.actions.addNode({
               id: type,
               type: "MATERIAL_TYPE",

@@ -8,9 +8,15 @@ import {
   setPan,
   setZoom,
   SVGFetched,
+  updateSVG,
   updateProxy,
 } from "./actions";
-import { initialState, SVGModuleState, newSVGState } from "./state";
+import {
+  initialState,
+  SVGModuleState,
+  newSVGState,
+  InstancesMap,
+} from "./state";
 import _ from "lodash";
 
 const slice = createSlice({
@@ -21,27 +27,27 @@ const slice = createSlice({
     builder.addCase(
       loadSVG,
       (state: SVGModuleState, { payload: { path, instanceName } }) => {
-
-        let instances = {
+        let instances: InstancesMap = {
           [instanceName]: {
             zoom: 1,
-            pan: [500, 500],
+            pan: [0,0],
             proxies: {},
-          }
-        }
+            content: undefined,
+          },
+        };
         if (state.svgs[path] && !_.isEmpty(state.svgs[path].instances))
-          instances = {...instances, ...state.svgs[path].instances}
-        
+          instances = { ...instances, ...state.svgs[path].instances };
+
         return {
           ...state,
           svgs: {
             [path]: {
               path,
               ...newSVGState,
-              instances: instances
+              instances: instances,
             },
           },
-        }
+        };
       }
     );
     builder.addCase(
@@ -59,18 +65,24 @@ const slice = createSlice({
     builder.addCase(
       SVGFetched,
       (state: SVGModuleState, { payload: { path, content } }) => {
-        
         return {
           ...state,
           svgs: {
             ...state.svgs,
             [path]: {
               ...state.svgs[path],
+              instances: Object.entries(state.svgs[path].instances).reduce(
+                (acc, [name, settings]) => ({
+                  ...acc,
+                  [name]: { ...settings, content: content },
+                }),
+                {}
+              ),
               progress: "completed",
               content,
             },
           },
-        }
+        };
       }
     );
     builder.addCase(
@@ -177,7 +189,30 @@ const slice = createSlice({
                 ...state.svgs[path].instances[instanceName],
                 proxies: Object.entries(
                   state.svgs[path].instances[instanceName].proxies
-                ).reduce((acc, [key, proxy]) => (key === id ? acc : { ...acc, [key]: proxy }), {}),
+                ).reduce(
+                  (acc, [key, proxy]) =>
+                    key === id ? acc : { ...acc, [key]: proxy },
+                  {}
+                ),
+              },
+            },
+          },
+        },
+      })
+    );
+
+    builder.addCase(
+      updateSVG,
+      (state: SVGModuleState, { payload: { path, instanceName, document } }) => ({
+        ...state,
+        svgs: {
+          [path]: {
+            ...state.svgs[path],
+            instances: {
+              ...state.svgs[path].instances,
+              [instanceName]: {
+                ...state.svgs[path].instances[instanceName],
+                content: document,
               },
             },
           },

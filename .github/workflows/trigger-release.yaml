@@ -1,0 +1,96 @@
+name: Trigger new Release
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+        # add semantic version as a git tag
+      - name: Add tag version
+        id: version
+        uses: paulhatch/semantic-version@v5.3.0
+        with:
+          # The prefix to use to identify tags
+          tag_prefix: "v"
+          # A string which, if present in a git commit, indicates that a change represents a
+          # major (breaking) change, supports regular expressions wrapped with '/'
+          major_pattern: "(MAJOR)"
+          # A string which indicates the flags used by the `major_pattern` regular expression. Supported flags: idgs
+          major_regexp_flags: ""
+          # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
+          minor_pattern: "(MINOR)"
+          # A string which indicates the flags used by the `minor_pattern` regular expression. Supported flags: idgs
+          minor_regexp_flags: ""
+          # A string to determine the format of the version output
+          version_format: "${major}.${minor}.${patch}"
+          # Optional path to check for changes. If any changes are detected in the path the
+          # 'changed' output will true. Enter multiple paths separated by spaces.
+          change_path: "webapp"
+          # Named version, will be used as suffix for name version tag
+          # namespace: webapp
+          # If this is set to true, *every* commit will be treated as a new version.
+          bump_each_commit: false
+          # If true, the body of commits will also be searched for major/minor patterns to determine the version type.
+          search_commit_body: true
+          # The output method used to generate list of users, 'csv' or 'json'.
+          user_format_type: "csv"
+          # Prevents pre-v1.0.0 version from automatically incrementing the major version.
+          # If enabled, when the major version is 0, major releases will be treated as minor and minor as patch. Note that the version_type output is unchanged.
+          enable_prerelease_mode: true
+
+      - name: Cancel if Unchanged
+        if: ${{ ! steps.version.outputs.changed }}
+        run: |
+            gh run cancel ${{ github.run_id }}
+            gh run watch ${{ github.run_id }}
+        env:
+            GITHUB_TOKEN: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Update version
+        run: npm version ${{steps.version.outputs.version}}
+        working-directory: webapp
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.DEPLOY_KEY }}
+          commit-message: Release ${{steps.version.outputs.version}}
+          sign-commits: true
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          signoff: true
+          branch: version/${{steps.version.outputs.version}}
+          delete-branch: true
+          title: '[New version] ${{steps.version.outputs.version_tag}} '
+          body: |
+            New version ${{steps.version.outputs.version_tag}}:
+
+            Authors:
+                ${{steps.version.outputs.authors}}
+          labels: |
+            release
+            ${{steps.version.outputs.version_tag}}
+          assignees: MuriloSchaefer
+          reviewers: MuriloSchaefer
+          draft: false
+    #   - name: Create tag
+    #     uses: actions/github-script@v5
+    #     with:
+    #       script: |
+    #         github.rest.git.createRef({
+    #           owner: context.repo.owner,
+    #           repo: context.repo.repo,
+    #           ref: 'refs/tags/${{steps.version.outputs.version_tag}}',
+    #           sha: context.sha
+    #         })

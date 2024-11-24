@@ -10,6 +10,7 @@ import slice from "../store/slice";
 import { StartModuleProps } from "@kernel/modules/base";
 import HomeViewport from "../components/ViewportManager/HomeViewport";
 import { switchTheme } from "../store/actions";
+import type { PaletteMode } from "@mui/material";
 
 export const startModule = ({
   dispatch,
@@ -18,8 +19,11 @@ export const startModule = ({
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
 
   const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
-  if (darkThemeMq.matches) {
+  const storedTheme = localStorage.getItem('theme')
+  if (darkThemeMq.matches && !storedTheme) {
     dispatch(switchTheme({theme: 'dark'}))
+  } else if(storedTheme){
+    dispatch(switchTheme({theme: storedTheme as PaletteMode}))
   }
   
   storeManager.functions.registerMiddleware(layoutMiddleware);

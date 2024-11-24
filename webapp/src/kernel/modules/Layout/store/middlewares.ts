@@ -7,6 +7,7 @@ middlewares.startListening({
   actionCreator: switchTheme,
   effect: async ({payload}: PayloadAction<{ theme: PaletteMode }>, listenerApi) => {
     const { dispatch} = listenerApi;
+    localStorage.setItem('theme', payload.theme)
     dispatch(themeSwitched(payload)) // dispatch event
   },
 });

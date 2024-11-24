@@ -124,7 +124,6 @@ export default ({ from = "", to = "" }: { from?: string; to?: string }) => {
               filterUnits={(unit) => unit.id !== form.from}
               formControlProps={{sx: {flexGrow: 1}}}
               onChange={(evt) =>{
-                console.log('changing')
 
                 setForm((f) => ({ ...f, to: evt.target.value }))
               }

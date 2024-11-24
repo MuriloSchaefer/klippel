@@ -34,13 +34,26 @@
       "id": "material-usage-117",
       "label": "Frente",
       "editableAttributes": ["materialType", "materialId"],
-      "materialId": "material-9",
+      "materialId": "material-11",
       "materialType": "malha",
       "position": {
         "x": 0,
         "y": 0
       },
-      "proxies": []
+      "proxies": [
+        {
+          "elem": "zCDwudrQUa",
+          "attr": "fill"
+        },
+        {
+          "elem": "QXIxwwXIfj",
+          "attr": "fill"
+        },
+        {
+          "elem": "RErRnbQApE",
+          "attr": "fill"
+        }
+      ]
     },
     "material-usage-117-restriction-1": {
       "type": "RESTRICTION",
@@ -101,6 +114,447 @@
         "x": 0,
         "y": 0
       }
+    },
+    "M-grade-17": {
+      "type": "GRADE",
+      "id": "M-grade-17",
+      "abbreviation": "M",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "G-grade-18": {
+      "type": "GRADE",
+      "id": "G-grade-18",
+      "abbreviation": "G",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "GG-grade-19": {
+      "type": "GRADE",
+      "id": "GG-grade-19",
+      "abbreviation": "GG",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "EG-grade-20": {
+      "type": "GRADE",
+      "id": "EG-grade-20",
+      "abbreviation": "EG",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-12": {
+      "id": "material-12",
+      "type": "MATERIAL",
+      "label": "Malha 30/1 Penteada",
+      "materialId": 12,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-19": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-19",
+      "label": "Ombros",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-12",
+      "materialType": "malha",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": [
+        {
+          "elem": "RwUfhxQqmo",
+          "attr": "fill"
+        },
+        {
+          "elem": "aVBygJqQcv",
+          "attr": "fill"
+        },
+        {
+          "elem": "BxPQrEtQLT",
+          "attr": "fill"
+        },
+        {
+          "elem": "HMkGgGUPcK",
+          "attr": "fill"
+        },
+        {
+          "elem": "KCQMjKSOlV",
+          "attr": "fill"
+        },
+        {
+          "elem": "TAuBKNTbpq",
+          "attr": "fill"
+        },
+        {
+          "elem": "TyvleERDue",
+          "attr": "fill"
+        },
+        {
+          "elem": "dDRHLHwkNh",
+          "attr": "fill"
+        },
+        {
+          "elem": "hGtQFSwyjG",
+          "attr": "fill"
+        },
+        {
+          "elem": "JREGbNLSAD",
+          "attr": "fill"
+        }
+      ]
+    },
+    "material-usage-19-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-19-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["malha", "tecido"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-11": {
+      "id": "material-11",
+      "type": "MATERIAL",
+      "label": "Malha 30/1 Penteada",
+      "materialId": 11,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-74": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-74",
+      "label": "Costas",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-11",
+      "materialType": "malha",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": [
+        {
+          "elem": "wwqVwA6Uiw",
+          "attr": "fill"
+        },
+        {
+          "elem": "iCd6NOzRZS",
+          "attr": "fill"
+        },
+        {
+          "elem": "CSSVZgR74d",
+          "attr": "fill"
+        },
+        {
+          "elem": "sFNwRnj3U7",
+          "attr": "fill"
+        }
+      ]
+    },
+    "material-usage-74-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-74-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["malha", "tecido"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-5": {
+      "id": "material-5",
+      "type": "MATERIAL",
+      "label": "Malha PV",
+      "materialId": 5,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-15": {
+      "id": "material-15",
+      "type": "MATERIAL",
+      "label": "Tricoline Amélie",
+      "materialId": 15,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-14": {
+      "id": "material-14",
+      "type": "MATERIAL",
+      "label": "Tricoline Amélie",
+      "materialId": 14,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-128": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-128",
+      "label": "Barras",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-2",
+      "materialType": "malha",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": [
+        {
+          "elem": "whrwSPXMwj",
+          "attr": "fill"
+        },
+        {
+          "elem": "sWwcSfqrSO",
+          "attr": "fill"
+        },
+        {
+          "elem": "KbKjIwXDYb",
+          "attr": "fill"
+        },
+        {
+          "elem": "bweIYqmulu",
+          "attr": "fill"
+        },
+        {
+          "elem": "shWrUfSEro",
+          "attr": "fill"
+        },
+        {
+          "elem": "berNdEsyEp",
+          "attr": "fill"
+        }
+      ]
+    },
+    "material-usage-128-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-128-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["malha", "tecido"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-13": {
+      "id": "material-13",
+      "type": "MATERIAL",
+      "label": "Tricoline Amélie",
+      "materialId": 13,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-3": {
+      "id": "material-3",
+      "type": "MATERIAL",
+      "label": "Malha PV",
+      "materialId": 3,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-4": {
+      "id": "material-4",
+      "type": "MATERIAL",
+      "label": "Malha PV",
+      "materialId": 4,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-2": {
+      "id": "material-2",
+      "type": "MATERIAL",
+      "label": "Malha PV",
+      "materialId": 2,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-17": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-17",
+      "label": "Gola externa",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-11",
+      "materialType": "malha",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": [
+        {
+          "elem": "fBQwYMcaKe",
+          "attr": "fill"
+        },
+        {
+          "elem": "ueNGCZfQDE",
+          "attr": "fill"
+        },
+        {
+          "elem": "wZRZojqYHd",
+          "attr": "fill"
+        },
+        {
+          "elem": "RrsvneiJVC",
+          "attr": "fill"
+        },
+        {
+          "elem": "OrpARMIgtF",
+          "attr": "fill"
+        }
+      ]
+    },
+    "material-usage-17-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-17-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["malha", "tecido"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-30": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-30",
+      "label": "Gola interna",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-12",
+      "materialType": "malha",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": [
+        {
+          "elem": "XWjEEdGDTY",
+          "attr": "fill"
+        },
+        {
+          "elem": "qPwkxxDgBH",
+          "attr": "fill"
+        },
+        {
+          "elem": "iQSumjPruz",
+          "attr": "fill"
+        }
+      ]
+    },
+    "material-usage-30-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-30-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["malha", "tecido"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "linha": {
+      "id": "linha",
+      "type": "MATERIAL_TYPE",
+      "label": "Linha",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-34-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-34-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["linha"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-10": {
+      "id": "material-10",
+      "type": "MATERIAL",
+      "label": "Linha mundial",
+      "materialId": 10,
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "material-usage-36": {
+      "type": "MATERIAL_USAGE",
+      "id": "material-usage-36",
+      "label": "Filete",
+      "editableAttributes": ["materialType", "materialId"],
+      "materialId": "material-10",
+      "materialType": "linha",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "proxies": [
+        {
+          "elem": "LrQkwGSedc",
+          "attr": "fill"
+        },
+        {
+          "elem": "ZSmJvPlPvx",
+          "attr": "fill"
+        },
+        {
+          "elem": "emEseFMZwf",
+          "attr": "fill"
+        },
+        {
+          "elem": "yAnihsxnvt",
+          "attr": "fill"
+        }
+      ]
+    },
+    "material-usage-36-restriction-1": {
+      "type": "RESTRICTION",
+      "restrictionType": "allowOnly",
+      "attribute": "materialType",
+      "id": "material-usage-36-restriction-1",
+      "label": "Permitido apenas",
+      "operand": ["linha"],
+      "position": {
+        "x": 0,
+        "y": 0
+      }
     }
   },
   "edges": {
@@ -116,12 +570,6 @@
       "targetId": "material-usage-117-restriction-1",
       "attr": "materialType",
       "type": "RESTRICTED_BY"
-    },
-    "material-usage-117->material-9": {
-      "id": "material-usage-117->material-9",
-      "sourceId": "material-usage-117",
-      "targetId": "material-9",
-      "type": "CONSUMES"
     },
     "garment->operation-118": {
       "id": "garment->operation-118",
@@ -151,6 +599,148 @@
       "sourceId": "garment",
       "targetId": "P-grade-126",
       "order": 1
+    },
+    "garment -> M-grade-17": {
+      "type": "HAS_GRADE",
+      "id": "garment -> M-grade-17",
+      "sourceId": "garment",
+      "targetId": "M-grade-17",
+      "order": 2
+    },
+    "garment -> G-grade-18": {
+      "type": "HAS_GRADE",
+      "id": "garment -> G-grade-18",
+      "sourceId": "garment",
+      "targetId": "G-grade-18",
+      "order": 3
+    },
+    "garment -> GG-grade-19": {
+      "type": "HAS_GRADE",
+      "id": "garment -> GG-grade-19",
+      "sourceId": "garment",
+      "targetId": "GG-grade-19",
+      "order": 4
+    },
+    "garment -> EG-grade-20": {
+      "type": "HAS_GRADE",
+      "id": "garment -> EG-grade-20",
+      "sourceId": "garment",
+      "targetId": "EG-grade-20",
+      "order": 5
+    },
+    "garment->material-usage-19": {
+      "id": "garment->material-usage-19",
+      "sourceId": "garment",
+      "targetId": "material-usage-19",
+      "type": "MADE_OF"
+    },
+    "material-usage-19->material-usage-19-restriction-1": {
+      "id": "material-usage-19->material-usage-19-restriction-1",
+      "sourceId": "material-usage-19",
+      "targetId": "material-usage-19-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "garment->material-usage-74": {
+      "id": "garment->material-usage-74",
+      "sourceId": "garment",
+      "targetId": "material-usage-74",
+      "type": "MADE_OF"
+    },
+    "material-usage-74->material-usage-74-restriction-1": {
+      "id": "material-usage-74->material-usage-74-restriction-1",
+      "sourceId": "material-usage-74",
+      "targetId": "material-usage-74-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "garment->material-usage-128": {
+      "id": "garment->material-usage-128",
+      "sourceId": "garment",
+      "targetId": "material-usage-128",
+      "type": "MADE_OF"
+    },
+    "material-usage-128->material-usage-128-restriction-1": {
+      "id": "material-usage-128->material-usage-128-restriction-1",
+      "sourceId": "material-usage-128",
+      "targetId": "material-usage-128-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "material-usage-117->material-11": {
+      "id": "material-usage-117->material-11",
+      "sourceId": "material-usage-117",
+      "targetId": "material-11",
+      "type": "CONSUMES"
+    },
+    "material-usage-19->material-12": {
+      "id": "material-usage-19->material-12",
+      "sourceId": "material-usage-19",
+      "targetId": "material-12",
+      "type": "CONSUMES"
+    },
+    "material-usage-74->material-11": {
+      "id": "material-usage-74->material-11",
+      "sourceId": "material-usage-74",
+      "targetId": "material-11",
+      "type": "CONSUMES"
+    },
+    "material-usage-128->material-2": {
+      "id": "material-usage-128->material-2",
+      "sourceId": "material-usage-128",
+      "targetId": "material-2",
+      "type": "CONSUMES"
+    },
+    "garment->material-usage-17": {
+      "id": "garment->material-usage-17",
+      "sourceId": "garment",
+      "targetId": "material-usage-17",
+      "type": "MADE_OF"
+    },
+    "material-usage-17->material-usage-17-restriction-1": {
+      "id": "material-usage-17->material-usage-17-restriction-1",
+      "sourceId": "material-usage-17",
+      "targetId": "material-usage-17-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "material-usage-17->material-11": {
+      "id": "material-usage-17->material-11",
+      "sourceId": "material-usage-17",
+      "targetId": "material-11",
+      "type": "CONSUMES"
+    },
+    "garment->material-usage-30": {
+      "id": "garment->material-usage-30",
+      "sourceId": "garment",
+      "targetId": "material-usage-30",
+      "type": "MADE_OF"
+    },
+    "material-usage-30->material-usage-30-restriction-1": {
+      "id": "material-usage-30->material-usage-30-restriction-1",
+      "sourceId": "material-usage-30",
+      "targetId": "material-usage-30-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "garment->material-usage-36": {
+      "id": "garment->material-usage-36",
+      "sourceId": "garment",
+      "targetId": "material-usage-36",
+      "type": "MADE_OF"
+    },
+    "material-usage-36->material-usage-36-restriction-1": {
+      "id": "material-usage-36->material-usage-36-restriction-1",
+      "sourceId": "material-usage-36",
+      "targetId": "material-usage-36-restriction-1",
+      "attr": "materialType",
+      "type": "RESTRICTED_BY"
+    },
+    "material-usage-36->material-10": {
+      "id": "material-usage-36->material-10",
+      "sourceId": "material-usage-36",
+      "targetId": "material-10",
+      "type": "CONSUMES"
     }
   },
   "adjacencyList": {
@@ -159,7 +749,17 @@
       "outputs": [
         "garment->material-usage-117",
         "garment->operation-118",
-        "garment -> P-grade-126"
+        "garment -> P-grade-126",
+        "garment -> M-grade-17",
+        "garment -> G-grade-18",
+        "garment -> GG-grade-19",
+        "garment -> EG-grade-20",
+        "garment->material-usage-19",
+        "garment->material-usage-74",
+        "garment->material-usage-128",
+        "garment->material-usage-17",
+        "garment->material-usage-30",
+        "garment->material-usage-36"
       ]
     },
     "malha": {
@@ -177,7 +777,7 @@
       ],
       "outputs": [
         "material-usage-117->material-usage-117-restriction-1",
-        "material-usage-117->material-9"
+        "material-usage-117->material-11"
       ]
     },
     "material-usage-117-restriction-1": {
@@ -185,7 +785,7 @@
       "outputs": []
     },
     "material-9": {
-      "inputs": ["material-usage-117->material-9"],
+      "inputs": [],
       "outputs": []
     },
     "operation-118": {
@@ -194,6 +794,137 @@
     },
     "P-grade-126": {
       "inputs": ["garment -> P-grade-126"],
+      "outputs": []
+    },
+    "M-grade-17": {
+      "inputs": ["garment -> M-grade-17"],
+      "outputs": []
+    },
+    "G-grade-18": {
+      "inputs": ["garment -> G-grade-18"],
+      "outputs": []
+    },
+    "GG-grade-19": {
+      "inputs": ["garment -> GG-grade-19"],
+      "outputs": []
+    },
+    "EG-grade-20": {
+      "inputs": ["garment -> EG-grade-20"],
+      "outputs": []
+    },
+    "material-12": {
+      "inputs": ["material-usage-19->material-12"],
+      "outputs": []
+    },
+    "material-usage-19": {
+      "inputs": ["garment->material-usage-19"],
+      "outputs": [
+        "material-usage-19->material-usage-19-restriction-1",
+        "material-usage-19->material-12"
+      ]
+    },
+    "material-usage-19-restriction-1": {
+      "inputs": ["material-usage-19->material-usage-19-restriction-1"],
+      "outputs": []
+    },
+    "material-11": {
+      "inputs": [
+        "material-usage-117->material-11",
+        "material-usage-74->material-11",
+        "material-usage-17->material-11"
+      ],
+      "outputs": []
+    },
+    "material-usage-74": {
+      "inputs": ["garment->material-usage-74"],
+      "outputs": [
+        "material-usage-74->material-usage-74-restriction-1",
+        "material-usage-74->material-11"
+      ]
+    },
+    "material-usage-74-restriction-1": {
+      "inputs": ["material-usage-74->material-usage-74-restriction-1"],
+      "outputs": []
+    },
+    "material-5": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-15": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-14": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-usage-128": {
+      "inputs": ["garment->material-usage-128"],
+      "outputs": [
+        "material-usage-128->material-usage-128-restriction-1",
+        "material-usage-128->material-2"
+      ]
+    },
+    "material-usage-128-restriction-1": {
+      "inputs": ["material-usage-128->material-usage-128-restriction-1"],
+      "outputs": []
+    },
+    "material-13": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-3": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-4": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-2": {
+      "inputs": ["material-usage-128->material-2"],
+      "outputs": []
+    },
+    "material-usage-17": {
+      "inputs": ["garment->material-usage-17"],
+      "outputs": [
+        "material-usage-17->material-usage-17-restriction-1",
+        "material-usage-17->material-11"
+      ]
+    },
+    "material-usage-17-restriction-1": {
+      "inputs": ["material-usage-17->material-usage-17-restriction-1"],
+      "outputs": []
+    },
+    "material-usage-30": {
+      "inputs": ["garment->material-usage-30"],
+      "outputs": ["material-usage-30->material-usage-30-restriction-1"]
+    },
+    "material-usage-30-restriction-1": {
+      "inputs": ["material-usage-30->material-usage-30-restriction-1"],
+      "outputs": []
+    },
+    "linha": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-usage-34-restriction-1": {
+      "inputs": [],
+      "outputs": []
+    },
+    "material-10": {
+      "inputs": ["material-usage-36->material-10"],
+      "outputs": []
+    },
+    "material-usage-36": {
+      "inputs": ["garment->material-usage-36"],
+      "outputs": [
+        "material-usage-36->material-usage-36-restriction-1",
+        "material-usage-36->material-10"
+      ]
+    },
+    "material-usage-36-restriction-1": {
+      "inputs": ["material-usage-36->material-usage-36-restriction-1"],
       "outputs": []
     }
   }

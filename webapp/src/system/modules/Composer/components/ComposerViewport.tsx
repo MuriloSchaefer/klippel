@@ -1,13 +1,16 @@
 import { useCallback, useMemo } from "react";
-import _ from "lodash";
 
+import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
-
 import LanIcon from "@mui/icons-material/Lan";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { Store } from "@kernel/modules/Store";
+import type { IGraphModule } from "@kernel/modules/Graphs";
+import type { NodesHashMap } from "@kernel/modules/Graphs/store/state";
+import type { IOrderModule } from "@system/modules/Orders";
+import type { BudgetFloatingButtonActions } from "@system/modules/Orders/typings";
 
 import ComposerSettingsPanel from "./SettingsPanel";
 import ComposerDetailsPanel from "./DetailsPanel";
@@ -18,13 +21,8 @@ import type {
   CompositionState,
   PartNode,
 } from "../store/composition/state";
-import { IGraphModule } from "@kernel/modules/Graphs";
-import { IPointerModule } from "@kernel/modules/Pointer";
 import useCompositionsManager from "../hooks/useCompositionsManager";
-import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
-import { IOrderModule } from "@system/modules/Orders";
 
-import type { BudgetFloatingButtonActions } from "@system/modules/Orders/typings";
 import GradesCounter from "./GradesCounter";
 
 type CompositionInfo = Omit<CompositionState, "selectedPart" | "loading">;
@@ -32,8 +30,12 @@ type CompositionInfo = Omit<CompositionState, "selectedPart" | "loading">;
 export const ComposerViewportLoader = () => {
   const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
+  const svgModule = useModule<ISVGModule>("SVG");
 
   const { useAppSelector } = storeModule.hooks;
+  const {
+    components: { SVGEditorToolkit },
+  } = svgModule;
 
   const { selectActiveViewport } = layoutModule.store.selectors;
   const activeViewport = useAppSelector(selectActiveViewport);
@@ -52,10 +54,12 @@ export const ComposerViewportLoader = () => {
     return null;
 
   return (
-    <ComposerViewport
-      selectPart={composition.actions.selectPart}
-      compositionInfo={composition.state}
-    />
+    <SVGEditorToolkit>
+      <ComposerViewport
+        selectPart={composition.actions.selectPart}
+        compositionInfo={composition.state}
+      />
+    </SVGEditorToolkit>
   );
 };
 
@@ -66,14 +70,10 @@ export const ComposerViewport = ({
   selectPart: (name: string) => void;
   compositionInfo: CompositionInfo;
 }) => {
+  const { graphId, svgPath, name, viewportName, budget } = compositionInfo;
   const {
-    components: { SVGViewer },
-    hooks: { useSVG },
+    hooks: { useSVGEditor },
   } = useModule<ISVGModule>("SVG");
-
-  const {
-    components: { MultiTouchPanel },
-  } = useModule<IPointerModule>("Pointer");
 
   const {
     hooks: { useGraph },
@@ -85,37 +85,52 @@ export const ComposerViewport = ({
   const { BudgetFloatingButton } = ordersModule.components;
   const { ViewportNotificationsTray } = layoutModule.components;
 
-  const { graphId, svgPath, name, viewportName, budget } = compositionInfo;
+  const theme = useTheme();
 
   const compositionManager = useCompositionsManager();
   const nodes = useGraph<
     CompositionGraph,
     NodesHashMap<CompositionNode> | undefined
   >(graphId, (g) => g?.nodes);
-  const svg = useSVG(svgPath, (svg) => svg?.instances[name]);
+
+  const beforeInjection = useCallback(
+    (svgRoot: SVGSVGElement) => {
+      if (!nodes.state) return svgRoot;
+
+      // QUESTION: do we actually need to select part by clicking on element?
+      // Object.values(nodes.state)
+      //   .filter((n): n is PartNode => n.type === "PART" || n.type === "GARMENT")
+      //   .forEach((n) => {
+      //     console.log("attaching selection events");
+      //     if (n.domId) {
+      //       const [element] = [
+      //         ...(svgRoot?.querySelectorAll(`#${n.domId}`) ?? []),
+      //       ];
+      //       element.addEventListener(
+      //         "click",
+      //         (e) => {
+      //           console.log("selected");
+      //           e.stopPropagation();
+      //           selectPart(n.id);
+      //           const element = e.target as SVGElement;
+      //           element.setAttribute("stroke", theme.palette.primary.main);
+      //           element.setAttribute("stroke-width", "30");
+      //         },
+      //         { once: true }
+      //       );
+      //     }
+      //   });
+      return svgRoot;
+    },
+    [graphId, nodes]
+  );
+
+  const editor = useSVGEditor({ svgPath, instanceName: name, beforeInjection });
 
   const allowedActions: BudgetFloatingButtonActions[] = useMemo(() => {
     if (!budget) return ["create-budget", "add-to-budget"];
     return ["convert-to-order", "delete-budget"];
   }, [budget]);
-
-  const beforeInjectionHandle = useCallback(
-    (svgRoot: SVGSVGElement) => {
-      if (!nodes.state) return;
-      Object.values(nodes.state)
-        .filter((n): n is PartNode => n.type === "PART")
-        .forEach((n) => {
-          if (n.domId) {
-            const [element] = [...(svgRoot?.querySelectorAll(`#${n.domId}`) ?? [])];
-            element.addEventListener("click", (e) => {
-              e.stopPropagation();
-              selectPart(n.id);
-            });
-          }
-        });
-    },
-    [graphId]
-  );
 
   const handleShowGraphClick = useCallback(() => {
     compositionManager.functions.createDebugView(name, viewportName);
@@ -133,24 +148,18 @@ export const ComposerViewport = ({
           overflow: "hidden",
         }}
       >
-        <MultiTouchPanel
-          gestures={{
-            onPinch: (state) => {
-              svg.actions.setZoom(name, state.offset[0]);
-            },
-            onWheel: (state) => {
-              const currentZoom = svg.state?.zoom ?? 1;
-              //svg.actions.setPan(name, state.event.pageX, state.event.pageY)
-              svg.actions.setZoom(name, currentZoom + state.delta[1] * 0.001);
-            },
-          }}
+        <div
+          ref={editor.wrapperRef}
+          role="svg-editor"
+          style={{ height: "100%", width: "100%" }}
         >
-          <SVGViewer
-            instanceName={name}
-            path={svgPath}
-            beforeInjection={beforeInjectionHandle}
+          <svg
+            ref={editor.svgRef}
+            id={`svg-editor`}
+            width="100%"
+            height="100%"
           />
-        </MultiTouchPanel>
+        </div>
 
         <ViewportNotificationsTray>
           <LanIcon
@@ -174,7 +183,7 @@ export const ComposerViewport = ({
           alignItems: "end",
           bottom: 10,
           width: "100%",
-          pointerEvents: 'none'
+          pointerEvents: "none",
         }}
       >
         <BudgetFloatingButton allowedActions={allowedActions} />

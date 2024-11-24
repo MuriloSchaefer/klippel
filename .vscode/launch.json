@@ -5,12 +5,39 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "pwa-chrome",
+      "name": "Debug Main Process",
+      "type": "node",
       "request": "launch",
-      "name": "Launch Brave against localhost",
-      "runtimeExecutable": "/usr/bin/brave",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/webapp",
+      "cwd": "${workspaceRoot}/webapp",
+      "runtimeExecutable": "${workspaceRoot}/webapp/node_modules/.bin/electron-vite",
+      "windows": {
+        "runtimeExecutable": "${workspaceRoot}/webapp/node_modules/.bin/electron-vite.cmd"
+      },
+      "runtimeArgs": ["--sourcemap"],
+      "env": {
+        "REMOTE_DEBUGGING_PORT": "9222"
+      },
+      "args": ["--outDir", "./dist/electron"]
+    },
+    {
+      "name": "Debug Renderer Process",
+      "port": 9222,
+      "request": "attach",
+      "type": "chrome",
+      "webRoot": "${workspaceFolder}/webapp/src",
+      "timeout": 60000,
+      "presentation": {
+        "hidden": true
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug WebApp",
+      "configurations": ["Debug Main Process", "Debug Renderer Process"],
+      "presentation": {
+        "order": 1
+      }
     }
   ]
 }

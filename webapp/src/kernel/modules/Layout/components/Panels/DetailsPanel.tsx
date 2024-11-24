@@ -75,7 +75,7 @@ export const DetailsPanel = ({
         )}
         <span>{title ?? "Detalhes"}</span>
       </Box>
-      <Box role="panel-content" sx={{overflow: 'auto', height: '100%'}}>
+      <Box role="panel-content" sx={{ height: '100%'}}>
         <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
           {children}
         </ErrorBoundary>

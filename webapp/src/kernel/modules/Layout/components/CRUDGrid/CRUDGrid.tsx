@@ -14,8 +14,8 @@ import {
   GridRowModesModel,
   GridToolbarContainer,
   GridToolbarDensitySelector,
-  GridToolbarFilterButton,
   GridValidRowModel,
+  useGridApiRef,
 } from "@mui/x-data-grid";
 import { useCallback, useState, useContext } from "react";
 
@@ -29,7 +29,8 @@ import CancelIcon from "@mui/icons-material/Close";
 import RestoreSharpIcon from "@mui/icons-material/RestoreSharp";
 import { darken, lighten, styled } from "@mui/material/styles";
 
-import { CRUDGridContext } from "./CRUDGridProvider";
+import { CRUDGridContext, } from "./CRUDGridProvider";
+import type { GridApiCommunity } from "@mui/x-data-grid/internals";
 
 const getBackgroundColor = (color: string, mode: string) =>
   mode === "dark" ? darken(color, 0.7) : lighten(color, 0.7);
@@ -167,26 +168,35 @@ export const CRUDGrid = ({
   columns,
   addLabel,
   newRecord,
+  onRecordAdded,
+  onSave,
+  onCancel,
+  slots,
   ...props
 }: Omit<DataGridProps, "rows"> & {
   columns: GridColDef<GridValidRowModel>[];
   newRecord: () => GridValidRowModel & { id: string };
+  onRecordAdded?: (record: GridValidRowModel, api: GridApiCommunity)=>void;
   addLabel?: string;
+  onSave?:()=>void
+  onCancel?:()=>void
 }) => {
   const { rows, setRows } = useContext(CRUDGridContext);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+  const api = useGridApiRef()
 
   const handleAddRecord = () => {
     const rec = newRecord();
     setRows((oldRows) => [
       ...oldRows,
-      { ...rec, state: "added" },
+      { ...rec, state: "added", ref: null },
       // { id, fill: false, stroke: false, state: "added" },
     ]);
     setRowModesModel((oldModel) => ({
       ...oldModel,
       [rec.id]: { mode: GridRowModes.Edit, fieldToFocus: "id" },
     }));
+    onRecordAdded?.(rec, api.current)
   };
 
   const handleEditClick = useCallback(
@@ -231,6 +241,7 @@ export const CRUDGrid = ({
         ...currModes,
         [id]: { mode: GridRowModes.View },
       }));
+      onSave?.()
     },
     [rows]
   );
@@ -270,6 +281,7 @@ export const CRUDGrid = ({
       if (editedRow && editedRow.state === "added") {
         setRows((rows) => rows.filter((row) => row.id !== id));
       }
+      onCancel?.()
     },
     [rows]
   );
@@ -277,6 +289,7 @@ export const CRUDGrid = ({
   return (
     <StyledDataGrid
       editMode="row"
+      apiRef={api}
       hideFooter={true}
       autoHeight={true}
       rowModesModel={rowModesModel}
@@ -287,6 +300,7 @@ export const CRUDGrid = ({
       slots={{
         noRowsOverlay: NoRows,
         toolbar: CustomToolbar,
+        ...slots,
       }}
       columns={[
         ...columns,

@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import _ from "lodash";
+import React, { useCallback, useContext, useEffect, useMemo } from "react";
+import { uniqueId } from "lodash";
 
 import Box from "@mui/material/Box";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
-import { GridRenderEditCellParams } from "@mui/x-data-grid";
+import { GridRenderEditCellParams, GridRow, GridRowProps, useGridApiContext, useGridApiRef } from "@mui/x-data-grid";
 import InputAdornment from "@mui/material/InputAdornment";
 import ColorizeSharpIcon from "@mui/icons-material/ColorizeSharp";
 
@@ -18,10 +18,31 @@ import {
   MaterialUsageNode,
 } from "../../../../store/composition/state";
 import { useTheme } from "@mui/material/styles";
+import { ISVGModule } from "@kernel/modules/SVG";
 
 interface LinkMaterialContainerProps extends PointerContainerProps {
   compositionState: CompositionState;
   materialUsageId: string;
+}
+
+const Row = ({ children, row, ...props }: GridRowProps) => {
+  const svgModule = useModule<ISVGModule>("SVG");
+  const api = useGridApiContext()
+  const { useSVGEditorToolkit } = svgModule.hooks;
+  const {
+    highlightElement,
+    unHighlightElement
+  } = useSVGEditorToolkit();
+
+  const onHoverIn = useCallback(()=>{
+    if (row) highlightElement(api.current.getRow(row.id).elem)
+  }, [row?.ref])
+  const onHoverOut = useCallback(()=>{
+    if (row) unHighlightElement(api.current.getRow(row.id).elem)
+  }, [row?.ref])
+  return <GridRow data-test="row" {...props} onPointerOver={onHoverIn} onPointerOut={onHoverOut} >
+  {children}
+</GridRow>
 }
 
 const LinkMaterialContainer = ({
@@ -30,11 +51,12 @@ const LinkMaterialContainer = ({
 }: LinkMaterialContainerProps) => {
   const graphModule = useModule<IGraphModule>("Graph");
   const layoutModule = useModule<ILayoutModule>("Layout");
+  const svgModule = useModule<ISVGModule>("SVG");
 
-  const [pickingElement, setPickingElement] = useState(false)
-  const theme = useTheme()
+  const theme = useTheme();
 
   const { useNodeInfo } = graphModule.hooks;
+  const { useSVGEditorToolkit } = svgModule.hooks;
 
   const { CRUDGridContext } = layoutModule.contexts;
   const { CRUDGrid, CRUDBooleanCell, CRUDTextFieldCell } =
@@ -55,6 +77,28 @@ const LinkMaterialContainer = ({
   }, [node]);
 
   const { setRows } = useContext(CRUDGridContext);
+  const {
+    state: { tools },
+    pickElement,
+    cancelPickElement,
+  } = useSVGEditorToolkit();
+
+  const handlePickButton = useCallback(
+    (callback: (selected: SVGElement) => void) => {
+      if (tools.pickElement.enabled) {
+        cancelPickElement();
+        return;
+      }
+      pickElement(
+        "SVGElement",
+        (root) => [
+          ...root.querySelectorAll<SVGElement>("path,circle,rect").values(),
+        ],
+        callback
+      );
+    },
+    [tools.pickElement.enabled, pickElement, cancelPickElement]
+  );
 
   useEffect(
     () =>
@@ -63,7 +107,7 @@ const LinkMaterialContainer = ({
           ...proxy,
           elem,
           state: "untouched",
-          id: _.uniqueId("proxy-"),
+          id: uniqueId("proxy-"),
         }))
       ),
     [adaptedProxies]
@@ -82,10 +126,21 @@ const LinkMaterialContainer = ({
       <CRUDGrid
         addLabel="Adicionar vínculo"
         newRecord={() => ({
-          id: _.uniqueId("proxy-"),
+          id: uniqueId("proxy-"),
           stroke: false,
           fill: false,
         })}
+        onRecordAdded={(record, api) => {
+          handlePickButton((selected) => {
+            api.setEditCellValue({
+              field: "elem",
+              id: record.id,
+              value: selected.id,
+            });
+          });
+        }}
+        onSave={cancelPickElement}
+        onCancel={cancelPickElement}
         columns={[
           {
             field: "elem",
@@ -102,11 +157,23 @@ const LinkMaterialContainer = ({
                   endAdornment: (
                     <InputAdornment
                       position="end"
-                      sx={{ cursor: "pointer", color: pickingElement ? theme.palette.secondary.main : undefined }}
-                      onClick={(evt) => {
-                        console.log("clicked", evt);
-                        setPickingElement(true)
+                      sx={{
+                        cursor: "pointer",
+                        color:
+                          tools.pickElement.enabled &&
+                          tools.pickElement.type === "SVGElement"
+                            ? theme.palette.secondary.main
+                            : undefined,
                       }}
+                      onClick={() =>
+                        handlePickButton((selected) => {
+                          params.api.setEditCellValue({
+                            id: params.id,
+                            field: params.field,
+                            value: selected.id,
+                          });
+                        })
+                      }
                     >
                       <ColorizeSharpIcon />
                     </InputAdornment>
@@ -143,6 +210,9 @@ const LinkMaterialContainer = ({
             ),
           },
         ]}
+        slots={{
+          row: Row,
+        }}
       />
     </Box>
   );

@@ -2,40 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import viteTsconfigPaths from "vite-tsconfig-paths";
 import svgrPlugin from "vite-plugin-svgr";
-import { VitePWA } from "vite-plugin-pwa";
+import { resolve } from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
-      // strategies: 'injectManifest',
-      // srcDir: 'src',
-      // filename: 'sw.ts',
-      registerType: "autoUpdate",
-      devOptions: {
-        enabled: true,
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,ico,png,svg,json,vue,txt,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-        ]
-      }
-    }),
     viteTsconfigPaths(),
     svgrPlugin(),
   ],
@@ -70,6 +42,13 @@ export default defineConfig({
         },
       },
     },
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./*"),
+      "@kernel": resolve(__dirname, "./kernel"),
+      "@system": resolve(__dirname, "./system")
+    }
   },
   optimizeDeps: {
     esbuildOptions: {
