@@ -47,6 +47,7 @@ jobs:
           # Prevents pre-v1.0.0 version from automatically incrementing the major version.
           # If enabled, when the major version is 0, major releases will be treated as minor and minor as patch. Note that the version_type output is unchanged.
           enable_prerelease_mode: true
+          debug: true
 
       - name: Cancel if Unchanged
         if: ${{ ! steps.version.outputs.changed }}
@@ -55,16 +56,47 @@ jobs:
             gh run watch ${{ github.run_id }}
         env:
             GITHUB_TOKEN: ${{ secrets.DEPLOY_KEY }}
-      - name: echo new version
-        run: echo ${{steps.version.outputs.version_tag}}
 
-      - name: Create tag
-        uses: actions/github-script@v5
+      - name: Update version
+        run: npm version ${{steps.version.outputs.major}}.${{steps.version.outputs.patch}}.${{steps.version.outputs.minor}}
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
         with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{steps.version.outputs.version_tag}}',
-              sha: context.sha
-            })
+          token: ${{ secrets.DEPLOY_KEY }}
+          commit-message: Update version
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          signoff: true
+          branch: version/${{steps.version.outputs.version}}
+          delete-branch: true
+          title: '[New version] ${{steps.version.outputs.version_tag}} '
+          body: |
+            New version ${{steps.version.outputs.version_tag}}:
+
+            Authors:
+                ${{steps.version.outputs.authors}}
+            
+            Debug:
+                ${{steps.version.outputs.debug_output}}
+          labels: |
+            release
+            new version
+            ${{steps.version.outputs.version_tag}}
+          assignees: MuriloSchaefer
+          reviewers: MuriloSchaefer
+          team-reviewers: |
+            developers
+            qa-team
+          draft: false
+    #   - name: Create tag
+    #     uses: actions/github-script@v5
+    #     with:
+    #       script: |
+    #         github.rest.git.createRef({
+    #           owner: context.repo.owner,
+    #           repo: context.repo.repo,
+    #           ref: 'refs/tags/${{steps.version.outputs.version_tag}}',
+    #           sha: context.sha
+    #         })
