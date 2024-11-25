@@ -80,26 +80,26 @@ jobs:
           signoff: true
           branch: v/${{steps.version.outputs.version}}
           delete-branch: true
-          title: '[New version] ${{steps.version.outputs.version_tag}} '
+          title: '[New version] ${{steps.version.outputs.version}} '
           body: |
-            New version ${{steps.version.outputs.version_tag}}:
+            New version ${{steps.version.outputs.version}}:
 
             Authors:
                 ${{steps.version.outputs.authors}}
           labels: |
             release
-            ${{steps.version.outputs.version_tag}}
+            ${{steps.version.outputs.version}}
           assignees: MuriloSchaefer
           reviewers: MuriloSchaefer
           base: ${{steps.extract_branch.outputs.branch}}
           draft: false
-    #   - name: Create tag
-    #     uses: actions/github-script@v5
-    #     with:
-    #       script: |
-    #         github.rest.git.createRef({
-    #           owner: context.repo.owner,
-    #           repo: context.repo.repo,
-    #           ref: 'refs/tags/${{steps.version.outputs.version_tag}}',
-    #           sha: context.sha
-    #         })
+      # - name: Create tag
+      #   uses: actions/github-script@v5
+      #   with:
+      #     script: |
+      #       github.rest.git.createRef({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         ref: 'refs/tags/${{steps.version.outputs.version}}',
+      #         sha: context.sha
+      #       })
