@@ -1,4 +1,4 @@
-name: Trigger new Release
+name: Bump version
 
 on:
   workflow_dispatch: 
@@ -12,13 +12,21 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
       - name: Check out Git repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{steps.extract_branch.outputs.branch}}
 
         # add semantic version as a git tag
       - name: Add tag version
         id: version
-        uses: paulhatch/semantic-version@v5.3.0
+        uses: paulhatch/semantic-version@v5.4.0
         with:
           # The prefix to use to identify tags
           tag_prefix: "v"
@@ -37,7 +45,7 @@ jobs:
           # 'changed' output will true. Enter multiple paths separated by spaces.
           change_path: "webapp"
           # Named version, will be used as suffix for name version tag
-          # namespace: webapp
+          # namespace: ''
           # If this is set to true, *every* commit will be treated as a new version.
           bump_each_commit: false
           # If true, the body of commits will also be searched for major/minor patterns to determine the version type.
@@ -47,7 +55,6 @@ jobs:
           # Prevents pre-v1.0.0 version from automatically incrementing the major version.
           # If enabled, when the major version is 0, major releases will be treated as minor and minor as patch. Note that the version_type output is unchanged.
           enable_prerelease_mode: true
-          debug: true
 
       - name: Cancel if Unchanged
         if: ${{ ! steps.version.outputs.changed }}
@@ -66,12 +73,12 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.DEPLOY_KEY }}
-          commit-message: Release ${{steps.version.outputs.version}}
+          commit-message: v${{steps.version.outputs.version}}
           sign-commits: true
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           signoff: true
-          branch: version/${{steps.version.outputs.version}}
+          branch: v/${{steps.version.outputs.version}}
           delete-branch: true
           title: '[New version] ${{steps.version.outputs.version_tag}} '
           body: |
@@ -79,14 +86,12 @@ jobs:
 
             Authors:
                 ${{steps.version.outputs.authors}}
-            
-            Debug:
-                ${{steps.version.outputs.debug_output}}
           labels: |
             release
             ${{steps.version.outputs.version_tag}}
           assignees: MuriloSchaefer
           reviewers: MuriloSchaefer
+          base: ${{steps.extract_branch.outputs.branch}}
           draft: false
     #   - name: Create tag
     #     uses: actions/github-script@v5
