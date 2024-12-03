@@ -24,10 +24,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'webapp/package-lock.json'
 
-      - name: Extract version info
-        id: version
-        run: echo ${npm pkg get version} >> $GITHUB_OUTPUT
-
       - name: Install Dependencies
         run: npm ci
         working-directory: webapp
@@ -35,6 +31,12 @@ jobs:
       - name: Build n Package
         run: npm run package
         working-directory: webapp
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{matrix.os}}
+          path: dist
     
   release:
     needs: build
