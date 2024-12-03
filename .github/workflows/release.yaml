@@ -68,7 +68,7 @@ jobs:
 
       - name: Debug
         run: echo $(pwd)
-      - run: ls -la .
+      - run: ls -la webapp/dist/ubuntu-latest/**
 
       - name: Semantic release
         run: npx semantic-release
