@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest] # windows-latest
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Check out Git repository
@@ -69,6 +69,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: webapp/dist/
+
+      - name: Debug
+        run: echo $(pwd)
+      - run: ls -la .
 
       - name: Semantic release
         run: npx semantic-release
