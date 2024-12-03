@@ -32,11 +32,15 @@ jobs:
         run: npm run package
         working-directory: webapp
 
+      - name: Debug
+        run: echo $(pwd)
+      - run: ls -la webapp/out/**
+
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.os}}
-          path: webapp/dist
+          path: webapp/out
     
   release:
     needs: build
@@ -67,10 +71,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: webapp/dist/
-
-      - name: Debug
-        run: echo $(pwd)
-      - run: ls -la webapp/dist/**
 
       - name: Semantic release
         run: npx semantic-release

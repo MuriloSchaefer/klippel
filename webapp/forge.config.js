@@ -29,7 +29,11 @@ module.exports = {
     {
       name: '@electron-forge/maker-rpm',
       config: {
-        bin: 'Klippel'
+        bin: 'Klippel',
+        options: {
+          maintainer: 'Murilo Schaefer',
+          homepage: 'https://klippel.app.br'
+        }
       },
     },
   ],
