@@ -49,6 +49,8 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -68,7 +70,7 @@ jobs:
 
       - name: Debug
         run: echo $(pwd)
-      - run: ls -la webapp/dist/ubuntu-latest/**
+      - run: ls -la webapp/dist/**
 
       - name: Semantic release
         run: npx semantic-release
