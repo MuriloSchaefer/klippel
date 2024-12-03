@@ -1,4 +1,4 @@
-name: Release Electron app
+name: Build Electron app
 
 on:
   workflow_call:  
