@@ -23,8 +23,6 @@ export interface CompoundValue {
 
 export type Value = UnitValue | CompoundValue
 
-
-
 // Graph nodes
 export interface UnitNode extends Node {
     type: 'UNIT'
