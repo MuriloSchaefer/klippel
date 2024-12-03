@@ -1,5 +1,4 @@
-name: Release Electron app
-
+name: Release
 on:
   workflow_dispatch: 
   # pull_request:
@@ -7,8 +6,38 @@ on:
   #     - stable
 
 jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'webapp/package-lock.json'
+
+      - name: Extract version info
+        id: version
+        run: echo ${npm pkg get version} >> $GITHUB_OUTPUT
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: webapp
+
+      - name: Build n Package
+        run: npm run package
+        working-directory: webapp
     
   release:
+    needs: build
     permissions:
       contents: write
       issues: write
@@ -16,8 +45,6 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - name: Build
-        uses: ./.github/workflows/build.yaml
 
       - name: Semantic release
         run: npx semantic-release
