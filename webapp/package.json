@@ -45,6 +45,9 @@
     "make": "electron-vite build && electron-forge make",
     "publish": "electron-forge publish"
   },
+  "repository": {
+    "url": "git@github.com:MuriloSchaefer/klippel.git"
+  },
   "eslintConfig": {
     "extends": "react-app"
   },

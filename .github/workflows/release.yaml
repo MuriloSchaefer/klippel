@@ -51,11 +51,28 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'webapp/package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: webapp
+
       - name: Download all distributions
         uses: actions/download-artifact@v4
+        with:
+          path: webapp/
 
       - name: Semantic release
         run: npx semantic-release
+        working-directory: webapp
         env:
           GITHUB_TOKEN: ${{secrets.DEPLOY_KEY}}
 
