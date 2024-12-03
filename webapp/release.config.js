@@ -12,11 +12,16 @@ module.exports = {
     [
       "@semantic-release/git",
       {
-        assets: ["dist/*", './package.json', './package-lock.json'],
+        assets: ['./package.json', './package-lock.json'],
         message:
           "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
       },
     ],
-    "@semantic-release/github",
+    ["@semantic-release/github", {
+      "assets": [
+        { "path": "webapp/dist/ubuntu-latest", "label": "Ubuntu x64" },
+        { "path": "webapp/dist/macos-latest", "label": "MacOs x64" }
+      ]
+    }],
   ],
 };
