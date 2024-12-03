@@ -68,7 +68,7 @@ jobs:
       - name: Download all distributions
         uses: actions/download-artifact@v4
         with:
-          path: webapp/
+          path: webapp/dist/
 
       - name: Semantic release
         run: npx semantic-release
