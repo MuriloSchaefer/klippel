@@ -34,12 +34,13 @@ jobs:
 
       - name: Stats
         run: ls -la dist
-        
+        working-directory: webapp
+
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.os}}
-          path: dist
+          path: webapp/dist
     
   release:
     needs: build
