@@ -34,7 +34,8 @@
     "remark-gfm": "^4.0.0",
     "reselect": "^4.1.5",
     "styled-components": "^6.0.0-alpha.5",
-    "tslib": "^2.4.0"
+    "tslib": "^2.4.0",
+    "update-electron-app": "^3.0.0"
   },
   "resolutions": {
     "styled-components": "^5.3.3"
