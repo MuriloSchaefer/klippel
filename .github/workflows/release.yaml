@@ -33,11 +33,11 @@ jobs:
         working-directory: webapp
 
       - name: List resulting files
-        if: matrix.os != 'windows_latest'
+        if: matrix.os != 'windows-latest'
         run: ls -la webapp/out/**
 
       - name: List windows folder
-        if: matrix.os == 'windows_latest'
+        if: matrix.os == 'windows-latest'
         run: dir webapp/out /s /b /o:gn
 
       - name: Archive production artifacts
