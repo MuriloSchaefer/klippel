@@ -23,7 +23,7 @@ module.exports = {
     {
       name: '@electron-forge/maker-deb',
       config: {
-        bin: 'Klippel'
+        bin: 'Klippel',
       },
     },
     {
@@ -33,7 +33,7 @@ module.exports = {
         options: {
           maintainer: 'Murilo Schaefer',
           homepage: 'https://klippel.app.br'
-        }
+        },
       },
     },
   ],
