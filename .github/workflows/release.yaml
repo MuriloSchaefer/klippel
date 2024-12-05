@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest ] #windows-latest
+        os: [ubuntu-latest, macos-latest, windows-latest ]
 
     steps:
       - name: Check out Git repository
@@ -41,12 +41,17 @@ jobs:
         run: dir webapp/out 
 
       - name: Zip deliverable
+        if: matrix.os != 'windows-latest'
         run: zip -q -r webapp/${{matrix.os}}.zip webapp/out
+
+      - name: Zip deliverable (windows)
+        if: matrix.os == 'windows-latest'
+        run: Compress-Archive -Path webapp/out/* -Destination webapp/${{matrix.os}}.zip
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{matrix.os}}
+          name: ${{matrix.os}}.zip
           path: webapp/${{matrix.os}}.zip
     
   release:
