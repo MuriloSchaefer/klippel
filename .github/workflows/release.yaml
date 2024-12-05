@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest ] # macos-latest, windows-latest
+        os: [ubuntu-latest, macos-latest ] #windows-latest
 
     steps:
       - name: Check out Git repository
@@ -40,11 +40,14 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: dir webapp/out 
 
+      - name: Zip deliverable
+        run: zip -q -r webapp/out/${{matrix.os}}.zip webapp/out/${{matrix.os}}
+
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.os}}
-          path: webapp/out
+          path: webapp/out/${{matrix.os}}.zip
     
   release:
     needs: build
@@ -75,13 +78,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: webapp/dist/
-
-      - name: Check files
-        run: ls -la webapp/dist
-      - run: ls -la webapp/dist/ubuntu-latest
-
-      - name: Zip deliverable
-        run: zip -r webapp/dist/ubuntu-latest.zip webapp/dist/ubuntu-latest
 
       - name: Semantic release
         run: npx semantic-release --debug
