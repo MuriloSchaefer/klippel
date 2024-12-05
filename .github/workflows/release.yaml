@@ -76,6 +76,13 @@ jobs:
         with:
           path: webapp/dist/
 
+      - name: Check files
+        run: ls -la webapp/dist
+      - run: ls -la webapp/dist/ubuntu-latest
+
+      - name: Zip deliverable
+        run: zip -r webapp/dist/ubuntu-latest.zip webapp/dist/ubuntu-latest
+
       - name: Semantic release
         run: npx semantic-release --debug
         working-directory: webapp

@@ -19,7 +19,7 @@ module.exports = {
     ],
     ["@semantic-release/github", {
       assets: [
-        { "path": "dist/ubuntu-latest", "label": "Ubuntu x64" },
+        { "path": "dist/ubuntu-latest.zip", "label": "Ubuntu x64" },
         // { "path": "dist/macos-latest", "label": "MacOs x64" },
         // { "path": "dist/windows-latest", "label": "Windows x64" },
       ]
