@@ -41,13 +41,13 @@ jobs:
         run: dir webapp/out 
 
       - name: Zip deliverable
-        run: zip -q -r webapp/out/${{matrix.os}}.zip webapp/out/${{matrix.os}}
+        run: zip -q -r webapp/${{matrix.os}}.zip webapp/out
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.os}}
-          path: webapp/out/${{matrix.os}}.zip
+          path: webapp/${{matrix.os}}.zip
     
   release:
     needs: build
