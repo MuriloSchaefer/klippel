@@ -1,0 +1,68 @@
+<mxfile host="65bd71144e">
+    <diagram id="fjW3XUicNTEm6zXbmLUy" name="Page-1">
+        <mxGraphModel dx="1546" dy="890" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="3" value="" style="shape=ext;double=1;rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="100" y="85" width="690" height="710" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=4;hachureGap=8;hachureAngle=45;fillColor=#1ba1e2;sketch=1;" vertex="1" parent="1">
+                    <mxGeometry x="130" y="250" width="630" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="&lt;h1&gt;System storage&lt;/h1&gt;&lt;p&gt;Similar to linux, where everything is a file, klippel organizes all its data semantically in the file system.&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="110" y="100" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="System responsabilities" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="328" y="220" width="195" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=4;hachureGap=8;hachureAngle=45;fillColor=#1ba1e2;sketch=1;" vertex="1" parent="1">
+                    <mxGeometry x="130" y="430" width="170" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="local preferences" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="117.5" y="400" width="195" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=4;hachureGap=8;hachureAngle=45;fillColor=none;sketch=1;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="430" width="420" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="Workspaces" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="450" y="400" width="195" height="30" as="geometry"/>
+                </mxCell>
+                <object label="" fill="red" id="10">
+                    <mxCell style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=4;hachureGap=8;hachureAngle=45;fillColor=#008a00;sketch=1;fontColor=#ffffff;strokeColor=#005700;" vertex="1" parent="1">
+                        <mxGeometry x="360" y="480" width="195" height="130" as="geometry"/>
+                    </mxCell>
+                </object>
+                <mxCell id="11" value="personal" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="450" width="195" height="30" as="geometry"/>
+                </mxCell>
+                <object label="" fill="red" id="12">
+                    <mxCell style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=4;hachureGap=8;hachureAngle=45;fillColor=#e3c800;sketch=1;fontColor=#000000;strokeColor=#B09500;" vertex="1" parent="1">
+                        <mxGeometry x="580" y="480" width="160" height="130" as="geometry"/>
+                    </mxCell>
+                </object>
+                <mxCell id="13" value="shared" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="617.5" y="450" width="85" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="Vertical Tree Layout" style="swimlane;startSize=20;horizontal=1;childLayout=treeLayout;horizontalTree=0;resizable=0;containerType=tree;fontSize=12;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="117.5" y="1180" width="280" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="Root" style="whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="15">
+                    <mxGeometry x="90" y="40" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="Child 1" style="whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="15">
+                    <mxGeometry x="20" y="130" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;html=1;rounded=1;curved=0;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;startSize=6;endSize=6;" edge="1" parent="15" source="16" target="17">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="Child 2" style="whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="15">
+                    <mxGeometry x="160" y="130" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;html=1;rounded=1;curved=0;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;startSize=6;endSize=6;" edge="1" parent="15" source="16" target="19">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
