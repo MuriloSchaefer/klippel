@@ -21,7 +21,7 @@ module.exports = {
       assets: [
         { "path": "dist/ubuntu-latest.zip", "label": "Ubuntu-${nextRelease.version}" },
         { "path": "dist/macos-latest.zip", "label": "MacOs-${nextRelease.version}" },
-        // { "path": "dist/windows-latest.zip", "label": "Windows-${nextRelease.version}" },
+        { "path": "dist/windows-latest.zip", "label": "Windows-${nextRelease.version}" },
       ]
     }],
   ],

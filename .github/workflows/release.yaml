@@ -1,9 +1,8 @@
 name: Release
 on:
-  workflow_dispatch: 
-  # pull_request:
-  #   branches: 
-  #     - stable
+  push:
+    branches: 
+      - stable
 
 jobs:
   build:
@@ -89,20 +88,3 @@ jobs:
         working-directory: webapp
         env:
           GITHUB_TOKEN: ${{secrets.DEPLOY_KEY}}
-  
-  # assets:
-  #   permissions:
-  #     contents: write
-  #     issues: write
-  #     pull-requests: write
-  #   needs: release
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download all distributions
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         path: webapp/dist/
-
-  #     - name: Upload Linux distribution
-  #       run: gh release upload <release_tag> <a_file>
-      
