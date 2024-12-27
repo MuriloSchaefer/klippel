@@ -39,6 +39,14 @@ export default defineConfig({
         input: {
           index: resolve(__dirname, 'index.html')
         },
+
+        onwarn(warning, warn) {
+          // Suppress "Module level directives cause errors when bundled" warnings
+          if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
+            return;
+          }
+          warn(warning);
+        },
         output: {
           manualChunks: (id, { getModuleInfo }) => {
             if (id.includes("node_modules")) return "vendor";

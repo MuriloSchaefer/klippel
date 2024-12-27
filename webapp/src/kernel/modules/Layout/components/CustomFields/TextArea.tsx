@@ -1,4 +1,4 @@
-import BaseTextareaAutosize from "@mui/base/TextareaAutosize";
+import { TextareaAutosize as BaseTextareaAutosize} from "@mui/base/TextareaAutosize";
 import {
   Box,
   BoxProps,

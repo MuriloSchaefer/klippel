@@ -11,6 +11,7 @@ import AddSharpIcon from "@mui/icons-material/AddSharp";
 import AdjustSharpIcon from "@mui/icons-material/AdjustSharp";
 
 import useComposition from "../../hooks/useComposition";
+import { useTheme } from "@mui/material/styles";
 
 interface AddPartForm {
   name: string;
@@ -19,13 +20,16 @@ interface AddPartForm {
 
 export const AddPartButton = ({
   compositionName,
+  parentId
 }: {
   compositionName: string;
+  parentId: string
 }) => {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
-  const composition = useComposition({compositionName}, (c) => c?.selectedPart);
+  const composition = useComposition({compositionName}, (c) => c);
+  const theme = useTheme()
 
   const [form, setForm] = useState<AddPartForm>({
     name: "",
@@ -33,7 +37,7 @@ export const AddPartButton = ({
   });
 
   const handleSubmit = useCallback(() => {
-    composition.actions.addPart(form.name, form.domId, composition.state);
+    composition.actions.addPart(form.name, form.domId, parentId);
   }, [form]);
 
   return (
@@ -84,7 +88,7 @@ export const AddPartButton = ({
       <IconButton
         aria-label="Add new part"
         size="small"
-        sx={{ lineHeight: "0.3em" }}
+        sx={{ lineHeight: "0.3em", color: theme.palette.success.dark }}
         onClick={(e) => {
           e.stopPropagation();
         }}
