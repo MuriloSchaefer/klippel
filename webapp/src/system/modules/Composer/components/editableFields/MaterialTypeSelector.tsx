@@ -14,7 +14,7 @@ import {
   MaterialUsageNode,
   RestrictionNode,
 } from "../../store/composition/state";
-import type { SelectChangeEvent } from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material/Select";
 import _ from "lodash";
 
 const MaterialTypeSelector = ({

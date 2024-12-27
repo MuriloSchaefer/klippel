@@ -1,4 +1,5 @@
-import { Box, IconProps } from "@mui/material";
+import Box  from "@mui/material/Box";
+import { type IconProps } from "@mui/material/Icon";
 import { CompoundValue } from "../typings";
 import useUnits from "../hooks/useUnits";
 

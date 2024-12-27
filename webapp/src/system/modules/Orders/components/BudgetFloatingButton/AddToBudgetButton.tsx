@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import useModule from "@kernel/hooks/useModule";
 import { IPointerModule } from "@kernel/modules/Pointer";
-import { Button } from "@mui/material";
+import Button from "@mui/material/Button";
 import { actions } from "./constants";
 import BudgetSelector from "../BudgetSelector";
 import useBudgetManager from "../../hooks/useBudgetManager";

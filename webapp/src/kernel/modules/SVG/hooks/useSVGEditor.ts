@@ -18,7 +18,7 @@ import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
 import { selectSVGState } from "../store/selectors";
 import { updateSVG } from "../store/actions";
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { EditorToolkitContext } from "../components/SVGEditorToolkit";
 import { randomString } from "@kernel/utils";
 

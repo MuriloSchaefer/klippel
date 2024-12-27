@@ -1,6 +1,6 @@
 import type {
   AccordionProps as MUIAccordionProps,
-} from "@mui/material";
+} from "@mui/material/Accordion";
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';

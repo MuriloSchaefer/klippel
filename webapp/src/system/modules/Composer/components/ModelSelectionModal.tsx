@@ -13,7 +13,8 @@ import type { SystemModalProps } from "@kernel/modules/Layout/components/SystemM
 import { useCompositionsList } from "../hooks/useCompositionsList";
 import ModelPreview from "./ModelPreview";
 import { IMarkdownModule } from "@kernel/modules/Markdown";
-import { ListItem, ListItemText } from "@mui/material";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
 
 type ModelSelectionModalProps = SystemModalProps & {
   onModelSelection: (name: string, path: string) => void;

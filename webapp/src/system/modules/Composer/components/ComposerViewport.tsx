@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import LanIcon from "@mui/icons-material/Lan";
 import useModule from "@kernel/hooks/useModule";
