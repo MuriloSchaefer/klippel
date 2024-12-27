@@ -13,7 +13,8 @@ import { IGraphModule } from "@kernel/modules/Graphs";
 import useConverterManager from "../../../../hooks/useConverterManager";
 import { CONVERSION_GRAPH_NAME } from "../../../../constants";
 import { ConversionGraph, UnitNode } from "../../../../typings";
-import { IconButton, TextField } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
 
 type PropertiesState = UnitNode & { scale?: string };
 

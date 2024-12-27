@@ -1,7 +1,8 @@
-import type { ButtonProps, SxProps } from "@mui/material";
+import type { SxProps } from "@mui/material/styles";
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
+import {type ButtonProps} from '@mui/material/Button';
 import React, { MouseEvent, useCallback, useState } from "react";
 
 export interface SystemModalProps {

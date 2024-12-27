@@ -3,7 +3,8 @@ import FormControl from "@mui/material/FormControl";
 import Select, { SelectProps } from "@mui/material/Select";
 
 import TextField, { TextFieldProps } from "@mui/material/TextField";
-import type { BoxProps, SelectChangeEvent } from "@mui/material";
+import type { BoxProps} from "@mui/material/Box";
+import type { SelectChangeEvent } from "@mui/material/Select";
 
 import type { UnitValue } from "../typings";
 

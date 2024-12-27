@@ -48,7 +48,11 @@ const StyledContent = styled(Box)`
 
 const Layout = () => {
   const storeModule = useModule<Store>("Store");
-  const { useAppSelector } = storeModule.hooks;
+  
+
+  const { useAppSelector, /**useFile**/ } = storeModule.hooks;
+  // const f = useFile('/tmp/klippel/test', 'w')
+  // const content = f.read()
 
   const selectedTheme = useAppSelector(selectTheme);
 

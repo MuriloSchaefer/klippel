@@ -10,7 +10,7 @@ import type { IPointerModule } from "@kernel/modules/Pointer";
 import { actions } from "./constants";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import useBudgetManager from "../../hooks/useBudgetManager";
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 type CreateBudgetForm = {
   label: string;

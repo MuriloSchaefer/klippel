@@ -10,7 +10,7 @@ import slice from "../store/slice";
 import { StartModuleProps } from "@kernel/modules/base";
 import HomeViewport from "../components/ViewportManager/HomeViewport";
 import { switchTheme } from "../store/actions";
-import type { PaletteMode } from "@mui/material";
+import { type PaletteMode } from "@mui/material";
 
 export const startModule = ({
   dispatch,

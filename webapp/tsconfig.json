@@ -5,7 +5,7 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "strictNullChecks": true,
-    "types": ["vite/client", "vite-plugin-svgr/client", "vite-plugin-pwa/react", "jest", "node"],
+    "types": ["vite/client", "vite-plugin-svgr/client", "vite-plugin-pwa/react", "jest", "node", "electron"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -21,7 +21,6 @@
     "jsx": "react-jsx",
     "baseUrl": "./src",
     "paths": {
-      "@": ["./*"],
       "@kernel/*": ["kernel/*"],
       "@system/*": ["system/*"],
       "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"]

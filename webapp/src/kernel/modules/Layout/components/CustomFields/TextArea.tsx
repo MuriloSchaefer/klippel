@@ -1,10 +1,7 @@
-import BaseTextareaAutosize from "@mui/base/TextareaAutosize";
-import {
-  Box,
-  BoxProps,
-  TextareaAutosizeProps,
-  useTheme,
-} from "@mui/material";
+import { TextareaAutosize as BaseTextareaAutosize } from "@mui/base/TextareaAutosize";
+import { useTheme } from "@mui/material/styles";
+import Box, { type BoxProps } from "@mui/material/Box";
+import { type TextareaAutosizeProps } from "@mui/material/TextareaAutosize";
 import styled from "styled-components";
 
 const blue = {

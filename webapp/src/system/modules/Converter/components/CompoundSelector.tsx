@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { BoxProps } from "@mui/material";
+import { type BoxProps } from "@mui/material/Box";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";

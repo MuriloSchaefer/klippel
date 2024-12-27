@@ -3,6 +3,7 @@ import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import useStoreManager, { StoreManager } from "./hooks/useStoreManager";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import useComponentRegistryManager from "./hooks/useComponentRegistryManager";
+import useFile from "./hooks/useFile";
 
 
 export interface Store extends IModule {
@@ -11,6 +12,7 @@ export interface Store extends IModule {
     hooks: {
         useAppDispatch: typeof useAppDispatch,
         useAppSelector: typeof useAppSelector
+        useFile: typeof useFile
     },
     managers: {
         store: typeof useStoreManager
@@ -30,6 +32,7 @@ const module: Store = {
     hooks: {
         useAppDispatch, 
         useAppSelector,
+        useFile
     },
     kernelCalls: {
         startModule: () => null,

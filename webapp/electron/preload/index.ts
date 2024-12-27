@@ -1,9 +1,11 @@
 import { contextBridge } from 'electron'
+import storage from './storage'
 // import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 // interface for communicating between renderer and main process.
 const api = {
+  storage
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
@@ -12,7 +14,7 @@ const api = {
 if (process.contextIsolated) {
   try {
     // contextBridge.exposeInMainWorld('electron', electronAPI) UNSAFE!
-    contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('electron', api)
   } catch (error) {
     console.error(error)
   }
@@ -20,5 +22,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
 //   window.electron = electronAPI // UNSAFE!
   // @ts-ignore (define in dts)
-  window.api = api
+  window.electron = api
 }

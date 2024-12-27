@@ -14,6 +14,13 @@ export default defineConfig({
   build: {
     target: "es2020",
     rollupOptions: {
+      onwarn(warning, warn) {
+        // Suppress "Module level directives cause errors when bundled" warnings
+        if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
+          return;
+        }
+        warn(warning);
+      },
       output: {
         manualChunks: (id, { getModuleInfo }) => {
           //if (id.includes("@react")) return "react";

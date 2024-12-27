@@ -1,6 +1,6 @@
 import React, { createElement, useCallback, useMemo } from "react";
 
-import type { BoxProps } from "@mui/material";
+import type { BoxProps } from "@mui/material/Box";
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
