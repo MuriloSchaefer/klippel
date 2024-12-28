@@ -62,7 +62,15 @@ app.whenReady().then(async () => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on('get-app-info', (e)=>{
+    e.returnValue = {
+      paths: {
+        HOME: app.getPath('home') + '/klippel',
+        CONFIG: app.getPath('appData') + '/klippel',
+        TEMP: app.getPath('temp')
+      }
+    }
+  })
 
   createWindow()
 

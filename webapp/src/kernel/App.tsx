@@ -2,7 +2,9 @@
 import React from "react";
 
 // Internal imports
-import ModulesProvider, { ModulesMap } from "./modules/Loader/components/Provider";
+import ModulesProvider, {
+  ModulesMap,
+} from "./modules/Loader/components/Provider";
 import DynamicStore from "./modules/Store/components/DynamicStore";
 import Layout from "./modules/Layout/components/WideLayout";
 
@@ -18,16 +20,14 @@ import composerModule from "@system/modules/Composer";
 import ordersModule from "@system/modules/Orders";
 
 export interface InitializationConfig {
-  extraModules: ModulesMap
+  extraModules: ModulesMap;
 }
 
 const App = (): React.ReactElement => {
-
   const builtInModules: ModulesMap = {
     kernel: [SVG, pointerModule, Markdown],
-    system: [converterModule, materialsModule, composerModule, ordersModule ]
-  }
-  
+    system: [converterModule, materialsModule, composerModule, ordersModule],
+  };
   return (
     // First initialize store and then load modules, since the loader requires the store to be already up
     <DynamicStore>
@@ -35,7 +35,7 @@ const App = (): React.ReactElement => {
         {/* [Authz Component here]
             This is only loaded after initialization is complete
          */}
-        <Layout /> 
+        <Layout />
       </ModulesProvider>
     </DynamicStore>
   );
