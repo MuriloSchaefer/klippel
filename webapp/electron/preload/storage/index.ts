@@ -1,10 +1,10 @@
-import fs from "fs";
+import fs from "fs-extra";
 import type { StorageAPI } from "./typings";
 
 // TODO: add restriction to folders to limit renderer access to FS.
 export default {
-  open: (path, mode) => {
-    const fd = fs.openSync(path, mode);
+  open: (path, flags, mode) => {
+    const fd = fs.openSync(path, flags, mode);
     var stats = fs.statSync(path);
 
     return {
@@ -14,19 +14,23 @@ export default {
       stats,
     };
   },
-  read: (fd, length, position) => {
-    let buffer: Buffer = Buffer.from("");
-
-    fs.readSync(fd, buffer, {
-      length,
-      position,
-    });
+  read: (path, encoding = "utf-8", flag = "r") => {
+    const buffer = fs.readFileSync(path, { encoding, flag });
     return buffer;
   },
-  write: (fd, buffer, offset, length, position) => {
-    fs.writeSync(fd, Buffer.from(buffer), offset, length, position);
+  write: (pathOrFd, buffer, options) => {
+    fs.writeFileSync(pathOrFd, buffer, options);
   },
   close: (fd) => {
-    fs.closeSync(fd);
+    console.debug(`closing file ${fd}`);
+    try {
+      fs.closeSync(fd);
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
+  dirStats: (path) => {
+    return fs.statSync(path);
   },
 } as StorageAPI;

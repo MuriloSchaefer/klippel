@@ -1,9 +1,9 @@
-// import type { Mode } from "fs";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { FileSystemRegistryContext } from "../contexts/fileSystemRegistry";
 import { File } from "../typings";
+import type { Mode, OpenMode } from "fs";
 
-export default function (path: string, mode: string | number = "r"): File {
+export default function (path: string, flags: OpenMode = 'r', mode?: Mode | null): File {
   const storage = window.electron.storage;
   const registry = useContext(FileSystemRegistryContext);
 
@@ -11,28 +11,20 @@ export default function (path: string, mode: string | number = "r"): File {
     if (registry.openFiles[path]) return registry.openFiles[path]; // Skip if it is already open.
 
     console.debug(`opening ${path} - ${mode}`);
-    const {fd, stats} = storage.open(path, mode);
+    const {fd, stats} = storage.open(path, flags, mode);
     const file: File = {
       fd,
       stats,
-      read: (length, position) => {
+      read: (encoding, flag) => {
         console.debug(`reading ${path}`);
-
-        // grab from window since this object lifecycle is different than the hook one.
-        // hook will get destroyed and collected by GC after each re-render.
-        // file will be held in a context to further use. Therefore it should not have references to outside.
-        const storage = window.electron.storage;
-        const buffer = storage.read(fd, length, position);
-        return buffer;
+        return storage.read(path, encoding, flag);
       },
-      write: (buffer, offset, length, position) => {
+      write: (buffer, options) => {
         console.debug(`writting ${path}`);
-
-        const storage = window.electron.storage;
-        storage.write(fd, buffer, offset, length, position);
+        storage.write(path, buffer, options);
       },
       close: () => {
-        //console.log("close");
+        console.debug(`closing ${path}`);
         storage.close(fd);
       },
     };
@@ -41,6 +33,10 @@ export default function (path: string, mode: string | number = "r"): File {
     registry.addFile(path, file);
     return file
   }, [path, mode])
+
+  useEffect(()=>{
+    return ()=> file.close()
+  }, [])
 
   return file
 }

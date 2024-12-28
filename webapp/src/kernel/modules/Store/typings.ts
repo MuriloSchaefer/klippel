@@ -21,12 +21,12 @@ export type File = {
 }
 
 export type Directory = {
-  fd: number,
+  path: string,
   stats: any,
-  search: ()=>any
+  search: (q: string, ext: string)=>any
   list: ()=>void
-  createDir: ()=>void
-  deleteDir: ()=>void
-  createFile: ()=>void
-  deleteFile: ()=>void
+  createDir: (name: string)=>void
+  deleteDir: (name: string)=>void
+  createFile: (name: string, buffer: Buffer)=>void
+  deleteFile: (name: string)=>void
 }

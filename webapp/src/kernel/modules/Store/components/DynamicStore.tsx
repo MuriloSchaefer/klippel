@@ -59,19 +59,19 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <ReduxProvider store={store}>
-      <CurrentReducersContext.Provider
-        value={{
-          currentReducers,
-          loadReducers,
-          registerMiddleware,
-        }}
-      >
-        <FileSystemRegistryProvider>
-          <ComponentsRegistryProvider>{children}</ComponentsRegistryProvider>
-        </FileSystemRegistryProvider>
-      </CurrentReducersContext.Provider>
-    </ReduxProvider>
+    <FileSystemRegistryProvider>
+      <ReduxProvider store={store}>
+        <CurrentReducersContext.Provider
+          value={{
+            currentReducers,
+            loadReducers,
+            registerMiddleware,
+          }}
+        >
+            <ComponentsRegistryProvider>{children}</ComponentsRegistryProvider>
+        </CurrentReducersContext.Provider>
+      </ReduxProvider>
+    </FileSystemRegistryProvider>
   );
 };
 
