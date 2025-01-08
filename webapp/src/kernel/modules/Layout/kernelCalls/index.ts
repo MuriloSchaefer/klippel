@@ -1,5 +1,9 @@
 // graphs manager
-import { MODULE_NAME, SECTIONS_REGISTRY_NAME, VIEWPORT_TYPE_REGISTRY_NAME } from "../constants";
+import {
+  MODULE_NAME,
+  SECTIONS_REGISTRY_NAME,
+  VIEWPORT_TYPE_REGISTRY_NAME,
+} from "../constants";
 import layoutMiddleware from "../store/middlewares";
 import ribbonMenuMiddleware from "../store/ribbonMenu/middlewares";
 import viewportMiddleware from "../store/viewports/middlewares";
@@ -19,13 +23,13 @@ export const startModule = ({
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
 
   const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
-  const storedTheme = localStorage.getItem('theme')
+  const storedTheme = localStorage.getItem("theme");
   if (darkThemeMq.matches && !storedTheme) {
-    dispatch(switchTheme({theme: 'dark'}))
-  } else if(storedTheme){
-    dispatch(switchTheme({theme: storedTheme as PaletteMode}))
+    dispatch(switchTheme({ theme: "dark" }));
+  } else if (storedTheme) {
+    dispatch(switchTheme({ theme: storedTheme as PaletteMode }));
   }
-  
+
   storeManager.functions.registerMiddleware(layoutMiddleware);
   storeManager.functions.registerMiddleware(ribbonMenuMiddleware);
   storeManager.functions.registerMiddleware(viewportMiddleware);
@@ -37,5 +41,5 @@ export const startModule = ({
     [VIEWPORT_TYPE_REGISTRY_NAME]: {
       home: HomeViewport,
     },
-  })
+  });
 };

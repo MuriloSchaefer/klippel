@@ -15,15 +15,13 @@ import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 
 // Internals
-import {
-  selectActiveViewport,
-  selectViewportStates,
-} from "../../store/viewports/selectors";
 import ViewportLoader from "./ViewportLoader";
 import useViewportManager from "../../hooks/useViewportManager";
 import { ViewportState } from "../../store/viewports/state";
 import { VIEWPORT_NOTIFICATIONS_ID } from "../../constants";
 import { selectAllGroups } from "../../store/viewports/groups/selectors";
+import useActiveViewport from "../../hooks/useActiveViewport";
+import { selectViewportStates } from "../../store/viewports/selectors";
 
 type GroupedViewports = {
   notGrouped: ViewportState[];
@@ -37,7 +35,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
 
   const groups = useAppSelector(selectAllGroups);
 
-  const selectedViewport = useAppSelector(selectActiveViewport);
+  const activeViewport = useActiveViewport();
   const viewports = useAppSelector(selectViewportStates);
 
   const adaptedState = useMemo(
@@ -77,7 +75,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
     <Box role="viewport-manager" sx={{ ...sx, height: '100%', display: 'flex', flexDirection: 'column' }} {...props}>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Tabs
-          value={selectedViewport}
+          value={activeViewport.name}
           aria-label="viewport tabs"
           role="viewport-tabs"
           sx={{ maxWidth: "100%" }}

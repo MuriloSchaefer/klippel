@@ -4,11 +4,11 @@ import storage from "./storage";
 // Custom APIs for renderer
 // interface for communicating between renderer and main process.
 export const api = {
-  constants: ipcRenderer.sendSync("get-app-info") as {paths: {
-    HOME: string;
-    CONFIG: string;
-    TEMP: string;
-  }},
+  // constants: ipcRenderer.sendSync("get-app-info") as {paths: {
+  //   HOME: string;
+  //   CONFIG: string;
+  //   TEMP: string;
+  // }},
   storage,
 };
 

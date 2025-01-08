@@ -21,6 +21,7 @@ import CustomTextArea from "./components/CustomFields/TextArea";
 import ColorPicker from "./components/ColorPicker";
 import CRUDTextFieldCell from "./components/CRUDGrid/TextFieldCell";
 import useActiveViewport from "./hooks/useActiveViewport";
+import useViewportSaver from "./hooks/useViewportSession";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -48,6 +49,7 @@ export interface ILayoutModule extends IModule {
     useActiveViewport: typeof useActiveViewport
     usePanelsManager: typeof usePanelsManager
     useResizeObserver: typeof useResizeObserver
+    useViewportSaver: typeof useViewportSaver
   },
   store: {
     selectors: {
@@ -90,7 +92,8 @@ const LayoutModule: ILayoutModule = {
     useViewportManager,
     useActiveViewport,
     usePanelsManager,
-    useResizeObserver
+    useResizeObserver,
+    useViewportSaver
   },
   store: {
     selectors: {

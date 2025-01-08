@@ -1,6 +1,6 @@
 import { Action, ThunkAction } from "@reduxjs/toolkit";
 import { StorageAPI } from "../../../../electron/preload/storage/typings";
-import { OmitFirstArg } from "typings";
+import { OmitFirstArg, ReplaceReturnType } from "typings";
 
 export type AppDispatch = any;
 export type RootState = ReturnType<(...args: any) => any>; 
@@ -24,9 +24,10 @@ export type Directory = {
   path: string,
   stats: any,
   search: (q: string, ext: string)=>any
-  list: ()=>void
+  list: ()=>string[]
   createDir: (name: string)=>void
   deleteDir: (name: string)=>void
   createFile: (name: string, buffer: Buffer)=>void
   deleteFile: (name: string)=>void
+  openFile: ReplaceReturnType<StorageAPI['open'], File>
 }

@@ -66,8 +66,6 @@ app.whenReady().then(async () => {
     e.returnValue = {
       paths: {
         HOME: app.getPath('home') + '/klippel',
-        CONFIG: app.getPath('appData') + '/klippel',
-        TEMP: app.getPath('temp')
       }
     }
   })
