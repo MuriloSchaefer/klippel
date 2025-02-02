@@ -28,7 +28,6 @@ export default function (
   }, [path, _state]);
   const listener = useCallback(
     (event: "rename" | "change", filename?: string) =>{
-      console.log(event, filename)
       setState({ event, filename })
     },
     []

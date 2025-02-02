@@ -164,7 +164,7 @@ export const ComposerViewport = ({
         <ViewportNotificationsTray>
           <SaveSharpIcon 
             fontSize="small"
-            onClick={()=> console.log('save session')}
+            onClick={()=> console.log('save model')}
             sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}/>
           <LanIcon
             fontSize="small"
