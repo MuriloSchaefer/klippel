@@ -16,8 +16,23 @@ import {
   SVGModuleState,
   newSVGState,
   InstancesMap,
+  SVGState,
 } from "./state";
 import _ from "lodash";
+
+
+const storage = window.electron.storage;
+storage.createDir(".session/SVG/svgs");
+
+function persistState(state: SVGState) {
+  const filename = `.session/SVG/svgs/${state.path.replaceAll('/', '-')}.js`
+  const f = storage.open(filename, 'w+')
+  storage.write(f.fd, JSON.stringify(state), {
+    encoding: "utf-8",
+  });
+  storage.close(f.fd)
+  return state;
+}
 
 const slice = createSlice({
   name: MODULE_NAME,
@@ -38,14 +53,16 @@ const slice = createSlice({
         if (state.svgs[path] && !_.isEmpty(state.svgs[path].instances))
           instances = { ...instances, ...state.svgs[path].instances };
 
+        const newState = {
+          path,
+          ...newSVGState,
+          instances: instances,
+        }
+        persistState(newState)
         return {
           ...state,
           svgs: {
-            [path]: {
-              path,
-              ...newSVGState,
-              instances: instances,
-            },
+            [path]: newState,
           },
         };
       }

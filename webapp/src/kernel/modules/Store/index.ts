@@ -4,6 +4,9 @@ import useStoreManager, { StoreManager } from "./hooks/useStoreManager";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import useComponentRegistryManager from "./hooks/useComponentRegistryManager";
 import useFile from "./hooks/useFile";
+import useDirectory from "./hooks/useDirectory";
+import useSessionDir from "./hooks/useSessionDir";
+import useWatchFile from "./hooks/useWatchFile";
 
 
 export interface Store extends IModule {
@@ -12,7 +15,10 @@ export interface Store extends IModule {
     hooks: {
         useAppDispatch: typeof useAppDispatch,
         useAppSelector: typeof useAppSelector
-        useFile: typeof useFile
+        useFile: typeof useFile,
+        useWatchFile: typeof useWatchFile,
+        useDirectory: typeof useDirectory,
+        useSessionDir: typeof useSessionDir,
     },
     managers: {
         store: typeof useStoreManager
@@ -32,7 +38,10 @@ const module: Store = {
     hooks: {
         useAppDispatch, 
         useAppSelector,
-        useFile
+        useFile,
+        useWatchFile,
+        useDirectory,
+        useSessionDir
     },
     kernelCalls: {
         startModule: () => null,

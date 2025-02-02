@@ -46,8 +46,8 @@ const slice = createSlice<
     builder.addCase(
       closeViewport,
       (state: viewportManagerState, { payload }) => {
-        storage.deleteDir(
-          `.session/Layout/viewPortManager/viewports/${payload.name}`
+        storage.deleteFile(
+          `.session/Layout/viewPortManager/viewports/${payload.name}.js`
         );
         return {
           ...state,
@@ -90,12 +90,12 @@ const slice = createSlice<
         };
 
         storage.move(
-          `.session/Layout/viewPortManager/viewports/${oldName}`,
-          `.session/Layout/viewPortManager/viewports/${newName}`,
+          `.session/Layout/viewPortManager/viewports/${oldName}.js`,
+          `.session/Layout/viewPortManager/viewports/${newName}.js`,
           {}
         );
         storage.write(
-          `.session/Layout/viewPortManager/viewports/${newName}/state.js`,
+          `.session/Layout/viewPortManager/viewports/${newName}.js`,
           JSON.stringify(newState.viewports[newName]),
           { encoding: "utf-8" }
         );
@@ -118,7 +118,7 @@ const slice = createSlice<
           ),
         };
         storage.write(
-          `.session/Layout/viewPortManager/viewports/${name}/state.js`,
+          `.session/Layout/viewPortManager/viewports/${name}.js`,
           JSON.stringify(newState.viewports[name]),
           { encoding: "utf-8" }
         );
@@ -139,7 +139,7 @@ const slice = createSlice<
           },
         };
         storage.write(
-          `.session/Layout/viewPortManager/viewports/${viewportName}/state.js`,
+          `.session/Layout/viewPortManager/viewports/${viewportName}.js`,
           JSON.stringify(newState.viewports[viewportName]),
           { encoding: "utf-8" }
         );
@@ -158,7 +158,7 @@ const slice = createSlice<
         },
       };
       storage.write(
-        `.session/Layout/viewPortManager/viewports/${viewportName}/state.js`,
+        `.session/Layout/viewPortManager/viewports/${viewportName}.js`,
         JSON.stringify(newState.viewports[viewportName]),
         { encoding: "utf-8" }
       );

@@ -24,7 +24,7 @@ export type Directory = {
   path: string,
   stats: any,
   search: (q: string, ext: string)=>any
-  list: ()=>string[]
+  list: ()=>void
   createDir: (name: string)=>void
   deleteDir: (name: string)=>void
   createFile: (name: string, buffer: Buffer)=>void

@@ -1,9 +1,15 @@
 // import type { Mode } from "fs";
-import { useMemo } from "react";
-import { type Directory } from "../typings";
+import { useContext, useMemo } from "react";
+import { type File, type Directory } from "../typings";
+import { FileSystemRegistryContext } from "../contexts/fileSystemRegistry";
 
-export default function (path: string): Directory {
+export default function (path: string, createIfNotFound: boolean = true): Directory {
   const storage = window.electron.storage;
+  const registry = useContext(FileSystemRegistryContext);
+  
+  if (createIfNotFound){
+    // TODO: create if does not exists.
+  }
 
   const dir: Directory = useMemo(()=>({
     path,
@@ -24,6 +30,31 @@ export default function (path: string): Directory {
     deleteFile(name){
       return storage.deleteFile(`${path}/${name}`)
     },
+    openFile(subPath, flags, mode){
+      const absPath = `${path}/${subPath}`
+      if (registry.openFiles[absPath]) return registry.openFiles[absPath];
+
+      console.debug(`opening ${path} - ${mode}`);
+      const {fd, stats} = storage.open(absPath, flags, mode)
+      const file: File = {
+        fd,
+        stats,
+        read: (encoding, flag) => {
+          console.debug(`reading ${absPath}`);
+          return storage.read(absPath, encoding, flag);
+        },
+        write: (buffer, options) => {
+          console.debug(`writting ${absPath}`);
+          storage.write(absPath, buffer, options);
+        },
+        close: () => {
+          console.debug(`closing ${absPath}`);
+          storage.close(fd);
+        },
+      };
+      registry.addFile(absPath, file);
+      return file
+    }
   }), [path])
 
   return dir

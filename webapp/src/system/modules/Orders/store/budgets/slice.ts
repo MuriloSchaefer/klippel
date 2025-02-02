@@ -1,6 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { BudgetsManagerState } from "../state";
+import { BudgetsManagerState, BudgetState } from "../state";
 import { createBudget, deleteBudget } from "./actions";
+
+const storage = window.electron.storage;
+storage.createDir(".session/Orders/budgets");
+function persistBudget(state: BudgetState){
+  storage.write(`.session/Orders/budgets/${state.id}.js`, JSON.stringify(state), {
+    encoding: "utf-8",
+  });
+  return state
+}
 
 const slice = createSlice({
   name: "budgets",
@@ -9,9 +18,10 @@ const slice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(createBudget, (state, { payload }) => ({
       ...state,
-      [payload.id]: payload,
+      [payload.id]: persistBudget(payload),
     }));
     builder.addCase(deleteBudget, (state, { payload }) => {
+      storage.deleteFile(`.session/Orders/budgets/${state.id}.js`)
       return Object.values(state).reduce(
         (acc, curr) =>
           curr.id === payload.id ? acc : { ...acc, [curr.id]: curr },

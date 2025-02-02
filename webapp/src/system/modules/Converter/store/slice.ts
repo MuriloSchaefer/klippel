@@ -2,9 +2,19 @@ import { createSlice } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
 
 import {
+  ConverterState,
   initialState
 } from "./state";
 import { selectNode } from "./actions";
+
+const storage = window.electron.storage;
+storage.createDir(".session/Composer/compositionsManager/compositions");
+function persistConverter(state: ConverterState){
+  storage.write(".session/Converter/state.js", JSON.stringify(state), {
+    encoding: "utf-8",
+  });
+  return state
+}
 
 
 const slice = createSlice({
@@ -14,7 +24,7 @@ const slice = createSlice({
     extraReducers: (builder) => {
       builder.addCase(
         selectNode,
-        (state, { payload }) => ({...state, selectedNode: payload}))
+        (state, { payload }) => persistConverter({...state, selectedNode: payload}))
         
     //   builder.addDefaultCase((state, action)=>({
     //     ...state, 

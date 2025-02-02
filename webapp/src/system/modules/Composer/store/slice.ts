@@ -8,7 +8,7 @@ import {
   closeComposition,
   storeCompositionsList,
 } from "./actions";
-import { newCompositionState } from "./composition/state";
+import { CompositionState, newCompositionState } from "./composition/state";
 import { initialState, ComposerState } from "./state";
 
 import instanceSlice from "./composition/slice";
@@ -20,6 +20,20 @@ import {
   selectPart,
   unselectPart,
 } from "./composition/actions";
+const storage = window.electron.storage;
+storage.createDir(".session/Composer/compositionsManager/compositions");
+function persistCompositionListState(state: ComposerState){
+  storage.write(".session/Composer/compositionsManager/compositionList.js", JSON.stringify(state), {
+    encoding: "utf-8",
+  });
+  return state
+}
+function persistCompositionState(state: CompositionState){
+  storage.write(`.session/Composer/compositionsManager/compositions/${state.name}.json`, JSON.stringify(state), {
+    encoding: "utf-8",
+  });
+  return state
+}
 
 const slice = createSlice({
   name: MODULE_NAME,
@@ -38,29 +52,30 @@ const slice = createSlice({
             ...state.compositionsManager,
             compositions: {
               ...state.compositionsManager.compositions,
-              [name]: {
+              [name]: persistCompositionState({
                 ...newCompositionState,
                 name,
                 svgPath,
                 graphId,
                 viewportName,
-              },
+              }),
             },
           },
         })
       )
       .addCase(storeCompositionsList, (state, action) => {
-        return {
+        return persistCompositionListState({
           ...state,
           compositionsManager: {
             ...state.compositionsManager,
             compositionsList: action.payload,
           },
-        };
+        });
       })
       .addCase(
         closeComposition,
         (state: ComposerState, { payload: { name } }) => {
+          storage.deleteFile(`.session/Composer/compositionsManager/compositions/${name}.json`)
           return {
             ...state,
             compositionsManager: {
@@ -86,13 +101,13 @@ const slice = createSlice({
             ...state.compositionsManager,
             compositions: {
               ...state.compositionsManager.compositions,
-              [composition.name]: {
+              [composition.name]: persistCompositionState({
                 ...composition,
                 loading: {
                   ...composition.loading,
                   loadSVG: "started",
                 },
-              },
+              }),
             },
           },
         };
@@ -110,13 +125,13 @@ const slice = createSlice({
             ...state.compositionsManager,
             compositions: {
               ...state.compositionsManager.compositions,
-              [composition.name]: {
+              [composition.name]: persistCompositionState({
                 ...composition,
                 loading: {
                   ...composition.loading,
                   loadSVG: "completed",
                 },
-              },
+              }),
             },
           },
         };
@@ -131,14 +146,14 @@ const slice = createSlice({
             ...state.compositionsManager,
             compositions: {
               ...state.compositionsManager.compositions,
-              [compositionName]: {
+              [compositionName]: persistCompositionState({
                 ...state.compositionsManager.compositions[compositionName],
                 loading: {
                   ...state.compositionsManager.compositions[compositionName]
                     .loading,
                   loadModel: "started",
                 },
-              },
+              }),
             },
           },
         };
@@ -151,7 +166,7 @@ const slice = createSlice({
           ...state.compositionsManager,
           compositions: {
             ...state.compositionsManager.compositions,
-            [payload.compositionName]: {
+            [payload.compositionName]: persistCompositionState({
               ...state.compositionsManager.compositions[
                 payload.compositionName
               ],
@@ -161,7 +176,7 @@ const slice = createSlice({
                 ].loading,
                 loadModel: "completed",
               },
-            },
+            }),
           },
         },
       };
@@ -175,12 +190,12 @@ const slice = createSlice({
         compositions: {
           ...state.compositionsManager.compositions,
 
-          [action.payload.compositionName]: instanceSlice.reducer(
+          [action.payload.compositionName]: persistCompositionState(instanceSlice.reducer(
             state.compositionsManager.compositions[
               action.payload.compositionName
             ],
             action
-          ),
+          )),
         },
       },
     }));
@@ -191,12 +206,12 @@ const slice = createSlice({
         compositions: {
           ...state.compositionsManager.compositions,
 
-          [action.payload.compositionName]: instanceSlice.reducer(
+          [action.payload.compositionName]: persistCompositionState(instanceSlice.reducer(
             state.compositionsManager.compositions[
               action.payload.compositionName
             ],
             action
-          ),
+          )),
         },
       },
     }));
@@ -208,12 +223,12 @@ const slice = createSlice({
         compositions: {
           ...state.compositionsManager.compositions,
 
-          [action.payload.compositionName]: instanceSlice.reducer(
+          [action.payload.compositionName]: persistCompositionState(instanceSlice.reducer(
             state.compositionsManager.compositions[
               action.payload.compositionName
             ],
             action
-          ),
+          )),
         },
       },
     }));
@@ -225,12 +240,12 @@ const slice = createSlice({
         compositions: {
           ...state.compositionsManager.compositions,
 
-          [action.payload.compositionName]: instanceSlice.reducer(
+          [action.payload.compositionName]: persistCompositionState(instanceSlice.reducer(
             state.compositionsManager.compositions[
               action.payload.compositionName
             ],
             action
-          ),
+          )),
         },
       },
     }));
@@ -242,12 +257,12 @@ const slice = createSlice({
         compositions: {
           ...state.compositionsManager.compositions,
 
-          [action.payload.compositionName]: instanceSlice.reducer(
+          [action.payload.compositionName]: persistCompositionState(instanceSlice.reducer(
             state.compositionsManager.compositions[
               action.payload.compositionName
             ],
             action
-          ),
+          )),
         },
       },
     }));
@@ -259,12 +274,12 @@ const slice = createSlice({
         compositions: {
           ...state.compositionsManager.compositions,
 
-          [action.payload.compositionName]: instanceSlice.reducer(
+          [action.payload.compositionName]: persistCompositionState(instanceSlice.reducer(
             state.compositionsManager.compositions[
               action.payload.compositionName
             ],
             action
-          ),
+          )),
         },
       },
     }));

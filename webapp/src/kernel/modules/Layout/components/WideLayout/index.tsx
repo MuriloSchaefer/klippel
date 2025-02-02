@@ -61,6 +61,7 @@ const Layout = () => {
   const theme = useMemo(
     () =>
       createTheme({
+        spacing:3,
         palette: {
           mode: selectedTheme ?? "dark",
           // Used by `getContrastText()` to maximize the contrast between
