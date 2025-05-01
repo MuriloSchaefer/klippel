@@ -3,9 +3,9 @@ import { BudgetsManagerState, BudgetState } from "../state";
 import { createBudget, deleteBudget } from "./actions";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Orders/budgets");
+storage.ensureDir(".session/Orders/budgets");
 function persistBudget(state: BudgetState){
-  storage.write(`.session/Orders/budgets/${state.id}.js`, JSON.stringify(state), {
+  storage.writeBlob(`.session/Orders/budgets/${state.id}.js`, new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state

@@ -13,7 +13,16 @@ import {
 } from "./actions";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Layout/viewPortManager/viewports");
+storage.ensureDir(".session/Layout/viewPortManager/viewports");
+
+const persistViewportState = (state: ViewportState) => {
+  storage.writeBlob(
+    `.session/Layout/viewPortManager/viewports/${state.name}.js`,
+    new Blob([JSON.stringify(state)]),
+    { encoding: "utf-8" }
+  );
+  return state;
+}
 
 const slice = createSlice<
   viewportManagerState,
@@ -29,18 +38,10 @@ const slice = createSlice<
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(addViewport, (state: viewportManagerState, { payload }) => {
-      const stateFile = storage.open(
-        `.session/Layout/viewPortManager/viewports/${payload.name}.js`,
-        "w+"
-      );
-      storage.write(stateFile.path, JSON.stringify(payload), {
-        encoding: "utf-8",
-      });
-      storage.close(stateFile.fd);
 
       return {
         ...state,
-        viewports: { ...state.viewports, [payload.name]: payload },
+        viewports: { ...state.viewports, [payload.name]: persistViewportState(payload) },
       };
     });
     builder.addCase(
@@ -89,16 +90,11 @@ const slice = createSlice<
           ),
         };
 
-        storage.move(
+        storage.moveFile(
           `.session/Layout/viewPortManager/viewports/${oldName}.js`,
           `.session/Layout/viewPortManager/viewports/${newName}.js`,
-          {}
         );
-        storage.write(
-          `.session/Layout/viewPortManager/viewports/${newName}.js`,
-          JSON.stringify(newState.viewports[newName]),
-          { encoding: "utf-8" }
-        );
+        persistViewportState(newState.viewports[newName]);
 
         return newState;
       }
@@ -117,11 +113,7 @@ const slice = createSlice<
             {}
           ),
         };
-        storage.write(
-          `.session/Layout/viewPortManager/viewports/${name}.js`,
-          JSON.stringify(newState.viewports[name]),
-          { encoding: "utf-8" }
-        );
+        persistViewportState(newState.viewports[name]);
         return newState;
       }
     );
@@ -138,11 +130,8 @@ const slice = createSlice<
             },
           },
         };
-        storage.write(
-          `.session/Layout/viewPortManager/viewports/${viewportName}.js`,
-          JSON.stringify(newState.viewports[viewportName]),
-          { encoding: "utf-8" }
-        );
+        
+        persistViewportState(newState.viewports[viewportName]);
         return newState;
       }
     );
@@ -157,11 +146,7 @@ const slice = createSlice<
           },
         },
       };
-      storage.write(
-        `.session/Layout/viewPortManager/viewports/${viewportName}.js`,
-        JSON.stringify(newState.viewports[viewportName]),
-        { encoding: "utf-8" }
-      );
+      persistViewportState(newState.viewports[viewportName]);
       return newState;
     });
 

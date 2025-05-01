@@ -5,10 +5,10 @@ import { moduleStarted } from "./actions";
 import { loaderInitialState, LoaderState } from "./state";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Loader");
+storage.ensureDir(".session/Loader");
 
 function persistState(state: LoaderState) {
-  storage.write(".session/Loader/state.js", JSON.stringify(state), {
+  storage.writeBlob(".session/Loader/state.js", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state;

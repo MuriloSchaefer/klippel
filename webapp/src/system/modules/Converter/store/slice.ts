@@ -8,9 +8,9 @@ import {
 import { selectNode } from "./actions";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Composer/compositionsManager/compositions");
+storage.ensureDir(".session/Composer/compositionsManager/compositions");
 function persistConverter(state: ConverterState){
-  storage.write(".session/Converter/state.js", JSON.stringify(state), {
+  storage.writeBlob(".session/Converter/state.js", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state

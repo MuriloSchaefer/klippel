@@ -4,9 +4,9 @@ import { materialsLoaded } from "./actions";
 import { initialState, MaterialsState } from "./state";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Materials/materials");
+storage.ensureDir(".session/Materials/materials");
 function persistMaterials(state: MaterialsState){
-  storage.write(".session/Materials/materials/state.js", JSON.stringify(state), {
+  storage.writeBlob(".session/Materials/materials/state.js", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state

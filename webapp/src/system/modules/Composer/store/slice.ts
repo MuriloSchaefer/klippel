@@ -21,15 +21,16 @@ import {
   unselectPart,
 } from "./composition/actions";
 const storage = window.electron.storage;
-storage.createDir(".session/Composer/compositionsManager/compositions");
+storage.ensureDir(".session/Composer/compositionsManager/compositions");
+
 function persistCompositionListState(state: ComposerState){
-  storage.write(".session/Composer/compositionsManager/compositionList.js", JSON.stringify(state), {
+  storage.writeBlob(".session/Composer/compositionsManager/compositionList.js", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state
 }
 function persistCompositionState(state: CompositionState){
-  storage.write(`.session/Composer/compositionsManager/compositions/${state.name}.json`, JSON.stringify(state), {
+  storage.writeBlob(`.session/Composer/compositionsManager/compositions/${state.name}.json`, new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state

@@ -4,13 +4,11 @@ import { addRibbonTab, selectTab} from "./actions";
 import { RibbonMenuState } from "./state";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Layout/ribbonMenu");
+storage.ensureDir(".session/Layout/ribbonMenu");
 
 
 function persistState(state: RibbonMenuState) {
-  const f = storage.open(".session/Layout/ribbonMenu/state.js", "w+");
-  storage.write(f.fd, JSON.stringify(state), { encoding: "utf-8" });
-  storage.close(f.fd);
+  storage.writeBlob(".session/Layout/ribbonMenu/state.js", new Blob([JSON.stringify(state)]), { encoding: "utf-8" });
   return state;
 }
 

@@ -22,15 +22,12 @@ import _ from "lodash";
 
 
 const storage = window.electron.storage;
-storage.createDir(".session/SVG/svgs");
+storage.ensureDir(".session/SVG/svgs");
 
 function persistState(state: SVGState) {
-  const filename = `.session/SVG/svgs/${state.path.replaceAll('/', '-')}.js`
-  const f = storage.open(filename, 'w+')
-  storage.write(f.fd, JSON.stringify(state), {
+  storage.writeBlob(`.session/SVG/svgs/${state.path.replaceAll('/', '-')}.js`, new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
-  storage.close(f.fd)
   return state;
 }
 

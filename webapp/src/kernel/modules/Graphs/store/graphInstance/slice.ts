@@ -20,9 +20,7 @@ import {
 
 const storage = window.electron.storage;
 function persistState(state: GraphState) {
-  const f = storage.open(`.session/Graph/graphs/${state.id}.js`, "w+");
-  storage.write(f.fd, JSON.stringify(state), { encoding: "utf-8" });
-  storage.close(f.fd);
+  storage.writeBlob(`.session/Graph/graphs/${state.id}.js`, new Blob([JSON.stringify(state)]), { encoding: "utf-8" });
   return state;
 }
 

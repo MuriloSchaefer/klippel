@@ -1,12 +1,11 @@
 import { IModule, KernelCalls } from "../base";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
-import useStoreManager, { StoreManager } from "./hooks/useStoreManager";
+import useStoreManager from "./hooks/useStoreManager";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import useComponentRegistryManager from "./hooks/useComponentRegistryManager";
-import useFile from "./hooks/useFile";
-import useDirectory from "./hooks/useDirectory";
-import useSessionDir from "./hooks/useSessionDir";
 import useWatchFile from "./hooks/useWatchFile";
+import useStorage from "./hooks/useStorage";
+import useLog from "./hooks/useLog";
 
 
 export interface Store extends IModule {
@@ -15,10 +14,9 @@ export interface Store extends IModule {
     hooks: {
         useAppDispatch: typeof useAppDispatch,
         useAppSelector: typeof useAppSelector
-        useFile: typeof useFile,
+        useStorage: typeof useStorage,
+        useLog: typeof useLog,
         useWatchFile: typeof useWatchFile,
-        useDirectory: typeof useDirectory,
-        useSessionDir: typeof useSessionDir,
     },
     managers: {
         store: typeof useStoreManager
@@ -38,10 +36,9 @@ const module: Store = {
     hooks: {
         useAppDispatch, 
         useAppSelector,
-        useFile,
+        useStorage,
+        useLog,
         useWatchFile,
-        useDirectory,
-        useSessionDir
     },
     kernelCalls: {
         startModule: () => null,

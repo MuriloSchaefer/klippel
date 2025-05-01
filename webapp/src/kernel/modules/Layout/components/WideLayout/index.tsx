@@ -52,9 +52,6 @@ const Layout = () => {
     useAppSelector,
     // useFile,
   } = storeModule.hooks;
-  // const f = useFile('/tmp/klippel/test', 'r+')
-  // f.write('rendered', {encoding:'utf-8', flag:'r+' })
-  // const content = f.read()
 
   const selectedTheme = useAppSelector(selectTheme);
 

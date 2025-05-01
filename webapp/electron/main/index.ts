@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 const { updateElectronApp } = require('update-electron-app');
 // import icon from '../../resources/icon.png?asset'
 import installExtension, { REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import {initStorageHooks} from './storage'
 
 updateElectronApp()
 if (require('electron-squirrel-startup')) app.quit();
@@ -20,9 +21,10 @@ function createWindow(): void {
       sandbox: false
     }
   })
+  initStorageHooks()
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow.showInactive()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

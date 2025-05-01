@@ -9,9 +9,9 @@ import {
 } from "./actions";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Markdown");
+storage.ensureDir(".session/Markdown");
 function persistState(state: MarkdownModuleState){
-  storage.write(".session/Markdown/state.js", JSON.stringify(state), {
+  storage.writeBlob(".session/Markdown/state.js", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state

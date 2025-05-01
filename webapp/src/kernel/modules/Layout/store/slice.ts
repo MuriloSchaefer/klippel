@@ -9,9 +9,9 @@ import {
 } from "./state";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Layout");
+storage.ensureDir(".session/Layout");
 function persiststate(state: LayoutState){
-  storage.write(".session/Layout/state.js", JSON.stringify(state), {
+  storage.writeBlob(".session/Layout/state.js", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state

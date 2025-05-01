@@ -4,6 +4,15 @@ import { ViewportGroups } from "../state";
 import { createGroup } from "./actions";
 
 const storage = window.electron.storage;
+storage.ensureDir(`.session/Layout/viewPortManager/.groups`);
+const persistState = (state: { name: string; color: string }) => {
+    storage.writeBlob(
+      `.session/Layout/viewPortManager/.groups/${state.name}.js`,
+      new Blob([JSON.stringify(state)]),
+      { encoding: "utf-8" }
+    );
+    return state;
+}
 
 const slice = createSlice<
   ViewportGroups,
@@ -15,15 +24,10 @@ const slice = createSlice<
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(createGroup, (state, { payload }) => {
-      storage.createDir(`.session/Layout/viewPortManager/.groups`);
-      storage.write(
-        `.session/Layout/viewPortManager/.groups/${payload.name}.js`,
-        JSON.stringify({ name: payload.name, color: payload.color }),
-        { encoding: "utf-8" }
-      );
+      storage.ensureDir(`.session/Layout/viewPortManager/.groups`);
       return {
         ...state,
-        [payload.name]: { name: payload.name, color: payload.color },
+        [payload.name]: persistState({ name: payload.name, color: payload.color }),
       };
     });
   },

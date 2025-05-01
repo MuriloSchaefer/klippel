@@ -9,12 +9,10 @@ import {
 import { initialState, PanelsState } from "./state";
 
 const storage = window.electron.storage;
-storage.createDir(".session/Layout/panels");
+storage.ensureDir(".session/Layout/panels");
 
 function persistState(state: PanelsState) {
-  const f = storage.open(".session/Layout/panels/state.js", "w+");
-  storage.write(f.fd, JSON.stringify(state), { encoding: "utf-8" });
-  storage.close(f.fd);
+  storage.writeBlob(".session/Layout/panels/state.js", new Blob([JSON.stringify(state)]), { encoding: "utf-8" });
   return state;
 }
 
