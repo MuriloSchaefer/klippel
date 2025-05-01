@@ -21,6 +21,7 @@
     "babel-plugin-direct-import": "^1.0.0",
     "d3": "^7.8.4",
     "electron-squirrel-startup": "^1.0.1",
+    "glob": "^11.0.2",
     "install-peerdeps": "^3.0.3",
     "jse-eval": "^1.5.2",
     "lodash": "^4.17.21",
