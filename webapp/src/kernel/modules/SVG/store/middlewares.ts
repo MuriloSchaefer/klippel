@@ -11,10 +11,26 @@ import {
   SVGUpdated,
   updateSVG,
   updateProxy,
+  saveSession,
+  sessionSaved,
 } from "./actions";
 import { SVGModuleState } from "./state";
+import { persistState } from "./slice";
 
 const middlewares = createListenerMiddleware();
+
+middlewares.startListening({
+  actionCreator: saveSession,
+  effect: async (payload, listenerApi) => {
+      const { dispatch, getState } = listenerApi;
+      
+      const {SVG: state} = getState() as { SVG: SVGModuleState }
+      Object.values(state.svgs).forEach(persistState)
+
+      dispatch(sessionSaved()); // dispatch event
+  }
+})
+
 middlewares.startListening({
   actionCreator: loadSVG,
   effect: async ({ payload }: PayloadAction<{ path: string }>, listenerApi) => {

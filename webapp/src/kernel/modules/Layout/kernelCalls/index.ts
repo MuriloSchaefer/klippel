@@ -10,7 +10,7 @@ import viewportMiddleware from "../store/viewports/middlewares";
 import viewportGroupsMiddleware from "../store/viewports/groups/middlewares";
 import panelsMiddleware from "../store/panels/middlewares";
 
-import slice from "../store/slice";
+import slice, { sessionSaver } from "../store/slice";
 import { StartModuleProps } from "@kernel/modules/base";
 import HomeViewport from "../components/ViewportManager/HomeViewport";
 import { switchTheme } from "../store/actions";
@@ -19,7 +19,14 @@ import { type PaletteMode } from "@mui/material";
 export const startModule = ({
   dispatch,
   managers: { storeManager, componentRegistryManager },
+  storage,
 }: StartModuleProps) => {
+  // configure session saver
+  const store = storeManager.functions.getStore()
+  storage.registerSessionSaveListener(
+    store ? sessionSaver(store) : ()=>console.log('Missing store. skipping session save!')
+  );
+
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
 
   const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");

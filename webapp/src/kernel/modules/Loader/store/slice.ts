@@ -1,14 +1,17 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, Store } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { moduleStarted } from "./actions";
+import { moduleStarted, saveSession } from "./actions";
 
 import { loaderInitialState, LoaderState } from "./state";
 
 const storage = window.electron.storage;
 storage.ensureDir(".session/Loader");
 
-function persistState(state: LoaderState) {
-  storage.writeBlob(".session/Loader/state.js", new Blob([JSON.stringify(state)]), {
+export const sessionSaver = (store: Store<LoaderState>) => () => {
+  store.dispatch(saveSession());
+};
+export function persistState(state: LoaderState) {
+  storage.writeBlob(".session/Loader/state.json", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state;
@@ -20,7 +23,7 @@ const slice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(moduleStarted, (state: LoaderState) =>
-      persistState({ ...state, modulesCount: state.modulesCount + 1 })
+      ({ ...state, modulesCount: state.modulesCount + 1 })
     );
   },
 });

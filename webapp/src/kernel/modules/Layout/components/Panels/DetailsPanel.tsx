@@ -1,4 +1,4 @@
-import React, { MouseEvent, useCallback } from "react";
+import React, { MouseEvent, useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -27,7 +27,8 @@ export const DetailsPanel = ({
   sx,
   ...props
 }: DetailsPanelProps) => {
-  const ref = document.getElementById(DETAILS_PANEL_ID);
+  const [retry, setRetry] = useState(false)
+  const ref = useMemo(()=> document.getElementById(DETAILS_PANEL_ID), [retry]);
   const isPortrait = useMediaQuery("(orientation: portrait)");
 
   const storeModule = useModule<Store>("Store");
@@ -45,7 +46,11 @@ export const DetailsPanel = ({
     [panelState?.state]
   );
 
-  if (!ref || !panelState) return null;
+  if (!ref){
+    setTimeout(()=>setRetry(!retry), 50)
+    return null
+  }
+  if (!panelState) return null;
   return createPortal(
     <Box
       role="details-panel"

@@ -1,53 +1,66 @@
-import type { PathLike } from "fs";
 import type { StorageAPI } from "./typings";
 import { ipcRenderer, IpcRendererEvent } from "electron";
-import { resolve } from "path";
 
-const info = ipcRenderer.sendSync("get-app-info");
 
 ipcRenderer.on("blob-written", (event, path) => {
-  console.log("Saved file " + path);
+  // console.log("Saved file " + path);
 });
 ipcRenderer.on("write-blob-error", (event, errMessage) => {
   console.error("Error writting blob: " + errMessage);
 });
 
 ipcRenderer.on("file-appended", (event, path) => {
-  console.log("File appended " + path);
+  // console.log("File appended " + path);
 });
 ipcRenderer.on("append-file-error", (event, errMessage) => {
   console.error("Error appending file: " + errMessage);
 });
 
 ipcRenderer.on("file-copied", (event, path) => {
-  console.log("File copied " + path);
+  // console.log("File copied " + path);
 });
 ipcRenderer.on("copy-file-error", (event, errMessage) => {
   console.error("Error copying file: " + errMessage);
 });
 ipcRenderer.on("file-moved", (event, path) => {
-  console.log("File moved " + path);
+  // console.log("File moved " + path);
 });
 ipcRenderer.on("move-file-error", (event, errMessage) => {
   console.error("Error moving file: " + errMessage);
 });
 
 ipcRenderer.on("file-symlinked", (event, path) => {
-  console.log("File sym linked " + path);
+  // console.log("File sym linked " + path);
 });
 ipcRenderer.on("sym-link-error", (event, errMessage) => {
   console.error("Error sym linking file: " + errMessage);
 });
 
 ipcRenderer.on("file-deleted", (event, path) => {
-  console.log("File deleted" + path);
+  // console.log("File deleted" + path);
 });
 ipcRenderer.on("delete-file-error", (event, errMessage) => {
   console.error("Error deleting file: " + errMessage);
 });
 
+ipcRenderer.on("exists-error", (event, errMessage) => {
+  console.error("Error checking path: " + errMessage);
+});
+
+const saveSessionListeners = new Set<() => void>();
+ipcRenderer.on("save-session", (event) => {
+  console.debug("Trigger save session");
+  console.log(saveSessionListeners)
+  saveSessionListeners.forEach((listener) => {
+    listener();
+  });
+});
+
 
 export default {
+  registerSessionSaveListener: (listener: () => void) => {
+    saveSessionListeners.add(listener);
+  },
   writeBlob: async (path, blob, options = {}) => {
     const buffer = Buffer.from(await blob.arrayBuffer());
 
@@ -58,12 +71,12 @@ export default {
 
     ipcRenderer.send("append-file", path, buffer, options);
   },
-  readFile: async (path) => {
+  readFile: async (path, options) => {
     ipcRenderer.once(`file-read-${path}-error`, (event, errMessage) => {
       console.error("Error reading file: " + errMessage);
     });
 
-    return ipcRenderer.invoke("read-file", path);
+    return ipcRenderer.invoke("read-file", path, options);
   },
   copyFile: async (sourcePath, destPath, flags) => {
     ipcRenderer.send("copy-file", sourcePath, destPath, flags);
@@ -86,6 +99,9 @@ export default {
   },
   deleteFile: async (path) => {
     ipcRenderer.send("delete-file", path);
+  },
+  exists: async (path) => {
+    return ipcRenderer.invoke("exists", path);
   },
 
   // directory methods

@@ -7,8 +7,9 @@ import {
   watchFile,
   symlink,
   copyFile,
-  readFile,
   remove,
+  readFileSync,
+  existsSync,
   //dirs
   ensureDir,
   //types
@@ -16,6 +17,8 @@ import {
 } from "fs-extra";
 import { resolve } from "path";
 import { glob, type GlobOptionsWithFileTypesTrue } from "glob";
+import { SimpleIntervalJob, Task, type ToadScheduler } from "toad-scheduler";
+import type { BrowserWindow } from "electron/main";
 
 function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
   const HOME = app.getPath("home") + "/klippel";
@@ -31,8 +34,11 @@ function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
   return absPath;
 }
 
-export function initStorageHooks() {
-  console.debug("initializingHooks");
+export function initStorageHooks(
+  scheduler: ToadScheduler,
+  mainWindow: BrowserWindow
+) {
+  // file functions
   ipcMain.on(
     "write-blob",
     (event, path, buffer, options: WriteFileOptions | string) => {
@@ -41,9 +47,6 @@ export function initStorageHooks() {
       );
       if (!absPath) return;
 
-      console.debug(
-        `storage function=write-blob size=${buffer.length} path=${absPath}`
-      );
       outputFile(absPath, buffer, options, (err) => {
         if (err) {
           event.sender.send("write-blob-error", err.message);
@@ -69,19 +72,12 @@ export function initStorageHooks() {
     });
   });
 
-  ipcMain.handle("read-file", async (event, path) => {
+  ipcMain.handle("read-file", async (event, path, options) => {
     const absPath = getAbsPath(path, (err) =>
       event.sender.send(`file-read-${path}-error`, err.message)
     );
     if (!absPath) return;
-
-    readFile(absPath, (err, data) => {
-      if (err) {
-        event.sender.send(`file-read-${path}-error`, err.message);
-      } else {
-        return Buffer.from(data);
-      }
-    });
+    return readFileSync(absPath, options);
   });
 
   ipcMain.on("copy-file", (event, sourcePath, destPath, flags) => {
@@ -176,8 +172,14 @@ export function initStorageHooks() {
         event.sender.send("file-deleted", path);
       }
     });
-  })
-
+  });
+  ipcMain.handle("exists", (event, path) => {
+    const absPath = getAbsPath(path, (err) =>
+      event.sender.send("exists-error", err.message)
+    );
+    if (!absPath) return;
+    return existsSync(absPath);
+  });
 
   // Directory functions
 
@@ -187,7 +189,7 @@ export function initStorageHooks() {
       event,
       dir: PathLike,
       patterns: string[],
-      options: GlobOptionsWithFileTypesTrue = {
+      options: Omit<GlobOptionsWithFileTypesTrue, "cwd"> = {
         stat: true,
         withFileTypes: true,
       }
@@ -197,7 +199,7 @@ export function initStorageHooks() {
         event.sender.send("search-dir-error", err.message)
       );
       if (!absDir) return;
-      return glob(patterns, options);
+      return glob(patterns, { ...options, cwd: absDir });
     }
   );
 
@@ -214,4 +216,18 @@ export function initStorageHooks() {
       }
     });
   });
+
+  // Scheduler tasks
+  const saveSessionTask = new Task("save-session", () => {
+    console.debug("Call save session...");
+    mainWindow.webContents.send("save-session");
+  });
+
+  scheduler.addSimpleIntervalJob(
+    new SimpleIntervalJob(
+      { seconds: 20, runImmediately: false },
+      saveSessionTask,
+      { id: "save-session", preventOverrun: true } 
+    )
+  );
 }

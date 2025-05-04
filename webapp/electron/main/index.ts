@@ -5,6 +5,7 @@ const { updateElectronApp } = require('update-electron-app');
 // import icon from '../../resources/icon.png?asset'
 import installExtension, { REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import {initStorageHooks} from './storage'
+import initScheduler from './scheduler';
 
 updateElectronApp()
 if (require('electron-squirrel-startup')) app.quit();
@@ -21,7 +22,9 @@ function createWindow(): void {
       sandbox: false
     }
   })
-  initStorageHooks()
+  const scheduler = initScheduler()
+  initStorageHooks(scheduler, mainWindow)
+
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.showInactive()

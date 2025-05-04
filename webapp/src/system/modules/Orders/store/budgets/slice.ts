@@ -1,24 +1,34 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { BudgetsManagerState, BudgetState } from "../state";
 import { createBudget, deleteBudget } from "./actions";
+import { PathLike } from "fs";
 
 const storage = window.electron.storage;
 storage.ensureDir(".session/Orders/budgets");
-function persistBudget(state: BudgetState){
-  storage.writeBlob(`.session/Orders/budgets/${state.id}.js`, new Blob([JSON.stringify(state)]), {
+export function persistBudget(state: BudgetState){
+  storage.writeBlob(`.session/Orders/budgets/${state.id}.json`, new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state
 }
+const restoreBudgetsSession = async (sessionPath: PathLike = ".session/Orders/budgets") => {
+  const files = await storage.searchDir(sessionPath, ['*.json'], { withFileTypes: true, });
+  const budgets = await files.reduce(async (acc, file) => {
+    const fileContent = await storage.readFile<string>(`${sessionPath}/${file.name}`, {encoding: 'utf-8'});
+    const content = JSON.parse(fileContent) as BudgetState;
+    return {...await acc, [content.id]: content};
+  }, {})
+  return budgets as BudgetsManagerState;
+}
 
 const slice = createSlice({
   name: "budgets",
-  initialState: {} as BudgetsManagerState,
+  initialState: await restoreBudgetsSession(),
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(createBudget, (state, { payload }) => ({
       ...state,
-      [payload.id]: persistBudget(payload),
+      [payload.id]: payload,
     }));
     builder.addCase(deleteBudget, (state, { payload }) => {
       storage.deleteFile(`.session/Orders/budgets/${state.id}.js`)

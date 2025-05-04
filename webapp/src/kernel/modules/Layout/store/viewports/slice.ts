@@ -11,18 +11,66 @@ import {
   selectViewport,
   setExtrasViewport,
 } from "./actions";
+import { PathLike } from "fs";
+import groupSlice from "./groups/slice";
 
 const storage = window.electron.storage;
 storage.ensureDir(".session/Layout/viewPortManager/viewports");
 
-const persistViewportState = (state: ViewportState) => {
+export const persistViewportState = (state: ViewportState) => {
   storage.writeBlob(
-    `.session/Layout/viewPortManager/viewports/${state.name}.js`,
+    `.session/Layout/viewPortManager/viewports/${state.name}.json`,
     new Blob([JSON.stringify(state)]),
     { encoding: "utf-8" }
   );
   return state;
-}
+};
+
+export const persistActiveVP = (vpName: string) => {
+  storage.writeBlob(
+    `.session/Layout/viewPortManager/activeViewport.json`,
+    new Blob([vpName]),
+    { encoding: "utf-8" }
+  );
+  return vpName;
+};
+
+const restoreSession = async (
+  sessionPath: PathLike = ".session/Layout/viewPortManager/viewports"
+): Promise<{ [name: string]: ViewportState }> => {
+  const files = await storage.searchDir(sessionPath, ["*.json"], {
+    withFileTypes: true,
+  });
+  const state = await files.reduce(async (acc, file) => {
+    const content = JSON.parse(
+      await storage.readFile<string>(`${sessionPath}/${file.name}`, {
+        encoding: "utf-8",
+      })
+    ) as ViewportState;
+    return {...await acc, [content.name]: content };
+  }, {});
+
+  return {
+    ...state,
+    home: {
+      name: "home",
+      title: "",
+      type: "home",
+    },
+  } as { [name: string]: ViewportState };
+};
+
+const restoreActiveVPSession = async (
+  sessionPath: PathLike = ".session/Layout/viewPortManager"
+) => {
+  const exists = await storage.exists(`${sessionPath}/activeViewport.json`);
+  if (!exists) return "home";
+  const vpName = await storage.readFile<string>(
+    `${sessionPath}/activeViewport.json`,
+    { encoding: "utf-8" }
+  );
+  return vpName;
+};
 
 const slice = createSlice<
   viewportManagerState,
@@ -31,24 +79,26 @@ const slice = createSlice<
 >({
   name: `${MODULE_NAME}Viewports`,
   initialState: {
-    groups: {},
-    activeViewport: "home",
-    viewports: {},
+    groups: groupSlice.getInitialState(),
+    activeViewport: await restoreActiveVPSession(),
+    viewports: await restoreSession(),
   },
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(addViewport, (state: viewportManagerState, { payload }) => {
-
       return {
         ...state,
-        viewports: { ...state.viewports, [payload.name]: persistViewportState(payload) },
+        viewports: {
+          ...state.viewports,
+          [payload.name]: payload,
+        },
       };
     });
     builder.addCase(
       closeViewport,
       (state: viewportManagerState, { payload }) => {
         storage.deleteFile(
-          `.session/Layout/viewPortManager/viewports/${payload.name}.js`
+          `.session/Layout/viewPortManager/viewports/${payload.name}.json`
         );
         return {
           ...state,
@@ -66,12 +116,6 @@ const slice = createSlice<
     builder.addCase(
       selectViewport,
       (state: viewportManagerState, { payload }) => {
-        storage.deleteFile('.session/Layout/viewPortManager/activeViewport.js')
-        storage.symLink(
-          `.session/Layout/viewPortManager/viewports/${payload.name}.js`,
-          ".session/Layout/viewPortManager/activeViewport.js"
-        );
-
         return { ...state, activeViewport: payload.name };
       }
     );
@@ -91,10 +135,9 @@ const slice = createSlice<
         };
 
         storage.moveFile(
-          `.session/Layout/viewPortManager/viewports/${oldName}.js`,
-          `.session/Layout/viewPortManager/viewports/${newName}.js`,
+          `.session/Layout/viewPortManager/viewports/${oldName}.json`,
+          `.session/Layout/viewPortManager/viewports/${newName}.json`
         );
-        persistViewportState(newState.viewports[newName]);
 
         return newState;
       }
@@ -113,7 +156,6 @@ const slice = createSlice<
             {}
           ),
         };
-        persistViewportState(newState.viewports[name]);
         return newState;
       }
     );
@@ -130,8 +172,7 @@ const slice = createSlice<
             },
           },
         };
-        
-        persistViewportState(newState.viewports[viewportName]);
+
         return newState;
       }
     );
@@ -146,7 +187,6 @@ const slice = createSlice<
           },
         },
       };
-      persistViewportState(newState.viewports[viewportName]);
       return newState;
     });
 

@@ -7,8 +7,8 @@ const storage = window.electron.storage;
 storage.ensureDir(".session/Layout/ribbonMenu");
 
 
-function persistState(state: RibbonMenuState) {
-  storage.writeBlob(".session/Layout/ribbonMenu/state.js", new Blob([JSON.stringify(state)]), { encoding: "utf-8" });
+export function persistRibbonMenuState(state: RibbonMenuState) {
+  storage.writeBlob(".session/Layout/ribbonMenu/state.json", new Blob([JSON.stringify(state)]), { encoding: "utf-8" });
   return state;
 }
 
@@ -22,10 +22,10 @@ const slice = createSlice<RibbonMenuState, SliceCaseReducers<RibbonMenuState>, s
     extraReducers: (builder) => {
       builder.addCase(addRibbonTab, (state:RibbonMenuState,{ payload: {tab} }) => {
         const {name} = tab
-        return persistState({...state, tabs: {...state.tabs, [name]: tab}})
+        return ({...state, tabs: {...state.tabs, [name]: tab}})
       })
       builder.addCase(selectTab, (state:RibbonMenuState,{ payload: {name} }) => {
-        return persistState({...state, activeTab: name})
+        return ({...state, activeTab: name})
       })
     }
 })

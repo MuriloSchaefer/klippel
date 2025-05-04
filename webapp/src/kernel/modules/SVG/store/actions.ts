@@ -5,6 +5,10 @@ import { MODULE_NAME } from "../constants";
 import { SVGState, Proxies } from "./state";
 
 // Commands
+export const saveSession = createAction(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Save session`
+);
+
 export const loadSVG = createAction<{ path: string; instanceName: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Load SVG`
 );
@@ -51,6 +55,9 @@ export const updateSVG = createAction<{
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Update SVG`);
 
 // Events
+export const sessionSaved = createAction(
+  `[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] session saved`
+);
 export const SVGFetched = createAction<{ path: string; content: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] SVG fetched`
 );

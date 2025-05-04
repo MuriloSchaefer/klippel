@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, Store } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import { newGraphState } from '../state';
 import {
@@ -17,10 +17,16 @@ import {
   searchFinished,
   updateNode,
 } from "./actions";
+import { saveSession } from "../graphsManager/actions";
 
 const storage = window.electron.storage;
-function persistState(state: GraphState) {
-  storage.writeBlob(`.session/Graph/graphs/${state.id}.js`, new Blob([JSON.stringify(state)]), { encoding: "utf-8" });
+
+export const sessionSaver = (store: Store<GraphsManagerState>) => () => {
+  store.dispatch(saveSession())
+};
+
+export async function persistState(state: GraphState) {
+  await storage.writeBlob(`.session/Graph/graphs/${state.id}.json`, new Blob([JSON.stringify({...state, searchResults: {}})]), { encoding: "utf-8" });
   return state;
 }
 
@@ -32,7 +38,6 @@ const slice = createSlice({
     builder.addCase(
       loadGraph,
       (state: GraphsManagerState, { payload: { graphId, graph } }) => {
-        persistState(graph)
         return { ...state, graphs: { ...state.graphs, [graphId]: graph } };
       }
     );
@@ -96,7 +101,6 @@ const slice = createSlice({
               ),
             },
           }
-          persistState(newGraphState)
 
           return {
             ...state,
@@ -148,7 +152,6 @@ const slice = createSlice({
               {}
             ),
           }
-          persistState(newGraphState)
 
           return {
             ...state,
@@ -171,7 +174,6 @@ const slice = createSlice({
           if (node === null) throw Error("Node does not exist");
 
           graph.nodes[nodeId] = { ...node, ...changes };
-          persistState(graph)
 
           return state;
         }
@@ -188,7 +190,6 @@ const slice = createSlice({
           graph.adjacencyList[edge.sourceId].outputs.push(edge.id);
           graph.adjacencyList[edge.targetId].inputs.push(edge.id);
 
-          persistState(graph)
 
           return state;
         }
@@ -226,7 +227,6 @@ const slice = createSlice({
             ),
           }
           
-          persistState(newGraphState)
 
           return {
             ...state,
@@ -240,7 +240,6 @@ const slice = createSlice({
       .addCase(
         resetGraph,
         (state: GraphsManagerState, { payload: { graphId } }) => {
-          persistState({ id: graphId, ...newGraphState })
           return {
             ...state,
             graphs: {
@@ -258,12 +257,12 @@ const slice = createSlice({
         ) => {
           const newGraphState = {
             ...state.graphs[graphId],
+            id: graphId,
             searchResults: {
               ...state.graphs[graphId].searchResults,
               [searchId]: results,
             },
           }
-          persistState(newGraphState)
           return {
             ...state,
             graphs: {
@@ -283,7 +282,6 @@ const slice = createSlice({
             },
           }
         }
-        persistState(newGraphState)
         return {
           ...state,
           graphs: {

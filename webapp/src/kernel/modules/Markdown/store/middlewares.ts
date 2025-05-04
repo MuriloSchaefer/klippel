@@ -4,10 +4,25 @@ import {
   markdownLoaded,
   fetchMarkdown,
   loadMarkdown,
+  saveSession,
+  sessionSaved,
 } from "./actions";
 import { MarkdownModuleState } from "./state";
+import { persistState } from "./slice";
 
 const middlewares = createListenerMiddleware();
+middlewares.startListening({
+  actionCreator: saveSession,
+  effect: async (payload, listenerApi) => {
+      const { dispatch, getState } = listenerApi;
+      
+      const {Markdown: state} = getState() as { Markdown: MarkdownModuleState }
+      persistState(state)
+
+      dispatch(sessionSaved()); // dispatch event
+  }
+})
+
 middlewares.startListening({
   actionCreator: loadMarkdown,
   effect: async ({ payload }, listenerApi) => {

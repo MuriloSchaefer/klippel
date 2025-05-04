@@ -1,15 +1,11 @@
-import type { Stats, Mode, WriteFileOptions, PathLike, OpenMode } from "fs";
-import type { MoveOptions, SymlinkType } from "fs-extra";
-import type { GlobOptionsWithFileTypesTrue } from "glob";
-
-type FileMetadata = {
-  path: string;
-  mode: Mode;
-  fd: number;
-  stats: Stats;
-};
+import type { WriteFileOptions, PathLike } from "fs";
+import type { SymlinkType } from "fs-extra";
+import type { GlobOptions } from "glob";
 
 export type StorageAPI = {
+  // listeners
+  registerSessionSaveListener: (listener: () => void) => void;
+  // file functions
   writeBlob: (
     path: PathLike,
     blob: Blob,
@@ -20,9 +16,10 @@ export type StorageAPI = {
     blob: Blob,
     options?: WriteFileOptions
   ) => Promise<void>;
-  readFile: (
-    path: PathLike,
-  ) => Promise<Blob>;
+  readFile: <T = Buffer>(
+    path: PathLike, options?: {encoding?: string, flag?: string}
+  ) => Promise<T>;
+  exists: (path: PathLike) => Promise<boolean>;
   copyFile: (
     sourcePath: PathLike,
     destPath: PathLike,
@@ -43,6 +40,6 @@ export type StorageAPI = {
   ) => void;
 
   // directories
-  searchDir: (dir: PathLike, patterns: string[], options: GlobOptionsWithFileTypesTrue) => Promise<FileMetadata[]>;
+  searchDir: <T = Array<{name: string}> >(dir: PathLike, patterns: string[], options?: GlobOptions | {}) => Promise<T>; // Results<GlobOptions>
   ensureDir: (path: PathLike, options?: {mode: number}) => void;
 };

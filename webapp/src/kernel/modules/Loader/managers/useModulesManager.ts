@@ -30,6 +30,7 @@ export const useModulesManager = (): ModulesManager => {
     // CHALLENGE: try to make it easier to add new managers here without increasing coupling
     const {useLayoutManager, useRibbonMenuManager, useViewportManager} = layoutModule.hooks
     const {store, componentRegistry} = storeModule.managers
+    const {useStorage} = storeModule.hooks
 
     
     const layoutManager = useLayoutManager()
@@ -40,6 +41,7 @@ export const useModulesManager = (): ModulesManager => {
 
     const dispatch = storeModule.hooks.useAppDispatch()
     const useAppSelector = storeModule.hooks.useAppSelector
+    const storage = useStorage()
 
     const modulesCount = useAppSelector(modulesCountSelector)
 
@@ -66,7 +68,8 @@ export const useModulesManager = (): ModulesManager => {
                         layoutManager,
                         ribbonMenuManager,
                         viewportManager
-                    }
+                    },
+                    storage
                 })
 
                 // emit event

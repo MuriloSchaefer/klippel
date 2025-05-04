@@ -1,16 +1,21 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, Store } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
 
 import {
   ConverterState,
   initialState
 } from "./state";
-import { selectNode } from "./actions";
+import { saveSession, selectNode } from "./actions";
 
 const storage = window.electron.storage;
 storage.ensureDir(".session/Composer/compositionsManager/compositions");
-function persistConverter(state: ConverterState){
-  storage.writeBlob(".session/Converter/state.js", new Blob([JSON.stringify(state)]), {
+
+export const sessionSaver = (store: Store<ConverterState>) => () => {
+  store.dispatch(saveSession());
+};
+
+export function persistConverter(state: ConverterState){
+  storage.writeBlob(".session/Converter/state.json", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
   return state
@@ -24,7 +29,7 @@ const slice = createSlice({
     extraReducers: (builder) => {
       builder.addCase(
         selectNode,
-        (state, { payload }) => persistConverter({...state, selectedNode: payload}))
+        (state, { payload }) => ({...state, selectedNode: payload}))
         
     //   builder.addDefaultCase((state, action)=>({
     //     ...state, 

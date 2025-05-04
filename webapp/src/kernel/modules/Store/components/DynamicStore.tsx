@@ -26,16 +26,15 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   const store = useMemo(
-    () =>
-      configureStore({
-        reducer: combineReducers<{ [name: string]: Reducer<any, AnyAction> }>({
-          [slice.name]: slice.reducer,
-        }),
-        middleware: (getDefaultMiddleware) =>
-          getDefaultMiddleware({ serializableCheck: false }).concat(
-            dynamicMiddlewares
-          ),
+    () =>configureStore({
+      reducer: combineReducers<{ [name: string]: Reducer<any, AnyAction> }>({
+        [slice.name]: slice.reducer,
       }),
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({ serializableCheck: false }).concat(
+          dynamicMiddlewares
+        ),
+    }),
     []
   );
 
@@ -52,6 +51,8 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
     [currentReducers]
   );
 
+  const getStore = useCallback(()=>store, [store])
+
   return (
       <ReduxProvider store={store}>
         <CurrentReducersContext.Provider
@@ -59,6 +60,7 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
             currentReducers,
             loadReducers,
             registerMiddleware,
+            getStore
           }}
         >
             <ComponentsRegistryProvider>{children}</ComponentsRegistryProvider>
