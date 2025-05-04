@@ -1,4 +1,4 @@
-import { app, ipcMain } from "electron";
+import { ipcMain, app } from "electron";
 import { type PathLike } from "fs";
 import {
   //files
@@ -15,12 +15,13 @@ import {
   //types
   type WriteFileOptions,
 } from "fs-extra";
-import { resolve } from "path";
 import { glob, type GlobOptionsWithFileTypesTrue } from "glob";
 import { SimpleIntervalJob, Task, type ToadScheduler } from "toad-scheduler";
 import type { BrowserWindow } from "electron/main";
+import { resolve } from "path";
 
-function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
+
+export function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
   const HOME = app.getPath("home") + "/klippel";
   const absPath = resolve(`${HOME}/${path}`);
   let err;
@@ -28,7 +29,7 @@ function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
     err = Error("Cannot navegate outside home dir.");
     console.error(`Trying to access outside folder: ${absPath}`);
     onError?.(err);
-    return;
+    throw Error("cannot access data outside home folder");
   }
 
   return absPath;
