@@ -3,20 +3,23 @@ import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import useStoreManager from "./hooks/useStoreManager";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import useComponentRegistryManager from "./hooks/useComponentRegistryManager";
-import useWatchFile from "./hooks/useWatchFile";
 import useStorage from "./hooks/useStorage";
 import useLog from "./hooks/useLog";
+import SessionAutoSaverIcon from "./components/SessionAutoSaverIcon";
+import { restartModule } from './kernelcalls';
 
 
 export interface Store extends IModule {
     name: typeof MODULE_NAME,
     version: typeof MODULE_VERSION,
+    components: {
+        SessionAutoSaverIcon: typeof SessionAutoSaverIcon
+    },
     hooks: {
         useAppDispatch: typeof useAppDispatch,
         useAppSelector: typeof useAppSelector
         useStorage: typeof useStorage,
         useLog: typeof useLog,
-        useWatchFile: typeof useWatchFile,
     },
     managers: {
         store: typeof useStoreManager
@@ -29,6 +32,7 @@ const module: Store = {
     name: MODULE_NAME,
     version: MODULE_VERSION,
     depends_on: [],
+    components: {SessionAutoSaverIcon},
     managers: {
         store: useStoreManager,
         componentRegistry: useComponentRegistryManager
@@ -38,11 +42,10 @@ const module: Store = {
         useAppSelector,
         useStorage,
         useLog,
-        useWatchFile,
     },
     kernelCalls: {
-        startModule: () => null,
-        restartModule: () => null,
+        startModule: ()=>null,
+        restartModule: restartModule,
         shutdownModule: () => null,
     }
 }

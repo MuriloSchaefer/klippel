@@ -5,6 +5,10 @@ import type { GlobOptions } from "glob";
 export type StorageAPI = {
   // listeners
   registerSessionSaveListener: (listener: () => void) => void;
+  saveSession: () => void;
+  getAutoSaverInterval: () => Promise<number | undefined>;
+  pauseAutoSessionSaver: () => void;
+  resumeAutoSessionSaver: (interval?: number) => void;
   // file functions
   writeBlob: (
     path: PathLike,

@@ -20,9 +20,8 @@ import { SimpleIntervalJob, Task, type ToadScheduler } from "toad-scheduler";
 import type { BrowserWindow } from "electron/main";
 import { resolve } from "path";
 
-
 export function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
-  const HOME = app.getPath("home") + "/klippel";
+  const HOME = app.getPath("home") + "/klippel/envs/" + process.env["ENV_NAME"];
   const absPath = resolve(`${HOME}/${path}`);
   let err;
   if (!absPath.startsWith(HOME)) {
@@ -34,6 +33,17 @@ export function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
 
   return absPath;
 }
+
+const storeSessionFile = ".session/Store/state.json";
+let storeSessionState: { sessionAutoSaveInterval?: number } | undefined =
+  undefined;
+if (existsSync(storeSessionFile)) {
+  storeSessionState = JSON.parse(
+    readFileSync(storeSessionFile, { encoding: "utf-8" })
+  );
+}
+let sessionAutoSaverInterval: number | undefined =
+  storeSessionState?.sessionAutoSaveInterval ?? 20;
 
 export function initStorageHooks(
   scheduler: ToadScheduler,
@@ -218,17 +228,34 @@ export function initStorageHooks(
     });
   });
 
+  ipcMain.on("pause-session-auto-saver", () => {
+    sessionAutoSaverInterval = undefined;
+    scheduler.removeById("save-session");
+  });
+  ipcMain.on("resume-session-auto-saver", (_, interval) => {
+    sessionAutoSaverInterval = interval;
+    scheduler.addSimpleIntervalJob(
+      new SimpleIntervalJob(
+        { seconds: interval, runImmediately: false },
+        saveSessionTask,
+        { id: "save-session", preventOverrun: true }
+      )
+    );
+  });
+
   // Scheduler tasks
   const saveSessionTask = new Task("save-session", () => {
-    console.debug("Call save session...");
+    console.debug("Call save session!");
     mainWindow.webContents.send("save-session");
   });
 
-  scheduler.addSimpleIntervalJob(
-    new SimpleIntervalJob(
-      { seconds: 20, runImmediately: false },
-      saveSessionTask,
-      { id: "save-session", preventOverrun: true } 
-    )
-  );
+  if (sessionAutoSaverInterval) {
+    scheduler.addSimpleIntervalJob(
+      new SimpleIntervalJob(
+        { seconds: sessionAutoSaverInterval, runImmediately: false },
+        saveSessionTask,
+        { id: "save-session", preventOverrun: true }
+      )
+    );
+  }
 }

@@ -3,41 +3,35 @@ import { ipcRenderer, IpcRendererEvent } from "electron";
 
 
 ipcRenderer.on("blob-written", (event, path) => {
-  // console.log("Saved file " + path);
 });
 ipcRenderer.on("write-blob-error", (event, errMessage) => {
   console.error("Error writting blob: " + errMessage);
 });
 
 ipcRenderer.on("file-appended", (event, path) => {
-  // console.log("File appended " + path);
 });
 ipcRenderer.on("append-file-error", (event, errMessage) => {
   console.error("Error appending file: " + errMessage);
 });
 
 ipcRenderer.on("file-copied", (event, path) => {
-  // console.log("File copied " + path);
 });
 ipcRenderer.on("copy-file-error", (event, errMessage) => {
   console.error("Error copying file: " + errMessage);
 });
 ipcRenderer.on("file-moved", (event, path) => {
-  // console.log("File moved " + path);
 });
 ipcRenderer.on("move-file-error", (event, errMessage) => {
   console.error("Error moving file: " + errMessage);
 });
 
 ipcRenderer.on("file-symlinked", (event, path) => {
-  // console.log("File sym linked " + path);
 });
 ipcRenderer.on("sym-link-error", (event, errMessage) => {
   console.error("Error sym linking file: " + errMessage);
 });
 
 ipcRenderer.on("file-deleted", (event, path) => {
-  // console.log("File deleted" + path);
 });
 ipcRenderer.on("delete-file-error", (event, errMessage) => {
   console.error("Error deleting file: " + errMessage);
@@ -60,6 +54,21 @@ ipcRenderer.on("save-session", (event) => {
 export default {
   registerSessionSaveListener: (listener: () => void) => {
     saveSessionListeners.add(listener);
+  },
+  saveSession: ()=>{
+    saveSessionListeners.forEach((listener) => {
+      listener();
+    });
+  },
+  getAutoSaverInterval: async () => {
+    return ipcRenderer.invoke('session-auto-saver-interval')
+  },
+  pauseAutoSessionSaver: ()=>{
+    ipcRenderer.send('pause-session-auto-saver')
+  },
+  resumeAutoSessionSaver: (interval = 20)=>{
+    ipcRenderer.send('pause-session-auto-saver')
+    ipcRenderer.send('resume-session-auto-saver', interval)
   },
   writeBlob: async (path, blob, options = {}) => {
     const buffer = Buffer.from(await blob.arrayBuffer());

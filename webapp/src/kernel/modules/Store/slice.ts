@@ -1,16 +1,66 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, Store } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "./constants";
 import { StoreState } from "./state";
+import {
+  pauseSessionAutoSaver,
+  resumeSessionAutoSaver,
+  saveSession,
+} from "./actions";
+import type { PathLike } from "fs";
 
-const initialState: StoreState = {}
+const initialState: StoreState = {
+  sessionAutoSaveInterval: 20,
+};
+
+const storage = window.electron.storage;
+storage.ensureDir(".session/Store");
+
+export const sessionSaver = (store: Store<StoreState>) => () => {
+  store.dispatch(saveSession());
+};
+
+export function persistState(state: StoreState) {
+  storage.writeBlob(
+    ".session/Store/state.json",
+    new Blob([JSON.stringify(state)]),
+    {
+      encoding: "utf-8",
+    }
+  );
+  return state;
+}
+const restoreStoreSession = async (
+  sessionPath: PathLike = ".session/Store"
+) => {
+  const exists = await storage.exists(`${sessionPath}/state.json`);
+  if (!exists) return initialState;
+  const fileContent = await storage.readFile<string>(
+    `${sessionPath}/state.json`,
+    { encoding: "utf-8" }
+  );
+  return JSON.parse(fileContent) as StoreState;
+};
 
 const slice = createSlice({
-    name: MODULE_NAME,
-    initialState: initialState,
-    reducers: {},
-    extraReducers: (builder) => {
-    }
-})
+  name: MODULE_NAME,
+  initialState: await restoreStoreSession(),
+  reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(pauseSessionAutoSaver, (state) => {
+      return {
+        ...state,
+        sessionAutoSaveInterval: undefined,
+      };
+    });
 
-export default slice
+    builder.addCase(
+      resumeSessionAutoSaver,
+      (state, { payload }) => ({
+        ...state,
+        sessionAutoSaveInterval: payload.interval,
+      })
+    );
+  },
+});
 
+export default slice;

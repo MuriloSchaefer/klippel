@@ -11,6 +11,7 @@ import {
   updateSVG,
   updateProxy,
   saveSession,
+  removeInstance,
 } from "./actions";
 import {
   SVGModuleState,
@@ -29,7 +30,7 @@ export const sessionSaver = (store: Store<SVGModuleState>) => () => {
   store.dispatch(saveSession());
 };
 
-export function persistState({ content, instances, ...state }: SVGState) {
+export async function persistState({ content, instances, ...state }: SVGState) {
   const rootFolder = `.session/SVG/svgs/${state.path.replaceAll("/", "-")}`;
   storage.ensureDir(rootFolder);
   if (content) {
@@ -43,17 +44,26 @@ export function persistState({ content, instances, ...state }: SVGState) {
     }
   );
 
-  storage.ensureDir(`${rootFolder}/instances`);
+  const instancesPath = `${rootFolder}/instances`
+  storage.ensureDir(instancesPath);
+  const filesToKeep: string[] = [];
   Object.entries(instances).forEach(([name, { content, ...state }]) => {
-    const folder = `${rootFolder}/instances`;
-    storage.writeBlob(
-      `${folder}/${name}.json`,
-      new Blob([JSON.stringify(state)]),
-      {}
-    );
-    if (content)
-      storage.writeBlob(`${folder}/${name}.svg`, new Blob([content]));
+    const statePath = `${instancesPath}/${name}.json`;
+    filesToKeep.push(`${name}.json`);
+    storage.writeBlob(statePath, new Blob([JSON.stringify(state)]), {});
+    if (content) {
+      const svgPath = `${instancesPath}/${name}.svg`;
+      filesToKeep.push(`${name}.svg`);
+      storage.writeBlob(svgPath, new Blob([content]));
+    }
   });
+
+  const toDelete = await storage.searchDir<string[]>(
+    instancesPath,
+    ["*.{json,svg}"],
+    { ignore: filesToKeep }
+  );
+  toDelete.map(f => `${instancesPath}/${f}`).forEach(storage.deleteFile);
   return { content, instances, ...state };
 }
 
@@ -100,9 +110,9 @@ const restoreSession = async (sessionPath: PathLike = ".session/SVG/svgs/") => {
           { encoding: "utf-8" }
         );
       }
-      return {...await acc, [name]: state}
-    }, {})
-    svgState.instances = instances
+      return { ...(await acc), [name]: state };
+    }, {});
+    svgState.instances = instances;
     return { ...acc, [svgState.path]: svgState };
   }, {});
   return { svgs };
@@ -306,6 +316,25 @@ const slice = createSlice({
                 content: document,
               },
             },
+          },
+        },
+      })
+    );
+
+    builder.addCase(
+      removeInstance,
+      (
+        state: SVGModuleState,
+        { payload: { path, instanceName } }
+      ) => ({
+        ...state,
+        svgs: {
+          [path]: {
+            ...state.svgs[path],
+            instances: Object.entries(state.svgs[path].instances).reduce((acc, [name, inst])=> {
+              if (name!==instanceName) return {...acc, [name]: inst}
+              return acc
+            }, {})
           },
         },
       })

@@ -7,7 +7,7 @@ import {
   closeViewport,
   removeFromGroup,
 } from "@kernel/modules/Layout/store/viewports/actions";
-import { SVGLoaded, addProxy } from "@kernel/modules/SVG/store/actions";
+import { SVGLoaded, addProxy, removeInstance } from "@kernel/modules/SVG/store/actions";
 import type { SVGState } from "@kernel/modules/SVG/store/state";
 
 
@@ -111,6 +111,7 @@ middlewares.startListening({
     // check if viewport is associated with some composition
     Object.values(compositionsManager.compositions).forEach((comp) => {
       if (comp.viewportName === payload.name) {
+        dispatch(removeInstance({ path: comp.svgPath, instanceName: payload.name }));
         dispatch(closeComposition({ name: comp.name, graphId: comp.graphId })); // dispatch event
       }
       if (comp.debugViewport === payload.name) {
@@ -125,7 +126,10 @@ middlewares.startListening({
     { payload }: PayloadAction<{ name: string; graphId: string }>,
     listenerApi
   ) => {
-    const { dispatch } = listenerApi;
+    const { dispatch, getState } = listenerApi;
+
+    const {Composer: { compositionsManager: {compositions} }} = getState() as { Composer: ComposerState }
+    const comp = compositions[payload.name]
 
     dispatch(destroyGraph({ graphId: payload.graphId }));
 

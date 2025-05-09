@@ -27,7 +27,7 @@ export interface StartModuleProps {
 
 export interface KernelCalls {
   startModule: (props: StartModuleProps) => void,
-  restartModule: (storeManager: StoreManager) => void,
+  restartModule: (storeManager: StartModuleProps) => void,
   shutdownModule: (storeManager: StoreManager) => void
 }
 

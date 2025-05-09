@@ -13,6 +13,8 @@ import {
   updateProxy,
   saveSession,
   sessionSaved,
+  removeInstance,
+  InstanceRemoved,
 } from "./actions";
 import { SVGModuleState } from "./state";
 import { persistState } from "./slice";
@@ -27,7 +29,7 @@ middlewares.startListening({
       const {SVG: state} = getState() as { SVG: SVGModuleState }
       Object.values(state.svgs).forEach(persistState)
 
-      dispatch(sessionSaved()); // dispatch event
+      dispatch(sessionSaved()); 
   }
 })
 
@@ -35,13 +37,13 @@ middlewares.startListening({
   actionCreator: loadSVG,
   effect: async ({ payload }: PayloadAction<{ path: string }>, listenerApi) => {
     const { dispatch } = listenerApi;
-    dispatch(fetchSVG({ path: payload.path })); // dispatch event
+    dispatch(fetchSVG({ path: payload.path })); 
 
     // logic to load the SVG file
     const response = await fetch(payload.path);
     const raw = await (await response.blob()).text();
 
-    dispatch(SVGFetched({ path: payload.path, content: raw })); // dispatch event
+    dispatch(SVGFetched({ path: payload.path, content: raw })); 
   },
 });
 
@@ -56,7 +58,7 @@ middlewares.startListening({
       SVG: { svgs },
     } = getState() as { SVG: SVGModuleState };
 
-    dispatch(SVGLoaded(svgs[payload.path])); // dispatch event
+    dispatch(SVGLoaded(svgs[payload.path])); 
   },
 });
 
@@ -80,22 +82,28 @@ middlewares.startListening({
 
     dispatch(
       proxyUpdated(svgs[payload.path].instances[payload.instanceName].proxies)
-    ); // dispatch event
+    ); 
   },
 });
 
 middlewares.startListening({
   actionCreator: deleteProxy,
   effect: async ({ payload }, { dispatch }) => {
-    dispatch(proxyDeleted(payload)); // dispatch event
+    dispatch(proxyDeleted(payload)); 
   },
 });
 
 middlewares.startListening({
   actionCreator: updateSVG,
   effect: async ({ payload }, { dispatch }) => {
-    dispatch(SVGUpdated(payload)); // dispatch event
+    dispatch(SVGUpdated(payload)); 
   },
 });
 
+middlewares.startListening({
+  actionCreator: removeInstance,
+  effect: async ({ payload }, { dispatch }) => {
+    dispatch(InstanceRemoved(payload)); 
+  },
+});
 export default middlewares;

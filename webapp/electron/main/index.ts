@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from "electron";
+import { app, shell, BrowserWindow, Menu, Tray } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 const { updateElectronApp } = require("update-electron-app");
@@ -15,9 +15,36 @@ import { debounce } from "./utils";
 
 updateElectronApp();
 if (require("electron-squirrel-startup")) app.quit();
-async function createWindow(): Promise<void> {
+
+async function createTray(mainWindow: BrowserWindow): Promise<Tray> {
+  const tray = new Tray(
+    "/home/schaefer/Pictures/Screenshots/Screenshot_20250507_133104.png"
+  );
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Show App",
+      click: function () {
+        mainWindow.show();
+      },
+    },
+    {
+      label: "Quit",
+      click: function () {
+        if (process.platform !== "darwin") {
+          mainWindow.close()
+          app.quit();
+        }
+      },
+    },
+  ]);
+  tray.setToolTip("This is my application.");
+  tray.setContextMenu(contextMenu);
+  return tray;
+}
+
+async function createWindow(): Promise<BrowserWindow> {
   // Create the browser window.
-  const windowConfigLocation = getAbsPath(".session/window.json")
+  const windowConfigLocation = getAbsPath(".session/window.json");
   const hasPreviousSession = existsSync(windowConfigLocation);
   let config = DEFAULT_WINDOW_CONFIG;
   if (!hasPreviousSession) {
@@ -35,7 +62,7 @@ async function createWindow(): Promise<void> {
       ...mainWindow.getBounds(),
       title: mainWindow.title,
     };
-    console.log('Saving new Window state', newWindowConfig)
+    console.log("Saving new Window state", newWindowConfig);
     outputFile(windowConfigLocation, JSON.stringify(newWindowConfig));
   }, 100);
 
@@ -53,13 +80,22 @@ async function createWindow(): Promise<void> {
     mainWindow.showInactive();
   });
   mainWindow.on("resize", () => {
-    console.log('resized')
-    saveWindowState()
+    console.log("resized");
+    saveWindowState();
   });
   mainWindow.on("move", () => {
-    console.log('moved')
-    saveWindowState()
+    console.log("moved");
+    saveWindowState();
   });
+  const onClose =  (event) => {
+    event?.preventDefault();
+    mainWindow.webContents.send("save-session");
+    mainWindow.hide();
+  }
+  mainWindow.on("close",onClose);
+  app.on('before-quit', () => {
+    mainWindow.removeListener('close', onClose)
+  })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
@@ -73,6 +109,7 @@ async function createWindow(): Promise<void> {
   } else {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
+  return mainWindow;
 }
 
 // This method will be called when Electron has finished
@@ -96,22 +133,17 @@ app.whenReady().then(async () => {
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
+  console.log("creating windows");
+  const mainWindow = await createWindow();
+  const tray = createTray(mainWindow);
 
-  // IPC test
-  ipcMain.on("get-app-info", (e) => {
-    e.returnValue = {
-      paths: {
-        HOME: app.getPath("home") + "/klippel",
-      },
-    };
-  });
-
-  createWindow();
-
-  app.on("activate", function () {
+  app.on("activate", async function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      const mainWindow = await createWindow();
+      const tray = createTray(mainWindow);
+    }
   });
 });
 
@@ -123,6 +155,3 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.

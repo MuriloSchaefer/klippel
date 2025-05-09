@@ -48,7 +48,7 @@ const slice = createSlice({
           if (!(graphId in state.graphs)) throw Error()
 
           delete state.graphs[graphId]
-          storage.deleteFile(`.session/Graph/graphs/${graphId}.js`)
+          storage.deleteFile(`.session/Graph/graphs/${graphId}.json`)
           return state
         }
       )

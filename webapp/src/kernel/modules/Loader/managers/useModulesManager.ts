@@ -89,7 +89,17 @@ export const useModulesManager = (): ModulesManager => {
                 const module = modules[moduleName]
                 setModules(modules)
 
-                module.kernelCalls.restartModule(storeManager)
+                module.kernelCalls.restartModule({
+                    dispatch,
+                    managers: {
+                        storeManager,
+                        componentRegistryManager,
+                        layoutManager,
+                        ribbonMenuManager,
+                        viewportManager
+                    },
+                    storage
+                })
             }
         }
     }

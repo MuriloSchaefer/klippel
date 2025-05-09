@@ -44,6 +44,7 @@ const Initializer = ({
   const moduleManager = module.managers.modules();
   const graph = useGraph(GRAPH_NAME, (g) => g && g.id);
 
+  const [storeInitialized, setStoreInitialized] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true);
   const [graphInitialized, setGraphInitialized] = useState(false);
   const [staticModulesLoaded, setStaticModulesLoaded] = useState(0);
@@ -64,11 +65,25 @@ const Initializer = ({
 
   // LOAD STATIC MODULES
   useLayoutEffect(() => {
+    if (storeInitialized) return
+    // initialization logic (we may separate it in a custom hook)
+    bootLog(
+      `Loading store module  module=${storeModule.name} version=(${storeModule.version})`
+    );
+    moduleManager.functions.reloadModule(storeModule.name)
+    setStoreInitialized(true);
+    bootLog(
+      `Store module loaded  module=${storeModule.name} version=(${storeModule.version})`
+    );
+  }, [storeInitialized]);
+
+  useLayoutEffect(() => {
+    if (!storeInitialized) return
     // initialization logic (we may separate it in a custom hook)
     const mod = Object.keys(staticModules)[staticModulesLoaded];
     if (mod && !moduleManager.functions.isModuleLoaded(mod))
       loadStaticModule(staticModules[mod]);
-  }, [staticModulesLoaded]);
+  }, [staticModulesLoaded, storeInitialized]);
 
   // LOAD KERNEL MODULES
   useLayoutEffect(() => {

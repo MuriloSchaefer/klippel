@@ -15,6 +15,7 @@ import slice from "../slice";
 import dynamicMiddlewares from "redux-dynamic-middlewares";
 import { addMiddleware } from "redux-dynamic-middlewares";
 import ComponentsRegistryProvider from "./ComponentsRegistry";
+import middlewares from "../middlewares";
 
 export interface DynamicStore extends Store {
   registerMiddleware: (listener: ListenerMiddlewareInstance) => void;
@@ -31,9 +32,9 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
         [slice.name]: slice.reducer,
       }),
       middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware({ serializableCheck: false }).concat(
+        [...getDefaultMiddleware({ serializableCheck: false }).concat(
           dynamicMiddlewares
-        ),
+        ), middlewares.middleware],
     }),
     []
   );

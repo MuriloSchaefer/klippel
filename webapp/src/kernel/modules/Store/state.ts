@@ -1,2 +1,4 @@
-export interface StoreState {}
+export interface StoreState {
+    sessionAutoSaveInterval: number | undefined
+}
   

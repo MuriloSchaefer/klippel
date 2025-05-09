@@ -54,6 +54,12 @@ export const updateSVG = createAction<{
   document: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Update SVG`);
 
+export const removeInstance = createAction<{
+  path: string;
+  instanceName: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Remove instance`);
+
+
 // Events
 export const sessionSaved = createAction(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] session saved`
@@ -85,3 +91,8 @@ export const SVGUpdated = createAction<{
   instanceName: string;
   document: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] SVG Updated`);
+
+export const InstanceRemoved = createAction<{
+  path: string;
+  instanceName: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] SVG Instance removed`);
