@@ -3,9 +3,11 @@ import {
   pauseSessionAutoSaver,
   resumeSessionAutoSaver,
   saveSession,
+  selectWorkspace,
   sessionAutoSaverPaused,
   sessionAutoSaverResumed,
   sessionSaved,
+  workspaceSelected,
 } from "./actions";
 import { persistState } from "./slice";
 import { StoreState } from "./state";
@@ -40,6 +42,14 @@ middlewares.startListening({
     storage.resumeAutoSessionSaver(payload.interval);
 
     dispatch(sessionAutoSaverResumed()); // dispatch event
+  },
+});
+middlewares.startListening({
+  actionCreator: selectWorkspace,
+  effect: async ({payload}, listenerApi) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(workspaceSelected(payload)); // dispatch event
   },
 });
 
