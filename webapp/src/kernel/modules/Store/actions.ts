@@ -11,6 +11,9 @@ export const pauseSessionAutoSaver = createAction(
 export const resumeSessionAutoSaver = createAction<{interval: number}>(
   `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Resume session auto saver`
 );
+export const selectWorkspace = createAction<{workspace: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Select workspace`
+);
 
 // Events
 export const storeInitialized = createAction(
@@ -25,4 +28,8 @@ export const sessionAutoSaverPaused = createAction(
 export const sessionAutoSaverResumed = createAction(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Session auto saver resumed`
 );
+export const workspaceSelected = createAction<{workspace: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace selected`
+);
+
 

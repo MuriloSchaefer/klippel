@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly RENDERER_VITE_TEST: string;
+  readonly VITE_ENV_NAME: string;
 }
 
 interface ImportMeta {

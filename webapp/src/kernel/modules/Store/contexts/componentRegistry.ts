@@ -11,6 +11,7 @@ export type ComponentRegistryType = {
     registryName: string,
     componentName: string
   ) => ComponentType<T>;
+  getRegistry: <T =any>(name: string) => ComponentTypeMap<T>
 
   registerComponents: <T = any>(
     components: {[registry:string]: {[name: string]: ComponentType<T>}}
@@ -22,7 +23,8 @@ export const ComponentRegistryContext = createContext<ComponentRegistryType>({
   createRegistry: () => null,
   createRegistries: ()=>null,
   getComponent: () => React.memo(() => null),
-  registerComponents: () => null
+  registerComponents: () => null,
+  getRegistry: () => ({})
 });
 
 export default ComponentRegistryContext;

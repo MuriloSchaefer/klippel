@@ -7,13 +7,15 @@ import useStorage from "./hooks/useStorage";
 import useLog from "./hooks/useLog";
 import SessionAutoSaverIcon from "./components/SessionAutoSaverIcon";
 import { restartModule } from './kernelcalls';
+import WorkspaceSelector from "./components/WorkspaceSelector";
 
 
 export interface Store extends IModule {
     name: typeof MODULE_NAME,
     version: typeof MODULE_VERSION,
     components: {
-        SessionAutoSaverIcon: typeof SessionAutoSaverIcon
+        SessionAutoSaverIcon: typeof SessionAutoSaverIcon,
+        WorkspaceSelector: typeof WorkspaceSelector
     },
     hooks: {
         useAppDispatch: typeof useAppDispatch,
@@ -32,7 +34,7 @@ const module: Store = {
     name: MODULE_NAME,
     version: MODULE_VERSION,
     depends_on: [],
-    components: {SessionAutoSaverIcon},
+    components: {SessionAutoSaverIcon, WorkspaceSelector},
     managers: {
         store: useStoreManager,
         componentRegistry: useComponentRegistryManager

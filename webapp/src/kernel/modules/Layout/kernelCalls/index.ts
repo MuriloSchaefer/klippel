@@ -2,6 +2,7 @@
 import {
   MODULE_NAME,
   SECTIONS_REGISTRY_NAME,
+  SYSTEM_TRAY_REGISTRY_NAME,
   VIEWPORT_TYPE_REGISTRY_NAME,
 } from "../constants";
 import layoutMiddleware from "../store/middlewares";
@@ -48,5 +49,6 @@ export const startModule = ({
     [VIEWPORT_TYPE_REGISTRY_NAME]: {
       home: HomeViewport,
     },
+    [SYSTEM_TRAY_REGISTRY_NAME]: {}
   });
 };
