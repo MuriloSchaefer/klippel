@@ -1,5 +1,5 @@
 import { Manager } from "@kernel/modules/base";
-import { AnyAction } from "redux";
+import { AnyAction, type Store } from "redux";
 import { ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 import { Reducer, useContext } from "react";
 import CurrentReducersContext from "../contexts";
@@ -11,6 +11,7 @@ export interface StoreManager extends Manager {
         loadReducer: (key: string, reducer: Reducer<any, AnyAction>) => void
         //unloadReducer: (moduleName: string) => void
         registerMiddleware: (middleware: ListenerMiddlewareInstance) => void,
+        getStore: <T=any>() => Store<T> | undefined
     }
 }
 
@@ -21,7 +22,7 @@ export interface StoreManager extends Manager {
  */
 export const useStoreManager = (): StoreManager => {
 
-    const { loadReducers, registerMiddleware } = useContext(CurrentReducersContext)
+    const { loadReducers, registerMiddleware, getStore } = useContext(CurrentReducersContext)
 
     const manager: StoreManager = {
         functions: {
@@ -31,7 +32,8 @@ export const useStoreManager = (): StoreManager => {
             registerMiddleware: (middleware: ListenerMiddlewareInstance) => {
                 registerMiddleware(middleware)
                 
-            }
+            },
+            getStore
         }
     }
     return manager

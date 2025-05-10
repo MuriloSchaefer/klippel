@@ -6,6 +6,9 @@ import type { CompositionsList } from "./state";
 
 
 // Commands
+export const saveSession = createAction(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Save session`
+);
 export const listCompositions = createAction(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] List compositions`
 );
@@ -33,6 +36,9 @@ export const loadProxies = createAction<{compositionName: string, model: any}>(
 
 
 // Events
+export const sessionSaved = createAction(
+  `[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] session saved`
+);
 export const compositionsListed = createAction<CompositionsList>(
     `[${MODULE_NAME}:Compositions:${ACTION_TYPES.COMMAND}] Compositions listed`
 );

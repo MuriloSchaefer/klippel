@@ -1,5 +1,5 @@
 import { loadSVG, SVGLoaded } from "@kernel/modules/SVG/store/actions";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, Store } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
 import {
   createComposition,
@@ -7,9 +7,10 @@ import {
   modelStored,
   closeComposition,
   storeCompositionsList,
+  saveSession,
 } from "./actions";
-import { newCompositionState } from "./composition/state";
-import { initialState, ComposerState } from "./state";
+import { CompositionState, newCompositionState } from "./composition/state";
+import { ComposerState, CompositionsMap } from "./state";
 
 import instanceSlice from "./composition/slice";
 import {
@@ -20,10 +21,49 @@ import {
   selectPart,
   unselectPart,
 } from "./composition/actions";
+import { PathLike } from "fs";
+const storage = window.electron.storage;
+storage.ensureDir(".session/Composer/compositionsManager/compositions");
+
+export const sessionSaver = (store: Store<CompositionState>) => () => {
+  store.dispatch(saveSession());
+};
+
+export function persistCompositionState(state: CompositionState) {
+  storage.writeBlob(
+    `.session/Composer/compositionsManager/compositions/${state.name}.json`,
+    new Blob([JSON.stringify(state)]),
+    {
+      encoding: "utf-8",
+    }
+  );
+  return state;
+}
+const restoreCompositionsSession = async (
+  sessionPath: PathLike = ".session/Composer/compositionsManager/compositions"
+) => {
+  const files = await storage.searchDir(sessionPath, ["*.json"], {
+    withFileTypes: true,
+  });
+  const state = await files.reduce(async (acc, file) => {
+    const fileContent = await storage.readFile<string>(
+      `${sessionPath}/${file.name}`,
+      { encoding: "utf-8" }
+    );
+    const content = JSON.parse(fileContent) as CompositionState;
+    return { ...(await acc), [content.name]: content };
+  }, {});
+  return state as CompositionsMap;
+};
 
 const slice = createSlice({
   name: MODULE_NAME,
-  initialState: initialState,
+  initialState: {
+    compositionsManager: {
+      compositionsList: [],
+      compositions: await restoreCompositionsSession(),
+    },
+  } as ComposerState,
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -61,6 +101,9 @@ const slice = createSlice({
       .addCase(
         closeComposition,
         (state: ComposerState, { payload: { name } }) => {
+          storage.deleteFile(
+            `.session/Composer/compositionsManager/compositions/${name}.json`
+          );
           return {
             ...state,
             compositionsManager: {

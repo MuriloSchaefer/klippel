@@ -1,18 +1,13 @@
 import {
   configureStore,
   ListenerMiddlewareInstance,
-  ListenerMiddleware,
 } from "@reduxjs/toolkit";
 import React, { Reducer, useCallback, useMemo, useState } from "react";
 import { Provider as ReduxProvider } from "react-redux";
 import {
   AnyAction,
   combineReducers,
-  compose,
-  MiddlewareAPI,
   Store,
-  StoreEnhancer,
-  StoreEnhancerStoreCreator,
 } from "redux";
 import CurrentReducersContext, { ReducersMap } from "../contexts";
 import slice from "../slice";
@@ -20,7 +15,7 @@ import slice from "../slice";
 import dynamicMiddlewares from "redux-dynamic-middlewares";
 import { addMiddleware } from "redux-dynamic-middlewares";
 import ComponentsRegistryProvider from "./ComponentsRegistry";
-import FileSystemRegistryProvider from "../contexts/fileSystemRegistry";
+import middlewares from "../middlewares";
 
 export interface DynamicStore extends Store {
   registerMiddleware: (listener: ListenerMiddlewareInstance) => void;
@@ -32,16 +27,15 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   const store = useMemo(
-    () =>
-      configureStore({
-        reducer: combineReducers<{ [name: string]: Reducer<any, AnyAction> }>({
-          [slice.name]: slice.reducer,
-        }),
-        middleware: (getDefaultMiddleware) =>
-          getDefaultMiddleware({ serializableCheck: false }).concat(
-            dynamicMiddlewares
-          ),
+    () =>configureStore({
+      reducer: combineReducers<{ [name: string]: Reducer<any, AnyAction> }>({
+        [slice.name]: slice.reducer,
       }),
+      middleware: (getDefaultMiddleware) =>
+        [...getDefaultMiddleware({ serializableCheck: false }).concat(
+          dynamicMiddlewares
+        ), middlewares.middleware],
+    }),
     []
   );
 
@@ -58,20 +52,21 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
     [currentReducers]
   );
 
+  const getStore = useCallback(()=>store, [store])
+
   return (
-    <ReduxProvider store={store}>
-      <CurrentReducersContext.Provider
-        value={{
-          currentReducers,
-          loadReducers,
-          registerMiddleware,
-        }}
-      >
-        <FileSystemRegistryProvider>
-          <ComponentsRegistryProvider>{children}</ComponentsRegistryProvider>
-        </FileSystemRegistryProvider>
-      </CurrentReducersContext.Provider>
-    </ReduxProvider>
+      <ReduxProvider store={store}>
+        <CurrentReducersContext.Provider
+          value={{
+            currentReducers,
+            loadReducers,
+            registerMiddleware,
+            getStore
+          }}
+        >
+            <ComponentsRegistryProvider>{children}</ComponentsRegistryProvider>
+        </CurrentReducersContext.Provider>
+      </ReduxProvider>
   );
 };
 

@@ -7,7 +7,7 @@ import {
   closeViewport,
   removeFromGroup,
 } from "@kernel/modules/Layout/store/viewports/actions";
-import { SVGLoaded, addProxy } from "@kernel/modules/SVG/store/actions";
+import { SVGLoaded, addProxy, removeInstance } from "@kernel/modules/SVG/store/actions";
 import type { SVGState } from "@kernel/modules/SVG/store/state";
 
 
@@ -26,13 +26,27 @@ import {
   compositionsListed,
   storeCompositionsList,
   compositionsListStored,
+  saveSession,
+  sessionSaved,
 } from "./actions";
 import type { ComposerState, CompositionsList } from "./state";
 import { debugViewportOpened, openDebugView, selectPart } from "./composition/actions";
 import { MaterialsState } from '../../Materials/store/materials/state';
+import { persistCompositionState } from "./slice";
 
 const middlewares = createListenerMiddleware();
 
+middlewares.startListening({
+  actionCreator: saveSession,
+  effect: async (_, listenerApi) => {
+      const { dispatch, getState } = listenerApi;
+      
+      const {Composer: state} = getState() as { Composer: ComposerState }
+      Object.values(state.compositionsManager.compositions).forEach(persistCompositionState)
+
+      dispatch(sessionSaved()); // dispatch event
+  }
+})
 middlewares.startListening({
   actionCreator: listCompositions,
   effect: async (
@@ -97,6 +111,7 @@ middlewares.startListening({
     // check if viewport is associated with some composition
     Object.values(compositionsManager.compositions).forEach((comp) => {
       if (comp.viewportName === payload.name) {
+        dispatch(removeInstance({ path: comp.svgPath, instanceName: payload.name }));
         dispatch(closeComposition({ name: comp.name, graphId: comp.graphId })); // dispatch event
       }
       if (comp.debugViewport === payload.name) {
@@ -111,7 +126,7 @@ middlewares.startListening({
     { payload }: PayloadAction<{ name: string; graphId: string }>,
     listenerApi
   ) => {
-    const { dispatch } = listenerApi;
+    const { dispatch} = listenerApi;
 
     dispatch(destroyGraph({ graphId: payload.graphId }));
 

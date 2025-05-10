@@ -5,6 +5,10 @@ import { MODULE_NAME } from "../constants";
 import { SVGState, Proxies } from "./state";
 
 // Commands
+export const saveSession = createAction(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Save session`
+);
+
 export const loadSVG = createAction<{ path: string; instanceName: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Load SVG`
 );
@@ -50,7 +54,16 @@ export const updateSVG = createAction<{
   document: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Update SVG`);
 
+export const removeInstance = createAction<{
+  path: string;
+  instanceName: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Remove instance`);
+
+
 // Events
+export const sessionSaved = createAction(
+  `[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] session saved`
+);
 export const SVGFetched = createAction<{ path: string; content: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] SVG fetched`
 );
@@ -78,3 +91,8 @@ export const SVGUpdated = createAction<{
   instanceName: string;
   document: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] SVG Updated`);
+
+export const InstanceRemoved = createAction<{
+  path: string;
+  instanceName: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] SVG Instance removed`);

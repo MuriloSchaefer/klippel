@@ -66,7 +66,6 @@ export const Provider = ({
         }));
       },
       cancelPickElement: () => {
-        console.log("canceling");
         setState((state) => ({
           ...state,
           tools: {

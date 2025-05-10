@@ -5,13 +5,19 @@ import ModelSection from "../components/ModelSection";
 import { MODULE_NAME } from "../constants";
 import middlewares from "../store/middlewares";
 import graphMiddlewares from "../store/composition/middlewares";
-import slice from "../store/slice";
+import slice, { sessionSaver } from "../store/slice";
 import DebuggerViewport from "../components/DebuggerViewport";
 
 
 export function startModule({
-    managers: { storeManager,componentRegistryManager,layoutManager, ribbonMenuManager, viewportManager },
+    managers: { storeManager,componentRegistryManager, ribbonMenuManager },storage
   }: StartModuleProps){
+    // configure session saver
+    const store = storeManager.functions.getStore()
+    storage.registerSessionSaveListener(
+      store ? sessionSaver(store) : ()=>console.log('Missing store. skipping session save!')
+    );
+
     storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
     storeManager.functions.registerMiddleware(middlewares)
     storeManager.functions.registerMiddleware(graphMiddlewares)

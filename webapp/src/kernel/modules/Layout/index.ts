@@ -90,7 +90,7 @@ const LayoutModule: ILayoutModule = {
     useViewportManager,
     useActiveViewport,
     usePanelsManager,
-    useResizeObserver
+    useResizeObserver,
   },
   store: {
     selectors: {

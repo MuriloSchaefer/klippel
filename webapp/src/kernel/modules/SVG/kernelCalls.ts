@@ -3,22 +3,28 @@
 import { StartModuleProps } from "../base";
 import { MODULE_NAME } from "./constants";
 import middlewares from "./store/middlewares";
-import slice from "./store/slice";
-
+import slice, { sessionSaver } from "./store/slice";
 
 export const startModule = ({
   managers: { storeManager, componentRegistryManager },
+  storage,
 }: StartModuleProps) => {
-   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
-   storeManager.functions.registerMiddleware(middlewares);
-//   storeManager.functions.registerMiddleware(ribbonMenuMiddleware);
-//   storeManager.functions.registerMiddleware(viewportMiddleware);
-//   storeManager.functions.registerMiddleware(panelsMiddleware);
+  // configure session saver
+  const store = storeManager.functions.getStore()
+  storage.registerSessionSaveListener(
+    store ? sessionSaver(store) : ()=>console.log('Missing store. skipping session save!')
+  );
 
-//   componentRegistryManager.functions.createRegistries({
-//     [SECTIONS_REGISTRY_NAME]: {},
-//     [VIEWPORT_TYPE_REGISTRY_NAME]: {
-//       home: HomeViewport,
-//     },
-//   })
+  storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
+  storeManager.functions.registerMiddleware(middlewares);
+  //   storeManager.functions.registerMiddleware(ribbonMenuMiddleware);
+  //   storeManager.functions.registerMiddleware(viewportMiddleware);
+  //   storeManager.functions.registerMiddleware(panelsMiddleware);
+
+  //   componentRegistryManager.functions.createRegistries({
+  //     [SECTIONS_REGISTRY_NAME]: {},
+  //     [VIEWPORT_TYPE_REGISTRY_NAME]: {
+  //       home: HomeViewport,
+  //     },
+  //   })
 };

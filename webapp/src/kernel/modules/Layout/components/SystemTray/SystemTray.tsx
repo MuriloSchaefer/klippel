@@ -13,6 +13,7 @@ import useLayoutManager from "../../hooks/useLayoutManager";
 const SystemTray = () => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
+  const { SessionAutoSaverIcon } = storeModule.components;
 
   const selectedTheme = useAppSelector(selectTheme);
 
@@ -24,6 +25,7 @@ const SystemTray = () => {
 
   return (
     <Box role="system-tray-container">
+      <SessionAutoSaverIcon />
       <IconButton
         color="primary"
         aria-label="switch theme button"

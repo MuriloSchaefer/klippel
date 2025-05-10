@@ -9,9 +9,7 @@ export interface Proxies {
 export interface SVGInstance {
     pan: [number, number]
     zoom: number,
-    proxies: {
-        [name: string]: Proxies
-    }
+    proxies: Proxies
     content: string | undefined
 }
 

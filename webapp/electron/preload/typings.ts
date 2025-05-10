@@ -1,5 +1,3 @@
-import { StorageAPI } from "./storage/typings"
+import { api } from './index';
 
-export type IcpApi = {
-    storage: StorageAPI
-  }
+export type IcpApi = typeof api

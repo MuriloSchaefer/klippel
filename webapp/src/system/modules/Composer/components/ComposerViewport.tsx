@@ -11,6 +11,7 @@ import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { NodesHashMap } from "@kernel/modules/Graphs/store/state";
 import type { IOrderModule } from "@system/modules/Orders";
 import type { BudgetFloatingButtonActions } from "@system/modules/Orders/typings";
+import SaveSharpIcon from '@mui/icons-material/SaveSharp';
 
 import ComposerSettingsPanel from "./SettingsPanel";
 import ComposerDetailsPanel from "./DetailsPanel";
@@ -28,24 +29,23 @@ import GradesCounter from "./GradesCounter";
 type CompositionInfo = Omit<CompositionState, "selectedPart" | "loading">;
 
 export const ComposerViewportLoader = () => {
-  const storeModule = useModule<Store>("Store");
   const layoutModule = useModule<ILayoutModule>("Layout");
   const svgModule = useModule<ISVGModule>("SVG");
 
-  const { useAppSelector } = storeModule.hooks;
   const {
     components: { SVGEditorToolkit },
   } = svgModule;
 
-  const { selectActiveViewport } = layoutModule.store.selectors;
-  const activeViewport = useAppSelector(selectActiveViewport);
+  const { useActiveViewport } = layoutModule.hooks;
+
+  const activeViewport = useActiveViewport()
 
   const selector = useCallback(
     (c: CompositionState | undefined) => c as CompositionInfo,
     [activeViewport]
   );
   const composition = useComposition(
-    { viewportName: activeViewport! },
+    { viewportName: activeViewport.name },
     selector
   );
 
@@ -162,6 +162,10 @@ export const ComposerViewport = ({
         </div>
 
         <ViewportNotificationsTray>
+          <SaveSharpIcon 
+            fontSize="small"
+            onClick={()=> console.log('save model')}
+            sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}/>
           <LanIcon
             fontSize="small"
             onClick={handleShowGraphClick}

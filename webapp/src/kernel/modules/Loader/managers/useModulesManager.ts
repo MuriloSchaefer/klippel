@@ -13,7 +13,7 @@ export interface ModulesManager extends Manager {
     modulesLoaded: number,
     functions: {
         isModuleLoaded: (moduleName: string) => boolean
-        loadModule: (module: IModule) => void,
+        loadModule: (module: IModule, bootLog: (log: string)=>void) => void,
         unloadModule: (moduleName: string) => void,
         reloadModule: (moduleName: string) => void
     }
@@ -30,6 +30,8 @@ export const useModulesManager = (): ModulesManager => {
     // CHALLENGE: try to make it easier to add new managers here without increasing coupling
     const {useLayoutManager, useRibbonMenuManager, useViewportManager} = layoutModule.hooks
     const {store, componentRegistry} = storeModule.managers
+    const {useStorage} = storeModule.hooks
+
     
     const layoutManager = useLayoutManager()
     const ribbonMenuManager = useRibbonMenuManager()
@@ -39,6 +41,7 @@ export const useModulesManager = (): ModulesManager => {
 
     const dispatch = storeModule.hooks.useAppDispatch()
     const useAppSelector = storeModule.hooks.useAppSelector
+    const storage = useStorage()
 
     const modulesCount = useAppSelector(modulesCountSelector)
 
@@ -46,9 +49,13 @@ export const useModulesManager = (): ModulesManager => {
         modulesLoaded: modulesCount,
         functions: {
             isModuleLoaded: (moduleName: string) => moduleName in modules,
-            loadModule(module){
+            loadModule(module, bootLog){
                 
-                if (module.name in modules) throw new ModuleAlreadyLoaded(`${module.name} is not registered. Consider using restartModule instead.`)
+                if (module.name in modules) {
+                    const err = `Module already loaded. Skipping it.`
+                    bootLog(err)
+                    return
+                }
                 setModules({...modules, [module.name]: module})
 
                 dispatch(startModule(module.name))
@@ -61,7 +68,8 @@ export const useModulesManager = (): ModulesManager => {
                         layoutManager,
                         ribbonMenuManager,
                         viewportManager
-                    }
+                    },
+                    storage
                 })
 
                 // emit event
@@ -81,7 +89,17 @@ export const useModulesManager = (): ModulesManager => {
                 const module = modules[moduleName]
                 setModules(modules)
 
-                module.kernelCalls.restartModule(storeManager)
+                module.kernelCalls.restartModule({
+                    dispatch,
+                    managers: {
+                        storeManager,
+                        componentRegistryManager,
+                        layoutManager,
+                        ribbonMenuManager,
+                        viewportManager
+                    },
+                    storage
+                })
             }
         }
     }

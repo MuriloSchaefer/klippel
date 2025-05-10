@@ -1,8 +1,7 @@
-import { styled, ThemeProvider } from '@mui/system';
-import { createTheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import CssBaseline from '@mui/material/CssBaseline';
-
+import { styled, ThemeProvider } from "@mui/system";
+import { createTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import CssBaseline from "@mui/material/CssBaseline";
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
@@ -48,17 +47,18 @@ const StyledContent = styled(Box)`
 
 const Layout = () => {
   const storeModule = useModule<Store>("Store");
-  
 
-  const { useAppSelector, /**useFile**/ } = storeModule.hooks;
-  // const f = useFile('/tmp/klippel/test', 'w')
-  // const content = f.read()
+  const {
+    useAppSelector,
+    // useFile,
+  } = storeModule.hooks;
 
   const selectedTheme = useAppSelector(selectTheme);
 
   const theme = useMemo(
     () =>
       createTheme({
+        spacing:3,
         palette: {
           mode: selectedTheme ?? "dark",
           // Used by `getContrastText()` to maximize the contrast between
@@ -97,6 +97,9 @@ const Layout = () => {
             }}
           >
             <RibbonMenu>
+              {/* <Box onClick={(e)=>f.write(`${content}r`, {encoding:'utf-8'})}>
+                {content}
+              </Box> */}
               <SystemTray />
             </RibbonMenu>
           </Box>

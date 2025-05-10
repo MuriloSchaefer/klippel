@@ -1,13 +1,23 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, Store } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
 import { initialState, MaterialsModuleState } from "./state";
 import materialTypesSlice from './materialTypes/slice';
 import materialsSlice from './materials/slice';
+import { saveSession } from "./actions";
+const storage = window.electron.storage;
+storage.ensureDir(".session/SVG/svgs");
 
+export const sessionSaver = (store: Store<MaterialsModuleState>) => () => {
+  store.dispatch(saveSession());
+};
 
 const slice = createSlice({
     name: MODULE_NAME,
-    initialState: initialState,
+    initialState: {
+      ...initialState,
+      materials: materialsSlice.getInitialState(),
+      materialTypes: materialTypesSlice.getInitialState()
+    },
     reducers: {},
     extraReducers: (builder) => {
     //   builder.addCase(

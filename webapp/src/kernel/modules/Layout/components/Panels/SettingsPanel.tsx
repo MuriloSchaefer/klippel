@@ -1,4 +1,4 @@
-import React, { cloneElement, MouseEvent, useCallback } from "react";
+import React, { cloneElement, MouseEvent, useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -29,7 +29,8 @@ export const SettingsPanel = ({
   const panelsManager = usePanelsManager();
   const panelState = useAppSelector(selectSettingsPanel);
 
-  const ref = document.getElementById(SETTINGS_PANEL_ID);
+  const [retry, setRetry] = useState(false)
+  const ref = useMemo(()=>document.getElementById(SETTINGS_PANEL_ID), [retry])
 
   const handleToggleSettings = useCallback(
     (e: MouseEvent) => {
@@ -42,8 +43,11 @@ export const SettingsPanel = ({
     },
     [panelState?.state]
   );
-
-  if (!ref || !panelState) return null;
+  if (!ref){
+    setTimeout(()=>setRetry(!retry), 50)
+    return null
+  }
+  if (!panelState) return null;
   return createPortal(
     <Box sx={{ position: "relative" }}>
       <Box

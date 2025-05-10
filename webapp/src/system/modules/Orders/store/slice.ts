@@ -7,7 +7,7 @@ import budgetSlice from "./budgets/slice";
 
 const slice = createSlice({
   name: MODULE_NAME,
-  initialState: initialState,
+  initialState: { ...initialState, budgets: budgetSlice.getInitialState() },
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(createBudget, (state, action) => ({

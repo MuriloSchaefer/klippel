@@ -1,11 +1,11 @@
-import React, { ComponentType, ReactPortal, Reducer } from "react";
+import React, { Reducer } from "react";
 import { AnyAction, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 import { StoreManager } from "./Store/hooks/useStoreManager";
-import { ModulesContextType } from "./Loader/context";
 import { LayoutManager } from "./Layout/hooks/useLayoutManager";
 import { RibbonMenuManager } from "./Layout/hooks/useRibbonMenuManager";
 import { ViewportManager } from "./Layout/hooks/useViewportManager";
 import { ComponentRegistryManager } from "./Store/hooks/useComponentRegistryManager";
+import { StorageAPI } from "../../../electron/preload/storage/typings"; // TODO: find a common place for typings
 
 export interface Manager {
   functions: {
@@ -21,12 +21,13 @@ export interface StartModuleProps {
     layoutManager: LayoutManager
     ribbonMenuManager: RibbonMenuManager
     viewportManager: ViewportManager
-  }
+  },
+  storage: StorageAPI
 }
 
 export interface KernelCalls {
   startModule: (props: StartModuleProps) => void,
-  restartModule: (storeManager: StoreManager) => void,
+  restartModule: (storeManager: StartModuleProps) => void,
   shutdownModule: (storeManager: StoreManager) => void
 }
 

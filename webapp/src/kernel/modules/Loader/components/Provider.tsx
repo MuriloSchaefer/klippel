@@ -7,10 +7,14 @@ import Initializer from "./Initializer"
 import { IModule } from "@kernel/modules/base"
 
 export interface ModulesMap {
-    kernel: IModule[], //e.g. SVG: "./kernel/modules/SVG "
-    system: IModule[],
+    kernel: {
+        [name: string]: IModule
+    }, //e.g. SVG: "./kernel/modules/SVG "
+    system: {
+        [name: string]: IModule
+    },
   }
-const ModulesProvider = ({ children, loadModules }: { children: React.ReactElement, loadModules: ModulesMap }) => {
+const ModulesProvider = ({ children, extraModules }: { children: React.ReactElement, extraModules: ModulesMap }) => {
 
     const [modules, setModules] = useState<ModulesContextType>({
         Store: storeModule
@@ -23,7 +27,7 @@ const ModulesProvider = ({ children, loadModules }: { children: React.ReactEleme
 
 
     return <ModulesContext.Provider value={values}>
-        <Initializer extraModules={loadModules} afterLoadComponent={children}/>
+        <Initializer extraModules={extraModules} afterLoadComponent={children}/>
     </ModulesContext.Provider>
 }
 
