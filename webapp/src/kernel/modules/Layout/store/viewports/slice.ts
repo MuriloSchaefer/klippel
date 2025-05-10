@@ -12,7 +12,6 @@ import {
   setExtrasViewport,
 } from "./actions";
 import { PathLike } from "fs";
-import groupSlice from "./groups/slice";
 
 const storage = window.electron.storage;
 storage.ensureDir(".session/Layout/viewPortManager/viewports");
@@ -79,7 +78,7 @@ const slice = createSlice<
 >({
   name: `${MODULE_NAME}Viewports`,
   initialState: {
-    groups: groupSlice.getInitialState(),
+    groups: groupsSlice.getInitialState(),
     activeViewport: await restoreActiveVPSession(),
     viewports: await restoreSession(),
   },

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
@@ -9,7 +9,6 @@ import { Store } from "@kernel/modules/Store";
 
 import { selectTheme } from "../../store/selectors";
 import useLayoutManager from "../../hooks/useLayoutManager";
-import { useAppSelector } from '../../../Store/hooks';
 
 const SystemTray = () => {
   const storeModule = useModule<Store>("Store");

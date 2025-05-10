@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { materialTypesLoaded } from "./actions";
-import { initialState, MaterialType, MaterialTypesState } from "./state";
+import { MaterialType, MaterialTypesState } from "./state";
 import { PathLike } from "fs";
 
 const storage = window.electron.storage;

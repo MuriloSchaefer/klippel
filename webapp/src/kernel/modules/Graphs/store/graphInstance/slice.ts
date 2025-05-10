@@ -1,8 +1,8 @@
 import { createSlice, Store } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
-import { newGraphState } from '../state';
 import {
   graphsManagerInitialState,
+  newGraphState,
   GraphsManagerState,
   GraphState,
 } from "../state";

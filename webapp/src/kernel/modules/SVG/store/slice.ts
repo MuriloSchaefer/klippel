@@ -68,7 +68,7 @@ export async function persistState({ content, instances, ...state }: SVGState) {
 }
 
 const restoreSession = async (sessionPath: PathLike = ".session/SVG/svgs/") => {
-  const files = await storage.searchDir<String[]>(
+  const files = await storage.searchDir<string[]>(
     sessionPath,
     ["*/state.json"],
     {}

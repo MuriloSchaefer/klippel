@@ -29,21 +29,21 @@ export type StorageAPI = {
     destPath: PathLike,
     flags?: number
   ) => Promise<void>;
-  watchFile: (path: PathLike, listener: (blob: Promise<Blob>)=>void) => void;
+  watchFile: (path: PathLike, listener: (blob: Promise<Blob>)=>void) => Promise<void>;
   moveFile: (
     sourcePath: PathLike,
     destPath: PathLike,
-    flags?: number)=>void;
-  deleteFile: (path: PathLike) => void;
+    flags?: number)=>Promise<void>;
+  deleteFile: (path: PathLike) => Promise<void>;
 
 
   symLink: (
     sourcePath: PathLike,
     destPath: PathLike,
     type?: SymlinkType
-  ) => void;
+  ) => Promise<void>;
 
   // directories
   searchDir: <T = Array<{name: string}> >(dir: PathLike, patterns: string[], options?: GlobOptions | {}) => Promise<T>; // Results<GlobOptions>
-  ensureDir: (path: PathLike, options?: {mode: number}) => void;
+  ensureDir: (path: PathLike, options?: {mode: number}) => Promise<void>;
 };

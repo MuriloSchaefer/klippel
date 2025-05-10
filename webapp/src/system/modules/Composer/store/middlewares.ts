@@ -126,10 +126,7 @@ middlewares.startListening({
     { payload }: PayloadAction<{ name: string; graphId: string }>,
     listenerApi
   ) => {
-    const { dispatch, getState } = listenerApi;
-
-    const {Composer: { compositionsManager: {compositions} }} = getState() as { Composer: ComposerState }
-    const comp = compositions[payload.name]
+    const { dispatch} = listenerApi;
 
     dispatch(destroyGraph({ graphId: payload.graphId }));
 

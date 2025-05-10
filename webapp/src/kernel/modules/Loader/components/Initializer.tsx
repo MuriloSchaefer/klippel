@@ -9,7 +9,6 @@ import module from "..";
 import { GRAPH_NAME, MODULE_NAME } from "../constants";
 import useGraph from "@kernel/modules/Graphs/hooks/useGraph";
 import { ModulesMap } from "./Provider";
-import _ from "lodash";
 import { IModule } from "../../base";
 
 type InitializerProps = {
@@ -42,7 +41,7 @@ const Initializer = ({
   extraModules = { kernel: {}, system: {} },
 }: InitializerProps) => {
   const moduleManager = module.managers.modules();
-  const graph = useGraph(GRAPH_NAME, (g) => g && g.id);
+  const graph = useGraph(GRAPH_NAME, (g) => g?.id);
 
   const [storeInitialized, setStoreInitialized] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true);
