@@ -6,12 +6,14 @@ import {
   resumeSessionAutoSaver,
   saveSession,
   selectWorkspace,
+  workspacesListed,
 } from "./actions";
 import type { PathLike } from "fs";
 
 const initialState: StoreState = {
-  sessionAutoSaveInterval: 20,
-  selectedWorkspace: import.meta.env.VITE_ENV_NAME
+  sessionAutoSaveInterval: undefined,
+  selectedWorkspace: 'personal',
+  workspaces: ['personal']
 };
 
 const storage = window.electron.storage;
@@ -63,6 +65,13 @@ const slice = createSlice({
       })
     );
 
+    builder.addCase(
+      workspacesListed,
+      (state, { payload }) => ({
+        ...state,
+        workspaces: payload.workspaces
+      })
+    );
     builder.addCase(
       selectWorkspace,
       (state, { payload }) => ({

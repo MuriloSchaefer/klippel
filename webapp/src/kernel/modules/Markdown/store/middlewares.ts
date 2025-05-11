@@ -10,16 +10,17 @@ import {
 import { MarkdownModuleState } from "./state";
 import { persistState } from "./slice";
 
+const storage = window.electron.storage
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
   actionCreator: saveSession,
-  effect: async (payload, listenerApi) => {
+  effect: async (_, listenerApi) => {
       const { dispatch, getState } = listenerApi;
       
       const {Markdown: state} = getState() as { Markdown: MarkdownModuleState }
       persistState(state)
 
-      dispatch(sessionSaved()); // dispatch event
+      dispatch(sessionSaved()); 
   }
 })
 
@@ -27,13 +28,11 @@ middlewares.startListening({
   actionCreator: loadMarkdown,
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
-    dispatch(fetchMarkdown({ path: payload.path })); // dispatch event
+    dispatch(fetchMarkdown({ path: payload.path })); 
 
-    // logic to load the SVG file
-    const response = await fetch(payload.path);
-    const raw = await (await response.blob()).text();
+    const raw = await storage.readFile<string>(payload.path, {encoding: 'utf-8'})
 
-    dispatch(markdownFetched({ path: payload.path, content: raw })); // dispatch event
+    dispatch(markdownFetched({ path: payload.path, content: raw })); 
   },
 });
 
@@ -45,7 +44,7 @@ middlewares.startListening({
       Markdown: { markdowns },
     } = getState() as { Markdown: MarkdownModuleState };
 
-    dispatch(markdownLoaded(markdowns[payload.path])); // dispatch event
+    dispatch(markdownLoaded(markdowns[payload.path])); 
   },
 });
 

@@ -20,6 +20,7 @@ import { SVGModuleState } from "./state";
 import { persistState } from "./slice";
 
 const middlewares = createListenerMiddleware();
+const storage = window.electron.storage
 
 middlewares.startListening({
   actionCreator: saveSession,
@@ -40,8 +41,7 @@ middlewares.startListening({
     dispatch(fetchSVG({ path: payload.path })); 
 
     // logic to load the SVG file
-    const response = await fetch(payload.path);
-    const raw = await (await response.blob()).text();
+    const raw = await storage.readFile<string>(payload.path, {encoding: 'utf-8'})
 
     dispatch(SVGFetched({ path: payload.path, content: raw })); 
   },

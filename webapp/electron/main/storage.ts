@@ -43,7 +43,7 @@ if (existsSync(storeSessionFile)) {
   );
 }
 let sessionAutoSaverInterval: number | undefined =
-  storeSessionState?.sessionAutoSaveInterval ?? 20;
+  storeSessionState?.sessionAutoSaveInterval;
 
 export function initStorageHooks(
   scheduler: ToadScheduler,

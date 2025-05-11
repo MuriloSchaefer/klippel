@@ -1,5 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import {
+  listWorkspaces,
   pauseSessionAutoSaver,
   resumeSessionAutoSaver,
   saveSession,
@@ -8,6 +9,7 @@ import {
   sessionAutoSaverResumed,
   sessionSaved,
   workspaceSelected,
+  workspacesListed,
 } from "./actions";
 import { persistState } from "./slice";
 import { StoreState } from "./state";
@@ -42,6 +44,16 @@ middlewares.startListening({
     storage.resumeAutoSessionSaver(payload.interval);
 
     dispatch(sessionAutoSaverResumed()); // dispatch event
+  },
+});
+middlewares.startListening({
+  actionCreator: listWorkspaces,
+  effect: async (_, listenerApi) => {
+    const { dispatch } = listenerApi;
+
+    const list = await storage.searchDir<string[]>('workspaces', ["*"], {})
+
+    dispatch(workspacesListed({workspaces: list})); // dispatch event
   },
 });
 middlewares.startListening({

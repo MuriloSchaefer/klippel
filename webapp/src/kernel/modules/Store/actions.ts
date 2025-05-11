@@ -11,6 +11,9 @@ export const pauseSessionAutoSaver = createAction(
 export const resumeSessionAutoSaver = createAction<{interval: number}>(
   `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Resume session auto saver`
 );
+export const listWorkspaces = createAction(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] List workspaces`
+);
 export const selectWorkspace = createAction<{workspace: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Select workspace`
 );
@@ -27,6 +30,9 @@ export const sessionAutoSaverPaused = createAction(
 );
 export const sessionAutoSaverResumed = createAction(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Session auto saver resumed`
+);
+export const workspacesListed = createAction<{workspaces: string[]}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Workspaces listed`
 );
 export const workspaceSelected = createAction<{workspace: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace selected`
