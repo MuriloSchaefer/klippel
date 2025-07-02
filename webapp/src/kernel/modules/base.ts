@@ -5,7 +5,7 @@ import { LayoutManager } from "./Layout/hooks/useLayoutManager";
 import { RibbonMenuManager } from "./Layout/hooks/useRibbonMenuManager";
 import { ViewportManager } from "./Layout/hooks/useViewportManager";
 import { ComponentRegistryManager } from "./Store/hooks/useComponentRegistryManager";
-import { StorageAPI } from "../../../electron/preload/storage/typings"; // TODO: find a common place for typings
+import { StorageAPI, SessionStorageApi } from "../../../electron/preload/storage/typings"; // TODO: find a common place for typings
 
 export interface Manager {
   functions: {
@@ -22,7 +22,7 @@ export interface StartModuleProps {
     ribbonMenuManager: RibbonMenuManager
     viewportManager: ViewportManager
   },
-  storage: StorageAPI
+  storage: StorageAPI & SessionStorageApi
 }
 
 export interface KernelCalls {

@@ -1,0 +1,98 @@
+import { useCallback, useEffect, useState } from "react";
+
+import IconButton from "@mui/material/IconButton";
+import NoteAddSharpIcon from "@mui/icons-material/NoteAddSharp";
+
+import useModule from "@kernel/hooks/useModule";
+
+import type { IPointerModule } from "@kernel/modules/Pointer";
+import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import TextField from "@mui/material/TextField";
+import { randomString } from "@kernel/utils";
+import { Typography } from "@mui/material";
+import useModelsManager from "../../hooks/useModelsManager";
+
+export const CreateModelIconButton = () => {
+  const modelsManager = useModelsManager();
+  const pointerModule = useModule<IPointerModule>("Pointer");
+  const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
+
+  const [hashId, setHashId] = useState<string | undefined>(randomString(10));
+  const [name, setName] = useState<string | undefined>(undefined);
+
+  const handleModelCreation = useCallback(() => {
+    if (!name || !hashId) return 
+    modelsManager.createModel({ name: name, id: hashId });
+  }, [name, hashId]);
+
+  useEffect(()=>()=>setHashId(randomString(10)), [])
+
+  return (
+    <PointerContainer
+      component={
+        <Box
+          component={"form"}
+          id="new-model-form"
+          sx={{ display: "flex", flexDirection: "column", gap: 1, padding: 2, minWidth: '300px' }}
+        >
+          <Typography sx={{ padding: 1, width: "100%", textAlign: "center" }}>
+            Novo Modelo
+          </Typography>
+          <FormControl>
+            <TextField
+              error={!hashId || hashId.length > 30}
+              id="hashId"
+              label="ID"
+              variant="standard"
+              sx={{ marginBottom: 1 }}
+              onChange={(evt) => setHashId((old) => evt.target.value)}
+              value={hashId}
+              helperText={
+                <Box sx={{ lineHeight: 1 }}>
+                  <Typography sx={{ color: hashId ? "green" : "red" }}>
+                    Deve existir um id
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: hashId && hashId.length <= 30 ? "green" : "red",
+                    }}
+                  >
+                    Deve ter no máximo 30 caracteres
+                  </Typography>
+                </Box>
+              }
+            />
+            <TextField
+              error={!name}
+              id="name"
+              label="Nome"
+              variant="standard"
+              sx={{ marginBottom: 1 }}
+              onChange={(evt) => setName((old) => evt.target.value)}
+              value={name}
+              helperText="Escolha um nome para o modelo"
+            />
+          </FormControl>
+        </Box>
+      }
+      actions={[
+        <ConfirmAndCloseButton
+          type="submit"
+          id="new-model-form"
+          value={"Submit"}
+          color="success"
+          key="accept"
+          handleConfirm={handleModelCreation}
+          disabled={!name || !hashId || hashId.length > 30}
+        />,
+      ]}
+    >
+      <IconButton aria-label="create-model">
+        <NoteAddSharpIcon />
+      </IconButton>
+    </PointerContainer>
+  );
+};
+
+export default CreateModelIconButton;

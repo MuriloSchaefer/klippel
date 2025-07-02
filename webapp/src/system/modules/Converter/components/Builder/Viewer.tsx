@@ -7,6 +7,11 @@ import React, {
   useState,
 } from "react";
 
+import {
+  curveBundle,
+  line as d3Line,
+} from "d3";
+
 import { useTheme } from "@mui/material/styles";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
@@ -171,6 +176,32 @@ const Viewer = ({ graphId }: { graphId: string }) => {
               handleUnitSelection(d.id);
               e.stopPropagation();
             });
+        })
+        .renderLink((selection, scale, _colors, innerRadius, _outerRadius)=>{
+
+              const line = d3Line().curve(curveBundle.beta(0.35));
+          
+              selection
+                .append("path")
+                .attr("data-source", (d) => d.source)
+                .attr("data-target", (d) => d.target)
+                .attr("d", (d) =>
+                  line([
+                    [
+                      (innerRadius - 10) * Math.sin(scale(d.sourceOffset)),
+                      (innerRadius - 10) * -Math.cos(scale(d.sourceOffset)),
+                    ],
+                    [0, 0],
+                    [
+                      (innerRadius - 10) * Math.sin(scale(d.targetOffset)),
+                      (innerRadius - 10) * -Math.cos(scale(d.targetOffset)),
+                    ],
+                  ])
+                )
+                .attr("fill", "none")
+                .attr("stroke-width", 1)
+                //.attr('marker-end', 'url(#arrow)')
+                .attr("stroke", theme.palette.getContrastText(theme.palette.background.default));
         })
         .theme(theme.palette.mode).build,
     ]);

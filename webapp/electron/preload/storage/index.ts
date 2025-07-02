@@ -1,4 +1,4 @@
-import type { StorageAPI } from "./typings";
+import type { SessionStorageApi, StorageAPI } from "./typings";
 import { ipcRenderer, IpcRendererEvent } from "electron";
 
 
@@ -125,4 +125,4 @@ export default {
   ) => {
     ipcRenderer.send("ensure-dir", path, options);
   },
-} as StorageAPI;
+} as StorageAPI & SessionStorageApi;

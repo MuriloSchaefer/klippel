@@ -6,14 +6,23 @@ import { useMemo } from "react";
 import FormControl, { FormControlProps } from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectProps } from "@mui/material/Select";
+import { ListSubheader, Typography, useTheme } from "@mui/material";
 
 type UnitSelectorProps = SelectProps<string> & {
-    value?: string
+  value?: string;
   filterUnits?: (unit: UnitNode, scale?: ScaleNode) => boolean;
-  formControlProps?: FormControlProps
+  formControlProps?: FormControlProps;
 };
 
-export default ({ value, onChange, filterUnits = () => true,formControlProps, ...props }: UnitSelectorProps) => {
+type NotGrouped = { type: "WITHOUT_SCALE"; name: "Diversos"; id: "noScale" };
+
+export default ({
+  value,
+  onChange,
+  filterUnits = () => true,
+  formControlProps,
+  ...props
+}: UnitSelectorProps) => {
   const graphModule = useModule<IGraphModule>("Graph");
 
   const { useGraph } = graphModule.hooks;
@@ -22,7 +31,9 @@ export default ({ value, onChange, filterUnits = () => true,formControlProps, ..
     CONVERSION_GRAPH_NAME,
     (g) =>
       Object.values(g?.nodes ?? {})
-        .filter((n): n is UnitNode => n.type === "UNIT" || n.type === "COMPOUND_UNIT")
+        .filter(
+          (n): n is UnitNode => n.type === "UNIT" || n.type === "COMPOUND_UNIT"
+        )
         .map((node) => ({
           ...node,
           scale: Object.values(g?.nodes ?? {})
@@ -40,6 +51,37 @@ export default ({ value, onChange, filterUnits = () => true,formControlProps, ..
       storedState?.state?.filter((unit) => filterUnits(unit, unit.scale)) ?? [],
     [storedState.state, filterUnits]
   );
+  const groupedUnits = useMemo(() => {
+    return filteredUnits.reduce(
+      (acc, curr) => {
+        let group = curr.scale
+          ? curr.scale
+          : ({
+              type: "WITHOUT_SCALE",
+              name: "Diversos",
+              id: "noScale",
+            } as NotGrouped);
+
+        return {
+          ...acc,
+          groups: {
+            ...acc.groups,
+            [group.id]: group,
+          },
+          groupedUnits: {
+            ...acc.groupedUnits,
+            [group.id]: { ...acc.groupedUnits[group.id], [curr.id]: curr },
+          },
+        };
+      },
+      { groups: {}, groupedUnits: {} } as {
+        groups: {
+          [id: string]: ScaleNode | NotGrouped;
+        };
+        groupedUnits: { [scaleId: string]: { [unitId: string]: UnitNode } };
+      }
+    );
+  }, [filteredUnits]);
 
   return (
     <FormControl {...formControlProps}>
@@ -48,15 +90,26 @@ export default ({ value, onChange, filterUnits = () => true,formControlProps, ..
         inputProps={{ id: "unit" }}
         size="small"
         sx={{ width: "max(min-content, 100px)", minWidth: 100 }}
-        onChange={onChange}
+        onChange={(e, c) => {
+          console.log(e);
+          onChange?.(e, c);
+        }}
         value={value}
         {...props}
       >
-        {filteredUnits.map(({ id, name, abbreviation }) => (
-          <MenuItem key={id} value={id}>
-            {abbreviation}
-          </MenuItem>
-        ))}
+        {Object.values(groupedUnits.groups).map(({ id, name }) => [
+          <ListSubheader>{name}</ListSubheader>,
+          Object.values(groupedUnits.groupedUnits[id]).map(
+            ({ id, name, abbreviation, label }) => (
+              <MenuItem key={id} value={id} sx={{display: 'flex', gap:1, alignItems: 'center'}}>
+                <Typography>{abbreviation}</Typography>
+                <Typography fontSize={12} sx={{ opacity: 0.5 }}>
+                  ({name})
+                </Typography>
+              </MenuItem>
+            )
+          ),
+        ])}
       </Select>
     </FormControl>
   );

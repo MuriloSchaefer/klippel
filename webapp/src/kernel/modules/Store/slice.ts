@@ -12,8 +12,8 @@ import type { PathLike } from "fs";
 
 const initialState: StoreState = {
   sessionAutoSaveInterval: undefined,
-  selectedWorkspace: 'personal',
-  workspaces: ['personal']
+  selectedWorkspace: 'pessoal',
+  workspaces: ['pessoal']
 };
 
 const storage = window.electron.storage;

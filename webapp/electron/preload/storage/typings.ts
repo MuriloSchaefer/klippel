@@ -2,13 +2,16 @@ import type { WriteFileOptions, PathLike } from "fs";
 import type { SymlinkType } from "fs-extra";
 import type { GlobOptions } from "glob";
 
-export type StorageAPI = {
+export type SessionStorageApi = {
   // listeners
   registerSessionSaveListener: (listener: () => void) => void;
   saveSession: () => void;
   getAutoSaverInterval: () => Promise<number | undefined>;
   pauseAutoSessionSaver: () => void;
   resumeAutoSessionSaver: (interval?: number) => void;
+}
+
+export type StorageAPI = {
   // file functions
   writeBlob: (
     path: PathLike,
