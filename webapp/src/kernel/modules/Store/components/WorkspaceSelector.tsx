@@ -1,10 +1,11 @@
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import { Box, Divider, FormControl, InputLabel } from "@mui/material";
 
 import { useAppDispatch, useAppSelector, useCurrentWorkspace } from "../hooks";
 import { selectModuleState } from "../selectors";
 import { selectWorkspace } from "../actions";
-import { FormControl, InputLabel } from "@mui/material";
+import { NewWorkspaceButton } from "./NewWorkspaceButton";
 
 export default function WorkspaceSelector() {
   const dispatch = useAppDispatch();
@@ -15,8 +16,9 @@ export default function WorkspaceSelector() {
     })
   );
   return (
-    <FormControl variant="standard" sx={{ minWidth: 120 }}>
-      <InputLabel id="workspace-selector-label">Workspace</InputLabel>
+    <Box sx={{display: 'flex'}}>
+      <FormControl variant="standard" sx={{ minWidth: 120 }}>
+      <InputLabel id="workspace-selector-label">Área de trabalho</InputLabel>
       <Select
         id="workspace-selector"
         labelId="workspace-selector-label"
@@ -24,7 +26,7 @@ export default function WorkspaceSelector() {
         onChange={(event) =>
           dispatch(selectWorkspace({ workspace: event.target.value }))
         }
-        label="Workspace"
+        label="Área de trabalho"
         size="small"
       >
         {workspaces.map((ws) => (
@@ -32,5 +34,8 @@ export default function WorkspaceSelector() {
         ))}
       </Select>
     </FormControl>
+      <NewWorkspaceButton />
+      <Divider orientation="vertical" flexItem/>
+    </Box>
   );
 }

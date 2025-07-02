@@ -2,7 +2,6 @@ import { app, shell, BrowserWindow, Menu, Tray } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 const { updateElectronApp } = require("update-electron-app");
-// import icon from '../../resources/icon.png?asset'
 import installExtension, {
   REDUX_DEVTOOLS,
   REACT_DEVELOPER_TOOLS,

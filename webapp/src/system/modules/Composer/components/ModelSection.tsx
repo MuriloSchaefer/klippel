@@ -1,36 +1,37 @@
-import { useCallback } from "react";
+import { Box, Divider, Typography } from "@mui/material";
+import CreateModelIconButton from "./CreateModelIconButton";
+import OpenModelIconButton from "./OpenModelIconButton";
 
-import IconButton from "@mui/material/IconButton";
-import FileOpenIcon from "@mui/icons-material/FileOpen";
-
-import useModule from "@kernel/hooks/useModule";
-import { ILayoutModule } from "@kernel/modules/Layout";
-
-import ModelSelectionModal from "./ModelSelectionModal";
-import useCompositionsManager from "../hooks/useCompositionsManager";
-
-export const ModelSection = () => {
-  const compositionsManager = useCompositionsManager();
-  const layoutModule = useModule<ILayoutModule>("Layout");
-
-  const { SystemModal } = layoutModule.components;
-
-  const handleModelSelection = useCallback((name: string, path: string) => {
-    compositionsManager.functions.createComposition(name, path);
-  }, []);
-
+export default function ModelSection() {
   return (
-    <SystemModal
-      component={
-        <ModelSelectionModal onModelSelection={handleModelSelection} />
-      }
-      button={
-        <IconButton>
-          <FileOpenIcon />
-        </IconButton>
-      }
-    />
-  );
-};
+    <Box sx={{ display: "flex", gap: 5, alignItems:'end' }}>
+      <Box
+        sx={{ display: "flex", flexFlow: "column", justifyContent: "center" }}
+      >
+        <Box
+          sx={{
+            alignContent: "center",
+            display: "flex",
+            flexWrap: "wrap",
+            "&>*": {
+              flexBasis:'50%'
+            },
+          }}
+        >
+          <CreateModelIconButton />
+          <OpenModelIconButton />
+        </Box>
+        <Typography align="center">Modelos</Typography>
+      </Box>
+      <Divider orientation="vertical" flexItem />
+      <Box>
+        <Box>
+          <CreateModelIconButton />
+          <OpenModelIconButton />
+        </Box>
 
-export default ModelSection;
+        <Typography align="center">Variações</Typography>
+      </Box>
+    </Box>
+  );
+}

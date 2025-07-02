@@ -50,7 +50,7 @@ const App = (): React.ReactElement => {
       [converterModule.name]: converterModule, 
       [materialsModule.name]: materialsModule, 
       [composerModule.name]: composerModule, 
-      [ordersModule.name]: ordersModule
+      // [ordersModule.name]: ordersModule
     },
   };
   return (

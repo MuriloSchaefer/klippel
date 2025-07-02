@@ -17,6 +17,9 @@ export const listWorkspaces = createAction(
 export const selectWorkspace = createAction<{workspace: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Select workspace`
 );
+export const createWorkspace = createAction<{name: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Create workspace`
+);
 
 // Events
 export const storeInitialized = createAction(
@@ -36,6 +39,9 @@ export const workspacesListed = createAction<{workspaces: string[]}>(
 );
 export const workspaceSelected = createAction<{workspace: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace selected`
+);
+export const workspaceCreated = createAction<{name: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace created`
 );
 
 

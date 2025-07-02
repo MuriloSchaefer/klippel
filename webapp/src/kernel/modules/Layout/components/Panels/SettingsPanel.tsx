@@ -21,7 +21,7 @@ export const SettingsPanel = ({
   children,
 }: {
   title?: string;
-  children: React.ReactElement[];
+  children: React.ReactElement | React.ReactElement[];
 }) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
@@ -109,9 +109,9 @@ export const SettingsPanel = ({
           }}
         >
           <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
-            {children.map((child, idx) =>
+            {Array.isArray(children) ? children.map((child, idx) =>
               cloneElement(child, { state: panelState.state, key: idx })
-            )}
+            ) : cloneElement(children, { state: panelState.state })}
           </ErrorBoundary>
         </Box>
       </Box>

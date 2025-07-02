@@ -5,7 +5,7 @@ import type { ILayoutModule } from "@kernel/modules/Layout";
 import type { Store } from "@kernel/modules/Store";
 
 import { createBudget } from "../store/budgets/actions";
-import { IComposerModule } from "@system/modules/Composer";
+import { IComposerModule } from "@system/modules/ComposerOld";
 
 type BudgetManager = {
   createBudget: (label: string, color: string) => void;

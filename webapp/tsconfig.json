@@ -5,7 +5,7 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "strictNullChecks": true,
-    "types": ["vite/client", "vite-plugin-svgr/client", "vite-plugin-pwa/react", "jest", "node", "electron"],
+    "types": ["vite/client", "electron-vite/node", "vite-plugin-svgr/client", "vite-plugin-pwa/react", "jest", "node", "electron"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
