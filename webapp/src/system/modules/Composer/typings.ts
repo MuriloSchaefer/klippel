@@ -10,6 +10,7 @@ export type Model = {
     name: string,
     svg?: string,
     graph: string,
+    graphId: string, // loaded graph id
     description: string
 }
 

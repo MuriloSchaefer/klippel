@@ -23,7 +23,7 @@ export default function DeleteBudgetButton() {
   const layoutModule = useModule<ILayoutModule>("Layout");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
-  const { ColorPicker } = layoutModule.components;
+  // const { ColorPicker } = layoutModule.components;
 
 
   const [form, setForm] = useState<CreateBudgetForm>({ label: "", color: "" });
@@ -55,10 +55,10 @@ export default function DeleteBudgetButton() {
             justifyContent: "center",
           }}
         >
-          <ColorPicker
+          {/* <ColorPicker
             sx={{ width: "40px", height: "40px" }}
             colorChange={(color) => setForm((curr) => ({ ...curr, color: color.hex }))}
-          />
+          /> */}
           <TextField
             id="part-name"
             label="Nome"

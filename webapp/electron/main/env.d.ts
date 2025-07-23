@@ -1,9 +1,4 @@
-/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-  readonly MAIN_VITE_ROOT_PATH: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+declare module 'assets/*.png' {
+  const value: any;
+  export default value;
 }
