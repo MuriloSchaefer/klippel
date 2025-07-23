@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { TwitterPicker, TwitterPickerProps } from "react-color";
+// import { TwitterPicker, TwitterPickerProps } from "react-color";
 
 import Box from "@mui/material/Box";
 import type { ButtonProps } from "@mui/material/Button";
 
-const Dialog = (props: TwitterPickerProps) => {
+const Dialog = (props: any) => {
   return (
     <Box sx={{ position: "absolute" }}>
-      <TwitterPicker {...props} />
+      {/* <TwitterPicker {...props} /> */}
     </Box>
   );
 };
 
 export default function ColorPicker(
-  {colorChange,sx}: ButtonProps & { colorChange?: TwitterPickerProps["onChange"] }
+  {colorChange,sx}: ButtonProps & { colorChange?: any }
 ) {
   const [color, setColor] = useState("#ffffff");
   const [showDialog, setShowDialog] = useState(false);

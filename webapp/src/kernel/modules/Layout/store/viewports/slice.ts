@@ -150,9 +150,9 @@ const slice = createSlice<
             (newState, [vpName, vp]) => {
               if (name === vpName)
                 return { ...newState, [name]: { ...vp, extra: extras } };
-              return { ...newState, [name]: vp };
+              return { ...newState, [vpName]: vp };
             },
-            {}
+            {home: state.viewports.home}
           ),
         };
         return newState;

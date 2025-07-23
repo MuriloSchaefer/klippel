@@ -30,7 +30,7 @@ export default function useModelsManager() {
         "ModelViewport",
         undefined,
         'model',
-        {id: model.id}
+        {id: model.id, view: 'visual'}
       );
       graphsManager.functions.createGraph(model.id)
       dispatch(openModel({model}));

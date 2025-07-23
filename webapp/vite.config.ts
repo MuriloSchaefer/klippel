@@ -12,7 +12,7 @@ export default defineConfig({
     svgrPlugin(),
   ],
 
-  assetsInclude: ['electron/bin/**/*'], // ✅ this is valid
+  assetsInclude: ['electron/bin/**/*', 'electron/assets/**'], // ✅ this is valid
   build: {
     target: "es2020",
     rollupOptions: {
@@ -50,6 +50,10 @@ export default defineConfig({
           }
         },
       },
+      external: [
+        'react-color',
+        '@icons/material/CheckIcon'
+      ]
     },
   },
   resolve: {
@@ -57,11 +61,13 @@ export default defineConfig({
       "@": resolve(__dirname, "./*"),
       "@kernel": resolve(__dirname, "./kernel"),
       "@system": resolve(__dirname, "./system")
-    }
+    }, 
   },
   optimizeDeps: {
     esbuildOptions: {
       target: "es2020",
     },
+
   },
+  
 });

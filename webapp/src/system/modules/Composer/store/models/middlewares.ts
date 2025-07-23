@@ -11,8 +11,9 @@ import {
 } from "./actions";
 import { StoreState } from "@kernel/modules/Store/state";
 import { getWorkspaceFolder } from "@kernel/modules/Store/middlewares";
-import { Model } from "../../typings";
+import { ComposerModuleState, Model } from "../../typings";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
+import { persistModel } from "./slice";
 
 const storage = window.electron.storage;
 const middlewares = createListenerMiddleware();
@@ -22,8 +23,8 @@ middlewares.startListening({
   effect: async (_, listenerApi) => {
     const { dispatch, getState } = listenerApi;
 
-    //   const {Composer: state} = getState() as { Composer: ComposerState }
-    //   Object.values(state.compositionsManager.compositions).forEach(persistCompositionState)
+      const {Composer: state} = getState() as { Composer: ComposerModuleState }
+      Object.values(state.models).forEach(persistModel)
 
     dispatch(sessionSaved());
   },
@@ -44,6 +45,7 @@ middlewares.startListening({
       name: payload.name,
       svg: undefined,
       graph: "./graph.json",
+      graphId: payload.id,
       description: "./description.md",
     };
 

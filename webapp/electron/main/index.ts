@@ -11,13 +11,14 @@ import initScheduler from "./scheduler";
 import { existsSync, outputFile, readFileSync } from "fs-extra";
 import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
 import { debounce } from "./utils";
+import antaPng from "../assets/anta.png?asset"
 
 updateElectronApp();
 if (require("electron-squirrel-startup")) app.quit();
 
 async function createTray(mainWindow: BrowserWindow): Promise<Tray> {
   const tray = new Tray(
-    "/home/schaefer/Pictures/Screenshots/Screenshot_20250507_133104.png"
+    antaPng
   );
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -115,6 +116,8 @@ async function createWindow(): Promise<BrowserWindow> {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+  // make it work in amd gpus
+  // app.disableHardwareAcceleration();
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
 

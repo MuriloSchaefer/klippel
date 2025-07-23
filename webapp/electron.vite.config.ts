@@ -4,6 +4,7 @@ import { resolve } from "path";
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin(), swcPlugin()],
+    publicDir: 'electron/assets',
     build: {
       outDir: "dist/electron/main",
       rollupOptions: {
@@ -15,6 +16,7 @@ export default defineConfig({
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
+    publicDir: 'electron/assets',
     build: {
       outDir: "dist/electron/preload",
       rollupOptions: {
@@ -71,6 +73,9 @@ export default defineConfig({
             }
           },
         },
+        external: [
+          'react-color'
+        ]
       },
     },
   },
