@@ -1,5 +1,5 @@
 import { createSelector } from "reselect";
-import { ComposerModuleState, ModelsMap } from "../../typings";
+import { ComposerModuleState } from "../../typings";
 
 export const selectComposer = <T = ComposerModuleState>(
   selector: (state: ComposerModuleState) => T

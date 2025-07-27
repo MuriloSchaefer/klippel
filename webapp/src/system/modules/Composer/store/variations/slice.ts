@@ -1,15 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { ComposerModuleState, Model } from "../../typings";
 import { MODULE_NAME } from "../../constants";
-import { modelsListed } from "./actions";
 import type { PathLike } from "fs-extra";
-
+import { modelOpened } from "./actions";
 
 const storage = window.electron.storage;
-storage.ensureDir(".session/Composer/models");
-export function persistModelState(state: Model) {
+storage.ensureDir(".session/Composer/variations");
+export function persistVariation(state: Model) {
   storage.writeBlob(
-    `.session/Composer/models/${state.id}.json`,
+    `.session/Composer/variations/${state.id}.json`,
     new Blob([JSON.stringify(state)]),
     {
       encoding: "utf-8",
@@ -19,9 +18,13 @@ export function persistModelState(state: Model) {
 }
 
 const restoreModelsSession = async (
-  sessionPath: PathLike = ".session/Composer/models"
+  sessionPath: PathLike = ".session/Composer/variations"
 ) => {
-  const files = await storage.searchDir<string[]>(sessionPath, ["**/*.json"], {});
+  const files = await storage.searchDir<string[]>(
+    sessionPath,
+    ["**/*.json"],
+    {}
+  );
   const state = await files.reduce(async (acc, file) => {
     const fileContent = await storage.readFile<string>(
       `${sessionPath}/${file}`,
@@ -30,17 +33,17 @@ const restoreModelsSession = async (
     const content = JSON.parse(fileContent) as Model;
     return { ...(await acc), [content.id]: content };
   }, {});
-  return state as ComposerModuleState['models'];
+  return state as ComposerModuleState["variations"];
 };
 
 const slice = createSlice({
-  name: `${MODULE_NAME}-models`,
+  name: `${MODULE_NAME}-variations`,
   initialState: await restoreModelsSession(),
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(modelsListed, (state, { payload }) => ({
+    builder.addCase(modelOpened, (state, { payload: { model } }) => ({
       ...state,
-      ...payload.reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {}),
+      [model.variationId]: model,
     }));
   },
 });
