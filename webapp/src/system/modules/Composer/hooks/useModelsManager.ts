@@ -1,9 +1,11 @@
 import useModule from "@kernel/hooks/useModule";
 import { Model } from "../typings";
 import { Store } from "@kernel/modules/Store";
-import { createModel, listModels, openModel } from "../store/models/actions";
+import { createModel, listModels } from "../store/models/actions";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IGraphModule } from "@kernel/modules/Graphs";
+import { openModel } from "../store/variations/actions";
+import { uniqueId } from "lodash";
 
 export default function useModelsManager() {
   const storeModule = useModule<Store>("Store");
@@ -15,7 +17,6 @@ export default function useModelsManager() {
 
   const dispatch = useAppDispatch();
   const viewportManager = useViewportManager();
-  const graphsManager = graphs()
 
   return {
     createModel: (model: Pick<Model, "id" | "name">) => {
@@ -25,15 +26,15 @@ export default function useModelsManager() {
       dispatch(listModels());
     },
     openModel: (model: Model) => {
+      const variationId: string = uniqueId("variation-instance-");
       viewportManager.functions.addViewport(
         model.name,
         "ModelViewport",
         undefined,
         'model',
-        {id: model.id, view: 'visual'}
+        {id: model.id, variationId, view: 'visual'}
       );
-      graphsManager.functions.createGraph(model.id)
-      dispatch(openModel({model}));
+      dispatch(openModel({ model, variationId }));
     },
   };
 }

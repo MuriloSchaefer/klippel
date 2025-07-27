@@ -5,14 +5,16 @@ import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import VisualView from "./VisualView";
 import ModelView from "./ModelView";
+import CompositionTree from "../CompositionTree/CompositionTree";
+import useVariation from "../../../hooks/useVariation";
 
 export default function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const { ViewportNotificationsTray, SettingsPanel, Accordion } =
     layoutModule.components;
   const { useActiveViewport, useViewportManager } = layoutModule.hooks;
-  const viewport = useActiveViewport();
   const vpManager = useViewportManager();
+  const activeVP = useActiveViewport();
 
   return (
     <>
@@ -30,8 +32,7 @@ export default function ModelViewport() {
           icon={<AccountTreeSharpIcon />}
           summary="composição da peça"
         >
-          Arvore
-          {/* <CompositionTree /> */}
+          <CompositionTree variationId={activeVP.extra.variationId} />
         </Accordion>
       </SettingsPanel>
       <Box sx={{ position: "relative" }}>
@@ -43,11 +44,11 @@ export default function ModelViewport() {
         >
           <Button
             variant={
-              viewport.extra.view === "visual" ? "contained" : "outlined"
+              activeVP.extra.view === "visual" ? "contained" : "outlined"
             }
             onClick={() =>
-              vpManager.functions.setExtras(viewport.name, {
-                ...viewport.extra,
+              vpManager.functions.setExtras(activeVP.name, {
+                ...activeVP.extra,
                 view: "visual",
               })
             }
@@ -55,10 +56,10 @@ export default function ModelViewport() {
             Visual
           </Button>
           <Button
-            variant={viewport.extra.view === "model" ? "contained" : "outlined"}
+            variant={activeVP.extra.view === "model" ? "contained" : "outlined"}
             onClick={() =>
-              vpManager.functions.setExtras(viewport.name, {
-                ...viewport.extra,
+              vpManager.functions.setExtras(activeVP.name, {
+                ...activeVP.extra,
                 view: "model",
               })
             }
@@ -67,7 +68,7 @@ export default function ModelViewport() {
           </Button>
         </ButtonGroup>
         <Box id="view">
-          {viewport.extra.view === "visual" ? <VisualView /> : <ModelView />}
+          {activeVP.extra.view === "visual" ? <VisualView /> : <ModelView />}
         </Box>
       </Box>
     </>
