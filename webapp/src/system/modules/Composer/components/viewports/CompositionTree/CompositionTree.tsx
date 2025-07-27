@@ -1,33 +1,16 @@
-import React, { useCallback, useMemo } from "react";
-import { alpha, styled, useTheme } from "@mui/material/styles";
-import {
-  RichTreeView,
-  treeItemClasses,
-  UseTreeItem2Parameters,
-  useTreeItem2,
-  TreeItem2Provider,
-  TreeItem2Root,
-  TreeItem2IconContainer,
-  TreeItem2Icon,
-  TreeItem2Label,
-  TreeItem2GroupTransition,
-  TreeItem2Content,
-} from "@mui/x-tree-view";
-import Box from "@mui/material/Box";
-
-import { ILayoutModule } from "@kernel/modules/Layout";
-import { IGraphModule } from "@kernel/modules/Graphs";
 import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
-
-
+import { IGraphModule } from "@kernel/modules/Graphs";
+import Node from "@kernel/modules/Graphs/interfaces/Node";
+import { GraphState } from "@kernel/modules/Graphs/store/state";
+import { alpha, Box, styled, useTheme } from "@mui/material";
+import { RichTreeView, TreeItem2Content, TreeItem2GroupTransition, TreeItem2Icon, TreeItem2IconContainer, TreeItem2Label, TreeItem2Provider, TreeItem2Root, treeItemClasses, useTreeItem2, UseTreeItem2Parameters } from "@mui/x-tree-view";
+import React, { useMemo } from "react";
 type Item = {
   id: string;
   label: string;
   children: Item[];
 };
-
-function buildSubTree(graph: CompositionGraph, root: CompositionNode): Item {
+function buildSubTree(graph: GraphState, root: Node): Item { // TODO: Add typing for nodes and edges
   const children = Object.values(graph.edges)
     .filter((e) => e.sourceId == root.id && e.type === "COMPOSED_OF")
     .map((e) => {
@@ -50,14 +33,14 @@ const CustomTreeItemContent = styled(TreeItem2Content)(({ theme }) => ({
 interface CustomTreeItemProps
   extends Omit<UseTreeItem2Parameters, "rootRef">,
     Omit<React.HTMLAttributes<HTMLLIElement>, "onFocus"> {
-  compositionName: string;
+  variationId: string;
 }
 
 const CustomTreeItem = React.forwardRef(function CustomTreeItem(
   props: CustomTreeItemProps,
   ref: React.Ref<HTMLLIElement>
 ) {
-  const { id, itemId, label, disabled, children, compositionName, ...other } =
+  const { id, itemId, label, disabled, children, variationId, ...other } =
     props;
   const theme = useTheme();
 
@@ -70,6 +53,11 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
     status,
   } = useTreeItem2({ id, itemId, children, label, disabled, rootRef: ref });
 
+  // const { state: selectedId } = useComposition(
+  //   { compositionName },
+  //   (c) => c?.selectedPart
+  // );
+  const selectedId = null
   
   return (
     <TreeItem2Provider itemId={itemId}>
@@ -128,45 +116,28 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
   );
 });
 
-export default function CompositionTree() {
-  const storeModule = useModule<Store>("Store");
-  const layoutModule = useModule<ILayoutModule>("Layout");
-  const graphsModule = useModule<IGraphModule>("Graph");
-
-  const { useAppSelector } = storeModule.hooks;
-  const { useGraph } = graphsModule.hooks;
-  const { selectActiveViewport } = layoutModule.store.selectors;
-  const activeViewport = useAppSelector(selectActiveViewport);
-
-  const selector = useCallback(
-    (c: CompositionState | undefined) => ({
-      name: c?.name,
-      svgPath: c?.svgPath,
-      graphId: c?.graphId,
-      selectedPart: c?.selectedPart,
-    }),
-    []
-  );
-  const composition = useComposition(
-    { viewportName: activeViewport! },
-    selector
-  );
-  const graph = useGraph<CompositionGraph>(activeViewport!, (g) => g);
+export default function CompositionTree({
+  variationId,
+}: {
+  variationId: string;
+}) {
+  const graphModule = useModule<IGraphModule>("Graph");
+  const { useGraph } = graphModule.hooks;
+  const graph = useGraph(variationId, (g) => g);
 
   const tree = useMemo(() => {
-    if (!graph.state) return [];
-
-    return Object.values(graph.state.nodes).reduce((acc, curr) => {
-      if (curr.type === "GARMENT") {
-        let root = buildSubTree(graph.state!, curr);
-
-        return [...acc, root];
-      }
-
-      return acc;
-    }, [] as Item[]);
-  }, [graph.state]);
-
+      if (!graph.state) return [];
+  
+      return Object.values(graph.state.nodes).reduce((acc, curr) => {
+        if (curr.type === "GARMENT") {
+          let root = buildSubTree(graph.state!, curr);
+  
+          return [...acc, root];
+        }
+  
+        return acc;
+      }, [] as Item[]);
+    }, [graph.state]);
   return (
     <RichTreeView
       items={tree}
@@ -176,14 +147,13 @@ export default function CompositionTree() {
       // defaultCollapseIcon={<MinusSquare />}
       // defaultExpandIcon={<PlusSquare />}
       // defaultEndIcon={<CloseSquare />}
-      onItemClick={(e, id) => composition.actions.selectPart(id)}
+      // onItemClick={(e, id) => composition.actions.selectPart(id)}
       slots={{
         // @ts-ignore
         item: CustomTreeItem,
       }}
       slotProps={{
-        // @ts-ignore
-        item: { compositionName: composition.state!.name },
+        // item: { variationId: variationId },
       }}
       sx={{ flexGrow: 1, maxWidth: "100%", overflowY: "auto" }}
     />

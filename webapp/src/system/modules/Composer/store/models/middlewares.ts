@@ -3,16 +3,16 @@ import {
   createModel,
   listModels,
   modelCreated,
-  modelOpened,
   modelsListed,
-  openModel,
   saveSession,
   sessionSaved,
 } from "./actions";
 import { StoreState } from "@kernel/modules/Store/state";
 import { getWorkspaceFolder } from "@kernel/modules/Store/middlewares";
-import { Model } from "../../typings";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
+import { persistModelState } from "./slice";
+import { uniqueId } from "lodash";
+import { ComposerModuleState, Model, ModelVariation } from "../../typings";
 
 const storage = window.electron.storage;
 const middlewares = createListenerMiddleware();
@@ -22,8 +22,8 @@ middlewares.startListening({
   effect: async (_, listenerApi) => {
     const { dispatch, getState } = listenerApi;
 
-    //   const {Composer: state} = getState() as { Composer: ComposerState }
-    //   Object.values(state.compositionsManager.compositions).forEach(persistCompositionState)
+    const { Composer: state } = getState() as { Composer: ComposerModuleState };
+    Object.values(state.models).forEach(persistModelState);
 
     dispatch(sessionSaved());
   },
@@ -39,6 +39,7 @@ middlewares.startListening({
     );
     storage.ensureDir(`${workspace}/Models/${payload.id}`);
 
+    const instanceId = uniqueId(payload.id + "-");
     const model: Model = {
       id: payload.id,
       name: payload.name,
@@ -48,7 +49,7 @@ middlewares.startListening({
     };
 
     const graph: GraphState = {
-      id: model.id,
+      id: instanceId,
       nodes: {
         garment: {
           id: "garment",
@@ -83,8 +84,10 @@ middlewares.startListening({
       { encoding: "utf-8" }
     );
 
-    dispatch(modelCreated({ model }));
-    dispatch(listModels())
+    dispatch(
+      modelCreated({ model: { ...model, variationId: instanceId, instanceId } })
+    );
+    dispatch(listModels());
   },
 });
 
@@ -105,7 +108,7 @@ middlewares.startListening({
 
     const models = await Promise.all(
       entries.map(async (filePath) => {
-        const folder = filePath.split("/").slice(0, -1).join("/")
+        const folder = filePath.split("/").slice(0, -1).join("/");
         const state = JSON.parse(
           await storage.readFile(`${rootFolder}/${filePath}`, {
             encoding: "utf-8",
@@ -121,27 +124,6 @@ middlewares.startListening({
     );
 
     dispatch(modelsListed(models));
-  },
-});
-
-
-middlewares.startListening({
-  actionCreator: openModel,
-  effect: async ({payload: {model}}, listenerApi) => {
-    const { dispatch, getState } = listenerApi;
-
-    const workspace = getWorkspaceFolder(
-      getState as () => { Store: StoreState }
-    );
-    const rootFolder = `${workspace}/Models/${model.id}`;
-
-    const graphState = JSON.parse(
-      await storage.readFile(`${rootFolder}/graph.json`, {
-        encoding: "utf-8",
-      })
-    ) as GraphState[]
-
-    dispatch(modelOpened({model}));
   },
 });
 

@@ -1,7 +1,8 @@
 import { StartModuleProps } from "@kernel/modules/base";
 import React from "react";
 import ModelSection from "./components/ModelSection";
-import middlewares from "./store/models/middlewares";
+import modelsMiddlewares from "./store/models/middlewares";
+import variationMiddlewares from "./store/variations/middlewares";
 import { saveSession } from "./store/models/actions";
 import { MODULE_NAME } from "./constants";
 import slice from "./store/slice";
@@ -20,7 +21,8 @@ export function startModule({
   );
 
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
-  storeManager.functions.registerMiddleware(middlewares);
+  storeManager.functions.registerMiddleware(modelsMiddlewares);
+  storeManager.functions.registerMiddleware(variationMiddlewares);
   // storeManager.functions.registerMiddleware(graphMiddlewares)
 
   componentRegistryManager.functions.registerComponents({
