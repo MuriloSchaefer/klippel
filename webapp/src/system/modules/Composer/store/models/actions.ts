@@ -23,3 +23,6 @@ export const listModels = createAction(
 export const modelsListed = createAction<Model[]>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Models listed`
 );
+
+export const saveModel = createAction<ModelVariation>(`[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Save model`)
+export const modelSaved = createAction<ModelVariation>(`[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Model saved`)

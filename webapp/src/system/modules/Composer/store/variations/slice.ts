@@ -1,14 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { ComposerModuleState, Model } from "../../typings";
+import { ComposerModuleState, ModelVariation } from "../../typings";
 import { MODULE_NAME } from "../../constants";
 import type { PathLike } from "fs-extra";
-import { modelOpened } from "./actions";
+import { modelOpened, viewUploaded } from "./actions";
 
 const storage = window.electron.storage;
 storage.ensureDir(".session/Composer/variations");
-export function persistVariation(state: Model) {
+export function persistVariation(state: ModelVariation) {
   storage.writeBlob(
-    `.session/Composer/variations/${state.id}.json`,
+    `.session/Composer/variations/${state.variationId}.json`,
     new Blob([JSON.stringify(state)]),
     {
       encoding: "utf-8",
@@ -30,8 +30,8 @@ const restoreModelsSession = async (
       `${sessionPath}/${file}`,
       { encoding: "utf-8" }
     );
-    const content = JSON.parse(fileContent) as Model;
-    return { ...(await acc), [content.id]: content };
+    const content = JSON.parse(fileContent) as ModelVariation;
+    return { ...(await acc), [content.variationId]: content };
   }, {});
   return state as ComposerModuleState["variations"];
 };
@@ -44,6 +44,11 @@ const slice = createSlice({
     builder.addCase(modelOpened, (state, { payload: { model } }) => ({
       ...state,
       [model.variationId]: model,
+    }));
+
+    builder.addCase(viewUploaded, (state, { payload: { variationId, svgPath } }) => ({
+      ...state,
+      [variationId]: {...state[variationId], svg: svgPath}
     }));
   },
 });

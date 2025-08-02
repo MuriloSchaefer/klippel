@@ -1,18 +1,22 @@
+import { uniqueId } from "lodash";
 import { createListenerMiddleware } from "@reduxjs/toolkit";
+import { getWorkspaceFolder } from "@kernel/modules/Store/middlewares";
+import type { StoreState } from "@kernel/modules/Store/state";
+import type { GraphsManagerState, GraphState } from "@kernel/modules/Graphs/store/state";
+import type { SVGModuleState } from "@kernel/modules/SVG/store/state";
+import type { MarkdownModuleState } from "@kernel/modules/Markdown/store/state";
+import type { ComposerModuleState, Model, ModelVariation } from "../../typings";
+import { persistModelState } from "./slice";
 import {
   createModel,
   listModels,
   modelCreated,
+  modelSaved,
   modelsListed,
+  saveModel,
   saveSession,
   sessionSaved,
 } from "./actions";
-import { StoreState } from "@kernel/modules/Store/state";
-import { getWorkspaceFolder } from "@kernel/modules/Store/middlewares";
-import type { GraphState } from "@kernel/modules/Graphs/store/state";
-import { persistModelState } from "./slice";
-import { uniqueId } from "lodash";
-import { ComposerModuleState, Model, ModelVariation } from "../../typings";
 
 const storage = window.electron.storage;
 const middlewares = createListenerMiddleware();
@@ -86,7 +90,7 @@ middlewares.startListening({
     );
 
     dispatch(
-      modelCreated({ model: { ...model, variationId: instanceId, instanceId } })
+      modelCreated({ model: { ...model, variationId: instanceId, instanceId, selectedPart: 'garment' } })
     );
     dispatch(listModels());
   },
@@ -125,6 +129,50 @@ middlewares.startListening({
     );
 
     dispatch(modelsListed(models));
+  },
+});
+
+
+middlewares.startListening({
+  actionCreator: saveModel,
+  effect: async ({payload}, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+
+    const currState = getState() as { Store: StoreState, SVG: SVGModuleState, Graph: GraphsManagerState, Markdown: MarkdownModuleState }
+    const workspace = getWorkspaceFolder(
+      getState as () => typeof currState
+    );
+    const rootFolder = `${workspace}/Models/${payload.id}`;
+    const state: Model = {id: payload.id, name: payload.name, graph:'./graph.json'}
+
+    //save svg
+    if (payload.svg){
+      const svgPath = `${rootFolder}/view.svg`
+      const svg = currState.SVG.svgs[payload.svg].instances[payload.variationId]
+      if (svg.content){
+        storage.writeBlob(svgPath, new Blob([svg.content]))
+      }
+      state.svg = './view.svg'
+    }
+
+    // save graph
+    const graphPath = `${rootFolder}/graph.json`
+    const {searchResults, ...graphState} = currState.Graph.graphs[payload.variationId]
+    storage.writeBlob(graphPath, new Blob([JSON.stringify(graphState)]))
+
+    //save description
+    let descriptionPath = null
+    if (payload.description){
+      descriptionPath = `${rootFolder}/description.md`
+      storage.writeBlob(descriptionPath, new Blob([payload.description]))
+      state.description = './description.md'
+    }
+
+    //save state
+    storage.writeBlob(`${rootFolder}/model.json`, new Blob([JSON.stringify(state)]))
+
+    
+    dispatch(modelSaved(payload));
   },
 });
 

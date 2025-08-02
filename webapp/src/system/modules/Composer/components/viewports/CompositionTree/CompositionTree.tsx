@@ -2,7 +2,7 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
-import { alpha, Box, styled, useTheme } from "@mui/material";
+import { alpha, Box, IconButton, styled, useTheme } from "@mui/material";
 import {
   RichTreeView,
   TreeItemContent,
@@ -14,9 +14,11 @@ import {
   TreeItemRoot,
   treeItemClasses,
   useTreeItem,
-  UseTreeItemParameters,
+  TreeItemProps,
 } from "@mui/x-tree-view";
+import useVariation from "@system/modules/Composer/hooks/useVariation";
 import React, { useMemo } from "react";
+import AddCircleOutlineSharpIcon from '@mui/icons-material/AddCircleOutlineSharp';
 type Item = {
   id: string;
   label: string;
@@ -43,14 +45,8 @@ const CustomTreeItemContent = styled(TreeItemContent)(({ theme }) => ({
   },
 }));
 
-interface CustomTreeItemProps
-  extends Omit<UseTreeItemParameters, "rootRef">,
-    Omit<React.HTMLAttributes<HTMLLIElement>, "onFocus"> {
-  variationId: string;
-}
-
 const CustomTreeItem = React.forwardRef(function CustomTreeItem(
-  props: CustomTreeItemProps,
+  props: TreeItemProps & { variationId: string },
   ref: React.Ref<HTMLLIElement>
 ) {
   const { id, itemId, label, disabled, children, variationId, ...other } =
@@ -65,16 +61,17 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
     getGroupTransitionProps,
     status,
   } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
+  const rootProps: any = getRootProps(other); // TODO: type it
+  
+  const {
+    state: variation,
+  } = useVariation(variationId);
 
-  // const { state: selectedId } = useComposition(
-  //   { compositionName },
-  //   (c) => c?.selectedPart
-  // );
-  const selectedId = null;
+  if (!variation) return <></> // TODO: error
 
   return (
     <TreeItemProvider id={itemId} itemId={itemId}>
-      <TreeItemRoot {...getRootProps(other)}>
+      <TreeItemRoot >
         <CustomTreeItemContent {...getContentProps()}>
           {children && (
             <TreeItemIconContainer
@@ -98,13 +95,12 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
             sx={{ flexGrow: 1, display: "flex", gap: 1, alignItems: "center" }}
           >
             <TreeItemLabel {...getLabelProps()} />
-            {selectedId === itemId && (
+            {variation.selectedPart === itemId && (
               <>
-                {/* <AddPartButton
-                  compositionName={compositionName}
-                  parentId={itemId}
-                />
-                <RemovePartButton
+                <IconButton>
+                  <AddCircleOutlineSharpIcon />
+                </IconButton>
+                {/*<RemovePartButton
                   compositionName={compositionName}
                   nodeId={itemId}
                 /> */}
@@ -153,25 +149,24 @@ export default function CompositionTree({
       return acc;
     }, [] as Item[]);
   }, [graph.state]);
+
+  const {
+    state: variation,
+  } = useVariation(variationId);
+
+  if (!variation) return <></> // TODO: error
+
   return (
     <RichTreeView
       items={tree}
       aria-label="composition tree"
-      // defaultExpanded={["root"]}
       defaultExpandedItems={["garment"]}
-      // defaultCollapseIcon={<MinusSquare />}
-      // defaultExpandIcon={<PlusSquare />}
-      // defaultEndIcon={<CloseSquare />}
-      // onItemClick={(e, id) => composition.actions.selectPart(id)}
+      selectedItems={variation.selectedPart}
       slots={{
-        // @ts-ignore
-        item: CustomTreeItem,
+        item: (props, ref) => (
+          <CustomTreeItem {...props} ref={ref} variationId={variationId} />
+        ),
       }}
-      slotProps={
-        {
-          // item: { variationId: variationId },
-        }
-      }
       sx={{ flexGrow: 1, maxWidth: "100%", overflowY: "auto" }}
     />
   );

@@ -13,3 +13,7 @@ export const modelOpened = createAction<{model: ModelVariation}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Model openened`
 );
 
+export const uploadView = createAction<{variationId: string, file: File}>(`[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Upload view`)
+export const viewUploaded = createAction<{variationId: string, file: File, svgPath: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] View uploaded`
+);

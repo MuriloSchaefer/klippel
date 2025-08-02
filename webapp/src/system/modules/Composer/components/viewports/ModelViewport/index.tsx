@@ -2,7 +2,7 @@ import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import SaveSharpIcon from "@mui/icons-material/SaveSharp";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
-import { Box, Button, ButtonGroup } from "@mui/material";
+import { Box, Button, ButtonGroup, useTheme } from "@mui/material";
 import VisualView from "./VisualView";
 import ModelView from "./ModelView";
 import CompositionTree from "../CompositionTree/CompositionTree";
@@ -15,13 +15,16 @@ export default function ModelViewport() {
   const { useActiveViewport, useViewportManager } = layoutModule.hooks;
   const vpManager = useViewportManager();
   const activeVP = useActiveViewport();
+  const variation = useVariation(activeVP.extra.variationId)
+
+  const theme = useTheme();
 
   return (
     <>
       <ViewportNotificationsTray>
         <SaveSharpIcon
           fontSize="small"
-          onClick={() => console.log("save model")}
+          onClick={variation.actions.saveAsModel}
           sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}
         />
       </ViewportNotificationsTray>
@@ -35,12 +38,25 @@ export default function ModelViewport() {
           <CompositionTree variationId={activeVP.extra.variationId} />
         </Accordion>
       </SettingsPanel>
-      <Box sx={{ position: "relative" }}>
+      <Box
+        sx={{
+          padding: 1,
+          height: "100%",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
         <ButtonGroup
           disableElevation
           variant="contained"
           aria-label="Disabled button group"
-          sx={{ position: "absolute", right: 10, top: 0 }}
+          sx={{
+            position: "absolute",
+            right: 10,
+            top: 0,
+            zIndex: theme.zIndex.fab,
+            backgroundColor: theme.palette.background.default
+          }}
         >
           <Button
             variant={
@@ -67,9 +83,7 @@ export default function ModelViewport() {
             Modelo
           </Button>
         </ButtonGroup>
-        <Box id="view">
-          {activeVP.extra.view === "visual" ? <VisualView /> : <ModelView />}
-        </Box>
+        {activeVP.extra.view === "visual" ? <VisualView variationId={activeVP.extra.variationId}/> : <ModelView />}
       </Box>
     </>
   );
