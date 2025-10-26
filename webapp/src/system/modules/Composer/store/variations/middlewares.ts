@@ -6,7 +6,7 @@ import type { GraphState } from "@kernel/modules/Graphs/store/state";
 import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { saveSession, sessionSaved } from "../models/actions";
 import { ComposerModuleState } from "@system/modules/Composer/typings";
-import { modelOpened, openModel } from "./actions";
+import { modelOpened, openModel, partSelected, selectPart } from "./actions";
 import { persistVariation } from "./slice";
 import { LayoutState } from "@kernel/modules/Layout/store/state";
 
@@ -41,8 +41,24 @@ middlewares.startListening({
     ) as GraphState;
 
     dispatch(loadGraph({ graphId: variationId, graph: {...graphState, id: variationId} }));
-    dispatch(modelOpened({ model: {...model, variationId, instanceId: variationId} }));
+    dispatch(modelOpened({ model: {...model, variationId, instanceId: variationId, selectedPart: 'garment'} }));
   },
 });
+
+middlewares.startListening({
+  actionCreator: selectPart,
+  effect: async ({ payload: { variationId, partId } }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    const { Composer: state } = getState() as { Composer: ComposerModuleState };
+    const variation = state.variations[variationId];
+    if (!variation) {
+      console.warn(`Variation with id ${variationId} not found`);
+      return;
+    }
+
+    dispatch(partSelected({ variationId, partId }));
+  },
+});
+
 
 export default middlewares;

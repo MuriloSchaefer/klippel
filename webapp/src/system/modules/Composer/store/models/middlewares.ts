@@ -12,7 +12,7 @@ import { getWorkspaceFolder } from "@kernel/modules/Store/middlewares";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
 import { persistModelState } from "./slice";
 import { uniqueId } from "lodash";
-import { ComposerModuleState, Model, ModelVariation } from "../../typings";
+import { ComposerModuleState, Model } from "../../typings";
 
 const storage = window.electron.storage;
 const middlewares = createListenerMiddleware();
@@ -85,7 +85,7 @@ middlewares.startListening({
     );
 
     dispatch(
-      modelCreated({ model: { ...model, variationId: instanceId, instanceId } })
+      modelCreated({ model: { ...model, variationId: instanceId, instanceId, selectedPart: 'garment' } })
     );
     dispatch(listModels());
   },

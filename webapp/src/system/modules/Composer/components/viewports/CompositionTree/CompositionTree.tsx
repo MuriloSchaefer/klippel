@@ -4,7 +4,10 @@ import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
 import { alpha, Box, styled, useTheme } from "@mui/material";
 import { RichTreeView, TreeItem2Content, TreeItem2GroupTransition, TreeItem2Icon, TreeItem2IconContainer, TreeItem2Label, TreeItem2Provider, TreeItem2Root, treeItemClasses, useTreeItem2, UseTreeItem2Parameters } from "@mui/x-tree-view";
+import useVariation from "@system/modules/Composer/hooks/useVariation";
 import React, { useMemo } from "react";
+import AddPartButton from "./AddPartButton";
+import RemovePartButton from "./RemovePartButton";
 type Item = {
   id: string;
   label: string;
@@ -12,7 +15,7 @@ type Item = {
 };
 function buildSubTree(graph: GraphState, root: Node): Item { // TODO: Add typing for nodes and edges
   const children = Object.values(graph.edges)
-    .filter((e) => e.sourceId == root.id && e.type === "COMPOSED_OF")
+    .filter((e) => e.sourceId == root.id && e.type === "HAS_PART")
     .map((e) => {
       return buildSubTree(graph, graph.nodes[e.targetId]);
     });
@@ -53,16 +56,12 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
     status,
   } = useTreeItem2({ id, itemId, children, label, disabled, rootRef: ref });
 
-  // const { state: selectedId } = useComposition(
-  //   { compositionName },
-  //   (c) => c?.selectedPart
-  // );
-  const selectedId = null
+  const modelVariation = useVariation({variationId})
   
   return (
-    <TreeItem2Provider itemId={itemId}>
+    <TreeItem2Provider itemId={itemId} >
       <TreeItem2Root {...getRootProps(other)}>
-        <CustomTreeItemContent {...getContentProps()}>
+        <CustomTreeItemContent {...getContentProps()} >
           {children && <TreeItem2IconContainer
             {...getIconContainerProps()}
             sx={{
@@ -83,16 +82,16 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
             sx={{ flexGrow: 1, display: "flex", gap: 1, alignItems: "center" }}
           >
             <TreeItem2Label {...getLabelProps()} />
-            {selectedId === itemId && (
+            {modelVariation.state?.selectedPart === itemId && (
               <>
-                {/* <AddPartButton
-                  compositionName={compositionName}
+                <AddPartButton
+                  variationId={variationId}
                   parentId={itemId}
                 />
                 <RemovePartButton
-                  compositionName={compositionName}
-                  nodeId={itemId}
-                /> */}
+                  variationId={variationId}
+                  itemId={itemId}
+                />
               </>
             )}
           </Box>
@@ -124,7 +123,7 @@ export default function CompositionTree({
   const graphModule = useModule<IGraphModule>("Graph");
   const { useGraph } = graphModule.hooks;
   const graph = useGraph(variationId, (g) => g);
-
+  console.log(graph)
   const tree = useMemo(() => {
       if (!graph.state) return [];
   
@@ -138,22 +137,26 @@ export default function CompositionTree({
         return acc;
       }, [] as Item[]);
     }, [graph.state]);
+
+  console.log(tree)
+  const modelVariation = useVariation({variationId})
   return (
     <RichTreeView
       items={tree}
       aria-label="composition tree"
-      // defaultExpanded={["root"]}
       defaultExpandedItems={["garment"]}
-      // defaultCollapseIcon={<MinusSquare />}
-      // defaultExpandIcon={<PlusSquare />}
-      // defaultEndIcon={<CloseSquare />}
-      // onItemClick={(e, id) => composition.actions.selectPart(id)}
       slots={{
         // @ts-ignore
         item: CustomTreeItem,
       }}
       slotProps={{
-        // item: { variationId: variationId },
+        item: { 
+        // @ts-ignore
+          variationId: variationId
+        },
+      }}
+      onItemSelectionToggle={(e, itemId, selected) => {
+        if (selected) modelVariation.actions.selectPart(itemId);
       }}
       sx={{ flexGrow: 1, maxWidth: "100%", overflowY: "auto" }}
     />

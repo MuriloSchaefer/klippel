@@ -10,9 +10,7 @@
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=MuriloSchaefer_composer&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=MuriloSchaefer_composer)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=MuriloSchaefer_composer&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=MuriloSchaefer_composer)
 
-This is a project to study micro-kernel architecture using React and Redux. Eventually this will evolve to also include backend and infrastructure projects.
-
-Play with the platform in the [playground](https://muriloschaefer.github.io/klippel).
+This is a project to study micro-kernel architecture using React and Redux. It is a cloth compositor where users can build garment while keeping track of materials, cost and time needed for their creations.
 
 ## Running the project
 At the moment only the webapp is available. To run it execute the following commands:
