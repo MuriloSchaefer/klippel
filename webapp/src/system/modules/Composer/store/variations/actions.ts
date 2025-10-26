@@ -13,3 +13,9 @@ export const modelOpened = createAction<{model: ModelVariation}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Model openened`
 );
 
+export const selectPart = createAction<{ variationId: string, partId: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Select part`
+);
+export const partSelected = createAction<{variationId: string, partId: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Part selected`
+);

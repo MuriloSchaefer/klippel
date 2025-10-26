@@ -5,6 +5,7 @@ import {
   newGraphState,
   GraphsManagerState,
   GraphState,
+  AdjacencyList,
 } from "../state";
 import {
   addEdge,
@@ -22,11 +23,15 @@ import { saveSession } from "../graphsManager/actions";
 const storage = window.electron.storage;
 
 export const sessionSaver = (store: Store<GraphsManagerState>) => () => {
-  store.dispatch(saveSession())
+  store.dispatch(saveSession());
 };
 
 export async function persistState(state: GraphState) {
-  await storage.writeBlob(`.session/Graph/graphs/${state.id}.json`, new Blob([JSON.stringify({...state, searchResults: {}})]), { encoding: "utf-8" });
+  await storage.writeBlob(
+    `.session/Graph/graphs/${state.id}.json`,
+    new Blob([JSON.stringify({ ...state, searchResults: {} })]),
+    { encoding: "utf-8" }
+  );
   return state;
 }
 
@@ -49,6 +54,27 @@ const slice = createSlice({
           if (!graph) throw Error("Graph does not exist");
           const nodeState = graph.nodes[node.id];
           if (nodeState) throw Error("Node already exists");
+
+          let otherNodesChanges: AdjacencyList = Object.entries(edges.inputs).reduce(
+            (acc, [id, edge]) => ({
+              ...acc,
+              [edge.sourceId]: {
+                ...graph.adjacencyList[edge.sourceId],
+                outputs: [...graph.adjacencyList[edge.sourceId].outputs, id],
+              },
+            }),
+            {}
+          );
+          otherNodesChanges = Object.entries(edges.outputs).reduce(
+            (acc, [id, edge]) => ({
+              ...acc,
+              [edge.targetId]: {
+                ...otherNodesChanges[edge.targetId],
+                inputs: [...otherNodesChanges[edge.targetId].inputs, id],
+              },
+            }),
+            otherNodesChanges
+          );
 
           const newGraphState = {
             ...graph,
@@ -73,34 +99,9 @@ const slice = createSlice({
                 inputs: Object.keys(edges.inputs),
                 outputs: Object.keys(edges.outputs),
               },
-              ...Object.entries(edges.inputs).reduce(
-                (acc, [id, edge]) => ({
-                  ...acc,
-                  [edge.sourceId]: {
-                    ...graph.adjacencyList[edge.sourceId],
-                    outputs: [
-                      ...graph.adjacencyList[edge.sourceId].outputs,
-                      id,
-                    ],
-                  },
-                }),
-                {}
-              ),
-              ...Object.entries(edges.outputs).reduce(
-                (acc, [id, edge]) => ({
-                  ...acc,
-                  [edge.targetId]: {
-                    ...graph.adjacencyList[edge.targetId],
-                    inputs: [
-                      ...graph.adjacencyList[edge.targetId].inputs,
-                      id,
-                    ],
-                  },
-                }),
-                {}
-              ),
+              ...otherNodesChanges,
             },
-          }
+          };
 
           return {
             ...state,
@@ -151,7 +152,7 @@ const slice = createSlice({
                 !edgesToRemove.includes(id) ? { ...acc, [id]: curr } : acc,
               {}
             ),
-          }
+          };
 
           return {
             ...state,
@@ -190,14 +191,13 @@ const slice = createSlice({
           graph.adjacencyList[edge.sourceId].outputs.push(edge.id);
           graph.adjacencyList[edge.targetId].inputs.push(edge.id);
 
-
           return state;
         }
       )
       .addCase(
         removeEdge,
         (state: GraphsManagerState, { payload: { graphId, edgeId } }) => {
-          const edge = state.graphs[graphId].edges[edgeId]
+          const edge = state.graphs[graphId].edges[edgeId];
 
           const newGraphState = {
             ...state.graphs[graphId],
@@ -209,15 +209,11 @@ const slice = createSlice({
                   ? {
                       ...acc,
                       [id]: {
-                        inputs: curr.inputs.filter(
-                          (i) => i !== edgeId
-                        ),
-                        outputs: curr.outputs.filter(
-                          (i) => i !== edgeId
-                        ),
+                        inputs: curr.inputs.filter((i) => i !== edgeId),
+                        outputs: curr.outputs.filter((i) => i !== edgeId),
                       },
                     }
-                  : {...acc, [id]: curr},
+                  : { ...acc, [id]: curr },
               {}
             ),
             edges: Object.entries(state.graphs[graphId].edges).reduce(
@@ -225,8 +221,7 @@ const slice = createSlice({
                 id !== edgeId ? { ...acc, [id]: curr } : acc,
               {}
             ),
-          }
-          
+          };
 
           return {
             ...state,
@@ -262,7 +257,7 @@ const slice = createSlice({
               ...state.graphs[graphId].searchResults,
               [searchId]: results,
             },
-          }
+          };
           return {
             ...state,
             graphs: {
@@ -271,25 +266,29 @@ const slice = createSlice({
             },
           };
         }
-      ).addCase(invalidateSearch, (state, {payload: {graphId, searchId}})=>{
-        const newGraphState = {
-          ...state.graphs[graphId],
-          searchResults: {
-            ...state.graphs[graphId].searchResults,
-            [searchId]: {
-              ...state.graphs[graphId].searchResults[searchId],
-              outdated: true
+      )
+      .addCase(
+        invalidateSearch,
+        (state, { payload: { graphId, searchId } }) => {
+          const newGraphState = {
+            ...state.graphs[graphId],
+            searchResults: {
+              ...state.graphs[graphId].searchResults,
+              [searchId]: {
+                ...state.graphs[graphId].searchResults[searchId],
+                outdated: true,
+              },
             },
-          }
+          };
+          return {
+            ...state,
+            graphs: {
+              ...state.graphs,
+              [graphId]: newGraphState,
+            },
+          };
         }
-        return {
-          ...state,
-          graphs: {
-            ...state.graphs,
-            [graphId]: newGraphState
-          }
-        }
-      })
+      );
   },
 });
 
