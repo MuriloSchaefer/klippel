@@ -32,7 +32,7 @@ export default function useModelsManager() {
         "ModelViewport",
         undefined,
         "model",
-        { id: model.id, variationId }
+        { id: model.id, variationId, view: 'graph' }
       );
       dispatch(openModel({ model, variationId }));
     },

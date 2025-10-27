@@ -2,7 +2,7 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { Store } from "@kernel/modules/Store";
 import { selectPart } from "../store/variations/actions";
-import { PartNode } from "../typings";
+import { ComposerModuleState, PartNode } from "../typings";
 import { EdgeMap } from "@kernel/modules/Graphs/hooks/useGraph";
 
 export default function useVariation({ variationId }: { variationId: string }) {
@@ -14,7 +14,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
   const { useGraph } = graphModule.hooks;
 
   const state = useAppSelector(
-    (state) => state.Composer.variations[variationId]
+    (state: { Composer: ComposerModuleState }) => state.Composer.variations[variationId]
   );
   const graph = useGraph(variationId, (g) => g && g);
   return {
