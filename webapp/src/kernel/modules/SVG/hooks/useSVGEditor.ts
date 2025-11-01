@@ -3,8 +3,6 @@ import {
   axisBottom,
   axisRight,
   scaleLinear,
-  select,
-  zoom,
 } from "d3";
 import {
   useContext,
@@ -21,6 +19,7 @@ import { updateSVG } from "../store/actions";
 import { useTheme } from "@mui/material/styles";
 import { EditorToolkitContext } from "../components/SVGEditorToolkit";
 import { randomString } from "@kernel/utils";
+import useD3Container from "./useD3Container";
 
 
 interface SVGEditorProps {
@@ -32,6 +31,9 @@ interface SVGEditorProps {
 interface SVGEditor {
   svgRef: React.RefObject<SVGSVGElement>;
   wrapperRef: React.RefObject<HTMLDivElement>;
+  container: ReturnType<typeof useD3Container>;
+  width: number;
+  height: number;
   transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement): void;
 }
 
@@ -55,8 +57,8 @@ export const useSVGEditor = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(wrapperRef);
-  const width = dimensions?.width ?? 0;
-  const height = dimensions?.height ?? 0;
+  const width = dimensions?.width ?? 700;
+  const height = dimensions?.height ?? 700;
 
   const theme = useTheme();
 
@@ -78,12 +80,13 @@ export const useSVGEditor = ({
     state: { tools },
   } = useContext(EditorToolkitContext);
 
+  const container = useD3Container().width(width).height(height)
+
   useLayoutEffect(() => {
     if (!dimensions || !svgRef.current || !svgState?.content || !parsedSVG) {
       return;
     }
-
-    select(svgRef.current).datum(null).call(render);
+    container.render(null, svgRef.current);
   }, [
     dimensions,
     svgRef.current,
@@ -115,10 +118,10 @@ export const useSVGEditor = ({
   const [zoomTransform, setZoomTransform] = useState(undefined)
   const [pickingElements, setPickingElements] = useState<PickingElements>([])
 
-  function render(svg: Selection<SVGSVGElement, undefined, null, undefined>) {
-    svg.selectChildren("*").remove();
+  function renderPreview(selection: Selection<SVGGElement, any, SVGSVGElement, any>) {
+    selection.selectChildren("*").remove();
 
-    const defs = svg.append("defs");
+    const defs = selection.append("defs");
 
     //add helper for tools
     const pattern = defs
@@ -143,58 +146,12 @@ export const useSVGEditor = ({
       .attr("y2", "10")
       .attr("style", `stroke:${theme.palette.primary.main}; stroke-width:10;`);
 
-    const gridGroup = svg.append("g").attr("role", "grid");
-    const editorContainer = svg.append("g").attr("role", "container");
-
-
-    // Add grid
-    const gX = gridGroup
-      .append("g")
-      .attr("class", "axis axis--x")
-      .attr("stroke-opacity", "0.3")
-      .attr("stroke-dasharray", "6 1")
-      .attr("stroke-width", "0.5px")
-      .call(xAxis);
-    const gY = gridGroup
-      .append("g")
-      .attr("class", "axis axis--y")
-      .attr("stroke-opacity", "0.3")
-      .attr("stroke-dasharray", "6 1")
-      .attr("stroke-width", "0.5px")
-      .call(yAxis);
-
-
-
-    // add zoom 
-    // @ts-ignore TODO: fix typing
-    const zoomFunc = zoom<Element, undefined>()
-      .scaleExtent([-10, 40]) 
-      // @ts-ignore TODO: fix typing
-      .filter((event) => {
-        event.preventDefault();
-        return (!event.ctrlKey || event.type === "wheel") && !event.button;
-      })
-      // @ts-ignore TODO: fix typing
-      .on("zoom", ({ transform }, d) => { 
-        editorContainer.attr("transform", transform);
-        gX.call(xAxis.scale(transform.rescaleX(x)));
-        gY.call(yAxis.scale(transform.rescaleY(y)));
-        setZoomTransform(transform)
-      });
-    svg // @ts-ignore TODO: fix typing
-      .call(zoomFunc)
-    
-    if (zoomTransform){
-      // @ts-ignore TODO: fix typing
-      svg.call(zoomFunc.transform, zoomTransform)
-    }
-
+    const editorContainer = selection.append("g").attr("role", "container");
 
     if (!parsedSVG) {
       console.error("SVG could not be parsed!");
       return;
     }
-
 
     // attach proxies
     const proxies = Object.entries(svgState?.proxies ?? {});
@@ -212,7 +169,6 @@ export const useSVGEditor = ({
         const e = parsedSVG.getElementById(id)
         if (e){
           e.setAttribute('fill', "url(#pick-hatch-pattern)")
-
         }
       })
     }
@@ -287,6 +243,16 @@ export const useSVGEditor = ({
     editorContainer.node()?.append(beforeInjection(parsedSVG));
   }
 
+  container.content([
+    (root, selection, datum) => {
+      const editorPreview = selection.append("g").attr("id", "SVG-editor-preview");
+      renderPreview(editorPreview)
+    },
+    (root, selection, datum) => {
+      const toolsContainer = selection.append("g").attr("id", "SVG-editor-tools");
+    }
+  ])
+
   function transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement) {
     const serialized = new XMLSerializer().serializeToString(fn(parsedSVG));
     dispatch(updateSVG({ path: svgPath, instanceName, document: serialized }));
@@ -294,6 +260,9 @@ export const useSVGEditor = ({
   return {
     svgRef,
     wrapperRef,
+    width,
+    height,
+    container,
     transform,
   };
 };

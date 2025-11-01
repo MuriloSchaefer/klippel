@@ -3,8 +3,6 @@ import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
 
-import type { CompoundValue, UnitValue } from "@system/modules/Converter/typings";
-
 export type Model = {
     id: string,
     name: string,
@@ -36,10 +34,32 @@ export type PartNode = Node & {
     label: string;
 }
 
+export type MaterialNode = Node & {
+    type: "MATERIAL";
+    label: string;
+    materialId: number;
+    attributes?: {}
+        
+}
+
 // edges definitions
 export type HasPartEdge = Edge & {
     type: "HAS_PART";
 }
 export type PartOfEdge = Edge & {
     type: "PART_OF";
+}
+export type MaterialOfEdge = Edge & {
+    type: "MATERIAL_OF";
+}
+export type  HasMaterialEdge = Edge & {
+    type: "HAS_MATERIAL";
+} 
+export type VariationGraphState = GraphState & {
+    nodes: {
+        [key: string]: GarmentNode | PartNode | MaterialNode;
+    };
+    edges: {
+        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge;
+    };
 }

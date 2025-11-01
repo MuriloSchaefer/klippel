@@ -9,7 +9,7 @@ import { useCallback } from "react";
 import { selectMaterialTypes } from "../../store/materialTypes/selectors";
 import { MaterialType } from "../../store/materialTypes/state";
 
-interface MaterialTypeSelectorProps extends SelectProps<any> {
+type MaterialTypeSelectorProps = SelectProps<string> & {
   filter?: (types: MaterialType) => boolean;
 }
 

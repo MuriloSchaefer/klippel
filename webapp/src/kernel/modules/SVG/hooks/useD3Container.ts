@@ -32,7 +32,7 @@ export default function <D = any>(): D3Container<D> {
   let _height = 700;
   let _underlays: Underlay<D>[] = [];
   let _content: Content<D>[] = [];
-  let _overlays: Underlay<D>[] = [];
+  let _overlays: Overlay<D>[] = [];
 
   function render(selection: Selection<SVGSVGElement, D, null, undefined>) {
     selection.each((data) => {
@@ -66,7 +66,7 @@ export default function <D = any>(): D3Container<D> {
     value ? ((_underlays = value), container) : _underlays;
   container.content = (value?: Content<D>[]) =>
     value ? ((_content = value), container) : _content;
-  container.overlays = (value?: Underlay<D>[]) =>
+  container.overlays = (value?: Overlay<D>[]) =>
     value ? ((_overlays = value), container) : _overlays;
 
   container.render = container;

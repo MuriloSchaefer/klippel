@@ -123,7 +123,6 @@ export default function CompositionTree({
   const graphModule = useModule<IGraphModule>("Graph");
   const { useGraph } = graphModule.hooks;
   const graph = useGraph(variationId, (g) => g);
-  console.log(graph)
   const tree = useMemo(() => {
       if (!graph.state) return [];
   
@@ -138,7 +137,6 @@ export default function CompositionTree({
       }, [] as Item[]);
     }, [graph.state]);
 
-  console.log(tree)
   const modelVariation = useVariation({variationId})
   return (
     <RichTreeView
