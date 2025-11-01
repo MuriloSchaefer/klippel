@@ -1,3 +1,5 @@
+// Removed duplicate import of useModule
+import MaterialListAccordion from "../MaterialListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import SaveSharpIcon from "@mui/icons-material/SaveSharp";
@@ -8,11 +10,12 @@ import SVGView from "./SVGView";
 import GraphView from "./GraphView";
 import { useMemo } from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
-import { select } from "d3";
+import DetailPanel from "./DetailPanel";
+import WidgetsSharpIcon from '@mui/icons-material/WidgetsSharp';
 
 export default function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
-  const { ViewportNotificationsTray, SettingsPanel, Accordion } =
+  const { ViewportNotificationsTray, SettingsPanel, Accordion, DetailsPanel } =
     layoutModule.components;
 
   const { useActiveViewport, useViewportManager } = layoutModule.hooks;
@@ -23,7 +26,7 @@ export default function ModelViewport() {
   const variation = useVariation({ variationId: activeVP.extra.variationId });
 
   const view = useMemo(() => {
-    console.log(activeVP.extra.view)
+    
     switch (activeVP.extra.view) {
       case "svg":
         return <SVGView variationId={activeVP.extra.variationId as string} />;
@@ -60,7 +63,18 @@ export default function ModelViewport() {
         >
           <CompositionTree variationId={activeVP.extra.variationId} />
         </Accordion>
+        <Accordion
+          name="Materiais"
+          icon={<WidgetsSharpIcon />}
+          summary="Materiais referenciados na composição"
+        >
+          <MaterialListAccordion variationId={activeVP.extra.variationId} />
+        </Accordion>
       </SettingsPanel>
+
+      <DetailsPanel >
+        <DetailPanel variationId={activeVP.extra.variationId} selectedPart={activeVP.extra.selectedPart} />
+      </DetailsPanel>
 
       {view}
 
@@ -76,7 +90,7 @@ export default function ModelViewport() {
                 view: "graph",
               });
             }}
-            variant={activeVP.extra.view === "graph" ? "outlined" : "contained"}
+            variant={"contained"}
           >
             Grafo
           </Button>
@@ -87,7 +101,10 @@ export default function ModelViewport() {
                 view: "svg",
               });
             }}
-            variant={activeVP.extra.view === "svg" ? "outlined" : "contained"}
+            sx={{
+              ":hover": { cursor: "pointer", color: "primary.main" },
+            }}
+            variant={"contained"}
           >
             Desenho
           </Button>

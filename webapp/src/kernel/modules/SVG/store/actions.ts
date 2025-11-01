@@ -9,7 +9,7 @@ export const saveSession = createAction(
   `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Save session`
 );
 
-export const loadSVG = createAction<{ path: string; instanceName: string }>(
+export const loadSVG = createAction<{ path: string; instanceName: string; content?: string }>(
   `[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Load SVG`
 );
 

@@ -1,12 +1,12 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import Box from '@mui/material/Box';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import ListSubheader from '@mui/material/ListSubheader';
-import {SelectChangeEvent} from '@mui/material';
+import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import ListSubheader from "@mui/material/ListSubheader";
+import { SelectChangeEvent } from "@mui/material";
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
@@ -31,8 +31,6 @@ const MaterialSelector = ({
   const { useAppSelector } = storeModule.hooks;
 
   const materialType = useAppSelector(selectMaterialType(type));
-  const selector = materialType.schemas[materialType.latestSchema].selector;
-
   const noFilter = useCallback((option: MaterialState) => true, []);
   const materials = useAppSelector(
     selectMaterials((materials) =>
@@ -43,6 +41,9 @@ const MaterialSelector = ({
     )
   );
 
+  const schemaObj = materialType.schemas[materialType.latestSchema];
+  const selector = schemaObj.selector;
+
   // adapt entries to be able to split into 2 selectors.
   // all entries are grouped per industry and external Id
   // This operation will be done in the backend eventually
@@ -50,41 +51,45 @@ const MaterialSelector = ({
     [industry: string]: {
       [externalId: string]: { label: string; extra: MaterialState[] };
     };
-  } = Object.values(materials).reduce((acc, curr) => {
-    if (acc[curr.industry]) {
-      if (acc[curr.industry][curr.externalId])
+  } = useMemo(
+    () =>
+      Object.values(materials).reduce((acc, curr) => {
+        if (acc[curr.industry]) {
+          if (acc[curr.industry][curr.externalId])
+            return {
+              ...acc,
+              [curr.industry]: {
+                ...acc[curr.industry],
+                [curr.externalId]: {
+                  ...acc[curr.industry][curr.externalId],
+                  extra: [...acc[curr.industry][curr.externalId].extra, curr],
+                },
+              },
+            };
+          else
+            return {
+              ...acc,
+              [curr.industry]: {
+                ...acc[curr.industry],
+                [curr.externalId]: {
+                  label: curr.attributes[selector.principal],
+                  extra: [curr],
+                },
+              },
+            };
+        }
         return {
           ...acc,
           [curr.industry]: {
-            ...acc[curr.industry],
-            [curr.externalId]: {
-              ...acc[curr.industry][curr.externalId],
-              extra: [...acc[curr.industry][curr.externalId].extra, curr],
-            },
-          },
-        };
-      else
-        return {
-          ...acc,
-          [curr.industry]: {
-            ...acc[curr.industry],
             [curr.externalId]: {
               label: curr.attributes[selector.principal],
               extra: [curr],
             },
           },
         };
-    }
-    return {
-      ...acc,
-      [curr.industry]: {
-        [curr.externalId]: {
-          label: curr.attributes[selector.principal],
-          extra: [curr],
-        },
-      },
-    };
-  }, {});
+      }, {}),
+    [materials]
+  );
 
   const [selectedMaterial, setSelectedMaterial] = useState(
     Object.values(materials).find((mat) => mat.id === value)

@@ -1,8 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { ComposerModuleState, Model, ModelVariation } from "../../typings";
+import { ComposerModuleState, ModelVariation } from "../../typings";
 import { MODULE_NAME } from "../../constants";
 import type { PathLike } from "fs-extra";
-import { modelOpened, selectPart } from "./actions";
+import { modelOpened, selectPart, uploadSVG } from "./actions";
 
 const storage = window.electron.storage;
 storage.ensureDir(".session/Composer/variations");
@@ -53,6 +53,14 @@ const slice = createSlice({
         selectedPart: partId,
       },
     }))
+
+    builder.addCase(uploadSVG, (state, { payload: { variationId } }) => ({
+      ...state,
+      [variationId]: {
+        ...state[variationId],
+        svg: `${variationId}.svg`,
+      },
+    }));
   },
 });
 

@@ -1,3 +1,5 @@
+import { uploadSVG, svgUploaded } from "./actions";
+
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { StoreState } from "@kernel/modules/Store/state";
@@ -9,6 +11,8 @@ import { ComposerModuleState } from "@system/modules/Composer/typings";
 import { modelOpened, openModel, partSelected, selectPart } from "./actions";
 import { persistVariation } from "./slice";
 import { LayoutState } from "@kernel/modules/Layout/store/state";
+import { loadSVG } from "@kernel/modules/SVG/store/actions";
+import { openDetails } from "@kernel/modules/Layout/store/panels/actions";
 
 const storage = window.electron.storage;
 const middlewares = createListenerMiddleware();
@@ -41,6 +45,8 @@ middlewares.startListening({
     ) as GraphState;
 
     dispatch(loadGraph({ graphId: variationId, graph: {...graphState, id: variationId} }));
+    dispatch(selectPart({ variationId, partId: "garment" }));
+    dispatch(openDetails());
     dispatch(modelOpened({ model: {...model, variationId, instanceId: variationId, selectedPart: 'garment'} }));
   },
 });
@@ -55,8 +61,24 @@ middlewares.startListening({
       console.warn(`Variation with id ${variationId} not found`);
       return;
     }
-
+    dispatch(openDetails())
     dispatch(partSelected({ variationId, partId }));
+  },
+});
+
+middlewares.startListening({
+  actionCreator: uploadSVG,
+  effect: async ({ payload: { variationId, svgContent } }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    const { Composer: state } = getState() as { Composer: ComposerModuleState };
+    const variation = state.variations[variationId];
+    if (!variation) {
+      console.warn(`Variation with id ${variationId} not found`);
+      return;
+    }
+    dispatch(loadSVG({ content: svgContent, path: `${variationId}.svg`, instanceName: variationId }));
+    // Update SVG in variation and persist
+    dispatch(svgUploaded({ variationId, svgContent }));
   },
 });
 

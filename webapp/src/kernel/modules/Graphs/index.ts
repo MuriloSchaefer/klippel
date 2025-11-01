@@ -10,7 +10,9 @@ import useNodeInfo from "./hooks/useNodeInfo";
 import useSearchResult from "./hooks/useSearchResult";
 import GraphViewer from "./components/GraphViewer";
 import useSearch from "./hooks/useSearch";
-
+import dfs from "./searchAlgs/dfs";
+import bfs from "./searchAlgs/bfs";
+import dijkstra from "./searchAlgs/dijkstra";
 export interface IGraphModule extends IModule {
   name: typeof MODULE_NAME,
   version: typeof MODULE_VERSION,
@@ -29,6 +31,13 @@ export interface IGraphModule extends IModule {
   store: {
     selectors: {
       getGraphState: typeof getGraphState
+    }
+  },
+  algorithms: {
+    search: {
+      dfs: typeof dfs,
+      bfs: typeof bfs,
+      dijkstra: typeof dijkstra,
     }
   }
 }
@@ -62,6 +71,13 @@ const GraphModule: IGraphModule = {
     startModule: startModule,
     restartModule(){},
     shutdownModule(){}
+  },
+  algorithms: {
+    search: {
+      dfs,
+      bfs,
+      dijkstra,
+    }
   }
 }
 

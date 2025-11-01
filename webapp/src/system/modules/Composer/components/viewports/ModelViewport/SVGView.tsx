@@ -1,34 +1,173 @@
-
-
 import type { ISVGModule } from "@kernel/modules/SVG";
 import useModule from "@kernel/hooks/useModule";
 import useVariation from "../../../hooks/useVariation";
-import { ILayoutModule } from "@kernel/modules/Layout";
-import { IGraphModule } from "@kernel/modules/Graphs";
-import { useTheme } from "@mui/material";
+import { useTheme, Box, Typography, Button } from "@mui/material";
+import DragAndDropSVG from "./assets/animated-drag-n-drop/DragAndDrop.svg";
+import React, { useRef, useCallback, useState } from "react";
+import { uploadSVG } from "../../../../Composer/store/variations/actions";
+import { Store } from "@kernel/modules/Store";
+
+export function SVGModelViewport({ variationId }: { variationId: string }) {
+  const theme = useTheme();
+  const {
+    hooks: { useSVGEditor },
+    d3Components: { Grid }
+  } = useModule<ISVGModule>("SVG");
 
 
-export function SVGModelViewport({variationId}: {variationId: string}) {
-    const theme = useTheme();
-    const {
-        hooks: { useGraph },
-    } = useModule<IGraphModule>("Graph");
-    const {
-        hooks: { useResizeObserver },
-    } = useModule<ILayoutModule>("Layout");
-    const {
-        hooks: { useD3Container },
-        d3Components: { Grid, DependencyCircle },
-    } = useModule<ISVGModule>("SVG");
+  const variation = useVariation({ variationId });
+  
+  const editor = useSVGEditor({
+    svgPath: variation.state.svg!,
+    instanceName: variationId,
+    beforeInjection: (svg) => svg,
+  });
+  editor.container.underlays([
+    Grid({
+        xSettings: { range: [-1, editor.width + 1], domain: [-1,editor.width + 1] },
+        ySettings: { range: [-1, editor.height + 1], domain: [-1, editor.height + 1] },
+        dimensions: [editor.width, editor.height],
+    }).transformZoom((root, zoomFunc) => {
+        // @ts-ignore TODO: fix typing
+        zoomFunc.translateBy(root, editor.width / 2, editor.height / 2);
+      }).build
+  ])
 
-    return <>SVG Model Viewport</>
+  return (
+    <div
+      ref={editor.wrapperRef}
+      role="svg-editor"
+      style={{ height: "100%", width: "100%" }}
+    >
+      <svg ref={editor.svgRef} id={`svg-editor`} width="100%" height="100%" />
+    </div>
+  );
 }
 
-export default function SVGView({variationId}: {variationId: string}){
-    const variation = useVariation({ variationId });
-    if (!variation.state.svg) {
-        return <>no SVG View</>
-    }
+export default function SVGView({ variationId }: { variationId: string }) {
+  const theme = useTheme();
+  const storeModule = useModule<Store>("Store");
+  const variation = useVariation({ variationId });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragActive, setDragActive] = useState(false);
 
-    return <SVGModelViewport variationId={variationId} />
+  const dispatch = storeModule.hooks.useAppDispatch();
+  const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // TODO: handle SVG file upload logic here
+      e.dataTransfer.clearData();
+    }
+  }, []);
+
+  const handleButtonClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        // TODO: handle SVG file upload logic here
+        for (const file of files) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const svgContent = e.target?.result as string;
+            // Dispatch the uploadSVG action with the SVG content
+            dispatch(uploadSVG({ variationId, svgContent }));
+          };
+          reader.readAsText(file);
+        }
+      }
+    },
+    []
+  );
+
+  if (!variation.state.svg) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          background: theme.palette.background.default,
+          color: theme.palette.text.primary,
+          borderRadius: 2,
+          border: `2px dashed ${
+            dragActive ? theme.palette.primary.main : theme.palette.divider
+          }`,
+          p: 4,
+          gap: 2,
+          transition: "border-color 0.2s",
+        }}
+        onDragEnter={handleDrag}
+        onDragOver={handleDrag}
+        onDragLeave={handleDrag}
+        onDrop={handleDrop}
+      >
+        <Box sx={{ mb: 2 }}>
+          <img
+            src={DragAndDropSVG}
+            alt="Drag and Drop SVG"
+            style={
+              {
+                width: 150,
+                height: 150,
+                display: "block",
+                margin: "0 auto",
+                // CSS palette variables for SVG
+                "--drop-area-bg":
+                  theme.palette.mode === "dark"
+                    ? theme.palette.grey[900]
+                    : theme.palette.primary.light,
+                "--drop-area-stroke": theme.palette.primary.main,
+                "--file-bg":
+                  theme.palette.mode === "dark"
+                    ? theme.palette.grey[800]
+                    : theme.palette.background.paper,
+                "--file-stroke": theme.palette.primary.main,
+                "--file-bar": theme.palette.primary.main,
+                "--drag-dots":
+                  theme.palette.mode === "dark"
+                    ? theme.palette.secondary.light
+                    : theme.palette.primary.main,
+              } as React.CSSProperties
+            }
+          />
+        </Box>
+        <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
+          Nenhum SVG carregado para o modelo.
+          <br />
+          Por favor arraste e solte um arquivo SVG ou faça upload através do
+          botão.
+        </Typography>
+        <Button variant="contained" color="primary" onClick={handleButtonClick}>
+          Fazer upload de SVG
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/svg+xml"
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
+      </Box>
+    );
+  }
+
+  return <SVGModelViewport variationId={variationId} />;
 }

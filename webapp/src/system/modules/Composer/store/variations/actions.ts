@@ -19,3 +19,10 @@ export const selectPart = createAction<{ variationId: string, partId: string}>(
 export const partSelected = createAction<{variationId: string, partId: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Part selected`
 );
+
+export const uploadSVG = createAction<{ variationId: string, svgContent: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Upload SVG`
+);
+export const svgUploaded = createAction<{ variationId: string, svgContent: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] SVG uploaded`
+);

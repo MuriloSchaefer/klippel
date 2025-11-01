@@ -31,15 +31,13 @@ const SystemTray = () => {
     const reg = componentRegistryManager.functions.getRegistry(
       SYSTEM_TRAY_REGISTRY_NAME
     );
-    console.log(reg)
     return Object.values(reg);
   }, [componentRegistryManager]);
-  console.log(elements)
 
   return (
     <Box role="system-tray-container" sx={{display: 'flex', gap: 1, alignItems: 'center'}}>
-      {elements.map((El) => (
-        <El />
+      {elements.map((El, index) => (
+        <El key={index} />
       ))}
       <IconButton
         color="primary"

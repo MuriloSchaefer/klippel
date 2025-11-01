@@ -17,20 +17,18 @@ import Markdown from "./modules/Markdown";
 import converterModule from "@system/modules/Converter";
 import materialsModule from "@system/modules/Materials";
 import composerModule from "@system/modules/Composer";
-import ordersModule from "@system/modules/Orders";
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import Paper from '@mui/material/Paper';
 
 import { Button } from "@mui/material";
 
-function fallbackRender({ error, resetErrorBoundary }: any) {
+export function fallbackRender({ error, resetErrorBoundary }: FallbackProps) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
-
   return (
-    <Paper variant="outlined" role="alert">
-      <p>Erro:</p>
-      <pre style={{ color: "red" }}>{error.message}</pre>
+    <Paper variant="outlined" role="error" sx={{ padding: 2 }}>
+      <pre style={{ color: "red" }}>{error.stack}</pre>
       <Button onClick={resetErrorBoundary}>Tentar novamente</Button>
+      <Button onClick={()=>console.log('report error')}>Reportar</Button>
     </Paper>
   );
 }
