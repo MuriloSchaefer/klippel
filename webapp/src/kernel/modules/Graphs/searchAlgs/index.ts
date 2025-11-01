@@ -1,5 +1,3 @@
-import dfs from "./dfs";
-import bfs from "./bfs";
-import dijkstra from "./dijkstra";
-
-export { bfs, dfs, dijkstra };
+export { dfs } from "./dfs";
+export { bfs } from "./bfs";
+export { dijkstra } from "./dijkstra";

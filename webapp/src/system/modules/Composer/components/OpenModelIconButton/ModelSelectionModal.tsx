@@ -10,8 +10,6 @@ import { styled } from "@mui/system";
 import useModule from "@kernel/hooks/useModule";
 import type { SystemModalProps } from "@kernel/modules/Layout/components/SystemModal";
 
-// import { useCompositionsList } from "../hooks/useCompositionsList";
-// import ModelPreview from "./ModelPreview";
 import { IMarkdownModule } from "@kernel/modules/Markdown";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";

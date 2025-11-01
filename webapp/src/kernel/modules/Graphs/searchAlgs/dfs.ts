@@ -1,7 +1,7 @@
 import Node from "../interfaces/Node";
 import { GraphSearch, GraphState, SearchResult } from "../store/state";
 
-const dfs = (
+export const dfs = (
   graph: Omit<GraphState, "searchResults">,
   nodeStart: string,
   validate: (

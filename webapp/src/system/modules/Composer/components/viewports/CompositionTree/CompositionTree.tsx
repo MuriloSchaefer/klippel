@@ -13,7 +13,7 @@ type Item = {
   label: string;
   children: Item[];
 };
-function buildSubTree(graph: GraphState, root: Node): Item { // TODO: Add typing for nodes and edges
+function buildSubTree(graph: GraphState, root: Node): Item { 
   const children = Object.values(graph.edges)
     .filter((e) => e.sourceId == root.id && e.type === "HAS_PART")
     .map((e) => {
@@ -117,9 +117,9 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
 
 export default function CompositionTree({
   variationId,
-}: {
+}: Readonly<{
   variationId: string;
-}) {
+}>) {
   const graphModule = useModule<IGraphModule>("Graph");
   const { useGraph } = graphModule.hooks;
   const graph = useGraph(variationId, (g) => g);

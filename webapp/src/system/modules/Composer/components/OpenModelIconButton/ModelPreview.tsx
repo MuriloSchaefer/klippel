@@ -2,7 +2,6 @@ import Box, { type BoxProps } from "@mui/material/Box";
 import { Model } from "../../typings";
 import { ISVGModule } from "@kernel/modules/SVG";
 import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
 
 function ModelPreview({
   model,

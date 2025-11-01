@@ -1,19 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 // Removed duplicate import of useModule
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import {
   Button,
-  Typography,
   Box,
-  SelectChangeEvent,
   FormControl,
-  InputLabel,
 } from "@mui/material";
 // Use MaterialTypeSelector from module system for correct typing
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IMaterialsModule } from "@system/modules/Materials";
-import type { MaterialState } from "@system/modules/Materials/store/materials/state";
 import useVariation from '../../../hooks/useVariation';
 
 export default function AddMaterialButton({

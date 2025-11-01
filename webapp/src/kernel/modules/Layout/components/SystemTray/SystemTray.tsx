@@ -14,7 +14,6 @@ import { SYSTEM_TRAY_REGISTRY_NAME } from "../../constants";
 const SystemTray = () => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
-  const { SessionAutoSaverIcon, WorkspaceSelector } = storeModule.components;
   const { componentRegistry } = storeModule.managers;
 
   const selectedTheme = useAppSelector(selectTheme);
@@ -27,17 +26,17 @@ const SystemTray = () => {
     );
   }, [selectedTheme]);
 
-  const elements = useMemo(() => {
+  const registry = useMemo(() => {
     const reg = componentRegistryManager.functions.getRegistry(
       SYSTEM_TRAY_REGISTRY_NAME
     );
-    return Object.values(reg);
+    return reg;
   }, [componentRegistryManager]);
 
   return (
     <Box role="system-tray-container" sx={{display: 'flex', gap: 1, alignItems: 'center'}}>
-      {elements.map((El, index) => (
-        <El key={index} />
+      {Object.entries(registry).map(([key, El]) => (
+        <El key={key} />
       ))}
       <IconButton
         color="primary"

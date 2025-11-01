@@ -29,8 +29,8 @@ export default function WorkspaceSelector() {
         label="Área de trabalho"
         size="small"
       >
-        {workspaces.map((ws, index) => (
-          <MenuItem value={ws} key={index}>{ws}</MenuItem>
+        {workspaces.map((ws) => (
+          <MenuItem value={ws} key={ws}>{ws}</MenuItem>
         ))}
       </Select>
     </FormControl>

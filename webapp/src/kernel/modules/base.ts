@@ -5,7 +5,7 @@ import { LayoutManager } from "./Layout/hooks/useLayoutManager";
 import { RibbonMenuManager } from "./Layout/hooks/useRibbonMenuManager";
 import { ViewportManager } from "./Layout/hooks/useViewportManager";
 import { ComponentRegistryManager } from "./Store/hooks/useComponentRegistryManager";
-import { StorageAPI, SessionStorageApi } from "../../../electron/preload/storage/typings"; // TODO: find a common place for typings
+import { StorageAPI, SessionStorageApi } from "../../../electron/preload/storage/typings";
 
 export interface Manager {
   functions: {
