@@ -2,7 +2,7 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { Store } from "@kernel/modules/Store";
 import { selectPart } from "../store/variations/actions";
-import { ComposerModuleState, MaterialNode, PartNode } from "../typings";
+import { ComposerModuleState, MaterialNode, PartNode, ElectiveNode } from "../typings";
 import { EdgeMap } from "@kernel/modules/Graphs/hooks/useGraph";
 import { IMaterialsModule } from "@system/modules/Materials";
 
@@ -102,6 +102,48 @@ export default function useVariation({ variationId }: { variationId: string }) {
       removeMaterial: (materialId: number) => {
         const nodeId = `material-${materialId}`;
         graph.actions.removeNode(nodeId);
+      },
+      addElective: (name: string, garmentId: string, defaultValue: boolean = false) => {
+        // create a small hash id
+        const hash = Math.random().toString(36).slice(2, 8);
+        const nodeId = `elective-${hash}`;
+        const node: ElectiveNode = {
+          id: nodeId,
+          type: "ELECTIVE",
+          label: name,
+          electiveId: hash,
+          value: defaultValue,
+          defaultValue: defaultValue,
+          position: { x: 0, y: 0 },
+        };
+
+        graph.actions.addNode(node, {
+          inputs: {
+            [`${garmentId}-${nodeId}`]: {
+              id: `${garmentId}-${nodeId}`,
+              type: "HAS_ELECTIVE",
+              sourceId: garmentId,
+              targetId: nodeId,
+            },
+          },
+          outputs: {
+            [`${nodeId}-${garmentId}`]: {
+              id: `${nodeId}-${garmentId}`,
+              type: "ELECTIVE_OF",
+              sourceId: nodeId,
+              targetId: garmentId,
+            },
+          },
+        });
+      },
+      removeElective: (nodeId: string) => {
+        graph.actions.removeNode(nodeId);
+      },
+      updateElective: (nodeId: string, changes: Partial<ElectiveNode>) => {
+        if (!graph.state) return;
+        const curr = graph.state.nodes[nodeId];
+        if (!curr) return;
+        graph.actions.updateNode({ ...curr, ...changes } as any);
       },
       updateMaterial: (nodeId: string, materialId: number)=>{
         if (!graph.state) return
