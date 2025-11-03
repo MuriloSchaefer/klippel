@@ -42,6 +42,14 @@ export type MaterialNode = Node & {
         
 }
 
+export type ElectiveNode = Node & {
+    type: "ELECTIVE";
+    label: string;
+    electiveId: string; // small hash id
+    value?: boolean;
+    defaultValue?: boolean;
+}
+
 // edges definitions
 export type HasPartEdge = Edge & {
     type: "HAS_PART";
@@ -55,11 +63,17 @@ export type MaterialOfEdge = Edge & {
 export type  HasMaterialEdge = Edge & {
     type: "HAS_MATERIAL";
 } 
+export type HasElectiveEdge = Edge & {
+    type: "HAS_ELECTIVE";
+}
+export type ElectiveOfEdge = Edge & {
+    type: "ELECTIVE_OF";
+}
 export type VariationGraphState = GraphState & {
     nodes: {
-        [key: string]: GarmentNode | PartNode | MaterialNode;
+        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode;
     };
     edges: {
-        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge;
+        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge;
     };
 }
