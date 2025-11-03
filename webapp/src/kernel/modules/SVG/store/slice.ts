@@ -23,7 +23,7 @@ import {
 import _ from "lodash";
 import { PathLike } from "fs";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/SVG/svgs");
 
 export const sessionSaver = (store: Store<SVGModuleState>) => () => {

@@ -24,7 +24,7 @@ export function getWorkspaceFolder(getState: () => { Store: StoreState }) {
   return `workspaces/${selectedWorkspace}`
 }
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
   actionCreator: saveSession,

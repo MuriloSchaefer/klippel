@@ -3,7 +3,7 @@ import { MODULE_NAME } from "../constants";
 import modelsSlice from "./models/slice";
 import variationsSlice from "./variations/slice";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Composer");
 
 const slice = createSlice({

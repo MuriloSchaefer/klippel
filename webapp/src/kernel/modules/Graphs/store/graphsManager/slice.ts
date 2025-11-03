@@ -11,7 +11,7 @@ import { createGraph, destroyGraph } from "./actions";
 import instanceSlice from "../graphInstance/slice"
 import { PathLike } from "fs";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Graph/graphs");
 
 const restoreSession = async (sessionPath: PathLike = ".session/Graph/graphs") => {

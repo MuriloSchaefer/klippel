@@ -3,7 +3,6 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { ISVGModule } from "@kernel/modules/SVG";
-import { useTheme } from "@mui/material";
 import {
   GarmentNode,
   PartNode,
@@ -17,8 +16,7 @@ type D3VariationGraphData = D3Graph<
   GarmentNode | PartNode,
   HasPartEdge & D3Link
 >;
-export default function GraphView({ variationId }: { variationId: string }) {
-  const theme = useTheme();
+export default function GraphView({ variationId }: Readonly<{ variationId: string }>) {
   const {
     algorithms: {
       search: { bfs },
@@ -52,7 +50,6 @@ export default function GraphView({ variationId }: { variationId: string }) {
         ySettings: { range: [-1, height + 1], domain: [-1, height + 1] },
         dimensions: [width, height],
       }).transformZoom((root, zoomFunc) => {
-        // @ts-ignore TODO: fix typing
         zoomFunc.translateBy(root, width / 2, height / 2);
       }).build,
     ])
@@ -63,10 +60,10 @@ export default function GraphView({ variationId }: { variationId: string }) {
           .append("g")
           .attr("id", "graph-content");
         const nodesGroup = svgRoot.append('g').attr("id", "nodes");
-        const linksGroup = svgRoot.append('g').attr("id", "links");
-        const unreachableGroup = svgRoot.append('g').attr("id", "unreachable-nodes");
+        svgRoot.append('g').attr("id", "links");
+        svgRoot.append('g').attr("id", "unreachable-nodes");
         // Render nodes
-        const result = bfs(
+        bfs(
           graph,
           "garment", // starting node id
           (node) => { // process each node
@@ -85,7 +82,7 @@ export default function GraphView({ variationId }: { variationId: string }) {
     container.render({graph: graph.state!}, svgRef.current);
   }, [container, dimensions]);
 
-  if (!graph.state) return <div>Loading...</div>;
+  if (!graph.state) return <div>Carregando...</div>;
 
   return (
     <div ref={wrapperRef} style={{ height: "100%", width: "100%" }}>

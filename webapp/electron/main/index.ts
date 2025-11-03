@@ -86,7 +86,7 @@ async function createWindow(): Promise<BrowserWindow> {
     console.log("moved");
     saveWindowState();
   });
-  const onClose =  (event) => {
+  const onClose =  (event: any) => {
     event?.preventDefault();
     mainWindow.webContents.send("save-session");
     mainWindow.hide();

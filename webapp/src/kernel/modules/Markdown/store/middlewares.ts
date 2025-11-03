@@ -10,7 +10,7 @@ import {
 import { MarkdownModuleState } from "./state";
 import { persistState } from "./slice";
 
-const storage = window.electron.storage
+const storage = globalThis.electron.storage
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
   actionCreator: saveSession,

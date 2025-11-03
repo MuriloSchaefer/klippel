@@ -10,7 +10,7 @@ import {
 import { PathLike } from "fs";
 import type { PaletteMode } from "@mui/material";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Layout");
 
 export const sessionSaver = (store: Store<LayoutState>) => () => {

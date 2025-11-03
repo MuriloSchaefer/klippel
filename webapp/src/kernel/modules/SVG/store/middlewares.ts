@@ -20,7 +20,7 @@ import { SVGModuleState } from "./state";
 import { persistState } from "./slice";
 
 const middlewares = createListenerMiddleware();
-const storage = window.electron.storage
+const storage = globalThis.electron.storage
 
 middlewares.startListening({
   actionCreator: saveSession,

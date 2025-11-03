@@ -1,11 +1,9 @@
 import { useState } from "react";
-// Removed duplicate import of useModule
 import {
   Button,
   Box,
   FormControl,
 } from "@mui/material";
-// Use MaterialTypeSelector from module system for correct typing
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IMaterialsModule } from "@system/modules/Materials";
@@ -14,18 +12,15 @@ import useVariation from '../../../hooks/useVariation';
 export default function AddMaterialButton({
   variationId,
   onSelect,
-}: {
+}: Readonly<{
   variationId: string;
   onSelect: (materialId: string) => void;
-}) {
+}>) {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const materialModule: IMaterialsModule =
     useModule<IMaterialsModule>("Materials");
-  const graphModule = useModule<any>("Graph");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { MaterialTypeSelector, MaterialSelector } = materialModule.components;
-  const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g: any) => g);
 
   const variation = useVariation({variationId});
   const [open, setOpen] = useState(false);

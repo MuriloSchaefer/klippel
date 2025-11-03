@@ -13,7 +13,7 @@ import {
 } from "./actions";
 import { PathLike } from "fs";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Layout/viewPortManager/viewports");
 
 export const persistViewportState = (state: ViewportState) => {

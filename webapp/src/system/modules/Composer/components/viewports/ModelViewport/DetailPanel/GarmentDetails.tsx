@@ -1,21 +1,20 @@
 import useModule from "@kernel/hooks/useModule";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 import { Box, FormControl, Input, InputLabel } from "@mui/material";
-import  { IGraphModule } from "@kernel/modules/Graphs";
+import { IGraphModule } from "@kernel/modules/Graphs";
 import { debounce } from "@kernel/utils";
 import { useMemo, useState } from "react";
-import InfoSharpIcon from '@mui/icons-material/InfoSharp';
+import InfoSharpIcon from "@mui/icons-material/InfoSharp";
 
 export default function GarmentDetails({
   variationId,
   selectedPart = "garment",
-}: {
+}: Readonly<{
   variationId: string;
   selectedPart: string;
-}) {
+}>) {
   const layoutModule = useModule<ILayoutModule>("Layout");
-  const { ViewportNotificationsTray, SettingsPanel, Accordion, DetailsPanel } =
-    layoutModule.components;
+  const { Accordion } = layoutModule.components;
 
   const graphModule = useModule<IGraphModule>("Graph");
   const selectedNode = graphModule.hooks.useGraph(
@@ -25,17 +24,18 @@ export default function GarmentDetails({
   const [detailsForm, setDetailsForm] = useState<{ garmentName: string }>({
     garmentName: selectedNode?.state?.label || "",
   });
-  const debouncedChange = useMemo(()=> debounce(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!selectedNode?.state) return;
+  const debouncedChange = useMemo(
+    () =>
+      debounce((e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!selectedNode?.state) return;
 
-      selectedNode.actions.updateNode({
-        ...selectedNode.state,
-        label: e.target.value,
-      });
-    },
-    1000
-  ), []);
+        selectedNode.actions.updateNode({
+          ...selectedNode.state,
+          label: e.target.value,
+        });
+      }, 1000),
+    []
+  );
 
   if (!selectedNode) return <>Nodo não encontrado</>;
 
@@ -52,14 +52,13 @@ export default function GarmentDetails({
           <Input
             id={`garment-name`}
             value={detailsForm.garmentName}
-            onChange={(e) =>{
+            onChange={(e) => {
               setDetailsForm((form) => ({
                 ...form,
                 garmentName: e.target.value,
-              }))
+              }));
               debouncedChange(e);
-            }
-            }
+            }}
           />
         </FormControl>
       </Accordion>

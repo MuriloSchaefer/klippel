@@ -3,7 +3,7 @@ import { MODULE_NAME } from "../../constants";
 import { addRibbonTab, selectTab} from "./actions";
 import { RibbonMenuState } from "./state";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Layout/ribbonMenu");
 
 

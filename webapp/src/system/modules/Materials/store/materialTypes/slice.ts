@@ -3,7 +3,7 @@ import { materialTypesLoaded } from "./actions";
 import { MaterialType, MaterialTypesState } from "./state";
 import { PathLike } from "fs";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Materials/materialTypes");
 export function persistMaterialTypes(state: MaterialTypesState){
   Object.entries(state).forEach(([key, value]) => {

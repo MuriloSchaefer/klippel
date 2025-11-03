@@ -16,7 +16,7 @@ const initialState: StoreState = {
   workspaces: ['pessoal']
 };
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Store");
 
 export const sessionSaver = (store: Store<StoreState>) => () => {

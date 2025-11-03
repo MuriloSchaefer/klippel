@@ -14,7 +14,7 @@ import { LayoutState } from "@kernel/modules/Layout/store/state";
 import { loadSVG } from "@kernel/modules/SVG/store/actions";
 import { openDetails } from "@kernel/modules/Layout/store/panels/actions";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 const middlewares = createListenerMiddleware();
 
 middlewares.startListening({

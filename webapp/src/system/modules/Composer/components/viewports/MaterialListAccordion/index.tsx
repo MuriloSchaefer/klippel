@@ -10,9 +10,9 @@ import type { Color } from "@system/modules/Materials/typings";
 
 export default function MaterialListAccordion({
   variationId,
-}: {
+}: Readonly<{
   variationId: string;
-}) {
+}>) {
   const theme = useTheme();
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
@@ -29,7 +29,7 @@ export default function MaterialListAccordion({
   // Get all material IDs referenced in the graph
   const materialIds = materialNodes
     .map((node) => Number(node.materialId))
-    .filter((id) => !isNaN(id));
+    .filter((id) => !Number.isNaN(id));
   const materials = useMaterials(materialIds);
 
   // Get material types
@@ -39,9 +39,7 @@ export default function MaterialListAccordion({
     <>
       <AddMaterialButton
         variationId={variationId}
-        onSelect={(materialId) => {
-          /* TODO: handle add material to graph */
-        }}
+        onSelect={()=>null}
       />
       <List sx={{ p: 0, mt: 2 }}>
         {materialNodes.length === 0 ? (
@@ -76,7 +74,7 @@ export default function MaterialListAccordion({
               >
                 <Typography sx={{ fontWeight: 500, mr: 1 }}>{label}</Typography>
                 <Typography color={theme.palette.text.secondary} sx={{ ml: 1 }}>
-                  ({"label" in extra ? extra.label : extra})
+                  ({typeof extra === "object" && "label" in extra ? extra.label : extra})
                 </Typography>
                 {color ? (
                   <Tooltip title={color.label} arrow>

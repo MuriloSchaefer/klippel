@@ -4,7 +4,7 @@ import { MODULE_NAME } from "../../constants";
 import type { PathLike } from "fs-extra";
 import { modelOpened, selectPart, uploadSVG } from "./actions";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Composer/variations");
 export function persistVariation(state: ModelVariation) {
   storage.writeBlob(

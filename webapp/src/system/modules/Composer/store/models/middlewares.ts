@@ -14,7 +14,7 @@ import { persistModelState } from "./slice";
 import { uniqueId } from "lodash";
 import { ComposerModuleState, Model } from "../../typings";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 const middlewares = createListenerMiddleware();
 
 middlewares.startListening({

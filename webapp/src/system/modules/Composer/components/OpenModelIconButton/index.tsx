@@ -9,7 +9,6 @@ import { ILayoutModule } from "@kernel/modules/Layout";
 import ModelSelectionModal from "./ModelSelectionModal";
 import { Model } from "../../typings";
 import useModelsManager from "../../hooks/useModelsManager";
-// import useCompositionsManager from "../hooks/useCompositionsManager";
 
 export const OpenModelIconButton = () => {
   const modelsManager = useModelsManager();

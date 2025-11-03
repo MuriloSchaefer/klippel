@@ -248,9 +248,9 @@ export const useSVGEditor = ({
       const editorPreview = selection.append("g").attr("id", "SVG-editor-preview");
       renderPreview(editorPreview)
     },
-    // (root, selection, datum) => {
-    //   const toolsContainer = selection.append("g").attr("id", "SVG-editor-tools");
-    // }
+    (root, selection, datum) => {
+      selection.append("g").attr("id", "SVG-editor-tools");
+    }
   ])
 
   function transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement) {

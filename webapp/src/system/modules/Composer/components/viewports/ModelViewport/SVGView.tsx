@@ -8,7 +8,6 @@ import { uploadSVG } from "../../../../Composer/store/variations/actions";
 import { Store } from "@kernel/modules/Store";
 
 export function SVGModelViewport({ variationId }: { variationId: string }) {
-  const theme = useTheme();
   const {
     hooks: { useSVGEditor },
     d3Components: { Grid }
@@ -28,7 +27,6 @@ export function SVGModelViewport({ variationId }: { variationId: string }) {
         ySettings: { range: [-1, editor.height + 1], domain: [-1, editor.height + 1] },
         dimensions: [editor.width, editor.height],
     }).transformZoom((root, zoomFunc) => {
-        // @ts-ignore TODO: fix typing
         zoomFunc.translateBy(root, editor.width / 2, editor.height / 2);
       }).build
   ])
@@ -36,7 +34,7 @@ export function SVGModelViewport({ variationId }: { variationId: string }) {
   return (
     <div
       ref={editor.wrapperRef}
-      role="svg-editor"
+      id="svg-editor-wrapper"
       style={{ height: "100%", width: "100%" }}
     >
       <svg ref={editor.svgRef} id={`svg-editor`} width="100%" height="100%" />
@@ -67,7 +65,6 @@ export default function SVGView({ variationId }: { variationId: string }) {
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      // TODO: handle SVG file upload logic here
       e.dataTransfer.clearData();
     }
   }, []);
@@ -80,12 +77,10 @@ export default function SVGView({ variationId }: { variationId: string }) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (files && files.length > 0) {
-        // TODO: handle SVG file upload logic here
         for (const file of files) {
           const reader = new FileReader();
           reader.onload = (e) => {
             const svgContent = e.target?.result as string;
-            // Dispatch the uploadSVG action with the SVG content
             dispatch(uploadSVG({ variationId, svgContent }));
           };
           reader.readAsText(file);
