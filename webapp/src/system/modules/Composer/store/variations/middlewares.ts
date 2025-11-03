@@ -1,4 +1,3 @@
-import { uploadSVG, svgUploaded } from "./actions";
 
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
@@ -8,7 +7,7 @@ import type { GraphState } from "@kernel/modules/Graphs/store/state";
 import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { saveSession, sessionSaved } from "../models/actions";
 import { ComposerModuleState } from "@system/modules/Composer/typings";
-import { modelOpened, openModel, partSelected, selectPart } from "./actions";
+import { modelOpened, openModel, partSelected, selectPart, uploadSVG, svgUploaded  } from "./actions";
 import { persistVariation } from "./slice";
 import { LayoutState } from "@kernel/modules/Layout/store/state";
 import { loadSVG } from "@kernel/modules/SVG/store/actions";

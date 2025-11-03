@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import FormControl, { FormControlProps } from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectProps } from "@mui/material/Select";
-import { ListSubheader, Typography, useTheme } from "@mui/material";
+import { ListSubheader, Typography } from "@mui/material";
 
 type UnitSelectorProps = SelectProps<string> & {
   value?: string;
@@ -16,7 +16,7 @@ type UnitSelectorProps = SelectProps<string> & {
 
 type NotGrouped = { type: "WITHOUT_SCALE"; name: "Diversos"; id: "noScale" };
 
-export default ({
+const UnitSelector = ({
   value,
   onChange,
   filterUnits = () => true,
@@ -98,7 +98,7 @@ export default ({
         {...props}
       >
         {Object.values(groupedUnits.groups).map(({ id, name }) => [
-          <ListSubheader>{name}</ListSubheader>,
+          <ListSubheader key={`name-${id}`}>{name}</ListSubheader>,
           Object.values(groupedUnits.groupedUnits[id]).map(
             ({ id, name, abbreviation, label }) => (
               <MenuItem key={id} value={id} sx={{display: 'flex', gap:1, alignItems: 'center'}}>
@@ -114,3 +114,5 @@ export default ({
     </FormControl>
   );
 };
+
+export default UnitSelector;

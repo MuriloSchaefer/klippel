@@ -21,7 +21,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
   const state = useAppSelector(
     (state: { Composer: ComposerModuleState }) => state.Composer.variations[variationId]
   );
-  const graph = useGraph(variationId, (g) => g && g);
+  const graph = useGraph(variationId, (g) => g);
   return {
     state: state,
     actions: {
@@ -30,10 +30,9 @@ export default function useVariation({ variationId }: { variationId: string }) {
         dispatch(selectPart({ variationId, partId }));
       },
       addPart: (name: string, parentId: string) => {
-        console.log("add part", name);
-        let id = name.toLowerCase().replace(/\s+/g, "-");
+        let id = name.toLowerCase().replaceAll(/\s+/g, "-");
         let i = 1;
-        while (id in Object.keys(graph.state?.nodes || {})) {
+        while (id in (graph.state?.nodes ?? {})) {
           id += "-" + i;
           i++;
         }

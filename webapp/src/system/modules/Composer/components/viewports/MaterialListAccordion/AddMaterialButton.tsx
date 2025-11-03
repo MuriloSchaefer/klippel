@@ -11,7 +11,6 @@ import useVariation from '../../../hooks/useVariation';
 
 export default function AddMaterialButton({
   variationId,
-  onSelect,
 }: Readonly<{
   variationId: string;
   onSelect: (materialId: string) => void;
@@ -23,7 +22,6 @@ export default function AddMaterialButton({
   const { MaterialTypeSelector, MaterialSelector } = materialModule.components;
 
   const variation = useVariation({variationId});
-  const [open, setOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("");
   const [selectedMaterial, setSelectedMaterial] = useState<number | null>(null);
 
@@ -68,7 +66,6 @@ export default function AddMaterialButton({
             if (selectedType && selectedMaterial) {
               // Persist to graph
               variation.actions.addMaterial(selectedMaterial)
-              setOpen(false);
             }
           }}
         >

@@ -7,7 +7,7 @@ import React, { useRef, useCallback, useState } from "react";
 import { uploadSVG } from "../../../../Composer/store/variations/actions";
 import { Store } from "@kernel/modules/Store";
 
-export function SVGModelViewport({ variationId }: { variationId: string }) {
+export function SVGModelViewport({ variationId }: Readonly<{ variationId: string }>) {
   const {
     hooks: { useSVGEditor },
     d3Components: { Grid }
@@ -42,7 +42,7 @@ export function SVGModelViewport({ variationId }: { variationId: string }) {
   );
 }
 
-export default function SVGView({ variationId }: { variationId: string }) {
+export default function SVGView({ variationId }: Readonly<{ variationId: string }>) {
   const theme = useTheme();
   const storeModule = useModule<Store>("Store");
   const variation = useVariation({ variationId });
@@ -64,9 +64,12 @@ export default function SVGView({ variationId }: { variationId: string }) {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      e.dataTransfer.clearData();
-    }
+    const files = e.dataTransfer.files;
+    if (!files || !files.length || files.length > 1) throw new Error("Please upload a single SVG file.");
+    const file  = files[0];
+    const blob = new Blob([file], { type: "image/svg+xml" });
+    blob.text().then(svgContent =>dispatch(uploadSVG({ variationId, svgContent })));
+
   }, []);
 
   const handleButtonClick = useCallback(() => {
@@ -76,16 +79,10 @@ export default function SVGView({ variationId }: { variationId: string }) {
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
-      if (files && files.length > 0) {
-        for (const file of files) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const svgContent = e.target?.result as string;
-            dispatch(uploadSVG({ variationId, svgContent }));
-          };
-          reader.readAsText(file);
-        }
-      }
+      if (!files || !files.length || files.length > 1) throw new Error("Please upload a single SVG file.");
+      const file  = files[0];
+      const blob = new Blob([file], { type: "image/svg+xml" });
+      blob.text().then(svgContent =>dispatch(uploadSVG({ variationId, svgContent })));
     },
     []
   );
