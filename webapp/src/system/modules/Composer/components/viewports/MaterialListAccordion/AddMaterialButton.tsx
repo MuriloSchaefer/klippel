@@ -13,7 +13,6 @@ export default function AddMaterialButton({
   variationId,
 }: Readonly<{
   variationId: string;
-  onSelect: (materialId: string) => void;
 }>) {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const materialModule: IMaterialsModule =

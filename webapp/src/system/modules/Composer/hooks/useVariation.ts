@@ -83,7 +83,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
         graph.actions.addNode(node, {
           inputs: {
             [`garment-${nodeId}`]: {
-              id: `${variationId}-${nodeId}`,
+              id: `garment-${nodeId}`,
               type: "HAS_MATERIAL",
               sourceId: 'garment',
               targetId: nodeId,
@@ -91,7 +91,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           },
           outputs: {
             [`${nodeId}-garment`]: {
-              id: `${nodeId}-${variationId}`,
+              id: `${nodeId}-garment`,
               type: "MATERIAL_OF",
               sourceId: nodeId,
               targetId: 'garment',
@@ -102,6 +102,44 @@ export default function useVariation({ variationId }: { variationId: string }) {
       removeMaterial: (materialId: number) => {
         const nodeId = `material-${materialId}`;
         graph.actions.removeNode(nodeId);
+      },
+      updateMaterial: (nodeId: string, materialId: number)=>{
+        if (!graph.state) return
+        const oldNode = graph.state.nodes[nodeId]
+        const inputEdges = Object.values(graph.state.edges).filter((edge)=>edge.targetId === oldNode.id)
+        const outputEdges = Object.values(graph.state.edges).filter((edge)=>edge.sourceId === oldNode.id)
+        const newNode = {...graph.state.nodes[nodeId], materialId, id: `material-${materialId}`} as MaterialNode
+        
+        if (newNode.id in graph.state.nodes){
+          // TODO: update curr node to merge old material
+          inputEdges.forEach(edge => {
+            if (! graph.state) return
+            const newEdgeId = `${edge.sourceId}-${newNode.id}`
+            if ( newEdgeId in graph.state.edges){
+              // ignore. TODO: merge attributes (such as materialUsage and so on)
+              console.log(`ignoring edge ${newEdgeId}. Already exists`)
+              return
+            }
+            graph.actions.addEdge({...edge, id: newEdgeId, targetId: newNode.id})
+          })
+          outputEdges.forEach(edge => {
+            if (! graph.state) return
+            const newEdgeId = `${newNode.id}-${edge.targetId}`
+            if ( newEdgeId in graph.state.edges){
+              // ignore. TODO: merge attributes (such as materialUsage and so on)
+              console.log(`ignoring edge ${newEdgeId}. Already exists`)
+              return
+            }
+            graph.actions.addEdge({...edge, id: newEdgeId, sourceId: newNode.id})
+          })
+        } else {
+          graph.actions.addNode(newNode, {
+            inputs: inputEdges.reduce((edges, currEdge) => ({...edges, [`${currEdge.sourceId}-${newNode.id}`]: {...currEdge, targetId: newNode.id}}), {}),
+            outputs: outputEdges.reduce((edges, currEdge) => ({...edges, [`${newNode.id}-${currEdge.targetId}`]: {...currEdge, sourceId: newNode.id}}), {}),
+          });
+        }
+        graph.actions.removeNode(nodeId)
+      
       }
     },
   };
