@@ -4,7 +4,7 @@ import { moduleStarted, saveSession } from "./actions";
 
 import { loaderInitialState, LoaderState } from "./state";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Loader");
 
 export const sessionSaver = (store: Store<LoaderState>) => () => {

@@ -1,7 +1,7 @@
 
 
 
-const dijkstra = () =>  {
+export const dijkstra = () =>  {
 
 }
 

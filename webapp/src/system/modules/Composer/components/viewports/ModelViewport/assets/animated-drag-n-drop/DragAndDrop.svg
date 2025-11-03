@@ -1,0 +1,51 @@
+<svg class="dragndrop-svg" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .dragndrop-svg {
+      display: block;
+      margin: 0 auto;
+    }
+    .drop-area {
+      fill: var(--drop-area-bg, #e3f2fd);
+      stroke: var(--drop-area-stroke, #1976d2);
+      stroke-width: 2;
+      filter: url(#dropShadow);
+    }
+    .file-rect {
+      fill: var(--file-bg, #fff);
+      stroke: var(--file-stroke, #1976d2);
+      stroke-width: 1.5;
+      animation: filedrop 1.5s infinite;
+    }
+    .file-bar {
+      fill: var(--file-bar, #1976d2);
+      opacity: 0.4;
+    }
+    .drag-dots {
+      stroke: var(--drag-dots, #1976d2);
+      stroke-width: 2;
+      stroke-dasharray: 4 3;
+      animation: dashmove 1.5s linear infinite;
+    }
+    @keyframes filedrop {
+      0% { transform: translateY(0px); opacity: 1; }
+      60% { transform: translateY(24px); opacity: 1; }
+      80% { transform: translateY(24px); opacity: 0.5; }
+      100% { transform: translateY(0px); opacity: 1; }
+    }
+    @keyframes dashmove {
+      to { stroke-dashoffset: -14; }
+    }
+  </style>
+  <rect class="drop-area" x="10" y="40" width="60" height="28" rx="6" />
+  <g>
+    <rect class="file-rect" id="file" x="32" y="16" width="16" height="20" rx="3" />
+    <rect class="file-bar" x="36" y="22" width="8" height="2.5" rx="1" />
+    <rect class="file-bar" x="36" y="26" width="8" height="2.5" rx="1" />
+  </g>
+  <path class="drag-dots" d="M40 36 V44" />
+  <defs>
+    <filter id="dropShadow" x="0" y="0" width="100%" height="100%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3" />
+    </filter>
+  </defs>
+</svg>

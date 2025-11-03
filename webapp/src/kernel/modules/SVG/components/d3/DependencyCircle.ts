@@ -48,7 +48,9 @@ type DependencyCircle<D = D3Graph, N extends D3Node = D3Node, L = D3Link> = {
     value: (
       selection: Selection<any, L, any, D>,
       scale: ScaleLinear<number, number, never>,
-      colors: ScaleOrdinal<string, unknown, never>
+      colors: ScaleOrdinal<string, unknown, never>,
+      innerRadius: number,
+      outerRadius: number
     ) => void
   ): DependencyCircle<D, N, L>;
   renderGroup(
@@ -166,7 +168,9 @@ export default <
       number
     >,
     scale: ScaleLinear<number, number, never>,
-    colors: ScaleOrdinal<string, unknown, never>
+    colors: ScaleOrdinal<string, unknown, never>,
+    innerRadius: number,
+    outerRadius: number
   ) => {
     const line = d3Line().curve(curveBundle.beta(0.35));
 
@@ -382,7 +386,7 @@ export default <
       )
       .attr("class", "link")
       .attr("id", (d) => d.id)
-      .call(renderLink, scale, colors);
+      .call(renderLink, scale, colors, _innerRadius, _outerRadius);
   }
 
   chart.innerRadius = (value: number) =>
@@ -402,7 +406,9 @@ export default <
   chart.renderLink = (
     value: (
       selection: Selection<SVGGElement | BaseType, IndexedN<N>, SVGGElement, D>,
-      scale: ScaleLinear<number, number, never>
+      scale: ScaleLinear<number, number, never>,
+      innerRadius: number,
+      outerRadius: number,
     ) => void
     // @ts-ignore TODO: fix typing
   ) => ((renderLink = value), chart);

@@ -11,14 +11,14 @@ import { createGraph, destroyGraph } from "./actions";
 import instanceSlice from "../graphInstance/slice"
 import { PathLike } from "fs";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Graph/graphs");
 
 const restoreSession = async (sessionPath: PathLike = ".session/Graph/graphs") => {
-  const files = await storage.searchDir(sessionPath, ['*.json'], { withFileTypes: true, });
+  const files = await storage.searchDir<string[]>(sessionPath, ['**/*.json'], { });
   const graphs = await files.reduce(async (acc, file) => {
-    if (!["modules.json", "conversion-graph.json"].includes(file.name)) {
-      const fileContent = await storage.readFile<string>(`${sessionPath}/${file.name}`, {encoding: 'utf-8'});
+    if (!["modules.json", "conversion-graph.json"].includes(file)) {
+      const fileContent = await storage.readFile<string>(`${sessionPath}/${file}`, {encoding: 'utf-8'});
       const content = JSON.parse(fileContent) as GraphState;
       return {...await acc, [content.id]: content};
     }

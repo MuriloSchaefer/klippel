@@ -4,7 +4,7 @@ import { SearchResult, GraphSearch } from "../store/state";
 
 
 
-const bfs = (
+export const bfs = (
   graph: GraphSearch,
   nodeStart: string,
   validate: (node: Node, graph: GraphSearch, currFindings: Node[], visitedNodes: Node[]) => boolean,

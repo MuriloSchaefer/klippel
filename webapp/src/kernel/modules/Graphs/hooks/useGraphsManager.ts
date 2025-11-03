@@ -1,15 +1,16 @@
 import { Manager } from "@kernel/modules/base";
 import { useAppDispatch } from "@kernel/modules/Store/hooks";
-import { addEdge, addNode, removeEdge, removeNode, resetGraph, updateNode } from "../store/graphInstance/actions";
+import { addEdge, addNode, loadGraph, removeEdge, removeNode, resetGraph, updateNode } from "../store/graphInstance/actions";
 
 import {createGraph as createGraphAction} from "../store/graphsManager/actions"
-import { newGraphState } from "../store/state";
+import { GraphState, newGraphState } from "../store/state";
 import { DEFAULT_EDGES, Graph } from "./useGraph";
 import Node from "../interfaces/Node";
 
 export interface GraphsManager extends Manager {
     functions: {
         createGraph: (graphId: string) => Graph 
+        loadGraph: (graphId: string, graph: GraphState) => void
         resetGraph: (graphId: string) => void
     }
 }
@@ -52,6 +53,9 @@ const useGraphsManager = (): GraphsManager => {
                       search: ()=>'null' // TODO: implement search dispatch here
                     },
                   }
+            },
+            loadGraph(graphId, graph){
+              dispatch(loadGraph({graphId, graph}))
             },
             resetGraph(graphId){
               dispatch(resetGraph({graphId}))

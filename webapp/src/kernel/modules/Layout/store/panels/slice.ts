@@ -9,7 +9,7 @@ import {
 import { initialState, PanelsState } from "./state";
 import { PathLike } from "fs";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Layout/panels");
 
 export function persistPanelsState(state: PanelsState) {

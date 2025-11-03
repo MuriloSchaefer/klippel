@@ -24,3 +24,7 @@ yarn-error.log*
 
 # jest cache
 .jest
+
+ComposerOld
+ipfs/
+bin/

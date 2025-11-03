@@ -1,7 +1,8 @@
+
+
 import { IModule } from "@kernel/modules/base";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
-import { startModule } from "./kernelCalls";
-import useComposition from "./hooks/useComposition";
+import { startModule } from './kernelCalls';
 
 
 export interface IComposerModule extends IModule {
@@ -9,7 +10,6 @@ export interface IComposerModule extends IModule {
   version: typeof MODULE_VERSION,
   components: {
   },
-  hooks: {useComposition: typeof useComposition}
 }
 
 /**
@@ -26,7 +26,7 @@ const module: IComposerModule = {
   depends_on: ['Layout', 'Graph', 'SVG', 'Materials', 'Converter'],
   components: {
   },
-  hooks:{useComposition},
+  hooks:{},
   kernelCalls: {
     startModule,
     restartModule(){},

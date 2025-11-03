@@ -11,6 +11,8 @@ export default defineConfig({
     viteTsconfigPaths(),
     svgrPlugin(),
   ],
+
+  assetsInclude: ['electron/bin/**/*'], // ✅ this is valid
   build: {
     target: "es2020",
     rollupOptions: {

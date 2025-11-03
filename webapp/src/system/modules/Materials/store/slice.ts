@@ -4,7 +4,7 @@ import { initialState, MaterialsModuleState } from "./state";
 import materialTypesSlice from './materialTypes/slice';
 import materialsSlice from './materials/slice';
 import { saveSession } from "./actions";
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/SVG/svgs");
 
 export const sessionSaver = (store: Store<MaterialsModuleState>) => () => {

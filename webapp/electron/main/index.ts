@@ -2,7 +2,6 @@ import { app, shell, BrowserWindow, Menu, Tray } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 const { updateElectronApp } = require("update-electron-app");
-// import icon from '../../resources/icon.png?asset'
 import installExtension, {
   REDUX_DEVTOOLS,
   REACT_DEVELOPER_TOOLS,
@@ -87,7 +86,7 @@ async function createWindow(): Promise<BrowserWindow> {
     console.log("moved");
     saveWindowState();
   });
-  const onClose =  (event) => {
+  const onClose =  (event: any) => {
     event?.preventDefault();
     mainWindow.webContents.send("save-session");
     mainWindow.hide();

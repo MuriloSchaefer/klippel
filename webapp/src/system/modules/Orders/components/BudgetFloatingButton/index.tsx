@@ -16,7 +16,7 @@ import useModule from "@kernel/hooks/useModule";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 import type { Store } from "@kernel/modules/Store";
 
-import type { IComposerModule } from "@system/modules/Composer";
+import type { IComposerModule } from "@system/modules/ComposerOld";
 
 import { actions } from "./constants";
 import CreateBudgetButton from "./CreateBudgetButton";

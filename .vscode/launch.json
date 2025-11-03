@@ -13,6 +13,7 @@
       "windows": {
         "runtimeExecutable": "${workspaceRoot}/webapp/node_modules/.bin/electron-vite.cmd"
       },
+      "autoAttachChildProcesses": true,
       "runtimeArgs": ["--sourcemap"],
       "env": {
         "REMOTE_DEBUGGING_PORT": "9222",

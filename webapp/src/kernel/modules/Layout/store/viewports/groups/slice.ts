@@ -4,7 +4,7 @@ import { ViewportGroups, ViewportGroupState } from "../state";
 import { createGroup } from "./actions";
 import { PathLike } from "fs";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(`.session/Layout/viewPortManager/.groups`);
 export const persistVPGroupState = (state:ViewportGroupState ) => {
     storage.writeBlob(

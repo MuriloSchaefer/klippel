@@ -7,8 +7,8 @@ import {
 } from "./state";
 import { saveSession, selectNode } from "./actions";
 
-const storage = window.electron.storage;
-storage.ensureDir(".session/Composer/compositionsManager/compositions");
+const storage = globalThis.electron.storage;
+storage.ensureDir(".session/Converter");
 
 export const sessionSaver = (store: Store<ConverterState>) => () => {
   store.dispatch(saveSession());

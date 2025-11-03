@@ -3,7 +3,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { ComponentRegistries, ComponentRegistryContext } from "../contexts/componentRegistry";
+import { ComponentRegistries, ComponentRegistryContext, ComponentTypeMap } from "../contexts/componentRegistry";
 
 
 export const ComponentsRegistryProvider = ({
@@ -24,6 +24,7 @@ export const ComponentsRegistryProvider = ({
         createRegistries,
         getComponent,
         registerComponents,
+        getRegistry
       }),
       [currentRegistries]
     );
@@ -39,6 +40,11 @@ export const ComponentsRegistryProvider = ({
       componentName: string
     ): ComponentType<T> {
       return currentRegistries[registryName][componentName];
+    }
+    function getRegistry<T = any>(
+      registryName: string,
+    ): ComponentTypeMap<T> {
+      return currentRegistries[registryName];
     }
     function registerComponents<T = any>(
       components: {[registry: string]: {[name: string]: ComponentType<T>}}

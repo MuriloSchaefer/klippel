@@ -63,36 +63,37 @@ const Initializer = ({
   const { createGraph, resetGraph } = graphsManager.functions;
 
   // LOAD STATIC MODULES
-  useLayoutEffect(() => {
-    if (storeInitialized) return
-    // initialization logic (we may separate it in a custom hook)
-    bootLog(
-      `Loading store module  module=${storeModule.name} version=(${storeModule.version})`
-    );
-    moduleManager.functions.reloadModule(storeModule.name)
-    setStoreInitialized(true);
-    bootLog(
-      `Store module loaded  module=${storeModule.name} version=(${storeModule.version})`
-    );
-  }, [storeInitialized]);
 
   useLayoutEffect(() => {
-    if (!storeInitialized) return
     // initialization logic (we may separate it in a custom hook)
     const mod = Object.keys(staticModules)[staticModulesLoaded];
     if (mod && !moduleManager.functions.isModuleLoaded(mod))
       loadStaticModule(staticModules[mod]);
   }, [staticModulesLoaded, storeInitialized]);
+  
+  useLayoutEffect(() => {
+    if (storeInitialized) return
+    if (staticModulesLoaded === Object.keys(staticModules).length){
+      bootLog(
+        `Loading store module  module=${storeModule.name} version=(${storeModule.version})`
+      );
+      moduleManager.functions.reloadModule(storeModule.name)
+      setStoreInitialized(true);
+      bootLog(
+        `Store module loaded  module=${storeModule.name} version=(${storeModule.version})`
+      );
+    }
+  }, [storeInitialized, staticModulesLoaded]);
 
   // LOAD KERNEL MODULES
   useLayoutEffect(() => {
-    if (staticModulesLoaded === Object.keys(staticModules).length) {
-      // all static modules are loaded and we can now load the kernel ones
-      const modName = Object.keys(extraModules.kernel)[kernelModulesLoaded];
-      if (modName && !moduleManager.functions.isModuleLoaded(modName))
-        loadKernelModule(extraModules.kernel[modName]);
-    }
-  }, [staticModulesLoaded, kernelModulesLoaded]);
+    if (!storeInitialized) return
+
+    // all static modules are loaded and we can now load the kernel ones
+    const modName = Object.keys(extraModules.kernel)[kernelModulesLoaded];
+    if (modName && !moduleManager.functions.isModuleLoaded(modName))
+      loadKernelModule(extraModules.kernel[modName]);
+  }, [storeInitialized, kernelModulesLoaded]);
 
   // LOAD EXTRA MODULES
   useLayoutEffect(() => {

@@ -7,7 +7,6 @@ import NodeTypeAccordion from "./NodeTypeAccordion";
 
 export default () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
-
   const { SettingsPanel, Accordion } = layoutModule.components;
 
   return (
@@ -19,7 +18,6 @@ export default () => {
       >
         <NodeTypeAccordion />
       </Accordion>
-      <></>
     </SettingsPanel>
   );
 };

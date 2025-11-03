@@ -9,7 +9,7 @@ import {
   saveSession,
 } from "./actions";
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Markdown");
 
 export const sessionSaver = (store: Store<MarkdownModuleState>) => () => {

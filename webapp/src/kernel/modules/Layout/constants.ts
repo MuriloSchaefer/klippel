@@ -8,6 +8,7 @@ export enum Theme {
 
 export const SECTIONS_REGISTRY_NAME = 'ribbonMenuSections'
 export const VIEWPORT_TYPE_REGISTRY_NAME = 'viewportTypes'
+export const SYSTEM_TRAY_REGISTRY_NAME = 'systemTray'
 
 export const SETTINGS_PANEL_ID = 'settings-panel'
 export const DETAILS_PANEL_ID = 'details-panel'

@@ -4,8 +4,5 @@ export type OmitFirstArg<F> = F extends (x: any, ...args: infer P) => infer R ? 
 export type ReplaceReturnType<T extends (...a: any) => any, TNewReturn> = (...a: Parameters<T>) => TNewReturn;
 
 declare global {
-  interface Window {
-    // electron: ElectronAPI
-    electron: IcpApi
-  }
+  var electron: IcpApi
 }

@@ -55,7 +55,7 @@ export const Accordion = ({
           }}
         >
           {icon ?? <SettingsInputCompositeSharp />}
-          <Typography component="div" sx={{ width: "33%", flexShrink: 0 }}>{name}</Typography>
+          <Typography component="div" sx={{ flexShrink: 0 }}>{name}</Typography>
           {summary && biggerThan1024 && (
             <Typography component="div" sx={{ color: "text.secondary" }}>{summary}</Typography>
           )}

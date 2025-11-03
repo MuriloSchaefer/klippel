@@ -23,7 +23,7 @@ type Grid<D = any> = {
   transformZoom(
     value: (
       root: Selection<SVGSVGElement, D, any, any>,
-      zoomFunc: ZoomBehavior<Element, D>
+      zoomFunc: ZoomBehavior<SVGSVGElement, D>
     ) => void
   ): Grid<D>;
 
@@ -53,9 +53,8 @@ export default <D = any>({
 
   let _transformZoom = (
     root: Selection<SVGSVGElement, D, any, any>,
-    zoomFunc: ZoomBehavior<Element, D>
+    zoomFunc: ZoomBehavior<SVGSVGElement, D>
   ) => {
-    // zoomFunc.translateBy(root, width/2, height/2)
   };
 
   function chart(
@@ -87,7 +86,7 @@ export default <D = any>({
       .call(yAxis);
 
     // add zoom
-    const zoomFunc = zoom<Element, D>()
+    const zoomFunc = zoom<SVGSVGElement, D>()
       .scaleExtent([-10, 40])
       .filter((event) => {
         event.preventDefault();
@@ -109,7 +108,7 @@ export default <D = any>({
   chart.transformZoom = (
     value: (
       root: Selection<SVGSVGElement, D, any, any>,
-      zoomFunc: ZoomBehavior<Element, D>
+      zoomFunc: ZoomBehavior<SVGSVGElement, D>
     ) => void
   ) => ((_transformZoom = value), chart);
   chart.build = chart as D3Component<D>;

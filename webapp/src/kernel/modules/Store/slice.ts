@@ -5,14 +5,18 @@ import {
   pauseSessionAutoSaver,
   resumeSessionAutoSaver,
   saveSession,
+  selectWorkspace,
+  workspacesListed,
 } from "./actions";
 import type { PathLike } from "fs";
 
 const initialState: StoreState = {
-  sessionAutoSaveInterval: 20,
+  sessionAutoSaveInterval: undefined,
+  selectedWorkspace: 'pessoal',
+  workspaces: ['pessoal']
 };
 
-const storage = window.electron.storage;
+const storage = globalThis.electron.storage;
 storage.ensureDir(".session/Store");
 
 export const sessionSaver = (store: Store<StoreState>) => () => {
@@ -60,6 +64,23 @@ const slice = createSlice({
         sessionAutoSaveInterval: payload.interval,
       })
     );
+
+    builder.addCase(
+      workspacesListed,
+      (state, { payload }) => ({
+        ...state,
+        workspaces: payload.workspaces
+      })
+    );
+    builder.addCase(
+      selectWorkspace,
+      (state, { payload }) => ({
+        ...state,
+        selectedWorkspace: payload.workspace,
+      })
+    );
+
+    
   },
 });
 
