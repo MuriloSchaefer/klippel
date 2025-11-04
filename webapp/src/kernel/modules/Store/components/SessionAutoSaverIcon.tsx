@@ -62,7 +62,9 @@ function SessionAutoSaverIcon({ interval }: Readonly<{ interval?: number }>) {
               <ListItem
                 sx={{ display: "flex", gap: 3, justifyContent: "center" }}
               >
-                <Button color="primary" onClick={storage.saveSession}>
+                <Button color="primary" onClick={()=>{
+                  storage.saveSession()
+                }}>
                   Salvar agora
                 </Button>
                 <Button

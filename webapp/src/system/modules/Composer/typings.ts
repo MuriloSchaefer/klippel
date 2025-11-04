@@ -2,6 +2,7 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+import { CompoundValue } from "@system/modules/Converter/typings";
 
 export type Model = {
     id: string,
@@ -50,6 +51,14 @@ export type ElectiveNode = Node & {
     defaultValue?: boolean;
 }
 
+export type ProcessNode = Node & {
+    type: "PROCESS";
+    label: string;
+    processId: string; // small hash id
+    costMoney?: CompoundValue; // monetary cost as CompoundValue (use Converter CompoundValue)
+    costTime?: CompoundValue; // compound time value (quotient/dividend from Converter)
+}
+
 // edges definitions
 export type HasPartEdge = Edge & {
     type: "HAS_PART";
@@ -69,11 +78,27 @@ export type HasElectiveEdge = Edge & {
 export type ElectiveOfEdge = Edge & {
     type: "ELECTIVE_OF";
 }
+export type HasProcessEdge = Edge & {
+    type: "HAS_PROCESS";
+}
+export type ProcessOfEdge = Edge & {
+    type: "PROCESS_OF";
+}
+export type ConsumesEdge = Edge & {
+    type: "CONSUMES";
+    // amount stored on the edge
+    amount?: CompoundValue;
+}
+export type ConsumedByEdge = Edge & {
+    type: "CONSUMED_BY";
+    // amount stored on the reverse edge as well
+    amount?: CompoundValue;
+}
 export type VariationGraphState = GraphState & {
     nodes: {
-        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode;
+        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode;
     };
     edges: {
-        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge;
+        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge;
     };
 }

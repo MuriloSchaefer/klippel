@@ -6,6 +6,7 @@ import { debounce } from "@kernel/utils";
 import { useMemo, useState } from "react";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
 import ElectiveListAccordion from "../../../viewports/ElectiveListAccordion";
+import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
 
 export default function GarmentDetails({
   variationId,
@@ -73,6 +74,14 @@ export default function GarmentDetails({
           variationId={variationId}
           garmentId={selectedPart}
         />
+      </Accordion>
+      <Accordion
+        name="Processos da Peça"
+        icon={undefined}
+        summary="Processos associados à peça (tempo e custo)"
+        defaultExpanded
+      >
+        <ProcessListAccordion variationId={variationId} parentId={selectedPart} />
       </Accordion>
     </Box>
   );
