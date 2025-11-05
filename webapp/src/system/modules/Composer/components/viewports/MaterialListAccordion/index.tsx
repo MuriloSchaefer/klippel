@@ -41,10 +41,11 @@ function ShowMaterial({
   const theme = useTheme();
   return (
     <>
-    <Box>
-      <Typography sx={{ fontWeight: 500, mr: 1 }} variant="body2">{label}</Typography>
-    </Box>
-      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "row" }}>
+      <Box sx={{display:'flex', flexDirection: 'column', gap:1}}>
+        <Typography sx={{ fontWeight: 500, mr: 1 }} variant="body2">
+          {label}
+        </Typography>
+        <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "row" }}>
         <Typography sx={{ fontWeight: 500, mr: 1 }}>{materialLabel}</Typography>
         <Typography color={theme.palette.text.secondary} sx={{ ml: 1 }}>
           ({typeof extra === "object" && "label" in extra ? extra.label : extra}
@@ -66,6 +67,8 @@ function ShowMaterial({
           </Tooltip>
         ) : null}
       </Box>
+      </Box>
+      
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         <IconButton
           sx={{
@@ -90,20 +93,22 @@ function ShowMaterial({
 
 function EditMaterial({
   type,
+  typeRestrictions,
   materialId,
   onSave,
   onCancel,
-}: {
+}: Readonly<{
   type: string;
+  typeRestrictions: string[],
   materialId: number;
   onSave: (materialId: number) => void;
   onCancel: () => void;
-}) {
+}>) {
   const theme = useTheme();
   const materialsModule = useModule<IMaterialsModule>("Materials");
-  const { MaterialSelector } = materialsModule.components;
+  const { MaterialSelector, MaterialTypeSelector } = materialsModule.components;
 
-  const [form, setForm] = useState({ materialId });
+  const [form, setForm] = useState<{type: string, materialId: number | undefined}>({ materialId, type });
   return (
     <>
       <Box
@@ -115,13 +120,22 @@ function EditMaterial({
         }}
       >
         <Box sx={{ display: "flex", flexDirection: "column" }}>
-          <Typography sx={{ fontWeight: 500, mr: 1, width: "100%" }}>
-            Tipo: {type}
-          </Typography>
+          <MaterialTypeSelector
+            value={form.type}
+            filter={(type)=>{
+
+              return typeRestrictions.includes(type.name)
+            }}
+            onChange={(e) =>
+              setForm((curr) => ({ ...curr, type: e.target.value, materialId: undefined }))
+            }
+          />
           <MaterialSelector
-            type={type}
+            type={form.type}
             value={form.materialId}
-            onChange={(newId) => setForm({ materialId: newId })}
+            onChange={(newId) =>
+              setForm((curr) => ({ ...curr, materialId: newId }))
+            }
           />
         </Box>
       </Box>
@@ -130,7 +144,12 @@ function EditMaterial({
           sx={{
             "&:hover": { color: theme.palette.success.main },
           }}
-          onClick={() => onSave(form.materialId)}
+          onClick={() => {
+            if (!form.materialId){
+              throw Error('must select a material')
+            }
+            onSave(form.materialId)
+          }}
         >
           <SaveSharp />
         </IconButton>
@@ -202,6 +221,7 @@ function MaterialItem({
       ) : (
         <EditMaterial
           type={material.type}
+          typeRestrictions={node.typeRestrictions}
           materialId={node.materialId}
           onCancel={() => setIsEditing(false)}
           onSave={(materialId) => {

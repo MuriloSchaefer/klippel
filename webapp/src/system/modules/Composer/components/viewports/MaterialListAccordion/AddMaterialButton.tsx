@@ -23,7 +23,8 @@ export default function AddMaterialButton({
   const materialModule = useModule<IMaterialsModule>("Materials");
   const graphModule = useModule<IGraphModule>("Graph");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
-  const { MaterialTypeMultiSelector, MaterialSelector, MaterialTypeSelector } = materialModule.components;
+  const { MaterialTypeMultiSelector, MaterialSelector, MaterialTypeSelector } =
+    materialModule.components;
 
   const variation = useVariation({ variationId });
   const graph = graphModule.hooks.useGraph(variationId, (g) => g);
@@ -80,7 +81,9 @@ export default function AddMaterialButton({
                 label="Tipos permitidos"
                 value={typeRestrictions}
                 sx={{ minWidth: 160 }}
-                onChange={(e) => setTypeRestrictions(e.target.value)}
+                onChange={(e) => {
+                  setTypeRestrictions(e.target.value as string[]);
+                }}
                 labelId="type-label"
               />
             </FormControl>
@@ -90,7 +93,11 @@ export default function AddMaterialButton({
               <MaterialTypeSelector
                 required
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                onChange={(e) => {
+                  setSelectedType(e.target.value);
+                  if (!(e.target.value in typeRestrictions))
+                    setTypeRestrictions((curr) => [...curr, e.target.value]);
+                }}
                 labelId="type-label"
               />
             </FormControl>
@@ -122,9 +129,11 @@ export default function AddMaterialButton({
           handleConfirm={() => {
             if (selectedType && selectedMaterial) {
               // Persist to graph
-              variation.actions.addMaterial(selectedMaterial, label, [
-                selectedType,
-              ]);
+              variation.actions.addMaterial(
+                selectedMaterial,
+                label,
+                typeRestrictions
+              );
             }
           }}
         >

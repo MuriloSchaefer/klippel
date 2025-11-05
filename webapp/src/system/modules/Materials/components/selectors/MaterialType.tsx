@@ -10,7 +10,7 @@ import { selectMaterialTypes } from "../../store/materialTypes/selectors";
 import { MaterialType } from "../../store/materialTypes/state";
 
 type MaterialTypeSelectorProps = SelectProps<string> & {
-  filter?: (types: MaterialType) => boolean;
+  filter?: (type: MaterialType) => boolean;
 }
 
 const MaterialTypeSelector = ({

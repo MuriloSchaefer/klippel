@@ -40,7 +40,7 @@ export type MaterialNode = Node & {
     label: string;
     materialId: number;
     attributes?: {}
-        
+    typeRestrictions: string[]
 }
 
 export type ElectiveNode = Node & {
