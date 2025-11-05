@@ -51,4 +51,48 @@ const MaterialTypeSelector = ({
   );
 };
 
+type MaterialTypeMultiSelectorProps = SelectProps<string[]> & {
+  filter?: (types: MaterialType) => boolean;
+  label: string | React.ReactNode | undefined
+}
+export const MaterialTypeMultiSelector = ({
+  filter,
+  value,
+  label,
+  ...props
+}: MaterialTypeMultiSelectorProps) => {
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
+
+  const materialTypes = useAppSelector(selectMaterialTypes);
+
+  const noFilter = useCallback((option: MaterialType) => true, []);
+
+  return (
+    <FormControl
+      sx={{ m: 1, minWidth: 120, width: "min-content" }}
+      fullWidth
+      size="small"
+    >
+      {label && <InputLabel id={`label`}>{label}</InputLabel>}
+      <Select
+        {...props}
+        multiple
+        labelId={`label`}
+        id={`material-type`}
+        value={value ?? []}
+        label="Tipo"
+      >
+        {Object.values(materialTypes)
+          .filter(filter ?? noFilter)
+          .map((type) => (
+            <MenuItem key={type.name} value={type.name}>
+              {type.label}
+            </MenuItem>
+          ))}
+      </Select>
+    </FormControl>
+  );
+};
+
 export default MaterialTypeSelector;

@@ -1,6 +1,6 @@
 import { IModule } from "@kernel/modules/base";
 import MaterialSelector from "./components/selectors/Material";
-import MaterialTypeSelector from "./components/selectors/MaterialType";
+import MaterialTypeSelector, { MaterialTypeMultiSelector } from "./components/selectors/MaterialType";
 import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import { startModule } from "./kernelCalls";
 import CRUDMaterialTypeCell from "./components/selectors/CRUDMaterialTypeCell";
@@ -10,6 +10,7 @@ import useMaterials from "./hooks/useMaterials";
 export interface IMaterialsModule extends IModule {
     components: {
         MaterialTypeSelector: typeof MaterialTypeSelector,
+        MaterialTypeMultiSelector: typeof MaterialTypeMultiSelector,
         MaterialSelector: typeof MaterialSelector,
         CRUDMaterialTypeCell: typeof CRUDMaterialTypeCell,
     },
@@ -32,6 +33,7 @@ const module: IMaterialsModule = {
     depends_on: ['Layout', 'Graph', 'SVG'],
     components: {
         MaterialTypeSelector,
+        MaterialTypeMultiSelector,
         MaterialSelector,
         CRUDMaterialTypeCell
     },

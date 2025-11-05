@@ -2,7 +2,12 @@ import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { Store } from "@kernel/modules/Store";
 import { selectPart } from "../store/variations/actions";
-import { ComposerModuleState, MaterialNode, PartNode, ElectiveNode } from "../typings";
+import {
+  ComposerModuleState,
+  MaterialNode,
+  PartNode,
+  ElectiveNode,
+} from "../typings";
 import { EdgeMap } from "@kernel/modules/Graphs/hooks/useGraph";
 import { IMaterialsModule } from "@system/modules/Materials";
 
@@ -14,12 +19,13 @@ export default function useVariation({ variationId }: { variationId: string }) {
 
   const graphModule = useModule<IGraphModule>("Graph");
   const { useGraph } = graphModule.hooks;
-  const { useMaterials} = materialsModule.hooks;
+  const { useMaterials } = materialsModule.hooks;
 
   const materials = useMaterials();
 
   const state = useAppSelector(
-    (state: { Composer: ComposerModuleState }) => state.Composer.variations[variationId]
+    (state: { Composer: ComposerModuleState }) =>
+      state.Composer.variations[variationId]
   );
   const graph = useGraph(variationId, (g) => g);
   return {
@@ -66,26 +72,27 @@ export default function useVariation({ variationId }: { variationId: string }) {
         graph.actions.addNode(node, edges);
       },
       removePart: (partId: string) => graph.actions.removeNode(partId),
-      addMaterial: (materialId: number) => {
+      addMaterial: (materialId: number, label: string, typeRestrictions: string[]) => {
         const material = materials[materialId];
         if (!material) {
           console.error("Material not found:", materialId);
           return;
         }
-        const nodeId = `material-${materialId}`
+        const nodeId = label.toLowerCase().replaceAll(/\s+/g, "-");
         const node: MaterialNode = {
           id: nodeId,
           type: "MATERIAL",
-          label: `Material ${materialId}`,
+          label: label,
           materialId: materialId,
           position: { x: 0, y: 0 },
+          typeRestrictions,
         };
         graph.actions.addNode(node, {
           inputs: {
             [`garment-${nodeId}`]: {
               id: `garment-${nodeId}`,
               type: "HAS_MATERIAL",
-              sourceId: 'garment',
+              sourceId: "garment",
               targetId: nodeId,
             },
           },
@@ -94,16 +101,28 @@ export default function useVariation({ variationId }: { variationId: string }) {
               id: `${nodeId}-garment`,
               type: "MATERIAL_OF",
               sourceId: nodeId,
-              targetId: 'garment',
+              targetId: "garment",
             },
           },
         });
       },
       removeMaterial: (materialId: number) => {
-        const nodeId = `material-${materialId}`;
+        const nodeId = Object.values(graph.state?.nodes ?? {}).find(
+          (n) =>
+            n.type === "MATERIAL" &&
+            (n as MaterialNode).materialId === materialId
+        )?.id;
+        if (!nodeId) {
+          console.error("Material node not found for materialId:", materialId);
+          return;
+        }
         graph.actions.removeNode(nodeId);
       },
-      addElective: (name: string, garmentId: string, defaultValue: boolean = false) => {
+      addElective: (
+        name: string,
+        garmentId: string,
+        defaultValue: boolean = false
+      ) => {
         // create a small hash id
         const hash = Math.random().toString(36).slice(2, 8);
         const nodeId = `elective-${hash}`;
@@ -145,44 +164,14 @@ export default function useVariation({ variationId }: { variationId: string }) {
         if (!curr) return;
         graph.actions.updateNode({ ...curr, ...changes } as any);
       },
-      updateMaterial: (nodeId: string, materialId: number)=>{
-        if (!graph.state) return
-        const oldNode = graph.state.nodes[nodeId]
-        const inputEdges = Object.values(graph.state.edges).filter((edge)=>edge.targetId === oldNode.id)
-        const outputEdges = Object.values(graph.state.edges).filter((edge)=>edge.sourceId === oldNode.id)
-        const newNode = {...graph.state.nodes[nodeId], materialId, id: `material-${materialId}`} as MaterialNode
-        
-        if (newNode.id in graph.state.nodes){
-          // TODO: update curr node to merge old material
-          inputEdges.forEach(edge => {
-            if (! graph.state) return
-            const newEdgeId = `${edge.sourceId}-${newNode.id}`
-            if ( newEdgeId in graph.state.edges){
-              // ignore. TODO: merge attributes (such as materialUsage and so on)
-              console.log(`ignoring edge ${newEdgeId}. Already exists`)
-              return
-            }
-            graph.actions.addEdge({...edge, id: newEdgeId, targetId: newNode.id})
-          })
-          outputEdges.forEach(edge => {
-            if (! graph.state) return
-            const newEdgeId = `${newNode.id}-${edge.targetId}`
-            if ( newEdgeId in graph.state.edges){
-              // ignore. TODO: merge attributes (such as materialUsage and so on)
-              console.log(`ignoring edge ${newEdgeId}. Already exists`)
-              return
-            }
-            graph.actions.addEdge({...edge, id: newEdgeId, sourceId: newNode.id})
-          })
-        } else {
-          graph.actions.addNode(newNode, {
-            inputs: inputEdges.reduce((edges, currEdge) => ({...edges, [`${currEdge.sourceId}-${newNode.id}`]: {...currEdge, targetId: newNode.id}}), {}),
-            outputs: outputEdges.reduce((edges, currEdge) => ({...edges, [`${newNode.id}-${currEdge.targetId}`]: {...currEdge, sourceId: newNode.id}}), {}),
-          });
-        }
-        graph.actions.removeNode(nodeId)
-      
-      }
+      updateMaterial: (nodeId: string, materialId: number) => {
+        if (!graph.state) return;
+        const newNode = {
+          ...graph.state.nodes[nodeId],
+          materialId,
+        } as MaterialNode;
+        graph.actions.updateNode(newNode);
+      },
     },
   };
 }

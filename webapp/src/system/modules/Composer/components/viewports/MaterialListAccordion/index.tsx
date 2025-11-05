@@ -25,12 +25,14 @@ import useVariation from "../../../hooks/useVariation";
 
 function ShowMaterial({
   label,
+  materialLabel,
   extra,
   color,
   onEdit,
   onDelete,
 }: {
   label: string;
+  materialLabel: string;
   extra: any;
   color?: Color;
   onEdit: () => void;
@@ -39,8 +41,11 @@ function ShowMaterial({
   const theme = useTheme();
   return (
     <>
+    <Box>
+      <Typography sx={{ fontWeight: 500, mr: 1 }} variant="body2">{label}</Typography>
+    </Box>
       <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "row" }}>
-        <Typography sx={{ fontWeight: 500, mr: 1 }}>{label}</Typography>
+        <Typography sx={{ fontWeight: 500, mr: 1 }}>{materialLabel}</Typography>
         <Typography color={theme.palette.text.secondary} sx={{ ml: 1 }}>
           ({typeof extra === "object" && "label" in extra ? extra.label : extra}
           )
@@ -187,7 +192,8 @@ function MaterialItem({
     >
       {!isEditing ? (
         <ShowMaterial
-          label={label}
+          label={node.label}
+          materialLabel={label}
           extra={extra}
           color={color}
           onEdit={() => setIsEditing(true)}
