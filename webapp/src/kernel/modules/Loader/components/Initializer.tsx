@@ -5,6 +5,15 @@ import graphModule from "@kernel/modules/Graphs";
 import layoutModule from "@kernel/modules/Layout";
 import storeModule from "@kernel/modules/Store";
 
+// Kernel modules
+import SVG from "@kernel/modules/SVG";
+import pointerModule from "@kernel/modules/Pointer";
+import Markdown from "@kernel/modules/Markdown";
+
+import converterModule from "@system/modules/Converter";
+import materialsModule from "@system/modules/Materials";
+import composerModule from "@system/modules/Composer";
+
 import module from "..";
 import { GRAPH_NAME, MODULE_NAME } from "../constants";
 import useGraph from "@kernel/modules/Graphs/hooks/useGraph";
@@ -13,7 +22,6 @@ import { IModule } from "../../base";
 
 type InitializerProps = {
   afterLoadComponent: React.ReactElement;
-  extraModules: ModulesMap;
   bootLog: (log: string) => void;
 };
 const KERNEL_LOGS = "logs/kernel";
@@ -38,7 +46,6 @@ const PreInit = (props: Omit<InitializerProps, "bootLog">) => {
 const Initializer = ({
   bootLog,
   afterLoadComponent,
-  extraModules = { kernel: {}, system: {} },
 }: InitializerProps) => {
   const moduleManager = module.managers.modules();
   const graph = useGraph(GRAPH_NAME, (g) => g?.id);
@@ -58,6 +65,20 @@ const Initializer = ({
     }),
     []
   );
+
+  const extraModules: ModulesMap = {
+      kernel: {
+        [SVG.name]:SVG, 
+        [pointerModule.name]:pointerModule, 
+        [Markdown.name]:Markdown
+      },
+      system: {
+        [converterModule.name]: converterModule, 
+        [materialsModule.name]: materialsModule, 
+        [composerModule.name]: composerModule, 
+        // [ordersModule.name]: ordersModule
+      },
+    };
 
   const graphsManager = graphModule.managers.graphs();
   const { createGraph, resetGraph } = graphsManager.functions;

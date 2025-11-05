@@ -8,15 +8,7 @@ import ModulesProvider, {
 import DynamicStore from "./modules/Store/components/DynamicStore";
 import Layout from "./modules/Layout/components/WideLayout";
 
-// Kernel modules
-import SVG from "./modules/SVG";
-import pointerModule from "./modules/Pointer";
-import Markdown from "./modules/Markdown";
-
 // System modules
-import converterModule from "@system/modules/Converter";
-import materialsModule from "@system/modules/Materials";
-import composerModule from "@system/modules/Composer";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import Paper from '@mui/material/Paper';
 
@@ -38,24 +30,11 @@ export interface InitializationConfig {
 }
 
 const App = (): React.ReactElement => {
-  const builtInModules: ModulesMap = {
-    kernel: {
-      [SVG.name]:SVG, 
-      [pointerModule.name]:pointerModule, 
-      [Markdown.name]:Markdown
-    },
-    system: {
-      [converterModule.name]: converterModule, 
-      [materialsModule.name]: materialsModule, 
-      [composerModule.name]: composerModule, 
-      // [ordersModule.name]: ordersModule
-    },
-  };
   return (
     // First initialize store and then load modules, since the loader requires the store to be already up
     <ErrorBoundary fallbackRender={fallbackRender}>
       <DynamicStore>
-      <ModulesProvider extraModules={builtInModules}>
+      <ModulesProvider>
         {/* [Authz Component here]
             This is only loaded after initialization is complete
          */}

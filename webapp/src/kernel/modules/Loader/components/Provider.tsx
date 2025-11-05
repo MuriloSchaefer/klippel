@@ -14,7 +14,7 @@ export interface ModulesMap {
         [name: string]: IModule
     },
   }
-const ModulesProvider = ({ children, extraModules }: { children: React.ReactElement, extraModules: ModulesMap }) => {
+const ModulesProvider = ({ children }: { children: React.ReactElement}) => {
 
     const [modules, setModules] = useState<ModulesContextType>({
         Store: storeModule
@@ -27,7 +27,7 @@ const ModulesProvider = ({ children, extraModules }: { children: React.ReactElem
 
 
     return <ModulesContext.Provider value={values}>
-        <Initializer extraModules={extraModules} afterLoadComponent={children}/>
+        <Initializer  afterLoadComponent={children}/>
     </ModulesContext.Provider>
 }
 
