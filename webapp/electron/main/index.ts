@@ -6,11 +6,13 @@ import installExtension, {
   REDUX_DEVTOOLS,
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
+
 import { getAbsPath, initStorageHooks } from "./storage";
 import initScheduler from "./scheduler";
 import { existsSync, outputFile, readFileSync } from "fs-extra";
 import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
 import { debounce } from "./utils";
+import initOllama from "./ollama";
 
 updateElectronApp();
 if (require("electron-squirrel-startup")) app.quit();
@@ -72,6 +74,8 @@ async function createWindow(): Promise<BrowserWindow> {
   });
   const scheduler = initScheduler();
   initStorageHooks(scheduler, mainWindow);
+  const eo = await initOllama()
+  console.log(eo)
 
   mainWindow.on("ready-to-show", () => {
     mainWindow.showInactive();
