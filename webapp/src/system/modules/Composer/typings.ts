@@ -59,6 +59,20 @@ export type ProcessNode = Node & {
     costTime?: CompoundValue; // compound time value (quotient/dividend from Converter)
 }
 
+export type VisualizationDom = {
+    id: string;
+    fill?: boolean;
+    stroke?: boolean;
+}
+
+export type VisualizationNode = Node & {
+    type: "VISUALIZATION";
+    label: string;
+    visualizationId: string; // small hash id
+    materialNodeId: string; // node id of the MATERIAL node this visualization references
+    doms: VisualizationDom[]; // list of SVG element ids and per-entry options
+}
+
 // edges definitions
 export type HasPartEdge = Edge & {
     type: "HAS_PART";
@@ -84,6 +98,12 @@ export type HasProcessEdge = Edge & {
 export type ProcessOfEdge = Edge & {
     type: "PROCESS_OF";
 }
+export type HasVisualizationEdge = Edge & {
+    type: "HAS_VISUALIZATION";
+}
+export type VisualizationOfEdge = Edge & {
+    type: "VISUALIZATION_OF";
+}
 export type ConsumesEdge = Edge & {
     type: "CONSUMES";
     // amount stored on the edge
@@ -96,9 +116,9 @@ export type ConsumedByEdge = Edge & {
 }
 export type VariationGraphState = GraphState & {
     nodes: {
-        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode;
+        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode | VisualizationNode;
     };
     edges: {
-        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge;
+        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge | HasVisualizationEdge | VisualizationOfEdge;
     };
 }

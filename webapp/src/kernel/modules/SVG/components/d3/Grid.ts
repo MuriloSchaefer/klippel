@@ -101,7 +101,6 @@ export default <D = any>({
 
       _transformZoom(root, zoomFunc);
 
-    // @ts-ignore TODO: fix typing
     root.call(zoomFunc);
   }
 

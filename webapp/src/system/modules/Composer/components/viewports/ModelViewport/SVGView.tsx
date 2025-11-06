@@ -9,13 +9,13 @@ import { Store } from "@kernel/modules/Store";
 
 export function SVGModelViewport({ variationId }: Readonly<{ variationId: string }>) {
   const {
-    hooks: { useSVGEditor },
+    hooks: { useSVGEditor, useSVG },
     d3Components: { Grid }
   } = useModule<ISVGModule>("SVG");
 
 
   const variation = useVariation({ variationId });
-  
+  const svg = useSVG(variation.state.svg!, variationId);
   const editor = useSVGEditor({
     svgPath: variation.state.svg!,
     instanceName: variationId,
@@ -43,13 +43,15 @@ export function SVGModelViewport({ variationId }: Readonly<{ variationId: string
 }
 
 export default function SVGView({ variationId }: Readonly<{ variationId: string }>) {
-  const theme = useTheme();
-  const storeModule = useModule<Store>("Store");
-  const variation = useVariation({ variationId });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
-
+  const theme = useTheme();
+  
+  const storeModule = useModule<Store>("Store");  
+  const variation = useVariation({ variationId });
+  
   const dispatch = storeModule.hooks.useAppDispatch();
+
   const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
