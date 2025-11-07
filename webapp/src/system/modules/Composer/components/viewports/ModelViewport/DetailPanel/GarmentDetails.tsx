@@ -8,6 +8,7 @@ import InfoSharpIcon from "@mui/icons-material/InfoSharp";
 import ElectiveListAccordion from "../../../viewports/ElectiveListAccordion";
 import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
 import VisualizationListAccordion from "../../VisualizationListAccordion";
+import GraduationListAccordion from "../../../viewports/GraduationListAccordion";
 
 export default function GarmentDetails({
   variationId,
@@ -66,10 +67,16 @@ export default function GarmentDetails({
         </FormControl>
       </Accordion>
       <Accordion
+        name="Graduações da Peça"
+        icon={undefined}
+        summary="Graduações vinculadas diretamente à peça (ordem configurável)"
+      >
+        <GraduationListAccordion variationId={variationId} garmentId={selectedPart} />
+      </Accordion>
+      <Accordion
         name="Visualização"
         icon={undefined}
         summary="Víncule materiais com objetos na arte."
-        defaultExpanded
       >
         <VisualizationListAccordion
           variationId={variationId}

@@ -50,6 +50,13 @@ export type ElectiveNode = Node & {
     defaultValue?: boolean;
 }
 
+export type GraduationNode = Node & {
+    type: "GRADUATION";
+    label: string;
+    graduationId: string; // small hash id
+    order?: number; // ordering index within garment
+}
+
 export type ProcessNode = Node & {
     type: "PROCESS";
     label: string;
@@ -97,6 +104,12 @@ export type HasProcessEdge = Edge & {
 export type ProcessOfEdge = Edge & {
     type: "PROCESS_OF";
 }
+export type HasGraduationEdge = Edge & {
+    type: "HAS_GRADUATION";
+}
+export type GraduationOfEdge = Edge & {
+    type: "GRADUATION_OF";
+}
 export type HasVisualizationEdge = Edge & {
     type: "HAS_VISUALIZATION";
 }
@@ -115,9 +128,9 @@ export type ConsumedByEdge = Edge & {
 }
 export type VariationGraphState = GraphState & {
     nodes: {
-        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode | VisualizationNode;
+        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode | VisualizationNode | GraduationNode;
     };
     edges: {
-        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge | HasVisualizationEdge | VisualizationOfEdge;
+        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge | HasVisualizationEdge | VisualizationOfEdge | HasGraduationEdge | GraduationOfEdge;
     };
 }

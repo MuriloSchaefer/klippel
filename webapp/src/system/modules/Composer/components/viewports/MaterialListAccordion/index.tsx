@@ -41,7 +41,7 @@ function ShowMaterial({
   const theme = useTheme();
   return (
     <>
-      <Box sx={{display:'flex', flexDirection: 'column', gap:1}}>
+      <Box sx={{display:'flex', flexDirection: 'column', gap:1, width: '100%'}}>
         <Typography sx={{ fontWeight: 500, mr: 1 }} variant="body2">
           {label}
         </Typography>
@@ -72,11 +72,11 @@ function ShowMaterial({
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         <IconButton
           sx={{
-            "&:hover": { color: theme.palette.error.main },
+            "&:hover": { color: theme.palette.error.light },
           }}
           onClick={onDelete}
         >
-          <DeleteOutlineSharp />
+          <DeleteOutlineSharp color="error"  />
         </IconButton>
         <IconButton
           sx={{
@@ -84,7 +84,7 @@ function ShowMaterial({
           }}
           onClick={onEdit}
         >
-          <ModeEditOutlineSharp />
+          <ModeEditOutlineSharp color="info" />
         </IconButton>
       </Box>
     </>
