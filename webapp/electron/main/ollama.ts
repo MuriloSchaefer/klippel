@@ -1,0 +1,34 @@
+import {ElectronOllama} from "electron-ollama";
+import { HOME } from "./storage";
+import { ensureDirSync } from "fs-extra";
+
+async function initOllama() {
+  const basePath = HOME + "/ollama";
+  ensureDirSync(basePath);
+
+  const eo = new ElectronOllama({
+    basePath: basePath,
+  });
+
+  if (!(await eo.isRunning())) {
+    // Welcome OpenAI's gpt-oss models
+    await eo.serve("v0.11.0", {
+      serverLog: (message) => console.log("[Ollama]", message),
+      downloadLog: (percent, message) =>
+        console.log("[Ollama Download]", `${percent}%`, message),
+    });
+
+    const liveVersion = await fetch("http://localhost:11434/api/version").then(
+      (res) => res.json()
+    );
+    console.log("Currently running Ollama", liveVersion);
+
+    await eo.getServer()?.stop(); // gracefully stop the server with 5s timeout
+  } else {
+    console.log("Ollama server is already running");
+  }
+
+  return eo;
+}
+
+export default initOllama;

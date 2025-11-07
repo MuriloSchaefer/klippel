@@ -1,16 +1,5 @@
-import {
-  Selection,
-  axisBottom,
-  axisRight,
-  scaleLinear,
-} from "d3";
-import {
-  useContext,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { Selection, axisBottom, axisRight, scaleLinear, select } from "d3";
+import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
@@ -21,11 +10,10 @@ import { EditorToolkitContext } from "../components/SVGEditorToolkit";
 import { randomString } from "@kernel/utils";
 import useD3Container from "./useD3Container";
 
-
 interface SVGEditorProps {
   svgPath: string;
   instanceName: string;
-  beforeInjection?:(svgRoot: SVGSVGElement) => SVGSVGElement
+  beforeInjection?: (svgRoot: SVGSVGElement) => SVGSVGElement;
 }
 
 interface SVGEditor {
@@ -37,16 +25,19 @@ interface SVGEditor {
   transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement): void;
 }
 
-type PickingElements = Array<{element: SVGElement, handlers: {
-  pointerover: (e: PointerEvent) => void
-  pointerout: (e: PointerEvent) => void
-  pointerdown: (e: PointerEvent) => void
-}}>
+type PickingElements = Array<{
+  element: SVGElement;
+  handlers: {
+    pointerover: (e: PointerEvent) => void;
+    pointerout: (e: PointerEvent) => void;
+    pointerdown: (e: PointerEvent) => void;
+  };
+}>;
 
 export const useSVGEditor = ({
   svgPath,
   instanceName,
-  beforeInjection = (svg) => svg
+  beforeInjection = (svg) => svg,
 }: SVGEditorProps): SVGEditor => {
   const {
     hooks: { useResizeObserver },
@@ -115,38 +106,20 @@ export const useSVGEditor = ({
     .tickSize(width)
     .tickPadding(8 - width);
 
-  const [zoomTransform, setZoomTransform] = useState(undefined)
-  const [pickingElements, setPickingElements] = useState<PickingElements>([])
+  const [zoomTransform, setZoomTransform] = useState(undefined);
+  const [pickingElements, setPickingElements] = useState<PickingElements>([]);
 
-  function renderPreview(selection: Selection<SVGGElement, any, SVGSVGElement, any>) {
+  
+  function renderPreview(
+    root: Selection<SVGSVGElement, any, SVGSVGElement, any>,
+    selection: Selection<SVGGElement, any, SVGSVGElement, any>
+  ) {
     selection.selectChildren("*").remove();
 
-    const defs = selection.append("defs");
-
-    //add helper for tools
-    const pattern = defs
-      .append("pattern")
-      .attr("id", "pick-hatch-pattern")
-      .attr("width", "50")
-      .attr("height", "10")
-      .attr("patternTransform", "rotate(45 0 0)")
-      .attr("patternUnits", "userSpaceOnUse");
-
-    let bg = pattern
-      .append("rect")
-      .attr("width", "50")
-      .attr("height", "10")
-      .attr("fill", theme.palette.background.default);
-
-    let path = pattern
-      .append("line")
-      .attr("x1", "0")
-      .attr("y1", "0")
-      .attr("x2", "0")
-      .attr("y2", "10")
-      .attr("style", `stroke:${theme.palette.primary.main}; stroke-width:10;`);
-
-    const editorContainer = selection.append("g").attr("role", "container");
+    const editorContainer = selection
+      .data([1])
+      .join("g")
+      .attr("role", "container");
 
     if (!parsedSVG) {
       console.error("SVG could not be parsed!");
@@ -163,20 +136,19 @@ export const useSVGEditor = ({
     });
 
     // hightlighted elements
-    if (tools.hightlightedElements){
-      tools.hightlightedElements.forEach(id => {
-
-        const e = parsedSVG.getElementById(id)
-        if (e){
-          e.setAttribute('fill', "url(#pick-hatch-pattern)")
+    if (tools.hightlightedElements) {
+      tools.hightlightedElements.forEach((id) => {
+        const e = parsedSVG.getElementById(id);
+        if (e) {
+          e.setAttribute("fill", "url(#pick-hatch-pattern)");
         }
-      })
+      });
     }
 
     // attach tool listeners
-    if (tools.pickElement.enabled && tools.pickElement.type === 'SVGElement'){
+    if (tools.pickElement.enabled && tools.pickElement.type === "SVGElement") {
       let elements = tools.pickElement.getSelectables(parsedSVG);
-      const pickingElementsTemp: PickingElements = []
+      const pickingElementsTemp: PickingElements = [];
       elements.map((element: SVGElement) => {
         const currFillColor = element.getAttribute("fill");
         const currStrokeColor = element.getAttribute("stroke");
@@ -187,16 +159,17 @@ export const useSVGEditor = ({
             e.stopPropagation();
             element.setAttribute("fill", "url(#pick-hatch-pattern)");
             element.setAttribute("stroke", theme.palette.primary.main);
-            element.setAttribute("stroke-width", "30");
+            element.setAttribute("stroke-width", "3");
           },
           pointerout: (e: PointerEvent) => {
             e.stopPropagation();
             if (currFillColor) element.setAttribute("fill", currFillColor);
             else element.removeAttribute("fill");
-    
-            if (currStrokeColor) element.setAttribute("stroke", currStrokeColor);
+
+            if (currStrokeColor)
+              element.setAttribute("stroke", currStrokeColor);
             else element.removeAttribute("stroke");
-    
+
             if (currStrokeWidth)
               element.setAttribute("stroke-width", currStrokeWidth);
             else element.removeAttribute("stroke-width");
@@ -204,54 +177,75 @@ export const useSVGEditor = ({
           pointerdown: (e: PointerEvent) => {
             e.stopPropagation();
             e.preventDefault();
-    
+
             if (currFillColor) element.setAttribute("fill", currFillColor);
             else element.removeAttribute("fill");
-    
-            if (currStrokeColor) element.setAttribute("stroke", currStrokeColor);
+
+            if (currStrokeColor)
+              element.setAttribute("stroke", currStrokeColor);
             else element.removeAttribute("stroke");
-    
+
             if (currStrokeWidth)
               element.setAttribute("stroke-width", currStrokeWidth);
             else element.removeAttribute("stroke-width");
-    
-    
+
             let iden = element.getAttribute("id") || randomString(10);
             if (!element.getAttribute("id")) element.setAttribute("id", iden);
             tools.pickElement.callback(element);
             transform(() => parsedSVG);
           },
-        }
-
+        };
 
         element.addEventListener("pointerover", handlers.pointerover);
         element.addEventListener("pointerout", handlers.pointerout);
         element.addEventListener("pointerdown", handlers.pointerdown);
-        pickingElementsTemp.push({element, handlers})
-      })
-      setPickingElements(pickingElementsTemp)
+        pickingElementsTemp.push({ element, handlers });
+      });
+      setPickingElements(pickingElementsTemp);
     } else {
-      if (pickingElements){
+      if (pickingElements) {
         // remove listeners
-        pickingElements.map(({element, handlers}) => {
+        pickingElements.map(({ element, handlers }) => {
           element.removeEventListener("pointerover", handlers.pointerover);
           element.removeEventListener("pointerout", handlers.pointerout);
           element.removeEventListener("pointerdown", handlers.pointerdown);
-        })
+        });
       }
     }
     editorContainer.node()?.append(beforeInjection(parsedSVG));
   }
 
   container.content([
-    (root, selection, datum) => {
-      const editorPreview = selection.append("g").attr("id", "SVG-editor-preview");
-      renderPreview(editorPreview)
+    (root) => {
+      const defs = select(svgRef.current!).selectAll('#svg-edit-defs').data([1]).join('defs').attr("id", "svg-edit-defs");
+      const pattern = defs.selectAll("#pick-hatch-pattern").data([1]).join("pattern")
+          .attr("id", "pick-hatch-pattern")
+          .attr("width", "50")
+          .attr("height", "10")
+          .attr("patternTransform", "rotate(45 0 0)")
+          .attr("patternUnits", "userSpaceOnUse")
+      pattern.selectAll('rect').data([1]).join("rect")
+        .attr("width", "50")
+        .attr("height", "10")
+        .attr("fill", theme.palette.background.default);
+
+      pattern.selectAll('line').data([1]).join("line")
+        .attr("x1", "0")
+        .attr("y1", "0")
+        .attr("x2", "0")
+        .attr("y2", "10")
+        .attr("style", `stroke:${theme.palette.primary.main}; stroke-width:2;`);
     },
     (root, selection, datum) => {
-      selection.append("g").attr("id", "SVG-editor-tools");
-    }
-  ])
+      const preview = selection.selectAll('#SVG-editor-preview').data([1]).join("g").attr("id", "SVG-editor-preview");
+      // @ts-ignore TODO: fix types
+      renderPreview(root, preview);
+    },
+    (root, selection, datum) => {
+      selection.selectAll('#SVG-editor-tools').data([1]).join("g").attr("id", "SVG-editor-tools");
+    },
+    
+  ]);
 
   function transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement) {
     const serialized = new XMLSerializer().serializeToString(fn(parsedSVG));

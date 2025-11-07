@@ -2,6 +2,7 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+import { CompoundValue } from "@system/modules/Converter/typings";
 
 export type Model = {
     id: string,
@@ -22,7 +23,6 @@ export type ComposerModuleState = {
     variations: { [key: string]: ModelVariation }
 }
 
-
 // nodes definitions
 export type GarmentNode = Node & {
     type: "GARMENT";
@@ -39,7 +39,37 @@ export type MaterialNode = Node & {
     label: string;
     materialId: number;
     attributes?: {}
-        
+    typeRestrictions: string[]
+}
+
+export type ElectiveNode = Node & {
+    type: "ELECTIVE";
+    label: string;
+    electiveId: string; // small hash id
+    value?: boolean;
+    defaultValue?: boolean;
+}
+
+export type ProcessNode = Node & {
+    type: "PROCESS";
+    label: string;
+    processId: string; // small hash id
+    costMoney?: CompoundValue; // monetary cost as CompoundValue (use Converter CompoundValue)
+    costTime?: CompoundValue; // compound time value (quotient/dividend from Converter)
+}
+
+export type VisualizationDom = {
+    id: string;
+    fill?: boolean;
+    stroke?: boolean;
+}
+
+export type VisualizationNode = Node & {
+    type: "VISUALIZATION";
+    label: string;
+    visualizationId: string; // small hash id
+    materialNodeId: string; // node id of the MATERIAL node this visualization references
+    doms: VisualizationDom[]; // list of SVG element ids and per-entry options
 }
 
 // edges definitions
@@ -55,11 +85,39 @@ export type MaterialOfEdge = Edge & {
 export type  HasMaterialEdge = Edge & {
     type: "HAS_MATERIAL";
 } 
+export type HasElectiveEdge = Edge & {
+    type: "HAS_ELECTIVE";
+}
+export type ElectiveOfEdge = Edge & {
+    type: "ELECTIVE_OF";
+}
+export type HasProcessEdge = Edge & {
+    type: "HAS_PROCESS";
+}
+export type ProcessOfEdge = Edge & {
+    type: "PROCESS_OF";
+}
+export type HasVisualizationEdge = Edge & {
+    type: "HAS_VISUALIZATION";
+}
+export type VisualizationOfEdge = Edge & {
+    type: "VISUALIZATION_OF";
+}
+export type ConsumesEdge = Edge & {
+    type: "CONSUMES";
+    // amount stored on the edge
+    amount?: CompoundValue;
+}
+export type ConsumedByEdge = Edge & {
+    type: "CONSUMED_BY";
+    // amount stored on the reverse edge as well
+    amount?: CompoundValue;
+}
 export type VariationGraphState = GraphState & {
     nodes: {
-        [key: string]: GarmentNode | PartNode | MaterialNode;
+        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode | VisualizationNode;
     };
     edges: {
-        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge;
+        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge | HasVisualizationEdge | VisualizationOfEdge;
     };
 }

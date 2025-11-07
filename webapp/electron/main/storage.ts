@@ -20,8 +20,8 @@ import { SimpleIntervalJob, Task, type ToadScheduler } from "toad-scheduler";
 import type { BrowserWindow } from "electron/main";
 import { resolve } from "path";
 
+export const HOME = app.getPath("home") + "/klippel/envs/" + process.env["ENV_NAME"];
 export function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
-  const HOME = app.getPath("home") + "/klippel/envs/" + process.env["ENV_NAME"];
   const absPath = resolve(`${HOME}/${path}`);
   let err;
   if (!absPath.startsWith(HOME)) {

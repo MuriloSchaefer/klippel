@@ -10,11 +10,12 @@ import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import { randomString } from "@kernel/utils";
-import { Typography } from "@mui/material";
+import { Typography, useTheme } from "@mui/material";
 import useModelsManager from "../../hooks/useModelsManager";
 
 export const CreateModelIconButton = () => {
   const modelsManager = useModelsManager();
+  const theme = useTheme()
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
@@ -50,12 +51,12 @@ export const CreateModelIconButton = () => {
               value={hashId}
               helperText={
                 <Box sx={{ lineHeight: 1 }}>
-                  <Typography sx={{ color: hashId ? "green" : "red" }}>
+                  <Typography sx={{ color: hashId ? theme.palette.success.main : theme.palette.error.main }}>
                     Deve existir um id
                   </Typography>
                   <Typography
                     sx={{
-                      color: hashId && hashId.length <= 30 ? "green" : "red",
+                      color: hashId && hashId.length <= 30 ? theme.palette.success.main : theme.palette.error.main,
                     }}
                   >
                     Deve ter no máximo 30 caracteres

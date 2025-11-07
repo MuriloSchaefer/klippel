@@ -197,7 +197,8 @@ const slice = createSlice({
       .addCase(
         removeEdge,
         (state: GraphsManagerState, { payload: { graphId, edgeId } }) => {
-          const edge = state.graphs[graphId].edges[edgeId];
+          const graph = state.graphs[graphId]
+          const edge = graph.edges[edgeId];
 
           const newGraphState = {
             ...state.graphs[graphId],

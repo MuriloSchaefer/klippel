@@ -11,14 +11,17 @@ import GraphView from "./GraphView";
 import { useMemo } from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import DetailPanel from "./DetailPanel";
-import WidgetsSharpIcon from '@mui/icons-material/WidgetsSharp';
+import WidgetsSharpIcon from "@mui/icons-material/WidgetsSharp";
+import { ISVGModule } from "@kernel/modules/SVG";
 
 export default function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
+  const svgModule = useModule<ISVGModule>("SVG");
   const { ViewportNotificationsTray, SettingsPanel, Accordion, DetailsPanel } =
     layoutModule.components;
 
   const { useActiveViewport, useViewportManager } = layoutModule.hooks;
+  const { SVGEditorToolkit } = svgModule.components;
 
   const activeVP = useActiveViewport();
   const vpManager = useViewportManager();
@@ -26,7 +29,6 @@ export default function ModelViewport() {
   const variation = useVariation({ variationId: activeVP.extra.variationId });
 
   const view = useMemo(() => {
-    
     switch (activeVP.extra.view) {
       case "svg":
         return <SVGView variationId={activeVP.extra.variationId as string} />;
@@ -38,78 +40,83 @@ export default function ModelViewport() {
   }, [activeVP.extra.view, activeVP.extra.variationId]);
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        height: "100%",
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <ViewportNotificationsTray>
-        <SaveSharpIcon
-          fontSize="small"
-          onClick={() => console.log("save model")}
-          sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}
-        />
-      </ViewportNotificationsTray>
+    <SVGEditorToolkit>
+      <Box
+        sx={{
+          position: "relative",
+          height: "100%",
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <ViewportNotificationsTray>
+          <SaveSharpIcon
+            fontSize="small"
+            onClick={() => console.log("save model")}
+            sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}
+          />
+        </ViewportNotificationsTray>
 
-      <SettingsPanel>
-        <Accordion
-          name="Composição"
-          icon={<AccountTreeSharpIcon />}
-          summary="composição da peça"
-        >
-          <CompositionTree variationId={activeVP.extra.variationId} />
-        </Accordion>
-        <Accordion
-          name="Materiais"
-          icon={<WidgetsSharpIcon />}
-          summary="Materiais referenciados na composição"
-        >
-          <MaterialListAccordion variationId={activeVP.extra.variationId} />
-        </Accordion>
-      </SettingsPanel>
-
-      <DetailsPanel >
-        <DetailPanel variationId={activeVP.extra.variationId} selectedPart={activeVP.extra.selectedPart} />
-      </DetailsPanel>
-
-      {view}
-
-      <Box sx={{ position: "absolute", top: 16, left: 16 }}>
-        <ButtonGroup
-          variant="contained"
-          aria-label="alterar modo de visualização"
-        >
-          <Button
-            onClick={() => {
-              vpManager.functions.setExtras(activeVP.name, {
-                ...activeVP.extra,
-                view: "graph",
-              });
-            }}
-            variant={"contained"}
+        <SettingsPanel>
+          <Accordion
+            name="Composição"
+            icon={<AccountTreeSharpIcon />}
+            summary="composição da peça"
           >
-            Grafo
-          </Button>
-          <Button
-            onClick={() => {
-              vpManager.functions.setExtras(activeVP.name, {
-                ...activeVP.extra,
-                view: "svg",
-              });
-            }}
-            sx={{
-              ":hover": { cursor: "pointer", color: "primary.main" },
-            }}
-            variant={"contained"}
+            <CompositionTree variationId={activeVP.extra.variationId} />
+          </Accordion>
+          <Accordion
+            name="Materiais"
+            icon={<WidgetsSharpIcon />}
+            summary="Materiais referenciados na composição"
           >
-            Desenho
-          </Button>
-        </ButtonGroup>
+            <MaterialListAccordion variationId={activeVP.extra.variationId} />
+          </Accordion>
+        </SettingsPanel>
+
+        <DetailsPanel>
+          <DetailPanel
+            variationId={activeVP.extra.variationId}
+            selectedPart={activeVP.extra.selectedPart}
+          />
+        </DetailsPanel>
+
+        {view}
+
+        <Box sx={{ position: "absolute", top: 16, left: 16 }}>
+          <ButtonGroup
+            variant="contained"
+            aria-label="alterar modo de visualização"
+          >
+            <Button
+              onClick={() => {
+                vpManager.functions.setExtras(activeVP.name, {
+                  ...activeVP.extra,
+                  view: "graph",
+                });
+              }}
+              variant={"contained"}
+            >
+              Grafo
+            </Button>
+            <Button
+              onClick={() => {
+                vpManager.functions.setExtras(activeVP.name, {
+                  ...activeVP.extra,
+                  view: "svg",
+                });
+              }}
+              sx={{
+                ":hover": { cursor: "pointer", color: "primary.main" },
+              }}
+              variant={"contained"}
+            >
+              Desenho
+            </Button>
+          </ButtonGroup>
+        </Box>
       </Box>
-    </Box>
+    </SVGEditorToolkit>
   );
 }

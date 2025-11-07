@@ -3,33 +3,61 @@ import useModule from "@kernel/hooks/useModule";
 import useVariation from "../../../hooks/useVariation";
 import { useTheme, Box, Typography, Button } from "@mui/material";
 import DragAndDropSVG from "./assets/animated-drag-n-drop/DragAndDrop.svg";
-import React, { useRef, useCallback, useState } from "react";
+import React, { useRef, useCallback, useState, useMemo } from "react";
 import { uploadSVG } from "../../../../Composer/store/variations/actions";
 import { Store } from "@kernel/modules/Store";
+import { debounce } from "@kernel/utils";
+import { zoomIdentity, ZoomTransform } from "d3";
 
-export function SVGModelViewport({ variationId }: Readonly<{ variationId: string }>) {
+export function SVGModelViewport({
+  variationId,
+}: Readonly<{ variationId: string }>) {
   const {
-    hooks: { useSVGEditor },
-    d3Components: { Grid }
+    hooks: { useSVGEditor, useSVG },
+    d3Components: { Grid },
   } = useModule<ISVGModule>("SVG");
 
-
   const variation = useVariation({ variationId });
-  
+  const svg = useSVG(variation.state.svg!, variationId);
   const editor = useSVGEditor({
     svgPath: variation.state.svg!,
     instanceName: variationId,
     beforeInjection: (svg) => svg,
   });
+
+  const debouncedSaveZoom = useMemo(
+    () => debounce((transform: ZoomTransform) => svg?.saveZoom(transform), 700),
+    [svg]
+  );
+
   editor.container.underlays([
     Grid({
-        xSettings: { range: [-1, editor.width + 1], domain: [-1,editor.width + 1] },
-        ySettings: { range: [-1, editor.height + 1], domain: [-1, editor.height + 1] },
-        dimensions: [editor.width, editor.height],
-    }).transformZoom((root, zoomFunc) => {
-        zoomFunc.translateBy(root, editor.width / 2, editor.height / 2);
-      }).build
-  ])
+      xSettings: {
+        range: [-1, editor.width + 1],
+        domain: [-1, editor.width + 1],
+      },
+      ySettings: {
+        range: [-1, editor.height + 1],
+        domain: [-1, editor.height + 1],
+      },
+      dimensions: [editor.width, editor.height],
+    })
+      .transformZoom((root, zoomFunc) => {
+        if (
+          svg?.state.instance.zoom !== undefined &&
+          svg?.state.instance.pan !== undefined
+        ) {
+          zoomFunc.transform(root, 
+            zoomIdentity
+              .translate(svg.state.instance.pan[0], svg.state.instance.pan[1])
+              .scale(svg.state.instance.zoom)
+          );
+        } else {
+          zoomFunc.translateBy(root, editor.width / 2, editor.height / 2);
+        }
+      })
+      .onZoom(debouncedSaveZoom).build,
+  ]);
 
   return (
     <div
@@ -42,14 +70,18 @@ export function SVGModelViewport({ variationId }: Readonly<{ variationId: string
   );
 }
 
-export default function SVGView({ variationId }: Readonly<{ variationId: string }>) {
-  const theme = useTheme();
-  const storeModule = useModule<Store>("Store");
-  const variation = useVariation({ variationId });
+export default function SVGView({
+  variationId,
+}: Readonly<{ variationId: string }>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
+  const theme = useTheme();
+
+  const storeModule = useModule<Store>("Store");
+  const variation = useVariation({ variationId });
 
   const dispatch = storeModule.hooks.useAppDispatch();
+
   const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -65,11 +97,13 @@ export default function SVGView({ variationId }: Readonly<{ variationId: string 
     e.stopPropagation();
     setDragActive(false);
     const files = e.dataTransfer.files;
-    if (!files || !files.length || files.length > 1) throw new Error("Please upload a single SVG file.");
-    const file  = files[0];
+    if (!files || !files.length || files.length > 1)
+      throw new Error("Please upload a single SVG file.");
+    const file = files[0];
     const blob = new Blob([file], { type: "image/svg+xml" });
-    blob.text().then(svgContent =>dispatch(uploadSVG({ variationId, svgContent })));
-
+    blob
+      .text()
+      .then((svgContent) => dispatch(uploadSVG({ variationId, svgContent })));
   }, []);
 
   const handleButtonClick = useCallback(() => {
@@ -79,10 +113,13 @@ export default function SVGView({ variationId }: Readonly<{ variationId: string 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
-      if (!files || !files.length || files.length > 1) throw new Error("Please upload a single SVG file.");
-      const file  = files[0];
+      if (!files || !files.length || files.length > 1)
+        throw new Error("Please upload a single SVG file.");
+      const file = files[0];
       const blob = new Blob([file], { type: "image/svg+xml" });
-      blob.text().then(svgContent =>dispatch(uploadSVG({ variationId, svgContent })));
+      blob
+        .text()
+        .then((svgContent) => dispatch(uploadSVG({ variationId, svgContent })));
     },
     []
   );

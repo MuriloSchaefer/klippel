@@ -1,13 +1,19 @@
-import { useMemo } from "react";
+import { CSSProperties, useMemo } from "react";
 
 import useModule from "@kernel/hooks/useModule";
 import type { Store } from "@kernel/modules/Store";
 
 import {
+  addProxy,
+  deleteProxy,
+  setPan,
+  setZoom,
+  updateProxy,
   updateSVG,
 } from "../store/actions";
 import type { SVGInstance } from "../store/state";
 import { selectSVGState } from "../store/selectors";
+import { ZoomTransform } from "d3";
 
 interface SVG {
   state: {
@@ -15,6 +21,11 @@ interface SVG {
     DOMroot: SVGSVGElement;
   };
   transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement): void;
+  addProxy(id: string, styles: Partial<CSSProperties>): void;
+  updateProxy(id: string, changes: Partial<CSSProperties>): void;
+  deleteProxy(id: string): void;
+
+  saveZoom(transform: ZoomTransform): void;
 }
 
 const useSVG = (path: string, instanceName: string): SVG | undefined => {
@@ -45,6 +56,29 @@ const useSVG = (path: string, instanceName: string): SVG | undefined => {
       const serialized = new XMLSerializer().serializeToString(fn(parsedSVG));
       dispatch(updateSVG({ path, instanceName, document: serialized }));
     },
+    addProxy(id, styles) {
+      dispatch(
+        addProxy({ path, instanceName, id, styles })
+      );
+    },
+    updateProxy(id, changes) {
+      dispatch(
+        updateProxy({ path, instanceName, id, changes })
+      );
+    },
+    deleteProxy(id) {
+      dispatch(
+        deleteProxy({ path, instanceName, id })
+      );
+    },
+    saveZoom(transform) {
+      dispatch(
+        setZoom({ path, instanceName, zoom: transform.k })
+      );
+      dispatch(
+        setPan({ path, instanceName, x: transform.x, y: transform.y })
+      )
+    }
   };
 };
 

@@ -59,13 +59,6 @@ export default defineConfig({
               const moduleName =
                 array[array.findIndex((p) => p === "modules") + 1];
 
-              if (id.includes("Composer")) {
-                // custom split for big components
-                // if (id.includes('store')) return `system/${moduleName}/store`
-                if (id.includes("components"))
-                  return `system/${moduleName}/components`;
-                if (id.includes("hooks")) return `system/${moduleName}/hooks`;
-              }
 
               return `system/${moduleName}`;
             }

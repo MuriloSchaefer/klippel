@@ -5,6 +5,9 @@ import { IGraphModule } from "@kernel/modules/Graphs";
 import { debounce } from "@kernel/utils";
 import { useMemo, useState } from "react";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
+import ElectiveListAccordion from "../../../viewports/ElectiveListAccordion";
+import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
+import VisualizationListAccordion from "../../VisualizationListAccordion";
 
 export default function GarmentDetails({
   variationId,
@@ -44,7 +47,7 @@ export default function GarmentDetails({
       <Accordion
         name="Detalhes da Peça"
         icon={<InfoSharpIcon />}
-        summary="Configura meta informações da peça"
+        summary="Informações básicas da peça"
         defaultExpanded
       >
         <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
@@ -63,12 +66,34 @@ export default function GarmentDetails({
         </FormControl>
       </Accordion>
       <Accordion
-        name="Opicionais da Peça"
+        name="Visualização"
         icon={undefined}
-        summary="Configura opicionais da peça"
+        summary="Víncule materiais com objetos na arte."
         defaultExpanded
       >
-        <></>
+        <VisualizationListAccordion
+          variationId={variationId}
+          garmentId={selectedPart}
+        />
+      </Accordion>
+      <Accordion
+        name="Eletivos da Peça"
+        icon={undefined}
+        summary="Cada eletivo representa uma variação opcional dentro da peça"
+        defaultExpanded
+      >
+        <ElectiveListAccordion
+          variationId={variationId}
+          garmentId={selectedPart}
+        />
+      </Accordion>
+      <Accordion
+        name="Processos da Peça"
+        icon={undefined}
+        summary="Processos associados à peça (tempo e custo)"
+        defaultExpanded
+      >
+        <ProcessListAccordion variationId={variationId} parentId={selectedPart} />
       </Accordion>
     </Box>
   );

@@ -1,6 +1,7 @@
 import {
   Selection,
   ZoomBehavior,
+  ZoomTransform,
   axisBottom,
   axisRight,
   scaleLinear,
@@ -27,6 +28,10 @@ type Grid<D = any> = {
     ) => void
   ): Grid<D>;
 
+
+  onZoom(): void;
+  onZoom(hook: (value: ZoomTransform)=>void): Grid<D>;
+
   build(): D3Component<D>;
 };
 
@@ -51,6 +56,7 @@ export default <D = any>({
 
   let _startCentered = true;
 
+  let _hook = (value: ZoomTransform) => {}
   let _transformZoom = (
     root: Selection<SVGSVGElement, D, any, any>,
     zoomFunc: ZoomBehavior<SVGSVGElement, D>
@@ -93,6 +99,7 @@ export default <D = any>({
         return (!event.ctrlKey || event.type === "wheel") && !event.button;
       })
       .on("zoom", ({ transform }) => {
+        _hook(transform);
         contentGroup.attr("transform", transform);
         overlaysGroup.attr("transform", transform);
         gX.call(xAxis.scale(transform.rescaleX(x)));
@@ -101,10 +108,10 @@ export default <D = any>({
 
       _transformZoom(root, zoomFunc);
 
-    // @ts-ignore TODO: fix typing
     root.call(zoomFunc);
   }
 
+  chart.onZoom = (hook: (value: ZoomTransform)=>void) => hook ? ((_hook = hook), chart) : chart;
   chart.transformZoom = (
     value: (
       root: Selection<SVGSVGElement, D, any, any>,
