@@ -23,7 +23,6 @@ export type ComposerModuleState = {
     variations: { [key: string]: ModelVariation }
 }
 
-
 // nodes definitions
 export type GarmentNode = Node & {
     type: "GARMENT";
