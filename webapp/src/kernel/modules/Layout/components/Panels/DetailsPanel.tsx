@@ -9,6 +9,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { Store } from "@kernel/modules/Store";
 import useModule from "@kernel/hooks/useModule";
+import { fallbackRender } from "@kernel/App";
 
 import { DETAILS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
@@ -81,7 +82,7 @@ export const DetailsPanel = ({
         <span>{title ?? "Detalhes"}</span>
       </Box>
       <Box role="panel-content" sx={{ height: '100%'}}>
-        <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
+        <ErrorBoundary fallbackRender={fallbackRender}>
           {children}
         </ErrorBoundary>
       </Box>

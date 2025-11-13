@@ -13,7 +13,8 @@ import {
   addEdge,
   removeEdge,
   search,
-} from "@kernel/modules/Graphs/store/graphInstance/actions";
+  updateEdge,
+} from "../store/graphInstance/actions";
 import { createSelector } from "reselect";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
@@ -29,7 +30,7 @@ export interface GraphActions {
   removeNode(id: string): void;
   updateNode(node: Node): void; // QUESTION: how to set the type here
   addEdge(edge: Edge): void;
-  updateEdge(edgeId: string, changes: Partial<Edge>):void;
+  updateEdge<E = Edge>(edgeId: string, changes: Partial<E>): void;
   removeEdge(id: string): void;
   nodeExists(id: string): boolean;
 
@@ -51,7 +52,7 @@ export interface GraphActions {
     getNeighbours: (node: Node, graph: GraphSearch) => string[],
     depth?: number,
     label?: string,
-    id?: string,
+    id?: string
   ): string;
 }
 export interface Graph<T = GraphState, A = GraphActions> {
@@ -77,7 +78,7 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
 
   const selector = createSelector(
     (state: { Graph: GraphsManagerState } | undefined) =>
-      state?.Graph && state.Graph.graphs[graphId] as G,
+      state?.Graph && (state.Graph.graphs[graphId] as G),
     graphSelector
   );
   const graphState = useAppSelector<R | undefined>(selector);
@@ -110,20 +111,25 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
         dispatch(addEdge({ graphId, edge }));
       },
       updateEdge: (edgeId, changes) => {
-        const currentEdge = innerState?.edges[edgeId]
-        if (currentEdge){
-          dispatch(removeEdge({ graphId, edgeId: edgeId }));
-          const updatedEdge = {...currentEdge, ...changes}
-          dispatch(addEdge({ graphId,  edge: updatedEdge}));
-        }
+        const currentEdge = innerState?.edges[edgeId];
+        if (!currentEdge) throw Error("edge do not exits");
+        dispatch(updateEdge({ graphId, edgeId, changes }));
       },
       removeEdge: (id) => {
         dispatch(removeEdge({ graphId, edgeId: id }));
       },
-      nodeExists: (nodeId) =>
-        innerState ? nodeId in innerState.nodes : false,
+      nodeExists: (nodeId) => (innerState ? nodeId in innerState.nodes : false),
 
-      search: (strategy, nodeStart, validate, stopCriteria, getNeighbours, depth, label, id) => {
+      search: (
+        strategy,
+        nodeStart,
+        validate,
+        stopCriteria,
+        getNeighbours,
+        depth,
+        label,
+        id
+      ) => {
         const resultPath = id ?? _.uniqueId("search");
         dispatch(
           search({

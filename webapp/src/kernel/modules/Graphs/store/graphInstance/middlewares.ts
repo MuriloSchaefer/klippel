@@ -23,6 +23,8 @@ import {
   SearchPayload,
   invalidateSearch,
   searchInvalidated,
+  updateEdge,
+  edgeUpdated,
 } from "./actions";
 
 const middlewares = createListenerMiddleware();
@@ -98,6 +100,17 @@ middlewares.startListening({
     const { dispatch } = listenerApi;
 
     dispatch(edgeRemoved(action)); // dispatch event
+  },
+});
+middlewares.startListening({
+  actionCreator: updateEdge,
+  effect: async (
+    { payload: action },
+    listenerApi
+  ) => {
+    const { dispatch } = listenerApi;
+
+    dispatch(edgeUpdated(action)); // dispatch event
   },
 });
 

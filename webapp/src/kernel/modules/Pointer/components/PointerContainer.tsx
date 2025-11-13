@@ -16,6 +16,7 @@ import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 import DragIndicatorSharpIcon from "@mui/icons-material/DragIndicatorSharp";
 
 import useDraggable from "../hooks/useDraggable";
+import { fallbackRender } from "@kernel/App";
 
 export interface PointerContainerActionProps extends IconButtonProps {
   closeContainer?: (e: MouseEvent) => void;
@@ -123,7 +124,7 @@ const ModalContent = ({
             alignContent: "center",
           }}
         >
-          <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
+          <ErrorBoundary fallbackRender={fallbackRender}>
             {component}
           </ErrorBoundary>
         </Box>

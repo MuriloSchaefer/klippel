@@ -10,11 +10,17 @@ import {
   GraduationNode,
   VisualizationDom,
   VisualizationNode,
+  ProcessNode,
+  ProcessOfEdge,
+  HasProcessEdge,
+  ConsumesEdge,
+  ConsumedByEdge,
 } from "../typings";
 import { EdgeMap } from "@kernel/modules/Graphs/hooks/useGraph";
 import { IMaterialsModule } from "@system/modules/Materials";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { useTheme } from "@mui/material";
+import { CompoundValue } from "@system/modules/Converter/typings";
 
 export default function useVariation({ variationId }: { variationId: string }) {
   const theme = useTheme();
@@ -423,6 +429,68 @@ export default function useVariation({ variationId }: { variationId: string }) {
             } as GraduationNode);
           }
         });
+      },
+      addProcessMaterialConsumption: (processNodeId: string, materialNodeId: string, amount: CompoundValue)=>{
+        graph.actions.addEdge({
+          id: `${processNodeId}->${materialNodeId}`,
+          type: "CONSUMES",
+          sourceId: processNodeId,
+          targetId: materialNodeId,
+          amount: amount,
+        } as ConsumesEdge);
+        graph.actions.addEdge({
+          type: "CONSUMED_BY",
+          id: `${materialNodeId}->${processNodeId}`,
+          targetId: processNodeId,
+          sourceId: materialNodeId,
+          amount: amount,
+        } as ConsumedByEdge);
+      },
+      removeProcessMaterialConsumption: (
+        processNodeId: string, materialNodeId: string
+      )=>{
+        graph.actions.removeEdge(`${processNodeId}->${materialNodeId}`)
+        graph.actions.removeEdge(`${materialNodeId}->${processNodeId}`)
+      },
+      updateProcessMaterialConsumption: (processNodeId: string, materialNodeId: string, newAmount: CompoundValue)=>{
+        graph.actions.updateEdge<ConsumesEdge>(`${processNodeId}->${materialNodeId}`, {amount: newAmount})
+        graph.actions.updateEdge<ConsumedByEdge>(`${materialNodeId}->${processNodeId}`, {amount: newAmount})
+      },
+      addProcess: (process: {
+        name: string;
+        costTime: CompoundValue;
+        costMoney: CompoundValue;
+      }) => {
+        if (!graph.state) return;
+        const hash = Math.random().toString(36).slice(2, 8);
+        const nodeId = `process-${hash}`;
+        const newNode = {
+          type: "PROCESS",
+          label: process.name,
+          id: nodeId,
+          costMoney: process.costMoney,
+          costTime: process.costTime,
+          position: { x: 0, y: 0 },
+          processId: hash,
+        } as ProcessNode;
+        graph.actions.addNode(newNode, {
+          inputs: {
+            [`garment->${nodeId}`]: {
+              type: "HAS_PROCESS",
+              id: `garment->${nodeId}`,
+              sourceId: "garment",
+              targetId: nodeId,
+            } as HasProcessEdge,
+          },
+          outputs: {
+            [`${nodeId}->garment`]: {
+              type: "PROCESS_OF",
+              id: `${nodeId}->garment`,
+              sourceId: nodeId,
+              targetId: "garment",
+            } as ProcessOfEdge,
+          },
+        } as EdgeMap);
       },
     },
   };

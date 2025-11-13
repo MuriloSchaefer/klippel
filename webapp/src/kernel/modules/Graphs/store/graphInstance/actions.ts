@@ -44,6 +44,9 @@ export const edgeAdded = createAction<{ graphId: string; edge: Edge }>(
 export const edgeRemoved = createAction<{ graphId: string; edgeId: string }>(
   `[${MODULE_NAME}:Instance:${ACTION_TYPES.EVENT}] Edge removed`
 );
+export const edgeUpdated = createAction<{ graphId: string; edgeId: string, changes: Partial<Edge> }>(
+  `[${MODULE_NAME}:Instance:${ACTION_TYPES.EVENT}] Edge updated`
+);
 
 export const searchFinished = createAction<{
   graphId: string;
@@ -86,6 +89,9 @@ export const addEdge = createAction<{ graphId: string; edge: Edge }>(
 );
 export const removeEdge = createAction<{ graphId: string; edgeId: string }>(
   `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Remove edge`
+);
+export const updateEdge = createAction<{ graphId: string; edgeId: string, changes: Partial<Edge> }>(
+  `[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Update edge`
 );
 
 export const search = createAction<SearchPayload>(`[${MODULE_NAME}:Instance:${ACTION_TYPES.COMMAND}] Search`);

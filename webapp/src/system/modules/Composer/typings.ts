@@ -119,12 +119,12 @@ export type VisualizationOfEdge = Edge & {
 export type ConsumesEdge = Edge & {
     type: "CONSUMES";
     // amount stored on the edge
-    amount?: CompoundValue;
+    amount: CompoundValue;
 }
 export type ConsumedByEdge = Edge & {
     type: "CONSUMED_BY";
     // amount stored on the reverse edge as well
-    amount?: CompoundValue;
+    amount: CompoundValue;
 }
 export type VariationGraphState = GraphState & {
     nodes: {

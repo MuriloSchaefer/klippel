@@ -4,7 +4,7 @@ import type { CompoundNode, ConversionGraph, UnitNode } from "../typings";
 import { CONVERSION_GRAPH_NAME } from "../constants";
 import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
 
-export default (nodeIds: string[]) => {
+export default (nodeIds?: string[]) => {
   const graphModule = useModule<IGraphModule>("Graph");
 
   const { useGraph } = graphModule.hooks;
@@ -16,7 +16,7 @@ export default (nodeIds: string[]) => {
     (g) =>
       g &&
       Object.values(g.nodes)
-        .filter((n): n is UnitNode | CompoundNode => nodeIds.includes(n.id))
+        .filter((n): n is UnitNode | CompoundNode => !nodeIds || nodeIds.includes(n.id))
         .reduce((acc, curr) => ({...acc, [curr.id]: curr}), {})
   );
 

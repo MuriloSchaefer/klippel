@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
+import Select, { SelectProps } from "@mui/material/Select";
 import ListSubheader from "@mui/material/ListSubheader";
 import { SelectChangeEvent } from "@mui/material";
 
@@ -21,11 +21,13 @@ const MaterialSelector = ({
   value,
   filter,
   onChange,
+  disabled = false
 }: {
   type: string;
   value?: number;
   filter?: (option: MaterialState) => boolean;
   onChange?: (value: number) => void;
+  disabled?: boolean
 }) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
@@ -88,11 +90,11 @@ const MaterialSelector = ({
           },
         };
       }, {}),
-    [materials]
+    [materials, selector]
   );
 
-  const [selectedMaterial, setSelectedMaterial] = useState(
-    Object.values(materials).find((mat) => mat.id === value)
+  const selectedMaterial = useMemo(
+    ()=>Object.values(materials).find((mat) => mat.id === value), [materials, value]
   );
   const [principalState, setPrincipalState] = useState(
     selectedMaterial
@@ -103,9 +105,6 @@ const MaterialSelector = ({
   const handleMaterialSelection = useCallback(
     (e: SelectChangeEvent<number>) => {
       if (typeof e.target.value === "string") return;
-      setSelectedMaterial(
-        Object.values(materials).find((mat) => mat.id === e.target.value)
-      );
       if (onChange) onChange(e.target.value);
     },
     [materials]
@@ -125,6 +124,8 @@ const MaterialSelector = ({
           value={principalState ?? ""}
           onChange={(e) => setPrincipalState(e.target.value)}
           label={selector.principal}
+          disabled={disabled}
+          sx={{minWidth: 120}}
         >
           {Object.entries(groupedMaterials).map(([industry, materials]) => {
             return [
@@ -145,12 +146,13 @@ const MaterialSelector = ({
         <InputLabel id={`label`} sx={{ textTransform: "capitalize" }}>
           {selector.extra}
         </InputLabel>
-        <Select
+        <Select<number>
           labelId={`label`}
           id={`material-extra`}
           value={selectedMaterial?.id ?? ""}
           onChange={handleMaterialSelection}
           label={selector.extra}
+          disabled={disabled}
         >
           {
             // TODO: improve conditionals
