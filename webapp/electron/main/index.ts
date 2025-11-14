@@ -12,7 +12,7 @@ import initScheduler from "./scheduler";
 import { existsSync, outputFile, readdirSync, readFileSync } from "fs-extra";
 import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
 import { debounce } from "./utils";
-import { initHeliaNode } from "./ipfs";
+import { initHeliaHooks, initHeliaNode } from "./ipfs";
 
 updateElectronApp();
 if (require("electron-squirrel-startup")) app.quit();
@@ -70,11 +70,14 @@ async function createWindow(): Promise<BrowserWindow> {
   if (existsSync(getAbsPath('.session/Store/state.json'))){
     workspace = JSON.parse(readFileSync(getAbsPath('.session/Store/state.json')).toString()).selectedWorkspace
   }
-  const heliaNode = await initHeliaNode(workspace)
+  const helia = await initHeliaNode(workspace)
   const scheduler = initScheduler();
-
-  heliaNode?.start()
-  console.log(heliaNode?.pins.ls())
+  
+  if (helia){
+    helia.start()
+    initHeliaHooks(helia)
+    console.debug("Helia node started. PeerId: ", helia.libp2p.peerId.toString())
+  }
 
   const mainWindow = new BrowserWindow({
     ...config,
@@ -83,7 +86,6 @@ async function createWindow(): Promise<BrowserWindow> {
       sandbox: false,
     },
   });
-  console.log(workspace)
   initStorageHooks(scheduler, mainWindow);
   // const eo = await initOllama()
   // console.log(eo)
