@@ -1,4 +1,4 @@
-import { ACTION_TYPES } from "@kernel/contants";
+import { ACTION_TYPES } from "@kernel/constants";
 import type { PaletteMode } from "@mui/material";
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";

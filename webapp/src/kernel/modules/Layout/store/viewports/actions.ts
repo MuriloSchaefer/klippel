@@ -1,6 +1,6 @@
 import { createAction } from "@reduxjs/toolkit";
 
-import { ACTION_TYPES } from "@kernel/contants";
+import { ACTION_TYPES } from "@kernel/constants";
 
 import { MODULE_NAME } from "../../constants";
 import { ViewportState } from "./state";

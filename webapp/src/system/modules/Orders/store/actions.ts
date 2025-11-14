@@ -1,6 +1,6 @@
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../constants";
-import { ACTION_TYPES } from "@kernel/contants";
+import { ACTION_TYPES } from "@kernel/constants";
 
 // Commands
 export const saveSession = createAction(
