@@ -23,7 +23,7 @@
     "datastore-fs": "^11.0.2",
     "electron-ollama": "^0.1.25",
     "electron-squirrel-startup": "^1.0.1",
-    "glob": "^11.0.2",
+    "glob": "^11.1.0",
     "helia": "^6.0.10",
     "install-peerdeps": "^3.0.3",
     "jse-eval": "^1.5.2",
