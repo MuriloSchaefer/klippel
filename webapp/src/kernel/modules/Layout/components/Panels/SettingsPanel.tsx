@@ -15,6 +15,7 @@ import useModule from "@kernel/hooks/useModule";
 import { SETTINGS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
 import { selectSettingsPanel } from "../../store/panels/selectors";
+import { fallbackRender } from "@kernel/App";
 
 export const SettingsPanel = ({
   title,
@@ -103,12 +104,14 @@ export const SettingsPanel = ({
           sx={{
             display: "flex",
             flexDirection: "column",
+            width: "100%",
+            overflowX: 'auto',
             placeSelf: "center",
             gap: panelState.state === "collapsed" ? 2 : 0,
             marginTop: 4,
           }}
         >
-          <ErrorBoundary fallback={<div>Ocorreu um erro</div>}>
+          <ErrorBoundary fallbackRender={fallbackRender}>
             {Array.isArray(children) ? children.map((child, idx) =>
               cloneElement(child, { state: panelState.state, key: idx })
             ) : cloneElement(children, { state: panelState.state })}

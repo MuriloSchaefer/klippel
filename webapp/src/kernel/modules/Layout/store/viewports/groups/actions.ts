@@ -1,7 +1,7 @@
 
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../../constants";
-import { ACTION_TYPES } from "@kernel/contants";
+import { ACTION_TYPES } from "@kernel/constants";
 
 
 export const createGroup = createAction<{name: string, color: string}>(

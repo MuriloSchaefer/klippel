@@ -90,10 +90,10 @@ function ElectiveItem({ node, variation }: { node: any; variation: any }) {
         </Box>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <IconButton sx={{ "&:hover": { color: "error.main" } }} onClick={() => variation.actions.removeElective(node.id)}>
-            <DeleteOutlineSharp />
+            <DeleteOutlineSharp color="error" />
           </IconButton>
           <IconButton sx={{ "&:hover": { color: "primary.main" } }} onClick={() => setIsEditing(true)}>
-            <ModeEditOutlineSharp />
+            <ModeEditOutlineSharp color="info" />
           </IconButton>
         </Box>
       </ListItem>

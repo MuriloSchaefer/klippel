@@ -13,6 +13,8 @@ import { Box, Button, ButtonGroup } from "@mui/material";
 import DetailPanel from "./DetailPanel";
 import WidgetsSharpIcon from "@mui/icons-material/WidgetsSharp";
 import { ISVGModule } from "@kernel/modules/SVG";
+import { ErrorBoundary } from "react-error-boundary";
+import { fallbackRender } from "@kernel/App";
 
 export default function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
@@ -82,7 +84,7 @@ export default function ModelViewport() {
           />
         </DetailsPanel>
 
-        {view}
+        <ErrorBoundary fallbackRender={fallbackRender}>{view}</ErrorBoundary>
 
         <Box sx={{ position: "absolute", top: 16, left: 16 }}>
           <ButtonGroup

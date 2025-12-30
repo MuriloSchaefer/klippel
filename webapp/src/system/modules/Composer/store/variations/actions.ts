@@ -3,7 +3,7 @@
 import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import type { Model, ModelVariation } from "../../typings";
-import { ACTION_TYPES } from "@kernel/contants";
+import { ACTION_TYPES } from "@kernel/constants";
 
 
 export const openModel = createAction<{model: Model, variationId: string}>(

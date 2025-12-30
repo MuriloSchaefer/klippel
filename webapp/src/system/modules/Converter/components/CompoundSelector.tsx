@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { type BoxProps } from "@mui/material/Box";
 import Box from "@mui/material/Box";
@@ -18,6 +18,7 @@ import {
 } from "../typings";
 import UnitAmountSelector from "./UnitAmountSelector";
 import { CONVERSION_GRAPH_NAME } from "../constants";
+import { debounce } from "@kernel/utils";
 
 interface CompoundSelectorProps extends Omit<BoxProps, "onChange"> {
   readonly label?: string;
@@ -68,6 +69,9 @@ export default function CompoundSelector({
     [storedState.state, filterQuotients]
   );
 
+  const [currState, setCurrentState] = useState(value)
+  const debouncedOnChange = useMemo(()=>debounce(onChange, 500), [])
+
   return (
     <Box
       role="compound-selector"
@@ -79,8 +83,13 @@ export default function CompoundSelector({
         <UnitAmountSelector
           key="quotient"
           id="quotient-selector"
-          value={value.quotient}
-          onChange={(v: UnitValue) => onChange({ ...value, quotient: v })}
+          value={currState.quotient}
+          onChange={(v: UnitValue) => {
+            const updatedValue = { ...currState, quotient: v }
+            setCurrentState(updatedValue)
+            debouncedOnChange(updatedValue)
+          }
+          }
           selectorProps={{ sx: {width: '10px'} }}
         >
           {filteredQuotients.map(({ id, name, abbreviation }) => (
@@ -93,8 +102,12 @@ export default function CompoundSelector({
         <UnitAmountSelector
           key="dividend"
           id="dividend-selector"
-          value={value.dividend}
-          onChange={(v: UnitValue) => onChange({ ...value, dividend: v })}
+          value={currState.dividend}
+          onChange={(v: UnitValue) => {
+            const updatedValue = { ...currState, dividend: v }
+            setCurrentState(updatedValue)
+            debouncedOnChange(updatedValue)
+          }}
           sx={{width: 'max-content'}}
         >
           {filteredDividends.map(({ id, name, abbreviation }) => (

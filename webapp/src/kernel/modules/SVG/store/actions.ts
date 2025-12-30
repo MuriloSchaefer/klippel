@@ -1,4 +1,4 @@
-import { ACTION_TYPES } from "@kernel/contants";
+import { ACTION_TYPES } from "@kernel/constants";
 import { createAction } from "@reduxjs/toolkit";
 import { CSSProperties } from "react";
 import { MODULE_NAME } from "../constants";

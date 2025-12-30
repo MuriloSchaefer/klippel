@@ -30,7 +30,7 @@ export interface IConverterModule extends IModule {
         useScales: typeof useScales,
         useUnits: typeof useUnits,
         useConverter: typeof useConverter
-    }
+    },
 }
 const module: IConverterModule = {
     name: MODULE_NAME,
@@ -56,7 +56,7 @@ const module: IConverterModule = {
         startModule: startModule,
         restartModule: ()=>{},
         shutdownModule: ()=>{},
-    }
+    },
 };
 
 export default module;

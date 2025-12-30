@@ -165,7 +165,7 @@ function VisualizationItem({ node, variationId }: any) {
               variation.actions.removeVisualization(node.id);
             }}
           >
-            <DeleteOutlineSharp />
+            <DeleteOutlineSharp color="error"/>
           </IconButton>
         </Box>
       </Box>
@@ -296,7 +296,7 @@ function VisualizationEditButton({ node, variationId }: any) {
                     setDoms((curr) => curr.filter((_, i) => i !== idx))
                   }
                 >
-                  <DeleteOutlineSharp />
+                  <DeleteOutlineSharp  color="error"/>
                 </IconButton>
               </Box>
             ))}
@@ -321,7 +321,7 @@ function VisualizationEditButton({ node, variationId }: any) {
       ]}
     >
       <IconButton sx={{ "&:hover": { color: theme.palette.info.main } }}>
-        <EditOutlined />
+        <EditOutlined color="info"/>
       </IconButton>
     </PointerContainer>
   );
@@ -456,7 +456,7 @@ function AddVisualizationButton({ variationId, garmentId }: any) {
                     setDoms((curr) => curr.filter((_, i) => i !== idx))
                   }
                 >
-                  <DeleteOutlineSharp />
+                  <DeleteOutlineSharp color="error"/>
                 </IconButton>
               </Box>
             ))}

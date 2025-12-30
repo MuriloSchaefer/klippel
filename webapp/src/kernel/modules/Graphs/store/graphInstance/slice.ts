@@ -16,6 +16,7 @@ import {
   removeNode,
   resetGraph,
   searchFinished,
+  updateEdge,
   updateNode,
 } from "./actions";
 import { saveSession } from "../graphsManager/actions";
@@ -55,7 +56,9 @@ const slice = createSlice({
           const nodeState = graph.nodes[node.id];
           if (nodeState) throw Error("Node already exists");
 
-          let otherNodesChanges: AdjacencyList = Object.entries(edges.inputs).reduce(
+          let otherNodesChanges: AdjacencyList = Object.entries(
+            edges.inputs
+          ).reduce(
             (acc, [id, edge]) => ({
               ...acc,
               [edge.sourceId]: {
@@ -197,7 +200,7 @@ const slice = createSlice({
       .addCase(
         removeEdge,
         (state: GraphsManagerState, { payload: { graphId, edgeId } }) => {
-          const graph = state.graphs[graphId]
+          const graph = state.graphs[graphId];
           const edge = graph.edges[edgeId];
 
           const newGraphState = {
@@ -229,6 +232,24 @@ const slice = createSlice({
             graphs: {
               ...state.graphs,
               [graphId]: newGraphState,
+            },
+          };
+        }
+      )
+      .addCase(
+        updateEdge,
+        (state, { payload: { graphId, edgeId, changes } }) => {
+          return {
+            ...state,
+            graphs: {
+              ...state.graphs,
+              [graphId]: {
+                ...state.graphs[graphId],
+                edges: {
+                  ...state.graphs[graphId].edges,
+                  [edgeId]: { ...state.graphs[graphId].edges[edgeId], ...changes },
+                },
+              },
             },
           };
         }

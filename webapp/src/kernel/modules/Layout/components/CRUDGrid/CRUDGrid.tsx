@@ -196,7 +196,7 @@ export const CRUDGrid = ({
       ...oldModel,
       [rec.id]: { mode: GridRowModes.Edit, fieldToFocus: "id" },
     }));
-    onRecordAdded?.(rec, api.current)
+    if (api.current) onRecordAdded?.(rec, api.current)
   };
 
   const handleEditClick = useCallback(
@@ -321,7 +321,7 @@ export const CRUDGrid = ({
                   label="Save"
                   key="save"
                   id={`save-${id}`}
-                  sx={{
+                  style={{
                     color: "primary.main",
                   }}
                   onClick={() => handleSaveClick(id)}

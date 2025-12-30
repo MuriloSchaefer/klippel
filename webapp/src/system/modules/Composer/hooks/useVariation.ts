@@ -7,16 +7,23 @@ import {
   MaterialNode,
   PartNode,
   ElectiveNode,
+  GraduationNode,
   VisualizationDom,
   VisualizationNode,
+  ProcessNode,
+  ProcessOfEdge,
+  HasProcessEdge,
+  ConsumesEdge,
+  ConsumedByEdge,
 } from "../typings";
 import { EdgeMap } from "@kernel/modules/Graphs/hooks/useGraph";
 import { IMaterialsModule } from "@system/modules/Materials";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { useTheme } from "@mui/material";
+import { CompoundValue } from "@system/modules/Converter/typings";
 
 export default function useVariation({ variationId }: { variationId: string }) {
-  const theme = useTheme()
+  const theme = useTheme();
   const storeModule = useModule<Store>("Store");
   const svgModule = useModule<ISVGModule>("SVG");
   const materialsModule = useModule<IMaterialsModule>("Materials");
@@ -35,7 +42,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
       state.Composer.variations[variationId]
   );
   const graph = useGraph(variationId, (g) => g);
-  const svg = svgModule.hooks.useSVG(state.svg!, variationId);
+  const svg = svgModule.hooks.useSVG(state?.svg!, variationId);
 
   return {
     state: state,
@@ -81,7 +88,11 @@ export default function useVariation({ variationId }: { variationId: string }) {
         graph.actions.addNode(node, edges);
       },
       removePart: (partId: string) => graph.actions.removeNode(partId),
-      addMaterial: (materialId: number, label: string, typeRestrictions: string[]) => {
+      addMaterial: (
+        materialId: number,
+        label: string,
+        typeRestrictions: string[]
+      ) => {
         const material = materials[materialId];
         if (!material) {
           console.error("Material not found:", materialId);
@@ -215,35 +226,42 @@ export default function useVariation({ variationId }: { variationId: string }) {
         if (!materialNode) {
           console.error("Material node not found:", materialNodeId);
           return;
-        };
+        }
         const material = materials[materialNode.materialId];
-        const schema = materialTypes[material.type]?.schemas[material.schemaVersion];
-        const colorAttr = Object.entries(schema.attributes).find((entry) => entry[1] === "color");
+        const schema =
+          materialTypes[material.type]?.schemas[material.schemaVersion];
+        const colorAttr = Object.entries(schema.attributes).find(
+          (entry) => entry[1] === "color"
+        );
 
         if (!colorAttr) {
-          console.error("No color attribute found for material type:", material.type);
+          console.error(
+            "No color attribute found for material type:",
+            material.type
+          );
           return;
-        };
-        const colorHex = material.attributes[colorAttr[0]].hex as string
-        for (const dom of doms){
+        }
+        const colorHex = material.attributes[colorAttr[0]].hex as string;
+        for (const dom of doms) {
           const proxy = {
             fill: dom.fill ? colorHex : undefined,
             stroke: dom.stroke ? colorHex : undefined,
-          }
-          svg?.addProxy(dom.id, proxy)
-          
+          };
+          svg?.addProxy(dom.id, proxy);
         }
-
       },
       removeVisualization: (nodeId: string) => {
         if (!graph.state) return;
         const curr = graph.state.nodes[nodeId] as VisualizationNode;
-        for (const dom of curr.doms){
-          svg?.deleteProxy(dom.id)
+        for (const dom of curr.doms) {
+          svg?.deleteProxy(dom.id);
         }
         graph.actions.removeNode(nodeId);
       },
-      updateVisualization: (nodeId: string, changes: Partial<VisualizationNode>) => {
+      updateVisualization: (
+        nodeId: string,
+        changes: Partial<VisualizationNode>
+      ) => {
         if (!graph.state) return;
         const curr = graph.state.nodes[nodeId] as VisualizationNode;
         if (!curr) return;
@@ -251,8 +269,8 @@ export default function useVariation({ variationId }: { variationId: string }) {
         graph.actions.updateNode(updatedNode);
 
         if (!changes.doms && !changes.materialNodeId) return;
-        if (curr.materialNodeId === updatedNode.materialNodeId) return
-        
+        if (curr.materialNodeId === updatedNode.materialNodeId) return;
+
         graph.actions.removeEdge(`${curr.materialNodeId}-${curr.id}`);
         graph.actions.removeEdge(`${curr.id}-${curr.materialNodeId}`);
         graph.actions.addEdge({
@@ -267,38 +285,43 @@ export default function useVariation({ variationId }: { variationId: string }) {
           sourceId: updatedNode.id,
           targetId: updatedNode.materialNodeId,
         });
-        
-        
-        const currMaterialNode = graph.state?.nodes[updatedNode.materialNodeId] as MaterialNode;
+
+        const currMaterialNode = graph.state?.nodes[
+          updatedNode.materialNodeId
+        ] as MaterialNode;
         if (!currMaterialNode) {
           console.error("Material node not found:", curr.materialNodeId);
           return;
-        };
+        }
         const currMaterial = materials[currMaterialNode.materialId];
-        const schema = materialTypes[currMaterial.type]?.schemas[currMaterial.schemaVersion];
-        const colorAttr = Object.entries(schema.attributes).find((entry) => entry[1] === "color");
+        const schema =
+          materialTypes[currMaterial.type]?.schemas[currMaterial.schemaVersion];
+        const colorAttr = Object.entries(schema.attributes).find(
+          (entry) => entry[1] === "color"
+        );
 
         if (!colorAttr) {
-          console.error("No color attribute found for material type:", currMaterial.type);
+          console.error(
+            "No color attribute found for material type:",
+            currMaterial.type
+          );
           return;
-        };
-        const colorHex = currMaterial.attributes[colorAttr[0]].hex as string
-        
+        }
+        const colorHex = currMaterial.attributes[colorAttr[0]].hex as string;
+
         // remove all proxies for current doms
-        for (const dom of curr.doms){
-          svg?.deleteProxy(dom.id)
+        for (const dom of curr.doms) {
+          svg?.deleteProxy(dom.id);
         }
 
-        for (const dom of updatedNode.doms){
+        for (const dom of updatedNode.doms) {
           const proxy = {
             fill: dom.fill ? colorHex : undefined,
             stroke: dom.stroke ? colorHex : undefined,
-          }
-          
-          svg?.addProxy(dom.id, proxy)
+          };
+
+          svg?.addProxy(dom.id, proxy);
         }
-
-
       },
       updateMaterial: (nodeId: string, materialId: number) => {
         if (!graph.state) return;
@@ -309,24 +332,165 @@ export default function useVariation({ variationId }: { variationId: string }) {
         graph.actions.updateNode(newNode);
 
         const material = materials[materialId];
-        const schema = materialTypes[material.type]?.schemas[material.schemaVersion];
-        const colorAttr = Object.entries(schema.attributes).find((entry) => entry[1] === "color");
-        if (!colorAttr) return
-        const colorHex = material.attributes[colorAttr[0]].hex as string
+        const schema =
+          materialTypes[material.type]?.schemas[material.schemaVersion];
+        const colorAttr = Object.entries(schema.attributes).find(
+          (entry) => entry[1] === "color"
+        );
+        if (!colorAttr) return;
+        const colorHex = material.attributes[colorAttr[0]].hex as string;
         const contrastColor = theme.palette.getContrastText(colorHex);
-        const visualizationEdges = Object.values(graph.state.edges).filter((edge)=> edge.type === "HAS_VISUALIZATION" && edge.sourceId === nodeId)
-        for (const edge of visualizationEdges){
-          const visualizationNode = graph.state?.nodes[edge.targetId] as VisualizationNode;
+        const visualizationEdges = Object.values(graph.state.edges).filter(
+          (edge) =>
+            edge.type === "HAS_VISUALIZATION" && edge.sourceId === nodeId
+        );
+        for (const edge of visualizationEdges) {
+          const visualizationNode = graph.state?.nodes[
+            edge.targetId
+          ] as VisualizationNode;
           if (!visualizationNode) return;
 
-          for (const dom of visualizationNode.doms){
+          for (const dom of visualizationNode.doms) {
             const proxy = {
-              fill: dom.fill ?  colorHex: undefined,
+              fill: dom.fill ? colorHex : undefined,
               stroke: dom.stroke ? colorHex : contrastColor,
-            }
-            svg?.updateProxy(dom.id, proxy)
+            };
+            svg?.updateProxy(dom.id, proxy);
           }
         }
+      },
+      addGraduations: (names: string[], garmentId: string) => {
+        const hash = Math.random().toString(36).slice(2, 8);
+        const nodeId = `graduation-${hash}`;
+
+        // compute next order index
+        const graduationEdges = graph.state
+          ? Object.values(graph.state.edges).filter(
+              (e: any) =>
+                e.sourceId === garmentId && e.type === "HAS_GRADUATION"
+            )
+          : [];
+        const graduationNodes = graduationEdges.map((e: any) =>
+          graph.state ? graph.state.nodes[e.targetId] : undefined
+        );
+        const maxOrder = graduationNodes.reduce(
+          (m: number, n: any) => Math.max(m, n?.order ?? 0),
+          -1
+        );
+        names.forEach((name, i) => {
+          const node: GraduationNode = {
+            id: nodeId,
+            type: "GRADUATION",
+            label: name,
+            graduationId: hash,
+            order: maxOrder + i + 1,
+            position: { x: 0, y: 0 },
+          };
+          graph.actions.addNode(node, {
+            inputs: {
+              [`${garmentId}-${nodeId}`]: {
+                id: `${garmentId}-${nodeId}`,
+                type: "HAS_GRADUATION",
+                sourceId: garmentId,
+                targetId: nodeId,
+              },
+            },
+            outputs: {
+              [`${nodeId}-${garmentId}`]: {
+                id: `${nodeId}-${garmentId}`,
+                type: "GRADUATION_OF",
+                sourceId: nodeId,
+                targetId: garmentId,
+              },
+            },
+          });
+        });
+      },
+      removeGraduation: (nodeId: string) => {
+        // update orders of other graduations
+
+        graph.actions.removeNode(nodeId);
+      },
+      updateGraduation: (nodeId: string, changes: Partial<GraduationNode>) => {
+        if (!graph.state) return;
+        const curr = graph.state.nodes[nodeId];
+        if (!curr) return;
+        graph.actions.updateNode({ ...curr, ...changes } as any);
+      },
+      reorderGraduations: (graduationIds: string[]) => {
+        // receives the new graduation order of node ids, where index 0 is the first graduation. Only update nodes that needs to be updated
+        if (!graph.state) return;
+        graduationIds.forEach((id, index) => {
+          const node = graph.state!.nodes[id] as GraduationNode;
+          if (node.order !== index) {
+            graph.actions.updateNode({
+              ...node,
+              order: index,
+            } as GraduationNode);
+          }
+        });
+      },
+      addProcessMaterialConsumption: (processNodeId: string, materialNodeId: string, amount: CompoundValue)=>{
+        graph.actions.addEdge({
+          id: `${processNodeId}->${materialNodeId}`,
+          type: "CONSUMES",
+          sourceId: processNodeId,
+          targetId: materialNodeId,
+          amount: amount,
+        } as ConsumesEdge);
+        graph.actions.addEdge({
+          type: "CONSUMED_BY",
+          id: `${materialNodeId}->${processNodeId}`,
+          targetId: processNodeId,
+          sourceId: materialNodeId,
+          amount: amount,
+        } as ConsumedByEdge);
+      },
+      removeProcessMaterialConsumption: (
+        processNodeId: string, materialNodeId: string
+      )=>{
+        graph.actions.removeEdge(`${processNodeId}->${materialNodeId}`)
+        graph.actions.removeEdge(`${materialNodeId}->${processNodeId}`)
+      },
+      updateProcessMaterialConsumption: (processNodeId: string, materialNodeId: string, newAmount: CompoundValue)=>{
+        graph.actions.updateEdge<ConsumesEdge>(`${processNodeId}->${materialNodeId}`, {amount: newAmount})
+        graph.actions.updateEdge<ConsumedByEdge>(`${materialNodeId}->${processNodeId}`, {amount: newAmount})
+      },
+      addProcess: (process: {
+        name: string;
+        costTime: CompoundValue;
+        costMoney: CompoundValue;
+      }) => {
+        if (!graph.state) return;
+        const hash = Math.random().toString(36).slice(2, 8);
+        const nodeId = `process-${hash}`;
+        const newNode = {
+          type: "PROCESS",
+          label: process.name,
+          id: nodeId,
+          costMoney: process.costMoney,
+          costTime: process.costTime,
+          position: { x: 0, y: 0 },
+          processId: hash,
+        } as ProcessNode;
+        graph.actions.addNode(newNode, {
+          inputs: {
+            [`garment->${nodeId}`]: {
+              type: "HAS_PROCESS",
+              id: `garment->${nodeId}`,
+              sourceId: "garment",
+              targetId: nodeId,
+            } as HasProcessEdge,
+          },
+          outputs: {
+            [`${nodeId}->garment`]: {
+              type: "PROCESS_OF",
+              id: `${nodeId}->garment`,
+              sourceId: nodeId,
+              targetId: "garment",
+            } as ProcessOfEdge,
+          },
+        } as EdgeMap);
       },
     },
   };

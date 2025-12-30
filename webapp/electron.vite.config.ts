@@ -51,8 +51,7 @@ export default defineConfig({
           manualChunks: (id, { getModuleInfo }) => {
             if (id.includes("node_modules")) return "vendor";
             if (id.includes("src/kernel")) {
-              if (id.includes("App.tsx")) return; // required to be in the index.js
-              return "kernel";
+              return // kernel must be in the index to ensure first loading
             }
             if (id.includes("src/system")) {
               const array = id.split("/");

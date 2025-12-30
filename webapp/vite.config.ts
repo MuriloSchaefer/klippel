@@ -29,8 +29,10 @@ export default defineConfig({
           //if (id.includes("@mui") || id.includes("react")) return "mui+react";
           if (id.includes("node_modules")) return "vendor";
           if (id.includes("src/kernel")) {
-
+            return
             if (id.includes('App.tsx')) return // required to be in the index.js
+            if (id.includes('constants.tsx')) return // required to be in the index.js
+
             return 'kernel'
           };
           if (id.includes("src/system")) {

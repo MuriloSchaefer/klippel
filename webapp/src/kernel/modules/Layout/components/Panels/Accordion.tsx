@@ -1,17 +1,17 @@
-import type {
-  AccordionProps as MUIAccordionProps,
-} from "@mui/material/Accordion";
+import type { AccordionProps as MUIAccordionProps } from "@mui/material/Accordion";
 
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import SvgIcon from '@mui/material/SvgIcon';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import MUIAccordion from '@mui/material/Accordion';
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import SvgIcon from "@mui/material/SvgIcon";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import MUIAccordion from "@mui/material/Accordion";
 
 import ExpandMoreSharp from "@mui/icons-material/ExpandMoreSharp";
 import SettingsInputCompositeSharp from "@mui/icons-material/SettingsInputCompositeSharp";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { ErrorBoundary } from "react-error-boundary";
+import { fallbackRender } from "@kernel/App";
 
 interface AccordionProps extends MUIAccordionProps {
   name: string;
@@ -40,7 +40,7 @@ export const Accordion = ({
     <MUIAccordion
       role={`accordion-${name}`}
       aria-label={`accordion ${name}`}
-      sx={{ width: "max-content", minWidth: "100%", ...sx }}
+      sx={{ width: "100%", overflowX: 'auto', ...sx }}
       {...otherProps}
     >
       <AccordionSummary
@@ -55,15 +55,20 @@ export const Accordion = ({
           }}
         >
           {icon ?? <SettingsInputCompositeSharp />}
-          <Typography component="div" sx={{ flexShrink: 0 }}>{name}</Typography>
+          <Typography component="div" sx={{ flexShrink: 0 }}>
+            {name}
+          </Typography>
           {summary && biggerThan1024 && (
-            <Typography component="div" sx={{ color: "text.secondary" }}>{summary}</Typography>
+            <Typography component="div" sx={{ color: "text.secondary" }}>
+              {summary}
+            </Typography>
           )}
         </Box>
       </AccordionSummary>
       <AccordionDetails>
-        {children}
-        {/* <Typography></Typography> */}
+        <ErrorBoundary fallbackRender={fallbackRender}>
+          {children}
+        </ErrorBoundary>
       </AccordionDetails>
     </MUIAccordion>
   );
