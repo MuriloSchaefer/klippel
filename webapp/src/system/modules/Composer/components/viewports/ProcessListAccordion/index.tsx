@@ -26,6 +26,7 @@ import {
 import { ConsumesEdge, MaterialNode, ProcessNode } from "../../../typings";
 import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
 import { IMaterialsModule } from "@system/modules/Materials";
+import ProcessEditButton from "./ProcessEditButton";
 import ProcessMaterialUsageButton from "./processMaterialUsageButton";
 
 function ProcessItem({
@@ -156,9 +157,7 @@ function ProcessItem({
         <IconButton>
           <DeleteOutlineSharp color="error" />
         </IconButton>
-        <IconButton>
-          <EditSharp color="info" />
-        </IconButton>
+        <ProcessEditButton variationId={variationId} processNode={node} />
         <ProcessMaterialUsageButton
           variationId={variationId}
           processNodeId={node.id}
@@ -202,15 +201,6 @@ function NewProcessButton({ variationId }: { variationId: string }) {
   const graph = useGraph(variationId, (g) => g);
 
   const materialNodes = useMemo(() => {
-    console.log(
-      Object.values(graph.state!.nodes).reduce(
-        (acc, curr) =>
-          curr.type === "MATERIAL"
-            ? { ...acc, [curr.id]: curr as MaterialNode }
-            : acc,
-        {} as NodesHashMap<MaterialNode>
-      )
-    );
     return Object.values(graph.state!.nodes).reduce(
       (acc, curr) =>
         curr.type === "MATERIAL"

@@ -791,8 +791,8 @@ middlewares.startListening({
                 },
                 gramatura: {
                     quotient: {
-                        amount: 139,
-                        unit: 'gramas7'
+                        amount: 0.139,
+                        unit: 'kilogramas6'
                     },
                     dividend: {
                         amount: 1,

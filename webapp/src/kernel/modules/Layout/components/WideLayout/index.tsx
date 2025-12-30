@@ -110,6 +110,8 @@ const Layout = () => {
             sx={{
               gridArea: "settings",
               minHeight: "100%",
+              maxWidth: '50vw',
+              overflowX: "auto",
               borderTop: 0,
               borderRight: 1,
               borderColor: "divider",
@@ -137,6 +139,7 @@ const Layout = () => {
             sx={{
               gridArea: "details",
               width: "100%",
+              maxWidth: '50vw',
               //minHeight: "100%",
               borderLeft: 1,
               borderColor: "divider",

@@ -162,7 +162,6 @@ export default function ProcessMaterialUsageButton({
                     e.targetId
                   ] as MaterialNode;
                   const material = materials[materialNode.materialId];
-                  console.log({e, materialNode, materials, material})
                   return (
                     <ListItem>
                       <FormControl>

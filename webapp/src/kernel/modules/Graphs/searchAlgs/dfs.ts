@@ -8,7 +8,8 @@ export const dfs = (
     node: Node,
     graph: GraphSearch,
     currFindings: Node[],
-    visitedNodes: Node[]
+    visitedNodes: Node[],
+    lastNode: string
   ) => boolean,
   stopCriteria: (
     node: Node,
@@ -34,7 +35,7 @@ export const dfs = (
     lastNode = visiting
     const node = graph.nodes[visiting];
     visited.push(node);
-    const match = validate(node, graph, findings, visited);
+    const match = validate(node, graph, findings, visited, lastNode);
     if (match) {
       findings.push(node);
 

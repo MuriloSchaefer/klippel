@@ -104,6 +104,8 @@ export const SettingsPanel = ({
           sx={{
             display: "flex",
             flexDirection: "column",
+            width: "100%",
+            overflowX: 'auto',
             placeSelf: "center",
             gap: panelState.state === "collapsed" ? 2 : 0,
             marginTop: 4,

@@ -40,7 +40,7 @@ export const Accordion = ({
     <MUIAccordion
       role={`accordion-${name}`}
       aria-label={`accordion ${name}`}
-      sx={{ width: "max-content", minWidth: "100%", ...sx }}
+      sx={{ width: "100%", overflowX: 'auto', ...sx }}
       {...otherProps}
     >
       <AccordionSummary
@@ -69,7 +69,6 @@ export const Accordion = ({
         <ErrorBoundary fallbackRender={fallbackRender}>
           {children}
         </ErrorBoundary>
-        {/* <Typography></Typography> */}
       </AccordionDetails>
     </MUIAccordion>
   );

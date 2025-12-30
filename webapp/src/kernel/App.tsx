@@ -10,18 +10,60 @@ import Layout from "./modules/Layout/components/WideLayout";
 
 // System modules
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
-import Paper from '@mui/material/Paper';
+import Paper from "@mui/material/Paper";
 
-import { Button } from "@mui/material";
+import { Button, IconButton, Typography } from "@mui/material";
+import { InfoOutlineSharp } from "@mui/icons-material";
+import PointerContainer from "./modules/Pointer/components/PointerContainer";
 
 export function fallbackRender({ error, resetErrorBoundary }: FallbackProps) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
   return (
-    <Paper variant="outlined" role="error" sx={{ padding: 2 }}>
+    <Paper
+      variant="outlined"
+      role="error"
+      sx={{ padding: 2, width: "100%", overflowX: "auto" }}
+    >
       <pre style={{ color: "red" }}>{error.stack}</pre>
       <Button onClick={resetErrorBoundary}>Tentar novamente</Button>
-      <Button onClick={()=>console.log('report error')}>Reportar</Button>
+      <Button onClick={() => console.log("report error")}>Reportar</Button>
     </Paper>
+  );
+}
+
+export function fallbackRenderLabelOnly({
+  error,
+  resetErrorBoundary,
+}: FallbackProps) {
+
+  // Call resetErrorBoundary() to reset the error boundary and retry the render.
+  return (
+    <Typography
+      color="error"
+      sx={{ display: "flex", alignItems: "center", gap: 1 }}
+    >
+      Erro: {error.message}{" "}
+      <PointerContainer
+        component={
+          <Paper
+            variant="outlined"
+            role="error"
+            sx={{ padding: 2, width: "100%", overflowX: "auto" }}
+          >
+            <pre style={{ color: "red" }}>{error.stack}</pre>
+            <Button onClick={resetErrorBoundary}>Tentar novamente</Button>
+            <Button onClick={() => console.log("report error")}>
+              Reportar
+            </Button>
+          </Paper>
+        }
+        actions={[]}
+      >
+        <IconButton size="small" color={"error"} component="span">
+          <InfoOutlineSharp />
+        </IconButton>
+      </PointerContainer>
+    </Typography>
   );
 }
 
@@ -34,13 +76,13 @@ const App = (): React.ReactElement => {
     // First initialize store and then load modules, since the loader requires the store to be already up
     <ErrorBoundary fallbackRender={fallbackRender}>
       <DynamicStore>
-      <ModulesProvider>
-        {/* [Authz Component here]
+        <ModulesProvider>
+          {/* [Authz Component here]
             This is only loaded after initialization is complete
          */}
-        <Layout />
-      </ModulesProvider>
-    </DynamicStore>
+          <Layout />
+        </ModulesProvider>
+      </DynamicStore>
     </ErrorBoundary>
   );
 };

@@ -63,7 +63,7 @@ export function SVGModelViewport({
     <div
       ref={editor.wrapperRef}
       id="svg-editor-wrapper"
-      style={{ height: "100%", width: "100%" }}
+      style={{ height: "100%", width: "100%", minWidth: 500 }}
     >
       <svg ref={editor.svgRef} id={`svg-editor`} width="100%" height="100%" />
     </div>
