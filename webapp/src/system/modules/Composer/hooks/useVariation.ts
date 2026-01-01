@@ -359,6 +359,11 @@ export default function useVariation({ variationId }: { variationId: string }) {
           }
         }
       },
+      /**
+       * Add multiple graduations to a garment.
+       * @param names Array of graduation names
+       * @param garmentId ID of the garment part to add graduations to
+       */
       addGraduations: (names: string[], garmentId: string) => {
         const hash = Math.random().toString(36).slice(2, 8);
         const nodeId = `graduation-${hash}`;

@@ -86,6 +86,7 @@ export default function GraduationListAccordion({ variationId, garmentId }: Read
             <Box key={node.id}>
               <GraduationItem
                 node={node}
+                variationId={variationId}
                 garmentId={garmentId}
                 index={idx}
                 moveUp={() => moveUp(idx)}
@@ -102,7 +103,7 @@ export default function GraduationListAccordion({ variationId, garmentId }: Read
   );
 }
 
-function GraduationItem({ node, garmentId, index, moveUp, moveDown, canMoveUp, canMoveDown }: any) {
+function GraduationItem({ node, variationId, garmentId, index, moveUp, moveDown, canMoveUp, canMoveDown }: any) {
   // keep hooks inside component
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState(() => ({ label: node.label ?? "" }));
@@ -112,8 +113,8 @@ function GraduationItem({ node, garmentId, index, moveUp, moveDown, canMoveUp, c
   }, [node.id, node.label]);
 
   // Debounced update via graph API — use useVariation locally to call updateGraduation and removal
-  const localVariation = useVariation({ variationId: node.variationId ?? "" });
-  const debouncedSave = useMemo(() => debounce((changes: any) => localVariation.actions.updateGraduation(node.id, changes), 400), [node.id]);
+  const variation = useVariation({ variationId });
+  const debouncedSave = useMemo(() => debounce((changes: any) => variation.actions.updateGraduation(node.id, changes), 400), [node.id]);
 
   return (
     <ListItem
@@ -144,7 +145,7 @@ function GraduationItem({ node, garmentId, index, moveUp, moveDown, canMoveUp, c
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         {!isEditing ? (
           <>
-            <IconButton sx={{ "&:hover": { color: "error.main" } }} onClick={() => localVariation.actions.removeGraduation(node.id)}>
+            <IconButton sx={{ "&:hover": { color: "error.main" } }} onClick={() => variation.actions.removeGraduation(node.id)}>
               <DeleteOutlineSharp color="error" />
             </IconButton>
             <IconButton sx={{ "&:hover": { color: "primary.main" } }} onClick={() => setIsEditing(true)}>
@@ -159,7 +160,7 @@ function GraduationItem({ node, garmentId, index, moveUp, moveDown, canMoveUp, c
           </>
         ) : (
           <>
-            <IconButton sx={{ "&:hover": { color: "primary.main" } }} onClick={() => { localVariation.actions.updateGraduation(node.id, { label: form.label }); setIsEditing(false); }}>
+            <IconButton sx={{ "&:hover": { color: "primary.main" } }} onClick={() => { variation.actions.updateGraduation(node.id, { label: form.label }); setIsEditing(false); }}>
               <SaveSharp />
             </IconButton>
             <IconButton sx={{ "&:hover": { color: "error.main" } }} onClick={() => setIsEditing(false)}>
@@ -179,20 +180,14 @@ function AddGraduationButton({ variationId, garmentId }: { variationId: string; 
   const [names, setNames] = useState("");
 
   // When confirm, split by comma and trim; keep order; create nodes in that order
-  function handleConfirm() {
+  async function handleConfirm() {
     const splitNames = names
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
     if (splitNames.length === 0) return;
-    // add multiple in one call if supported by the variation API
-    // fall back to calling individual add if needed
-    if (typeof variation.actions.addGraduations === "function") {
-      variation.actions.addGraduations(splitNames, garmentId);
-    } else {
-      // fall back (typed as any) in case older API exists
-      splitNames.forEach((label) => (variation.actions as any).addGraduation && (variation.actions as any).addGraduation(label, garmentId));
-    }
+
+    variation.actions.addGraduations(splitNames, garmentId);
     setNames("");
   }
 
