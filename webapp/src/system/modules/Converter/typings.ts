@@ -40,6 +40,7 @@ export interface CompoundNode extends Node {
 export interface ScaleNode extends Node {
     type: 'SCALE'
     name: string
+    base: string // ID of the base unit for this scale
 }
 
 export interface QuotientEdge extends Edge {

@@ -18,6 +18,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: "SCALE",
       id: "comprimento6",
       name: "Comprimento",
+      base: "metros5",
       position: {
         x: 0,
         y: 0,
@@ -57,6 +58,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: "SCALE",
       id: "monetaria10",
       name: "Monetaria",
+      base: "reais11",
       position: {
         x: 0,
         y: 0,
@@ -86,6 +88,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: "SCALE",
       id: "volume13",
       name: "Volume",
+      base: "metroscubicos15",
       position: {
         x: 0,
         y: 0,
@@ -115,6 +118,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: "SCALE",
       id: "area16",
       name: "Area",
+      base: "metrosquadrados17",
       position: {
         x: 0,
         y: 0,
@@ -144,6 +148,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: "SCALE",
       id: "capacidade5",
       name: "Capacidade",
+      base: "litros7",
       position: {
         x: 0,
         y: 0,
@@ -193,6 +198,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: "SCALE",
       id: "temporal247",
       name: "Temporal",
+      base: "segundos248",
       position: {
         x: 0,
         y: 0,
@@ -262,6 +268,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       type: "SCALE",
       id: "peso5",
       name: "Peso",
+      base: "kilogramas6",
       position: {
         x: 0,
         y: 0,
@@ -699,10 +706,18 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
     "metrosquadrados17-[conv]->centimetrosquadrados9": {
       type: "CONVERTS_TO",
       conversionType: "expression",
-      expression: "quantidade * 100",
+      expression: "quantidade * 10000",
       id: "metrosquadrados17-[conv]->centimetrosquadrados9",
       sourceId: "metrosquadrados17",
       targetId: "centimetrosquadrados9",
+    },
+    "centimetrosquadrados9-[conv]->metrosquadrados17": {
+      type: "CONVERTS_TO",
+      conversionType: "expression",
+      expression: "quantidade / 10000",
+      id: "centimetrosquadrados9-[conv]->metrosquadrados17",
+      sourceId: "centimetrosquadrados9",
+      targetId: "metrosquadrados17",
     },
     "kilometrosquadrados8-[conv]->metrosquadrados17": {
       type: "CONVERTS_TO",
@@ -719,6 +734,14 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       id: "metros5-[conv]->centimetros7",
       sourceId: "metros5",
       targetId: "centimetros7",
+    },
+    "centimetros7-[conv]->metros5": {
+      type: "CONVERTS_TO",
+      conversionType: "expression",
+      expression: "quantidade / 100",
+      id: "centimetros7-[conv]->metros5",
+      sourceId: "centimetros7",
+      targetId: "metros5",
     },
     "metros5-[conv]->milimetros9": {
       type: "CONVERTS_TO",
@@ -779,6 +802,22 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       id: "m / un-[conv]->metros5",
       sourceId: "m / un",
       targetId: "metros5",
+    },
+    "m / un-[conv]->Kg / un": {
+      type: "CONVERTS_TO",
+      conversionType: "expression",
+      expression: "(quantidadeQuociente / quantidadeDividendo) / (rendimentoQuociente / rendimentoDividendo)",
+      id: "m / un-[conv]->Kg / un",
+      sourceId: "m / un",
+      targetId: "Kg / un",
+    },
+    "Kg / un-[conv]->m / un": {
+      type: "CONVERTS_TO",
+      conversionType: "expression",
+      expression: "(quantidadeQuociente / quantidadeDividendo) * (rendimentoQuociente / rendimentoDividendo)",
+      id: "Kg / un-[conv]->m / un",
+      sourceId: "Kg / un",
+      targetId: "m / un",
     },
     "min / un->minutos249": {
       id: "min / un->minutos249",
@@ -921,6 +960,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         "kilometros8-[conv]->metros5",
         "m / un->metros5",
         "m / un-[conv]->metros5",
+        "centimetros7-[conv]->metros5",
       ],
       outputs: [
         "metros5 -> comprimento6",
@@ -941,7 +981,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
     },
     centimetros7: {
       inputs: ["metros5-[conv]->centimetros7"],
-      outputs: ["centimetros7 -> comprimento6"],
+      outputs: ["centimetros7 -> comprimento6", "centimetros7-[conv]->metros5"],
     },
     kilometros8: {
       inputs: ["metros5-[conv]->kilometros8"],
@@ -999,6 +1039,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         "m² / un->metrosquadrados17",
         "m² / un-[conv]->metrosquadrados17",
         "kilometrosquadrados8-[conv]->metrosquadrados17",
+        "centimetrosquadrados9-[conv]->metrosquadrados17",
         "g / m²->metrosquadrados17",
       ],
       outputs: [
@@ -1045,7 +1086,10 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         "kilometrosquadrados8-[conv]->centimetrosquadrados9",
         "metrosquadrados17-[conv]->centimetrosquadrados9",
       ],
-      outputs: ["centimetrosquadrados9 -> area16"],
+      outputs: [
+        "centimetrosquadrados9 -> area16",
+        "centimetrosquadrados9-[conv]->metrosquadrados17",
+      ],
     },
     temporal247: {
       inputs: [
@@ -1185,11 +1229,12 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       ],
     },
     "m / un": {
-      inputs: [],
+      inputs: ["Kg / un-[conv]->m / un"],
       outputs: [
         "m / un->metros5",
         "m / un->unitario18",
         "m / un-[conv]->metros5",
+        "m / un-[conv]->Kg / un",
       ],
     },
     "min / un": {
@@ -1201,8 +1246,8 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       ],
     },
     "Kg / un": {
-      inputs: ["m² / un-[conv]->Kg / un"],
-      outputs: ["Kg / un->kilogramas6", "Kg / un->unitario18"],
+      inputs: ["m² / un-[conv]->Kg / un", "m / un-[conv]->Kg / un"],
+      outputs: ["Kg / un->kilogramas6", "Kg / un->unitario18", "Kg / un-[conv]->m / un"],
     },
     "g / m²": {
       inputs: [],

@@ -139,7 +139,7 @@ const Layout = () => {
             sx={{
               gridArea: "details",
               width: "100%",
-              maxWidth: '50vw',
+              // maxWidth: '50vw',
               //minHeight: "100%",
               borderLeft: 1,
               borderColor: "divider",
