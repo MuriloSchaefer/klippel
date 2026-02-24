@@ -744,6 +744,22 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       sourceId: "metros5",
       targetId: "kilometros8",
     },
+    "kilogramas6-[conv]->gramas7": {
+      type: "CONVERTS_TO",
+      conversionType: "expression",
+      expression: "quantidade * 1000",
+      id: "kilogramas6-[conv]->gramas7",
+      sourceId: "kilogramas6",
+      targetId: "gramas7",
+    },
+    "gramas7-[conv]->kilogramas6": {
+      type: "CONVERTS_TO",
+      conversionType: "expression",
+      expression: "quantidade / 1000",
+      id: "gramas7-[conv]->kilogramas6",
+      sourceId: "gramas7",
+      targetId: "kilogramas6",
+    },
     "m / un->metros5": {
       id: "m / un->metros5",
       type: "QUOTIENT",
@@ -1102,12 +1118,22 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         "m² / Kg-[conv]->kilogramas6",
         "metros5-[conv]->kilogramas6",
         "Kg / un->kilogramas6",
+        "gramas7-[conv]->kilogramas6",
       ],
-      outputs: ["kilogramas6 -> peso5"],
+      outputs: [
+        "kilogramas6 -> peso5",
+        "kilogramas6-[conv]->gramas7",
+      ],
     },
     gramas7: {
-      inputs: ["g / m²->gramas7"],
-      outputs: ["gramas7 -> peso5"],
+      inputs: [
+        "g / m²->gramas7",
+        "kilogramas6-[conv]->gramas7",
+      ],
+      outputs: [
+        "gramas7 -> peso5",
+        "gramas7-[conv]->kilogramas6",
+      ],
     },
     miligramas8: {
       inputs: [],
