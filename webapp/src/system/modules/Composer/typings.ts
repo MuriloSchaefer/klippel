@@ -63,6 +63,7 @@ export type ProcessNode = Node & {
     processId: string; // small hash id
     costMoney?: CompoundValue; // monetary cost as CompoundValue (use Converter CompoundValue)
     costTime?: CompoundValue; // compound time value (quotient/dividend from Converter)
+    electiveNodeId?: string; // optional reference to an elective node - if set, process only applies when elective.value is true
 }
 
 export type VisualizationDom = {

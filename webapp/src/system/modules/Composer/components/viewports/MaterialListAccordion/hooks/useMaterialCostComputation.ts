@@ -5,7 +5,7 @@ import type { IConverterModule } from "@system/modules/Converter";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
 import type { ConversionNodes, ConvertionEdges, CompoundValue } from "@system/modules/Converter/typings";
 import type { MaterialState } from "@system/modules/Materials/store/materials/state";
-import type { ConsumesEdge, MaterialNode, ProcessNode } from "../../../../typings";
+import type { ConsumesEdge, MaterialNode, ProcessNode, ElectiveNode } from "../../../../typings";
 import { CONVERSION_GRAPH_NAME } from "@system/modules/Converter/constants";
 import { traceConversion } from "../utils/traceConversion";
 import type { ComputationStep } from "../types";
@@ -44,6 +44,14 @@ export function useMaterialCostComputation({
 
     for (const edge of consumesEdges) {
       const processNode = graph.state?.nodes[edge.sourceId] as ProcessNode;
+      
+      // Skip process if it has an elective that is not enabled
+      if (processNode?.electiveNodeId) {
+        const electiveNode = graph.state?.nodes[processNode.electiveNodeId] as ElectiveNode;
+        if (!electiveNode?.value) {
+          continue; // Skip this process - elective is not enabled
+        }
+      }
       
       // Trace detailed conversion steps
       const conversionTrace = traceConversion({

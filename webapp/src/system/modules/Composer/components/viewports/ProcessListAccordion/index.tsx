@@ -23,11 +23,12 @@ import {
   AccessTimeSharp,
   EditSharp,
 } from "@mui/icons-material";
-import { ConsumesEdge, MaterialNode, ProcessNode } from "../../../typings";
+import { ConsumesEdge, MaterialNode, ProcessNode, ElectiveNode } from "../../../typings";
 import { NodesHashMap } from "@kernel/modules/Graphs/store/state";
 import { IMaterialsModule } from "@system/modules/Materials";
 import ProcessEditButton from "./ProcessEditButton";
 import ProcessMaterialUsageButton from "./processMaterialUsageButton";
+import ProcessElectiveButton from "./ProcessElectiveButton";
 
 function ProcessItem({
   variationId,
@@ -52,6 +53,11 @@ function ProcessItem({
   const materials = useMaterials();
   const materialTypes = useMaterialTypes();
 
+  const linkedElective = useMemo(() => {
+    if (!node?.electiveNodeId || !graph.state) return null;
+    return graph.state.nodes[node.electiveNodeId] as ElectiveNode;
+  }, [node?.electiveNodeId, graph.state]);
+
   const materialsConsumptions = useMemo(
     () =>
       Object.values(graph.state?.edges ?? {}).filter(
@@ -71,27 +77,35 @@ function ProcessItem({
           gap: 2,
         }}
       >
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <Typography sx={{ fontWeight: "bold" }}>{node.label}</Typography>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <AttachMoneySharp />
-              <Typography>
-                {node.costTime?.quotient.amount}{" "}
-                {units![node.costTime!.quotient.unit].abbreviation} /
-                {node.costTime?.dividend.amount}{" "}
-                {units![node.costTime!.dividend.unit].abbreviation}
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <AccessTimeSharp />
-              <Typography>
-                {node.costMoney?.quotient.amount}{" "}
-                {units![node.costMoney!.quotient.unit].abbreviation} /
-                {node.costMoney?.dividend.amount}{" "}
-                {units![node.costMoney!.dividend.unit].abbreviation}
-              </Typography>
-            </Box>
+          {linkedElective && (
+            <Chip
+              label={linkedElective.label}
+              size="small"
+              color={linkedElective.value ? "success" : "default"}
+              sx={{ height: 20 }}
+            />
+          )}
+        </Box>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <AttachMoneySharp />
+            <Typography>
+              {node.costTime?.quotient.amount}{" "}
+              {units![node.costTime!.quotient.unit].abbreviation} /
+              {node.costTime?.dividend.amount}{" "}
+              {units![node.costTime!.dividend.unit].abbreviation}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <AccessTimeSharp />
+            <Typography>
+              {node.costMoney?.quotient.amount}{" "}
+              {units![node.costMoney!.quotient.unit].abbreviation} /
+              {node.costMoney?.dividend.amount}{" "}
+              {units![node.costMoney!.dividend.unit].abbreviation}
+            </Typography>
           </Box>
         </Box>
         <Box sx={{display:'flex', flexGrow: 1, alignItems: 'center'}}>
@@ -158,6 +172,7 @@ function ProcessItem({
           <DeleteOutlineSharp color="error" />
         </IconButton>
         <ProcessEditButton variationId={variationId} processNode={node} />
+        <ProcessElectiveButton variationId={variationId} processNode={node} />
         <ProcessMaterialUsageButton
           variationId={variationId}
           processNodeId={node.id}
