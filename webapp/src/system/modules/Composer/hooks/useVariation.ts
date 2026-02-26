@@ -365,9 +365,6 @@ export default function useVariation({ variationId }: { variationId: string }) {
        * @param garmentId ID of the garment part to add graduations to
        */
       addGraduations: (names: string[], garmentId: string) => {
-        const hash = Math.random().toString(36).slice(2, 8);
-        const nodeId = `graduation-${hash}`;
-
         // compute next order index
         const graduationEdges = graph.state
           ? Object.values(graph.state.edges).filter(
@@ -383,6 +380,10 @@ export default function useVariation({ variationId }: { variationId: string }) {
           -1
         );
         names.forEach((name, i) => {
+          // Generate unique ID for each graduation
+          const hash = Math.random().toString(36).slice(2, 8);
+          const nodeId = `graduation-${hash}`;
+
           const node: GraduationNode = {
             id: nodeId,
             type: "GRADUATION",
