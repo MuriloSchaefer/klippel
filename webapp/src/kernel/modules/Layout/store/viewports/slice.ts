@@ -1,4 +1,4 @@
-import { createSlice, SliceCaseReducers } from "@reduxjs/toolkit";
+import { createSlice, SliceCaseReducers, SliceSelectors } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import { viewportManagerState, ViewportState } from "./state";
 import groupsSlice from "./groups/slice";
@@ -74,7 +74,8 @@ const restoreActiveVPSession = async (
 const slice = createSlice<
   viewportManagerState,
   SliceCaseReducers<viewportManagerState>,
-  string
+  string,
+  SliceSelectors<viewportManagerState>
 >({
   name: `${MODULE_NAME}Viewports`,
   initialState: {
