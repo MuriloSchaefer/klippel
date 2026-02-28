@@ -5,6 +5,7 @@ import type { IMaterialsModule } from "@system/modules/Materials";
 import type { MaterialNode } from "../../../typings";
 import AddMaterialButton from "./AddMaterialButton";
 import MaterialItem from "./components/MaterialItem";
+import { useMemo } from "react";
 
 export default function MaterialListAccordion({
   variationId,
@@ -15,20 +16,22 @@ export default function MaterialListAccordion({
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
   const graph = useGraph(variationId, (g: any) => g);
-  const materialNodes: MaterialNode[] = graph?.state
+  const materialNodes: MaterialNode[] = useMemo(()=>{
+    return graph?.state
     ? (Object.values(graph.state.nodes).filter(
-        (n: any) => n.type === "MATERIAL"
+        (n: any) => n.type === "MATERIAL",
       ) as MaterialNode[])
     : [];
+  }, [graph.state])
+
 
   // Get materials module and hook
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const useMaterials = materialsModule.hooks.useMaterials;
-  // Get all material IDs referenced in the graph
-  const materialIds = materialNodes
-    .map((node) => Number(node.materialId))
-    .filter((id) => !Number.isNaN(id));
-  const materials = useMaterials(materialIds);
+
+  const materials = useMaterials(materialNodes
+        .map((node) => Number(node.materialId))
+        .filter((id) => !Number.isNaN(id)));
 
   return (
     <>
