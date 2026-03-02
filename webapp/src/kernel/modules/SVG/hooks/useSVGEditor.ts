@@ -71,7 +71,7 @@ export const useSVGEditor = ({
     state: { tools },
   } = useContext(EditorToolkitContext);
 
-  const container = useD3Container().width(width).height(height)
+  const container = useD3Container().width(width).height(height);
 
   useLayoutEffect(() => {
     if (!dimensions || !svgRef.current || !svgState?.content || !parsedSVG) {
@@ -109,10 +109,9 @@ export const useSVGEditor = ({
   const [zoomTransform, setZoomTransform] = useState(undefined);
   const [pickingElements, setPickingElements] = useState<PickingElements>([]);
 
-  
   function renderPreview(
     root: Selection<SVGSVGElement, any, SVGSVGElement, any>,
-    selection: Selection<SVGGElement, any, SVGSVGElement, any>
+    selection: Selection<SVGGElement, any, SVGSVGElement, any>,
   ) {
     selection.selectChildren("*").remove();
 
@@ -132,6 +131,11 @@ export const useSVGEditor = ({
       const elem = parsedSVG.querySelector(`#${id}`);
       Object.entries(attributes).forEach(([attr, value]) => {
         elem?.setAttribute(attr, value as string);
+        const styles = elem?.getAttribute("style")
+        if (styles){
+          const newStyle = styles.split(";").filter((s) => !s.includes(attr)).join(";");
+          if (newStyle) elem?.setAttribute("style", newStyle);
+        }
       });
     });
 
@@ -150,21 +154,38 @@ export const useSVGEditor = ({
       let elements = tools.pickElement.getSelectables(parsedSVG);
       const pickingElementsTemp: PickingElements = [];
       elements.map((element: SVGElement) => {
-        const currFillColor = element.getAttribute("fill");
-        const currStrokeColor = element.getAttribute("stroke");
-        const currStrokeWidth = element.getAttribute("stroke-width");
+        const styles = element.getAttribute("style")
+        const noFillorStrokeStyle =   styles ? styles.split(";").filter((s) => !s.includes('fill') && !s.includes('stroke')).join(";") : '';
+        const styleFillColor = styles?.split(";").find((s) => s.includes("fill"))?.split(":")[1].trim();
+        const styleStrokeColor = styles?.split(";").find((s) => s.includes("stroke"))?.split(":")[1].trim();
+        const styleStrokeWidth = styles?.split(";").find((s) => s.includes("stroke-width"))?.split(":")[1].trim();
+
+
+        const currFillColor = element.getAttribute("fill") ?? styleFillColor;
+        const currStrokeColor = element.getAttribute("stroke") ?? styleStrokeColor;
+        const currStrokeWidth = element.getAttribute("stroke-width") ?? styleStrokeWidth;
 
         const handlers = {
           pointerover: (e: PointerEvent) => {
             e.stopPropagation();
-            element.setAttribute("fill", "url(#pick-hatch-pattern)");
-            element.setAttribute("stroke", theme.palette.primary.main);
-            element.setAttribute("stroke-width", "3");
+            if (currFillColor && currFillColor !== "none"){
+              element.setAttribute("style", noFillorStrokeStyle);
+              console.log(currFillColor)
+              element.setAttribute("fill", "url(#pick-hatch-pattern)");
+            }
+
+            if (currStrokeColor && currStrokeColor !== "none"){
+              element.setAttribute("style", noFillorStrokeStyle);
+              element.setAttribute("stroke", theme.palette.primary.main);
+            }
           },
           pointerout: (e: PointerEvent) => {
             e.stopPropagation();
-            if (currFillColor) element.setAttribute("fill", currFillColor);
-            else element.removeAttribute("fill");
+            if (styles) element.setAttribute("style", styles);
+            if (currFillColor ) {
+              element.setAttribute("fill", currFillColor)}
+            else {
+              element.removeAttribute("fill")}
 
             if (currStrokeColor)
               element.setAttribute("stroke", currStrokeColor);
@@ -217,19 +238,32 @@ export const useSVGEditor = ({
 
   container.content([
     (root) => {
-      const defs = select(svgRef.current!).selectAll('#svg-edit-defs').data([1]).join('defs').attr("id", "svg-edit-defs");
-      const pattern = defs.selectAll("#pick-hatch-pattern").data([1]).join("pattern")
-          .attr("id", "pick-hatch-pattern")
-          .attr("width", "50")
-          .attr("height", "10")
-          .attr("patternTransform", "rotate(45 0 0)")
-          .attr("patternUnits", "userSpaceOnUse")
-      pattern.selectAll('rect').data([1]).join("rect")
-        .attr("width", "50")
-        .attr("height", "10")
+      const defs = select(svgRef.current!)
+        .selectAll("#svg-edit-defs")
+        .data([1])
+        .join("defs")
+        .attr("id", "svg-edit-defs");
+      const pattern = defs
+        .selectAll("#pick-hatch-pattern")
+        .data([1])
+        .join("pattern")
+        .attr("id", "pick-hatch-pattern")
+        .attr("width", "5")
+        .attr("height", "5")
+        .attr("patternTransform", "rotate(45 0 0)")
+        .attr("patternUnits", "userSpaceOnUse");
+      pattern
+        .selectAll("rect")
+        .data([1])
+        .join("rect")
+        .attr("width", "5")
+        .attr("height", "5")
         .attr("fill", theme.palette.background.default);
 
-      pattern.selectAll('line').data([1]).join("line")
+      pattern
+        .selectAll("line")
+        .data([1])
+        .join("line")
         .attr("x1", "0")
         .attr("y1", "0")
         .attr("x2", "0")
@@ -237,14 +271,21 @@ export const useSVGEditor = ({
         .attr("style", `stroke:${theme.palette.primary.main}; stroke-width:2;`);
     },
     (root, selection, datum) => {
-      const preview = selection.selectAll('#SVG-editor-preview').data([1]).join("g").attr("id", "SVG-editor-preview");
+      const preview = selection
+        .selectAll("#SVG-editor-preview")
+        .data([1])
+        .join("g")
+        .attr("id", "SVG-editor-preview");
       // @ts-ignore TODO: fix types
       renderPreview(root, preview);
     },
     (root, selection, datum) => {
-      selection.selectAll('#SVG-editor-tools').data([1]).join("g").attr("id", "SVG-editor-tools");
+      selection
+        .selectAll("#SVG-editor-tools")
+        .data([1])
+        .join("g")
+        .attr("id", "SVG-editor-tools");
     },
-    
   ]);
 
   function transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement) {

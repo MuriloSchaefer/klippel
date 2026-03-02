@@ -7,6 +7,7 @@ import ModulesProvider, {
 } from "./modules/Loader/components/Provider";
 import DynamicStore from "./modules/Store/components/DynamicStore";
 import Layout from "./modules/Layout/components/WideLayout";
+import KeyboardListener from "./modules/KeyboardShortcuts/components/KeyboardListener";
 
 // System modules
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
@@ -77,6 +78,8 @@ const App = (): React.ReactElement => {
     <ErrorBoundary fallbackRender={fallbackRender}>
       <DynamicStore>
         <ModulesProvider>
+          {/* Global keyboard event listener - captures all keyboard shortcuts */}
+          <KeyboardListener />
           {/* [Authz Component here]
             This is only loaded after initialization is complete
          */}

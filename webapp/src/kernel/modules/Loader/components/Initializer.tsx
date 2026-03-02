@@ -9,6 +9,7 @@ import storeModule from "@kernel/modules/Store";
 import SVG from "@kernel/modules/SVG";
 import pointerModule from "@kernel/modules/Pointer";
 import Markdown from "@kernel/modules/Markdown";
+import KeyboardShortcuts from "@kernel/modules/KeyboardShortcuts";
 
 import converterModule from "@system/modules/Converter";
 import materialsModule from "@system/modules/Materials";
@@ -21,8 +22,9 @@ import { ModulesMap } from "./Provider";
 import { IModule } from "../../base";
 
 type InitializerProps = {
-  afterLoadComponent: React.ReactElement;
+  afterLoadComponent: React.ReactElement | React.ReactElement[];
   bootLog: (log: string) => void;
+  logName: string;
 };
 const KERNEL_LOGS = "logs/kernel";
 const getDailyLogFileName = () => {
@@ -33,18 +35,20 @@ const getDailyLogFileName = () => {
 const PreInit = (props: Omit<InitializerProps, "bootLog">) => {
   const { useLog } = storeModule.hooks;
   const dt = new Date();
+  const logName = `${getDailyLogFileName()}/boot.log`;
 
   const bootLog = useLog(
     MODULE_NAME,
-    `${getDailyLogFileName()}/boot.log`
+    logName
   );
 
   bootLog?.(`New boot ---- ${dt.toLocaleString()}`);
-  return <Initializer {...props} bootLog={bootLog} />;
+  return <Initializer {...props} bootLog={bootLog}  logName={logName} />;
 };
 
 const Initializer = ({
   bootLog,
+  logName,
   afterLoadComponent,
 }: InitializerProps) => {
   const moduleManager = module.managers.modules();
@@ -61,6 +65,7 @@ const Initializer = ({
     () => ({
       [module.name]: module,
       [graphModule.name]: graphModule,
+      [KeyboardShortcuts.name]:KeyboardShortcuts,
       [layoutModule.name]: layoutModule,
     }),
     []
@@ -70,7 +75,7 @@ const Initializer = ({
       kernel: {
         [SVG.name]:SVG, 
         [pointerModule.name]:pointerModule, 
-        [Markdown.name]:Markdown
+        [Markdown.name]:Markdown,
       },
       system: {
         [converterModule.name]: converterModule, 
@@ -129,8 +134,13 @@ const Initializer = ({
 
   // SET INITIALIZATION COMPLETE
   useLayoutEffect(() => {
-    if (extraModulesLoaded === Object.keys(extraModules.system).length)
+    if (extraModulesLoaded === Object.keys(extraModules.system).length){
+
+      Object.values({...staticModules, ...extraModules.kernel, ...extraModules.system}).forEach(mod => {
+        mod.kernelCalls.postBootInitialization?.(mod)
+      })
       setIsInitializing(false);
+    }
   }, [extraModulesLoaded]);
 
   // CREATE GRAPH
@@ -245,6 +255,7 @@ const Initializer = ({
     setExtraModulesLoaded((old) => old + 1);
     bootLog(`Extra module loaded  module=${mod.name} version=(${mod.version})`);
   }
+
 
   useLayoutEffect(() => {
     if (!isInitializing) {

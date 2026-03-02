@@ -103,7 +103,7 @@ const LayoutModule: ILayoutModule = {
     startModule,
     restartModule(){},
     shutdownModule(){}
-  }
+  },
 }
 
 export default LayoutModule;

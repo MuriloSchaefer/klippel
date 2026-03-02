@@ -1,11 +1,12 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext } from "react";
 
 import { IModule, Manager } from "@kernel/modules/base";
 import storeModule from "@kernel/modules/Store";
 import layoutModule from "@kernel/modules/Layout";
+import keyboardShortcutsModule from "@kernel/modules/KeyboardShortcuts";
 
 import ModulesContext from "../context";
-import {ModuleAlreadyLoaded, ModuleNotLoaded} from "../exceptions";
+import { ModuleNotLoaded} from "../exceptions";
 import { moduleStarted, startModule } from "../store/actions";
 import { modulesCount as modulesCountSelector } from "../store/selectors";
 
@@ -30,10 +31,12 @@ export const useModulesManager = (): ModulesManager => {
     // CHALLENGE: try to make it easier to add new managers here without increasing coupling
     const {useLayoutManager, useRibbonMenuManager, useViewportManager} = layoutModule.hooks
     const {store, componentRegistry} = storeModule.managers
+    const {useKeyboardShortcutsManager} = keyboardShortcutsModule.managers
     const {useStorage} = storeModule.hooks
 
     
     const layoutManager = useLayoutManager()
+    const keyboardManager = useKeyboardShortcutsManager()
     const ribbonMenuManager = useRibbonMenuManager()
     const viewportManager = useViewportManager()
     const storeManager = store()
@@ -67,7 +70,8 @@ export const useModulesManager = (): ModulesManager => {
                         componentRegistryManager,
                         layoutManager,
                         ribbonMenuManager,
-                        viewportManager
+                        viewportManager,
+                        keyboardManager
                     },
                     storage
                 })
@@ -96,7 +100,8 @@ export const useModulesManager = (): ModulesManager => {
                         componentRegistryManager,
                         layoutManager,
                         ribbonMenuManager,
-                        viewportManager
+                        viewportManager,
+                        keyboardManager
                     },
                     storage
                 })
