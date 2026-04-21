@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import useModule from '@kernel/hooks/useModule';
 import { Store } from '@kernel/modules/Store';
 import { formatKeyEvent, shouldIgnoreKeyEvent } from '../utils';
-import { keyPressed, clearPressedKeys, toggleShowHints } from '../store/actions';
+import { keyPressed, toggleShowHints } from '../store/actions';
 import { selectPressedKeys } from '../store';
 
 /**
@@ -27,7 +27,7 @@ export interface KeyPressedAction {
   };
 }
 
-const preventPropagation = (event: KeyboardEvent, pressedKeys: string[]) =>{
+const preventPropagation = (event: KeyboardEvent) =>{
     // Prevent default for any Alt+Number and Alt+Letter combinations
     // to avoid triggering OS/browser shortcuts
     if (event.altKey && !event.ctrlKey && !event.metaKey) {
@@ -55,7 +55,7 @@ const KeyboardListener: React.FC = () => {
       if (shouldIgnoreKeyEvent(event)) {
         return;
       }
-      preventPropagation(event, pressedKeys)
+      preventPropagation(event)
 
       // Normalize the key event to a standard format
       const key = formatKeyEvent(event);
@@ -106,7 +106,15 @@ const KeyboardListener: React.FC = () => {
     if (event.key === 'AltGraph' && pressedKeys.length === 1 && pressedKeys[0] === 'AltGraph') {
       dispatch(toggleShowHints());
     }
-    const remainingKeys = pressedKeys.filter(pk => pk !== event.key)
+
+    // Normalize the released key to match the stored format in pressedKeys.
+    // formatKeyEvent maps 'Control'/'Meta' → 'Ctrl', so the filter must use the same name.
+    const normalizeReleasedKey = (key: string): string => {
+      if (key === 'Control' || key === 'Meta') return 'Ctrl';
+      return key;
+    };
+
+    const remainingKeys = pressedKeys.filter(pk => pk !== normalizeReleasedKey(event.key))
 
     const currState = new Set(pressedKeys)
     const newState = new Set(remainingKeys)

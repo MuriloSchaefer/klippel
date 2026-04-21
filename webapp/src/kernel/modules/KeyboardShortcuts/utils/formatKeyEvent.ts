@@ -86,8 +86,11 @@ export function shouldIgnoreKeyEvent(event: KeyboardEvent): boolean {
     target.tagName === 'SELECT' ||
     target.isContentEditable
   ) {
-    // Allow Escape and other critical shortcuts even in inputs
+    // Allow Escape, Tab, and Ctrl+Enter (confirm) even in inputs
     if (event.key === 'Escape' || event.key === 'Tab') {
+      return false;
+    }
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       return false;
     }
     return true;

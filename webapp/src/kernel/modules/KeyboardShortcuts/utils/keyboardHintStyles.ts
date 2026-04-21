@@ -67,17 +67,25 @@ export const keyboardHintSeparatorSx: SxProps<Theme> = {
   mx: 0.15,
 };
 
+export type BadgePlacement =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right';
+
 /**
  * Get badge position styles based on placement
  */
-export const getBadgePosition = (
-  placement: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-): Record<string, number> => {
-  const positions = {
-    'top-left': { top: 24, left: 24 },
-    'top-right': { top: 24, right: 24 },
-    'bottom-left': { bottom: 24, left: 24 },
-    'bottom-right': { bottom: 24, right: 24 },
+export const getBadgePosition = (placement: BadgePlacement): SxProps<Theme> => {
+  const positions: Record<BadgePlacement, SxProps<Theme>> = {
+    'top-left':      { top: 24, left: 24 },
+    'top-center':    { top: 24, left: '50%', transform: 'translateX(-50%)' },
+    'top-right':     { top: 24, right: 24 },
+    'bottom-left':   { bottom: 24, left: 24 },
+    'bottom-center': { bottom: 24, left: '50%', transform: 'translateX(-50%)' },
+    'bottom-right':  { bottom: 24, right: 24 },
   };
   return positions[placement];
 };

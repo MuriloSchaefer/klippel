@@ -113,7 +113,7 @@ export const CreateModelIconButton = forwardRef<HTMLButtonElement>(
         ]}
       >
         <IconButton ref={ref} aria-label="create-model" id="new-model-form">
-          <ShortcutHint placement="top-left" shortcutId={`${MODULE_NAME}/ModelSection/createModel`}>
+          <ShortcutHint placement="top-center" shortcutId={`${MODULE_NAME}/ModelSection/createModel`}>
             <NoteAddSharpIcon />
           </ShortcutHint>
         </IconButton>

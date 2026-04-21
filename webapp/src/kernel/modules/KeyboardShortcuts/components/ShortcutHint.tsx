@@ -22,6 +22,7 @@ import {
   keyboardHintSeparatorSx,
   keyboardHintWrapperSx,
   getBadgePosition,
+  type BadgePlacement,
 } from '../utils/keyboardHintStyles';
 
 export interface ShortcutHintProps {
@@ -43,7 +44,7 @@ export interface ShortcutHintProps {
   /**
    * Placement of the badge
    */
-  placement?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  placement?: BadgePlacement;
 }
 
 const ShortcutHint: React.FC<ShortcutHintProps> = React.memo(({

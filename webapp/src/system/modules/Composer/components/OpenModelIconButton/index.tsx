@@ -33,7 +33,7 @@ export const OpenModelIconButton = forwardRef<HTMLButtonElement>((props, ref) =>
       }
       button={
         <IconButton ref={ref} id="open-model-modal">
-          <ShortcutHint placement="bottom-right" shortcutId={`${MODULE_NAME}/ModelSection/openModel`}>
+          <ShortcutHint placement="bottom-center" shortcutId={`${MODULE_NAME}/ModelSection/openModel`}>
             <FileOpenIcon />
           </ShortcutHint>
         </IconButton>
