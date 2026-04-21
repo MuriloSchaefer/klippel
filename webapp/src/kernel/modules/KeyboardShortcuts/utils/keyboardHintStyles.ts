@@ -72,13 +72,12 @@ export const keyboardHintSeparatorSx: SxProps<Theme> = {
  */
 export const getBadgePosition = (
   placement: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-): Record<string, any> => {
+): Record<string, number> => {
   const positions = {
     'top-left': { top: 24, left: 24 },
     'top-right': { top: 24, right: 24 },
     'bottom-left': { bottom: 24, left: 24 },
     'bottom-right': { bottom: 24, right: 24 },
-    'center-bottom': { bottom: 24, right: '50%' },
   };
   return positions[placement];
 };
