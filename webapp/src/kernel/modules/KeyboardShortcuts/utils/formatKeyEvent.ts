@@ -37,6 +37,15 @@ export function formatKeyEvent(event: KeyboardEvent): string {
   // Get the actual key pressed
   let key = event.key;
   
+  // For number keys, use event.code to avoid issues with Alt+Number producing special characters
+  if (event.code && event.code.startsWith('Digit')) {
+    key = event.code.replace('Digit', '');
+  }
+  // For letter keys, use event.code if modifiers are pressed to avoid layout-specific characters
+  else if (event.code && event.code.startsWith('Key') && (event.altKey || event.ctrlKey || event.metaKey)) {
+    key = event.code.replace('Key', '').toLowerCase();
+  }
+  
   // Normalize special keys
   switch (key) {
     case ' ':

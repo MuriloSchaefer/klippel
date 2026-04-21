@@ -12,10 +12,11 @@ import viewportGroupsMiddleware from "../store/viewports/groups/middlewares";
 import panelsMiddleware from "../store/panels/middlewares";
 
 import slice, { sessionSaver } from "../store/slice";
-import { StartModuleProps } from "@kernel/modules/base";
+import { PostBootInitializationProps, StartModuleProps } from "@kernel/modules/base";
 import HomeViewport from "../components/ViewportManager/HomeViewport";
 import { switchTheme } from "../store/actions";
 import { type PaletteMode } from "@mui/material";
+import { selectTab } from "../store/ribbonMenu/actions";
 
 export const startModule = ({
   dispatch,
@@ -52,3 +53,20 @@ export const startModule = ({
     [SYSTEM_TRAY_REGISTRY_NAME]: {}
   });
 };
+
+export const postBootInitialization = ({managers: { storeManager, keyboardManager, ribbonMenuManager },}: PostBootInitializationProps) => {
+  Object.entries(ribbonMenuManager.tabs ?? {}).forEach(([name, tab], index) => {
+    const contextId = `${MODULE_NAME}/RibbonMenu`
+    const id = `${contextId}/${index}`
+    keyboardManager.functions.registerShortcuts([
+      {
+        id: id,
+        key: 'Alt+' + (index + 1),
+        contextId: contextId,
+        action: () => document.getElementById(id)?.click(),
+        description: 'Seleciona tab ' + name,
+        enabled: true,
+      }
+    ], {context: 'RibbonMenu'})
+  });
+}

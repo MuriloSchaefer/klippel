@@ -16,7 +16,8 @@ export interface ModulesManager extends Manager {
         isModuleLoaded: (moduleName: string) => boolean
         loadModule: (module: IModule, bootLog: (log: string)=>void) => void,
         unloadModule: (moduleName: string) => void,
-        reloadModule: (moduleName: string) => void
+        reloadModule: (moduleName: string) => void,
+        postBootInitialization: (moduleName: string) => void
     }
 }
 
@@ -94,6 +95,22 @@ export const useModulesManager = (): ModulesManager => {
                 setModules(modules)
 
                 module.kernelCalls.restartModule({
+                    dispatch,
+                    managers: {
+                        storeManager,
+                        componentRegistryManager,
+                        layoutManager,
+                        ribbonMenuManager,
+                        viewportManager,
+                        keyboardManager
+                    },
+                    storage
+                })
+            },
+            postBootInitialization(moduleName){
+                const module = modules[moduleName]
+                if (!module) throw new ModuleNotLoaded(`${moduleName} is not registered.`)
+                module.kernelCalls.postBootInitialization?.({
                     dispatch,
                     managers: {
                         storeManager,

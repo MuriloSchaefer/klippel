@@ -7,13 +7,22 @@
  * </ShortcutHint>
  */
 
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useMemo } from 'react';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
+import KeyboardIcon from '@mui/icons-material/Keyboard';
 
 import useModule from '@kernel/hooks/useModule';
 import { Store } from '@kernel/modules/Store';
-import { selectShowHints, selectShortcutById } from '../store/selectors';
+import { selectShowHints, selectShortcutById, selectPressedKeys } from '../store/selectors';
+import {
+  keyboardHintContainerSx,
+  keyboardHintKeySx,
+  keyboardHintKeyPressedSx,
+  keyboardHintSeparatorSx,
+  keyboardHintWrapperSx,
+  getBadgePosition,
+} from '../utils/keyboardHintStyles';
 
 export interface ShortcutHintProps {
   /**
@@ -37,7 +46,7 @@ export interface ShortcutHintProps {
   placement?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 }
 
-const ShortcutHint: React.FC<ShortcutHintProps> = ({
+const ShortcutHint: React.FC<ShortcutHintProps> = React.memo(({
   shortcutId,
   children,
   alwaysShow = false,
@@ -48,6 +57,18 @@ const ShortcutHint: React.FC<ShortcutHintProps> = ({
   
   const showHints = useAppSelector(selectShowHints);
   const shortcut = useAppSelector(selectShortcutById(shortcutId));
+  const pressedKeys = useAppSelector(selectPressedKeys);
+  
+  // Calculate badge position based on placement
+  const badgePosition = useMemo(() => getBadgePosition(placement), [placement]);
+  
+  // Split key by '+' and render each part as a Chip
+  const keyParts = useMemo(() => shortcut?.key.split('+') || [], [shortcut?.key]);
+  
+  // Check if any of the keys in this shortcut are currently pressed
+  const isPressed = useMemo(() => {
+    return keyParts.some(part => pressedKeys.includes(part));
+  }, [keyParts, pressedKeys]);
   
   // Don't show hint if:
   // - Global hints are disabled and alwaysShow is false
@@ -57,47 +78,28 @@ const ShortcutHint: React.FC<ShortcutHintProps> = ({
     return children;
   }
   
-  // Calculate badge position based on placement
-  const badgePosition = {
-    'top-left': { top: 4, left: 4 },
-    'top-right': { top: 4, right: 4 },
-    'bottom-left': { bottom: 4, left: 4 },
-    'bottom-right': { bottom: 4, right: 4 },
-  }[placement];
-  
-  // Split key by '+' and render each part as a Chip
-  const keyParts = shortcut.key.split('+');
-  
   return (
-    <Box sx={{ position: 'relative', display: 'inline-block' }}>
+    <Box sx={keyboardHintWrapperSx}>
       {children}
       <Box
         sx={{
-          position: 'absolute',
+          ...keyboardHintContainerSx,
           ...badgePosition,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.25,
-          bgcolor: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: 1,
-          px: 0.5,
-          py: 0.25,
-          pointerEvents: 'none',
-          zIndex: 1,
-          boxShadow: 1,
         }}
       >
+        <KeyboardIcon
+          sx={{
+            fontSize: '10px',
+            color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.4)',
+            transition: 'color 0.1s ease-in-out',
+          }}
+        />
         {keyParts.map((part, index) => (
           <React.Fragment key={index}>
             {index > 0 && (
               <Box
                 component="span"
-                sx={{
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  fontSize: '10px',
-                  mx: 0.25,
-                }}
+                sx={keyboardHintSeparatorSx}
               >
                 +
               </Box>
@@ -105,24 +107,19 @@ const ShortcutHint: React.FC<ShortcutHintProps> = ({
             <Chip
               label={part}
               size="small"
-              sx={{
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                height: '18px',
-                fontSize: '10px',
-                fontWeight: 700,
-                fontFamily: 'monospace',
-                '& .MuiChip-label': {
-                  px: 0.75,
-                  py: 0,
-                },
-              }}
+              sx={
+                pressedKeys.includes(part)
+                  ? keyboardHintKeyPressedSx
+                  : keyboardHintKeySx
+              }
             />
           </React.Fragment>
         ))}
       </Box>
     </Box>
   );
-};
+});
+
+ShortcutHint.displayName = 'ShortcutHint';
 
 export default ShortcutHint;

@@ -27,11 +27,13 @@ export interface StartModuleProps {
   storage: StorageAPI & SessionStorageApi
 }
 
+export interface PostBootInitializationProps extends StartModuleProps {}
+
 export interface KernelCalls {
   startModule: (props: StartModuleProps) => void,
   restartModule: (storeManager: StartModuleProps) => void,
   shutdownModule: (storeManager: StoreManager) => void
-  postBootInitialization?: (mod: IModule) => void
+  postBootInitialization?: (mod: PostBootInitializationProps) => void
 }
 
 interface ManagersMap {
@@ -81,7 +83,7 @@ export interface Shortcut {
   id: string;
   key: string;
   contextId: string;
-  action: AnyAction | null;
+  action: CallableFunction | null;
   description?: string;
   enabled?: boolean;
 }

@@ -2,7 +2,7 @@
 
 import { IModule } from "@kernel/modules/base";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
-import { startModule } from './kernelCalls';
+import { startModule, postBootInitialization } from './kernelCalls';
 
 
 export interface IComposerModule extends IModule {
@@ -30,7 +30,8 @@ const module: IComposerModule = {
   kernelCalls: {
     startModule,
     restartModule(){},
-    shutdownModule(){}
+    shutdownModule(){},
+    postBootInitialization,
   }
 }
 

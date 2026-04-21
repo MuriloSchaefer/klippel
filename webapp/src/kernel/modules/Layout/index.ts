@@ -1,6 +1,6 @@
 import { IModule } from "../base";
 import {MODULE_NAME, MODULE_VERSION} from "./constants"
-import { startModule } from "./kernelCalls";
+import { startModule, postBootInitialization } from "./kernelCalls";
 
 import useLayoutManager from "./hooks/useLayoutManager";
 import useRibbonMenuManager from "./hooks/useRibbonMenuManager";
@@ -102,7 +102,8 @@ const LayoutModule: ILayoutModule = {
   kernelCalls: {
     startModule,
     restartModule(){},
-    shutdownModule(){}
+    shutdownModule(){},
+    postBootInitialization
   },
 }
 

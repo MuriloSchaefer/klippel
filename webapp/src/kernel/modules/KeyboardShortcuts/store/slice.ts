@@ -4,7 +4,7 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 import { MODULE_NAME } from '../constants';
-import { initialState } from './state';
+import { initialState, KeyboardShortcutsState } from './state';
 import {
   registerShortcut,
   unregisterShortcut,
@@ -19,9 +19,50 @@ import {
   keyPressed,
 } from './actions';
 
+const storage = globalThis.electron.storage;
+storage.ensureDir('.session/KeyboardShortcuts');
+
+/**
+ * Persist the keyboard hints visibility state to session
+ */
+export function persistState(state: KeyboardShortcutsState) {
+  storage.writeBlob(
+    '.session/KeyboardShortcuts/state.json',
+    new Blob([JSON.stringify({ showHints: state.showHints })]),
+    { encoding: 'utf-8' }
+  );
+  return state;
+}
+
+/**
+ * Restore keyboard shortcuts settings from session
+ */
+const restoreSession = async () => {
+  try {
+    const sessionPath = '.session/KeyboardShortcuts/state.json';
+    const exists = await storage.exists(sessionPath);
+    
+    if (exists) {
+      const fileContent = await storage.readFile<string>(sessionPath, {
+        encoding: 'utf-8',
+      });
+      const { showHints } = JSON.parse(fileContent);
+      
+      if (typeof showHints === 'boolean') {
+        console.log('[KeyboardShortcuts] Session restored, showHints =', showHints);
+        return { ...initialState, showHints };
+      }
+    }
+  } catch (error) {
+    console.error('[KeyboardShortcuts] Failed to restore session:', error);
+  }
+  
+  return initialState;
+};
+
 const keyboardShortcutsSlice = createSlice({
   name: MODULE_NAME,
-  initialState,
+  initialState: await restoreSession(),
   reducers: {},
   extraReducers: (builder) => {
     // Register a new shortcut

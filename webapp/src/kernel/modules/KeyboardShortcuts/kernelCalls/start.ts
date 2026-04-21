@@ -1,1 +1,0 @@
-export { startModule } from './index';

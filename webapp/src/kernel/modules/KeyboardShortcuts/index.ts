@@ -1,11 +1,20 @@
 import { IModule } from '@kernel/modules/base';
 import { MODULE_NAME, MODULE_VERSION } from './constants';
-import { startModule } from './kernelCalls';
+import { startModule, postBootInitialization } from './kernelCalls';
 import KeyboardListener from './components/KeyboardListener';
 import ShortcutProvider from './components/ShortcutProvider';
 import KeyboardShortcutsTrayIcon from './components/KeyboardShortcutsTrayIcon';
 import ShortcutHint from './components/ShortcutHint';
 import useKeyboardShortcutsManager from './managers/keyboardManager';
+import {
+  keyboardHintContainerSx,
+  keyboardHintKeySx,
+  keyboardHintKeyPressedSx,
+  keyboardHintSeparatorSx,
+  keyboardHintWrapperSx,
+  getBadgePosition,
+  KEYBOARD_HINT_WRAPPER_CLASS,
+} from './utils/keyboardHintStyles';
 
 export interface IKeyboardShortcutsModule extends IModule {
   name: typeof MODULE_NAME;
@@ -18,6 +27,15 @@ export interface IKeyboardShortcutsModule extends IModule {
   };
   managers: {
     useKeyboardShortcutsManager: typeof useKeyboardShortcutsManager;
+  };
+  styles: {
+    keyboardHintContainerSx: typeof keyboardHintContainerSx;
+    keyboardHintKeySx: typeof keyboardHintKeySx;
+    keyboardHintKeyPressedSx: typeof keyboardHintKeyPressedSx;
+    keyboardHintSeparatorSx: typeof keyboardHintSeparatorSx;
+    keyboardHintWrapperSx: typeof keyboardHintWrapperSx;
+    getBadgePosition: typeof getBadgePosition;
+    KEYBOARD_HINT_WRAPPER_CLASS: typeof KEYBOARD_HINT_WRAPPER_CLASS;
   };
 }
 
@@ -34,12 +52,14 @@ export type KeyboardShortcuts = IKeyboardShortcutsModule;
  * - Redux state management for shortcuts
  * - Visual hints for keyboard shortcuts (ShortcutHint component)
  * - SystemTray icon for toggling hint visibility
+ * - Reusable style classes for keyboard hint badges
  * 
  * Usage:
  * 1. Mount KeyboardListener in App.tsx (already done)
  * 2. Use ShortcutProvider to create context scopes
  * 3. Wrap UI elements with ShortcutHint to show keyboard shortcuts
  * 4. Toggle hints visibility via SystemTray icon
+ * 5. Use styles.keyboardHintWrapperSx to add hint styling to any component
  */
 const module: IKeyboardShortcutsModule = {
   name: MODULE_NAME,
@@ -60,9 +80,19 @@ const module: IKeyboardShortcutsModule = {
     shutdownModule() {
       console.log('[KeyboardShortcuts] Shutdown not implemented');
     },
+    postBootInitialization
   },
   managers: {
     useKeyboardShortcutsManager,
+  },
+  styles: {
+    keyboardHintContainerSx,
+    keyboardHintKeySx,
+    keyboardHintKeyPressedSx,
+    keyboardHintSeparatorSx,
+    keyboardHintWrapperSx,
+    getBadgePosition,
+    KEYBOARD_HINT_WRAPPER_CLASS,
   }
 };
 

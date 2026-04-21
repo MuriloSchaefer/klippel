@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import useModule from '@kernel/hooks/useModule';
 import { Store } from '@kernel/modules/Store';
 import { formatKeyEvent, shouldIgnoreKeyEvent } from '../utils';
-import { keyPressed, addPressedKey, removePressedKey, clearPressedKeys } from '../store/actions';
+import { keyPressed, clearPressedKeys, toggleShowHints } from '../store/actions';
+import { selectPressedKeys } from '../store';
 
 /**
  * KeyboardListener is a global component that captures all keyboard events
@@ -26,32 +27,69 @@ export interface KeyPressedAction {
   };
 }
 
+const preventPropagation = (event: KeyboardEvent, pressedKeys: string[]) =>{
+    // Prevent default for any Alt+Number and Alt+Letter combinations
+    // to avoid triggering OS/browser shortcuts
+    if (event.altKey && !event.ctrlKey && !event.metaKey) {
+      // Prevent Alt+Number (1-9)
+      if (event.key >= '1' && event.key <= '9') {
+        event.preventDefault();
+      }
+      // Prevent Alt+Letters (common shortcuts like Alt+R)
+      else if (event.key.length === 1 && event.key.match(/[a-z]/i)) {
+        event.preventDefault();
+      }
+    }
+}
+
 const KeyboardListener: React.FC = () => {
   const storeModule = useModule<Store>('Store');
-  const { useAppDispatch } = storeModule.hooks;
+  const { useAppDispatch, useAppSelector } = storeModule.hooks;
   const dispatch = useAppDispatch();
+  const pressedKeys = useAppSelector(selectPressedKeys)
   
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Check if we should ignore this event (e.g., typing in input field)
+  // Track if Alt was pressed alone (no other keys pressed while held)
+
+  const handleKeyDown = useCallback((event: KeyboardEvent)=>{
+    // Check if we should ignore this event (e.g., typing in input field)
       if (shouldIgnoreKeyEvent(event)) {
         return;
       }
-      
+      preventPropagation(event, pressedKeys)
+
       // Normalize the key event to a standard format
       const key = formatKeyEvent(event);
       
-      // Ignore empty keys (e.g., pressing only Shift)
+      // Build keyParts for visual feedback
+      let keyParts: string[] = [];
+      
       if (!key) {
-        return;
+        // For modifier-only presses, track which modifiers are held
+        // This allows visual feedback even when no shortcut is triggered
+        if (event.ctrlKey || event.metaKey) keyParts.push('Ctrl');
+        if (event.altKey) keyParts.push('Alt');
+        if (event.shiftKey) keyParts.push('Shift');
+        
+        // If no modifiers at all, ignore this event
+        if (keyParts.length === 0) {
+          return;
+        }
+      } else {
+        // Split key into parts for visual feedback (e.g., "Alt+1" -> ["Alt", "1"])
+        keyParts = key.split('+');
       }
       
-      // Split key into parts for visual feedback (e.g., "Alt+1" -> ["Alt", "1"])
-      const keyParts = key.split('+');
-      
+      const currState = new Set(pressedKeys)
+      const newState = new Set(keyParts)
+      if (
+        currState.size === newState.size &&
+        [...currState].every((x) => newState.has(x))
+      ){
+        return
+      }
       // Dispatch single action with all key information
       // This updates pressedKeys and triggers middleware in one dispatch
-      dispatch(keyPressed(key, keyParts, {
+      dispatch(keyPressed(key || keyParts.join('+'), keyParts, {
         ctrlKey: event.ctrlKey,
         altKey: event.altKey,
         shiftKey: event.shiftKey,
@@ -60,29 +98,41 @@ const KeyboardListener: React.FC = () => {
         code: event.code,
       }));
       
-      // Prevent default for any Alt+Number and Alt+Letter combinations
-      // to avoid triggering OS/browser shortcuts
-      if (event.altKey && !event.ctrlKey && !event.metaKey) {
-        // Prevent Alt+Number (1-9)
-        if (event.key >= '1' && event.key <= '9') {
-          event.preventDefault();
-        }
-        // Prevent Alt+Letters (common shortcuts like Alt+R)
-        else if (event.key.length === 1 && event.key.match(/[a-z]/i)) {
-          event.preventDefault();
-        }
-      }
-    };
-    
-    const handleKeyUp = (event: KeyboardEvent) => {
-      // Clear pressed keys when any key is released
-      // This prevents stuck keys and resets the visual feedback
-      // Use requestAnimationFrame to batch this with any pending renders
-      requestAnimationFrame(() => {
-        dispatch(clearPressedKeys());
-      });
-    };
-    
+
+  }, [pressedKeys])
+
+  const handleKeyUp = useCallback((event: KeyboardEvent)=>{
+    // Check if right Alt was released and it was pressed alone - toggle hints
+    if (event.key === 'AltGraph' && pressedKeys.length === 1 && pressedKeys[0] === 'AltGraph') {
+      dispatch(toggleShowHints());
+    }
+    const remainingKeys = pressedKeys.filter(pk => pk !== event.key)
+
+    const currState = new Set(pressedKeys)
+    const newState = new Set(remainingKeys)
+    if (
+      currState.size === newState.size &&
+      [...currState].every((x) => newState.has(x))
+    ){
+      return
+    }
+    // Clear pressed keys when any key is released
+    // This prevents stuck keys and resets the visual feedback
+    // Use requestAnimationFrame to batch this with any pending renders
+    requestAnimationFrame(() => {
+      dispatch(keyPressed(remainingKeys.join('+'), remainingKeys, {
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+        shiftKey: event.shiftKey,
+        metaKey: event.metaKey,
+        key: event.key,
+        code: event.code,
+      }));
+    });
+
+  }, [pressedKeys])
+  
+  useEffect(() => {    
     // Listen to keydown and keyup events globally
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -92,7 +142,7 @@ const KeyboardListener: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [dispatch]);
+  }, [dispatch, pressedKeys]);
   
   // This component doesn't render anything
   return null;

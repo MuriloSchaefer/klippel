@@ -11,6 +11,9 @@
 import { createListenerMiddleware } from '@reduxjs/toolkit';
 import { keyPressed, clearPressedKeys } from './actions';
 import { selectShortcutByKey, selectEnabled } from './selectors';
+import { persistState } from './slice';
+import { KeyboardShortcutsState } from './state';
+import { saveSession, sessionSaved } from '@kernel/modules/Store/actions';
 
 const keyboardShortcutsMiddleware = createListenerMiddleware();
 
@@ -28,6 +31,11 @@ keyboardShortcutsMiddleware.startListening({
     }
 
     const { key } = action.payload;
+
+    // Skip shortcut matching for modifier-only presses (just visual feedback)
+    if (key === 'Ctrl' || key === 'Alt' || key === 'Shift' || key === 'Ctrl+Alt' || key === 'Ctrl+Shift' || key === 'Alt+Shift' || key === 'Ctrl+Alt+Shift') {
+      return;
+    }
 
     // Try to find a matching shortcut
     const matchedShortcut = selectShortcutByKey(key)(state);
@@ -54,6 +62,19 @@ keyboardShortcutsMiddleware.startListening({
       // Uncomment for verbose debugging
       // console.log(`[KeyboardShortcuts] No shortcut matched for key: ${key}`);
     }
+  }
+});
+
+// Listen for session save requests and persist state
+keyboardShortcutsMiddleware.startListening({
+  actionCreator: saveSession,
+  effect: async (_, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    
+    const { KeyboardShortcuts: state } = getState() as { KeyboardShortcuts: KeyboardShortcutsState };
+    persistState(state);
+    
+    dispatch(sessionSaved());
   }
 });
 

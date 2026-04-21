@@ -6,7 +6,7 @@ import { useContext } from "react"
 import { SectionsContext } from "../components/RibbonMenu/SectionsProvider"
 import { addRibbonTab, selectTab } from "../store/ribbonMenu/actions"
 import { selectTabs } from "../store/ribbonMenu/selectors"
-import { RibbonTabState } from "../store/ribbonMenu/state"
+import { RibbonTabState, Tabs } from "../store/ribbonMenu/state"
 
 interface AddTabProps {
     label: string
@@ -15,6 +15,7 @@ interface AddTabProps {
     shortcuts?: Shortcut[]
 }
 export interface RibbonMenuManager extends Manager {
+    tabs: Tabs | undefined,
     functions: {
         tabExists: (tabName: string) => boolean
         addNewTab: (tab: AddTabProps) => void
@@ -39,6 +40,7 @@ export function useRibbonMenuManager():RibbonMenuManager{
     const componentRegistryManager = componentRegistry()
     
     return {
+        tabs,
         functions: {
             tabExists(tabName){
                return tabs != undefined && tabName in tabs 
