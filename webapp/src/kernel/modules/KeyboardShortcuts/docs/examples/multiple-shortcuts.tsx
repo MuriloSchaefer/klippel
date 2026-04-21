@@ -105,25 +105,25 @@ export const AdvancedEditor: React.FC = () => {
   // Step 4: Render UI with hints
   return (
     <Box sx={{ display: 'flex', gap: 1 }}>
-      <ShortcutHint shortcutId="editor.save" placement="bottom">
+      <ShortcutHint shortcutId="editor.save" placement="bottom-center">
         <Button variant="contained" onClick={handleSave}>
           Save
         </Button>
       </ShortcutHint>
       
-      <ShortcutHint shortcutId="editor.undo" placement="bottom">
+      <ShortcutHint shortcutId="editor.undo" placement="bottom-center">
         <Button onClick={handleUndo} disabled={!state.canUndo}>
           Undo
         </Button>
       </ShortcutHint>
       
-      <ShortcutHint shortcutId="editor.redo" placement="bottom">
+      <ShortcutHint shortcutId="editor.redo" placement="bottom-center">
         <Button onClick={handleRedo} disabled={!state.canRedo}>
           Redo
         </Button>
       </ShortcutHint>
       
-      <ShortcutHint shortcutId="editor.find" placement="bottom">
+      <ShortcutHint shortcutId="editor.find" placement="bottom-center">
         <Button onClick={handleFind}>
           Find
         </Button>

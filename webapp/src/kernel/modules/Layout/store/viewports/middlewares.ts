@@ -49,9 +49,9 @@ middlewares.startListening({
 
 middlewares.startListening({
   actionCreator: setExtrasViewport,
-  effect: async (action, listenerApi) => {
+  effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
-    dispatch(ExtrasViewportSet); // dispatch event
+    dispatch(ExtrasViewportSet(payload)); // dispatch event
   },
 });
 

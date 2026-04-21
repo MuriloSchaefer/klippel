@@ -5,11 +5,18 @@ import {MODULE_NAME, MODULE_VERSION} from "./constants"
 import { startModule, postBootInitialization } from './kernelCalls';
 
 
+export type CompositionState = { name: string; [key: string]: unknown };
+
 export interface IComposerModule extends IModule {
   name: typeof MODULE_NAME,
   version: typeof MODULE_VERSION,
-  components: {
-  },
+  components: {},
+  hooks: {
+    useComposition: <T>(
+      options: { viewportName?: string | null },
+      selector: (composition: CompositionState | null | undefined) => T
+    ) => { state: T; actions: Record<string, (...args: unknown[]) => void> };
+  };
 }
 
 /**
@@ -26,7 +33,9 @@ const module: IComposerModule = {
   depends_on: ['Layout', 'Graph', 'SVG', 'Materials', 'Converter'],
   components: {
   },
-  hooks:{},
+  hooks:{
+    useComposition: <T>(_options: unknown, selector: (c: CompositionState | null | undefined) => T) => ({ state: selector(null), actions: {} }),
+  },
   kernelCalls: {
     startModule,
     restartModule(){},

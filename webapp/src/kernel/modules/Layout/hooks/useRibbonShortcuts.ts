@@ -37,7 +37,7 @@ export const useRibbonShortcuts = () => {
           contextId: 'Global',
           description: `Switch to ${tab.label} tab`,
           enabled: true,
-          action: selectTab({ name: tabName }),
+          action: () => dispatch(selectTab({ name: tabName })),
         }));
       }
     });

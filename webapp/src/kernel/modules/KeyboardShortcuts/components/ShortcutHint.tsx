@@ -11,6 +11,7 @@ import React, { ReactElement, useMemo } from 'react';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 import useModule from '@kernel/hooks/useModule';
 import { Store } from '@kernel/modules/Store';
@@ -83,10 +84,7 @@ const ShortcutHint: React.FC<ShortcutHintProps> = React.memo(({
     <Box sx={keyboardHintWrapperSx}>
       {children}
       <Box
-        sx={{
-          ...keyboardHintContainerSx,
-          ...badgePosition,
-        }}
+        sx={[keyboardHintContainerSx, badgePosition] as SxProps<Theme>}
       >
         <KeyboardIcon
           sx={{

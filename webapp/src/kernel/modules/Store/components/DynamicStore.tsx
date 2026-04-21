@@ -5,9 +5,10 @@ import {
 import React, { Reducer, useCallback, useMemo, useState } from "react";
 import { Provider as ReduxProvider } from "react-redux";
 import {
-  AnyAction,
   combineReducers,
   Store,
+  UnknownAction,
+  type Middleware,
 } from "redux";
 import CurrentReducersContext, { ReducersMap } from "../contexts";
 import slice from "../slice";
@@ -28,13 +29,13 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   const store = useMemo(
     () =>configureStore({
-      reducer: combineReducers<{ [name: string]: Reducer<any, AnyAction> }>({
+      reducer: combineReducers<{ [name: string]: Reducer<any, UnknownAction> }>({
         [slice.name]: slice.reducer,
       }),
       middleware: (getDefaultMiddleware) =>
-        [...getDefaultMiddleware({ serializableCheck: false }).concat(
-          dynamicMiddlewares
-        ), middlewares.middleware],
+        getDefaultMiddleware({ serializableCheck: false })
+          .concat(dynamicMiddlewares as Middleware)
+          .concat(middlewares.middleware),
     }),
     []
   );

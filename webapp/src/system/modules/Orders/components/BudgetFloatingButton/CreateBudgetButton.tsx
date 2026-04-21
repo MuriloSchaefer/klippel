@@ -64,7 +64,7 @@ export default function CreateBudgetButton() {
                 theme.palette.background.default
               )}`,
             }}
-            colorChange={(color) =>
+            colorChange={(color: { hex: string }) =>
               setForm((curr) => ({ ...curr, color: color.hex }))
             }
           />

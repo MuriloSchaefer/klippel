@@ -6,7 +6,7 @@ import MaterialTypeSelector from "./MaterialType";
 export const  CRUDMaterialTypeCell = ({ id, field, value, multiple=false }: GridRenderEditCellParams & {multiple?: boolean}) => {
     const apiRef = useGridApiContext();
     const handleValueChange = (
-      event: SelectChangeEvent<MaterialType>
+      event: SelectChangeEvent<string>
     ) => {
       apiRef.current.setEditCellValue({
         id,

@@ -7,11 +7,15 @@
  * 3. Handle shortcut actions
  */
 
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import type { KeyboardShortcuts } from "@kernel/modules/KeyboardShortcuts";
 import { selectShowHints, selectPressedKeys } from "@kernel/modules/KeyboardShortcuts/store/selectors";
+
+// Placeholder selectors — replace with your module's actual selectors
+const selectTabs = (_state: unknown): Record<string, { label: string }> => ({});
+const useSelectTab = () => useCallback((_name: string) => {}, []);
 
 const RibbonMenuExample = () => {
   const storeModule = useModule<Store>("Store");
@@ -19,10 +23,11 @@ const RibbonMenuExample = () => {
 
   const keyboardShortcutsModule = useModule<KeyboardShortcuts>("KeyboardShortcuts");
   const keyboardManager = keyboardShortcutsModule.managers.useKeyboardShortcutsManager();
-  
+
   const tabs = useAppSelector(selectTabs); // Your tab data from Redux
   const showHints = useAppSelector(selectShowHints);
   const pressedKeys = useAppSelector(selectPressedKeys);
+  const selectTab = useSelectTab();
 
   // Step 1: Register shortcuts when component mounts or data changes
   useEffect(() => {

@@ -24,7 +24,6 @@ import { IModule } from "../../base";
 type InitializerProps = {
   afterLoadComponent: React.ReactElement | React.ReactElement[];
   bootLog: (log: string) => void;
-  logName: string;
 };
 const KERNEL_LOGS = "logs/kernel";
 const getDailyLogFileName = () => {
@@ -34,7 +33,7 @@ const getDailyLogFileName = () => {
   }/${dt.getDate()}`;
 };
 
-const PreInit = (props: Omit<InitializerProps, "bootLog">) => {
+const PreInit = (props: Omit<InitializerProps, "bootLog" | "logName">) => {
   const { useLog } = storeModule.hooks;
   const dt = new Date();
   const logName = `${getDailyLogFileName()}/boot.log`;
@@ -42,12 +41,11 @@ const PreInit = (props: Omit<InitializerProps, "bootLog">) => {
   const bootLog = useLog(MODULE_NAME, logName);
 
   bootLog?.(`New boot ---- ${dt.toLocaleString()}`);
-  return <Initializer {...props} bootLog={bootLog} logName={logName} />;
+  return <Initializer {...props} bootLog={bootLog} />;
 };
 
 const Initializer = ({
   bootLog,
-  logName,
   afterLoadComponent,
 }: InitializerProps) => {
   const moduleManager = module.managers.modules();

@@ -57,7 +57,7 @@ export default function ConvertToOrderButton() {
         >
           <ColorPicker
             sx={{ width: "40px", height: "40px" }}
-            colorChange={(color) => setForm((curr) => ({ ...curr, color: color.hex }))}
+            colorChange={(color: { hex: string }) => setForm((curr) => ({ ...curr, color: color.hex }))}
           />
           <TextField
             id="part-name"

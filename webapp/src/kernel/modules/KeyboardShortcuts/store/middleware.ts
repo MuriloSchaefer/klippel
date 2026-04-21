@@ -41,27 +41,12 @@ keyboardShortcutsMiddleware.startListening({
     const matchedShortcut = selectShortcutByKey(key)(state);
 
     if (matchedShortcut) {
-      console.log(
-        `[KeyboardShortcuts] Matched shortcut: ${matchedShortcut.id} (${key})`,
-        matchedShortcut
-      );
 
       // Dispatch the shortcut's action
       if (matchedShortcut.action) {
-        console.log(
-          `[KeyboardShortcuts] Dispatching action for shortcut: ${matchedShortcut.id}`,
-          matchedShortcut.action
-        );
         dispatch(matchedShortcut.action as any);
-      } else {
-        console.warn(
-          `[KeyboardShortcuts] Shortcut ${matchedShortcut.id} has no action to dispatch`
-        );
       }
-    } else {
-      // Uncomment for verbose debugging
-      // console.log(`[KeyboardShortcuts] No shortcut matched for key: ${key}`);
-    }
+    } 
   }
 });
 
