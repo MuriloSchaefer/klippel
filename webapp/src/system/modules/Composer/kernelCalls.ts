@@ -3,6 +3,7 @@ import React from "react";
 import ModelSection from "./components/ModelSection";
 import modelsMiddlewares from "./store/models/middlewares";
 import variationMiddlewares from "./store/variations/middlewares";
+import computationMiddlewares from "./store/computation/middlewares";
 import { saveSession } from "./store/models/actions";
 import { MODULE_NAME } from "./constants";
 import slice from "./store/slice";
@@ -23,6 +24,7 @@ export function startModule({
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer)
   storeManager.functions.registerMiddleware(modelsMiddlewares);
   storeManager.functions.registerMiddleware(variationMiddlewares);
+  storeManager.functions.registerMiddleware(computationMiddlewares);
   // storeManager.functions.registerMiddleware(graphMiddlewares)
 
   componentRegistryManager.functions.registerComponents({

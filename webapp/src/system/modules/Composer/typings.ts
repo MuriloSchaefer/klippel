@@ -34,12 +34,60 @@ export type PartNode = Node & {
     label: string;
 }
 
+export type AttributeAudit = {
+  name: string;
+  rawValue: unknown;
+  rawUnit?: string;
+  normalisedValue?: number;
+  normalisedUnit?: string;
+  wasNormalised: boolean;
+  injectedVariables?: { [varName: string]: number };
+};
+
+export type AttributeNormalisationAudit = {
+  attributeName: string;
+  originalValue: number;
+  originalUnit: string;
+  normalisedValue: number;
+  normalisedUnit: string;
+};
+
+export type ConversionStepAudit = {
+  fromUnit: string;
+  toUnit: string;
+  expression: string;
+  attributeValues: { [varName: string]: number };
+  quantityValues: { [varName: string]: number };
+  result: number;
+};
+
+export type ProcessStepAudit = {
+  processLabel: string;
+  skipped: boolean;
+  skipReason?: string;
+  originalAmount: CompoundValue;
+  attributeNormalisations: AttributeNormalisationAudit[];
+  conversionSteps: ConversionStepAudit[];
+  convertedAmount: number;
+  convertedUnit: string;
+  runningTotal: number;
+  error?: string;
+};
+
+export type CostAudit = {
+  computedAt: string;
+  materialAttributes: AttributeAudit[];
+  steps: ProcessStepAudit[];
+};
+
 export type MaterialNode = Node & {
     type: "MATERIAL";
     label: string;
     materialId: number;
     attributes?: {}
-    typeRestrictions: string[]
+    typeRestrictions: string[];
+    computedCost?: CompoundValue;
+    costAudit?: CostAudit;
 }
 
 export type ElectiveNode = Node & {

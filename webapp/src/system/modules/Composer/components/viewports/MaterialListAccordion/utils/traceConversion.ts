@@ -9,21 +9,20 @@ import type {
   ConvertionEdges,
   ConvertsToEdge,
 } from "@system/modules/Converter/typings";
-import type { Converter } from "@system/modules/Converter/hooks/useConverter";
+import { convert } from "@system/modules/Converter/utils/convert";
 import type { AttributeConversion, ConversionStep } from "../types";
 
 /**
  * Traces the detailed conversion steps from one compound unit to another,
  * automatically converting material attributes to match the target unit scale.
- * 
+ *
  * This function replicates the converter's logic while capturing each intermediate
  * step and tracking which material attributes were auto-converted.
- * 
+ *
  * @param from - Source compound value with quotient and dividend
  * @param to - Target compound unit (quotient and dividend unit IDs)
  * @param initialParams - Material attributes that may contain compound or simple values
  * @param conversionGraph - Graph containing unit nodes and conversion edges
- * @param converter - Converter instance for unit conversions
  * @returns Object containing conversion steps, final value, and attribute conversions, or error information if conversion fails
  */
 export function traceConversion({
@@ -31,15 +30,13 @@ export function traceConversion({
   to,
   initialParams,
   conversionGraph,
-  converter,
 }: {
   from: CompoundValue;
   to: { quotient: string; dividend: string };
   initialParams: { [name: string]: number | UnitValue | CompoundValue };
   conversionGraph: GraphState<ConversionNodes, ConvertionEdges>;
-  converter: Converter;
-}): { 
-  steps: ConversionStep[]; 
+}): {
+  steps: ConversionStep[];
   finalValue: number;
   attributeConversions: AttributeConversion[];
   error?: never;
@@ -50,8 +47,8 @@ export function traceConversion({
   finalValue?: never;
   attributeConversions?: never;
 } {
-  if (!conversionGraph || !converter) {
-    return { error: "Grafo de conversão ou conversor não disponível" };
+  if (!conversionGraph) {
+    return { error: "Grafo de conversão não disponível" };
   }
 
   // Helper function to get base unit for a given unit
@@ -61,29 +58,29 @@ export function traceConversion({
     const unitScale = Object.values(conversionGraph.edges).find((e: any) =>
       e.type === 'BELONGS_TO' && e.sourceId === unitId
     );
-    
+
     // If unit doesn't belong to a scale, return it as-is (no normalization needed)
     if (!unitScale) {
       return { baseUnitId: unitId, conversionFactor: 1 };
     }
-    
+
     const scaleId = (unitScale as any).targetId;
     const scaleNode = conversionGraph.nodes[scaleId];
-    
+
     if (!scaleNode || scaleNode.type !== 'SCALE') {
       return { error: `Nó de escala não encontrado: ${scaleId}` };
     }
-    
+
     const baseUnitId = (scaleNode as any).base;
-    
+
     if (!baseUnitId) {
       return { error: `Nenhuma unidade base definida para escala ${scaleId}` };
     }
-    
+
     if (unitId === baseUnitId) {
       return { baseUnitId: unitId, conversionFactor: 1 };
     }
-    
+
     // Find conversion edge to base unit
     const conversionEdge = Object.values(conversionGraph.edges).find(
       (e: any) =>
@@ -91,11 +88,11 @@ export function traceConversion({
         e.sourceId === unitId &&
         e.targetId === baseUnitId
     ) as ConvertsToEdge | undefined;
-    
+
     if (!conversionEdge) {
       return { error: `Nenhuma aresta CONVERTS_TO encontrada de ${unitId} para ${baseUnitId}` };
     }
-    
+
     // Calculate conversion factor
     let factor = 1;
     if (conversionEdge.conversionType === 'factor') {
@@ -109,7 +106,7 @@ export function traceConversion({
         return { error: `Erro ao avaliar expressão de conversão: ${err}` };
       }
     }
-    
+
     return { baseUnitId, conversionFactor: factor };
   };
 
@@ -117,22 +114,22 @@ export function traceConversion({
   let normalizedFrom = { ...from };
   const fromQuotientBase = getBaseUnit(from.quotient.unit);
   const fromDividendBase = getBaseUnit(from.dividend.unit);
-  
+
   // Check for errors in base unit lookup
   if ('error' in fromQuotientBase) {
-    return { 
-      error: `Erro ao normalizar unidade do quociente (${from.quotient.unit}): ${fromQuotientBase.error}` 
+    return {
+      error: `Erro ao normalizar unidade do quociente (${from.quotient.unit}): ${fromQuotientBase.error}`
     };
   }
   if ('error' in fromDividendBase) {
-    return { 
-      error: `Erro ao normalizar unidade do dividendo (${from.dividend.unit}): ${fromDividendBase.error}` 
+    return {
+      error: `Erro ao normalizar unidade do dividendo (${from.dividend.unit}): ${fromDividendBase.error}`
     };
   }
-  
+
   // Track conversions applied to attributes
   const attributeConversions: AttributeConversion[] = [];
-  
+
   if (fromQuotientBase.baseUnitId !== from.quotient.unit) {
     normalizedFrom.quotient = {
       amount: from.quotient.amount * fromQuotientBase.conversionFactor,
@@ -147,7 +144,7 @@ export function traceConversion({
       convertedUnit: fromQuotientBase.baseUnitId,
     });
   }
-  
+
   if (fromDividendBase.baseUnitId !== from.dividend.unit) {
     normalizedFrom.dividend = {
       amount: from.dividend.amount * fromDividendBase.conversionFactor,
@@ -179,14 +176,14 @@ export function traceConversion({
   ) as any;
 
   if (!fromNode) {
-    return { 
+    return {
       error: `Unidade composta não encontrada no grafo: ${normalizedFrom.quotient.unit}/${normalizedFrom.dividend.unit}`,
       normalizedFrom
     };
   }
-  
+
   if (!toNode) {
-    return { 
+    return {
       error: `Unidade composta de destino não encontrada no grafo: ${to.quotient}/${to.dividend}`,
       normalizedFrom
     };
@@ -202,21 +199,22 @@ export function traceConversion({
         // Single unit value - convert to base unit of its scale
         let convertedValue = value.amount;
         let targetUnit = value.unit;
-        
+
         // Find which scale this unit belongs to
-        const valueUnitScale = Object.values(conversionGraph.edges).find((e: any) => 
+        const valueUnitScale = Object.values(conversionGraph.edges).find((e: any) =>
           e.type === 'BELONGS_TO' && e.sourceId === value.unit
         );
-        
+
         if (valueUnitScale) {
           const scaleId = (valueUnitScale as any).targetId;
           const scaleNode = conversionGraph.nodes[scaleId];
           const baseUnit = scaleNode && scaleNode.type === 'SCALE' ? (scaleNode as any).base : undefined;
-          
+
           // Convert to the base unit of this scale
           if (baseUnit && value.unit !== baseUnit) {
             try {
-              const converted = converter.convert(
+              const converted = convert(
+                conversionGraph,
                 { unit: value.unit, amount: value.amount },
                 baseUnit,
                 {}
@@ -240,23 +238,23 @@ export function traceConversion({
             }
           }
         }
-        
+
         return { ...acc, [name]: convertedValue };
       }
       if (typeof value === "object" && "quotient" in value) {
         // Compound value - convert quotient to base unit of its scale
         let quotientValue = value.quotient.amount;
-        
+
         // Find which scale the quotient unit belongs to
-        const quotientUnitScale = Object.values(conversionGraph.edges).find((e: any) => 
+        const quotientUnitScale = Object.values(conversionGraph.edges).find((e: any) =>
           e.type === 'BELONGS_TO' && e.sourceId === value.quotient.unit
         );
-        
+
         if (quotientUnitScale) {
           const scaleId = (quotientUnitScale as any).targetId;
           const scaleNode = conversionGraph.nodes[scaleId];
           const baseUnit = scaleNode && scaleNode.type === 'SCALE' ? (scaleNode as any).base : undefined;
-          
+
           // Convert quotient to the base unit of its scale
           if (baseUnit && value.quotient.unit !== baseUnit) {
             // Find direct conversion edge
@@ -266,10 +264,10 @@ export function traceConversion({
                 e.sourceId === value.quotient.unit &&
                 e.targetId === baseUnit
             ) as ConvertsToEdge | undefined;
-            
+
             if (conversionEdge) {
               let convertedValue = value.quotient.amount;
-              
+
               if (conversionEdge.conversionType === 'factor') {
                 convertedValue *= conversionEdge.factor;
               } else if (conversionEdge.conversionType === 'expression') {
@@ -277,9 +275,9 @@ export function traceConversion({
                 const fn = compile(conversionEdge.expression);
                 convertedValue = fn({ quantidade: convertedValue }) as number;
               }
-              
+
               quotientValue = convertedValue;
-              
+
               // Record the conversion
               if (Math.abs(quotientValue - value.quotient.amount) > 0.0001) {
                 attributeConversions.push({
@@ -293,7 +291,7 @@ export function traceConversion({
             }
           }
         }
-        
+
         return {
           ...acc,
           [`${name}Quociente`]: quotientValue,
@@ -359,11 +357,11 @@ export function traceConversion({
       })
       .flat()
       .filter((v, i, arr) => arr.indexOf(v) === i);
-    
+
     const errorMsg = missingVars.length > 0
       ? `Não foi possível encontrar caminho de conversão de ${normalizedFrom.quotient.unit}/${normalizedFrom.dividend.unit} para ${to.quotient}/${to.dividend}. Variáveis ausentes: ${missingVars.join(', ')}`
       : `Não foi possível encontrar caminho de conversão de ${normalizedFrom.quotient.unit}/${normalizedFrom.dividend.unit} para ${to.quotient}/${to.dividend}. Verifique se há uma rota de conversão disponível no grafo.`;
-    
+
     return { error: errorMsg, normalizedFrom };
   }
 
@@ -374,7 +372,7 @@ export function traceConversion({
   for (let i = 0; i < path.length - 1; i++) {
     const origin = path[i];
     const destination = path[i + 1];
-    
+
     const transformation = Object.values(conversionGraph.edges).find(
       (e: any) =>
         e.sourceId === origin &&
@@ -414,7 +412,7 @@ export function traceConversion({
     context["quantidadeDividendo"] = normalizedFrom.dividend.amount;
 
     const result = fn(context) as number;
-    
+
     steps.push({
       from: origin,
       to: destination,
