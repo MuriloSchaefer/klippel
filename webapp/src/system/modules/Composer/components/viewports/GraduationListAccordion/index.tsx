@@ -23,6 +23,7 @@ import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import useVariation from "../../../hooks/useVariation";
 import { debounce } from "@kernel/utils";
+import { VariationGraphState } from "@system/modules/Composer/typings";
 
 // Graduation list accordion
 // - add multiple graduations by comma in the add form
@@ -37,7 +38,7 @@ export default function GraduationListAccordion({ variationId, garmentId }: Read
 
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g: any) => g);
+  const graph = useGraph<VariationGraphState>(variationId);
 
   const graduationEdges = graph?.state
     ? Object.values(graph.state.edges).filter((e: any) => e.sourceId === garmentId && e.type === "HAS_GRADUATION")
@@ -147,7 +148,6 @@ function GraduationItem({ node, variationId, garmentId, index, moveUp, moveDown,
             type="number"
             value={form.amount}
             onChange={(e) => handleAmountChange(Number(e.target.value))}
-            inputProps={{ min: 0, step: 1 }}
             sx={{ width: 120 }}
           />
         </Box>
@@ -160,7 +160,6 @@ function GraduationItem({ node, variationId, garmentId, index, moveUp, moveDown,
             type="number"
             value={form.amount}
             onChange={(e) => handleAmountChange(Number(e.target.value))}
-            inputProps={{ min: 0, step: 1 }}
             sx={{ width: 120 }}
           />
         </Box>

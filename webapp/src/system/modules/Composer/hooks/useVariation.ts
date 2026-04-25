@@ -41,7 +41,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
     (state: { Composer: ComposerModuleState }) =>
       state.Composer.variations[variationId],
   );
-  const graph = useGraph(variationId, (g) => g);
+  const graph = useGraph(variationId);
   const svg = svgModule.hooks.useSVG(state?.svg!, variationId);
 
   return {
@@ -93,7 +93,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
         label: string,
         typeRestrictions: string[],
       ) => {
-        const material = materials[materialId];
+        const material = materials![materialId];
         if (!material) {
           console.error("Material not found:", materialId);
           return;
@@ -227,7 +227,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           console.error("Material node not found:", materialNodeId);
           return;
         }
-        const material = materials[materialNode.materialId];
+        const material = materials![materialNode.materialId];
         const schema =
           materialTypes[material.type]?.schemas[material.schemaVersion];
         const colorAttr = Object.entries(schema.attributes).find(
@@ -296,7 +296,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           console.error("Material node not found:", curr.materialNodeId);
           return;
         }
-        const currMaterial = materials[currMaterialNode.materialId];
+        const currMaterial = materials![currMaterialNode.materialId];
         const schema =
           materialTypes[currMaterial.type]?.schemas[currMaterial.schemaVersion];
         const colorAttr = Object.entries(schema.attributes).find(
@@ -334,7 +334,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
         } as MaterialNode;
         graph.actions.updateNode(newNode);
 
-        const material = materials[materialId];
+        const material = materials![materialId];
         const schema =
           materialTypes[material.type]?.schemas[material.schemaVersion];
         const colorAttr = Object.entries(schema.attributes).find(

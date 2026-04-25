@@ -1,19 +1,19 @@
 import { createSelector } from "reselect";
 import { LayoutState } from "../state";
 
+const selectLayout = (state: { Layout: LayoutState }) => state.Layout;
+
 export const selectPanels = createSelector(
-  (state: { Layout: LayoutState }) => state.Layout,
-  (state: LayoutState | undefined) => state && state.panels
+  selectLayout,
+  (layoutState: LayoutState | undefined) => layoutState?.panels
 );
 
 export const selectSettingsPanel = createSelector(
-    (state: { Layout: LayoutState }) => state.Layout,
-    (state: LayoutState | undefined) =>
-      state && state.panels.settings
-  )
+  selectPanels,
+  (panels) => panels?.settings
+);
 
-  export const selectDetailsPanel = createSelector(
-    (state: { Layout: LayoutState }) => state.Layout,
-    (state: LayoutState | undefined) =>
-      state && state.panels.details
-  )
+export const selectDetailsPanel = createSelector(
+  selectPanels,
+  (panels) => panels?.details
+);

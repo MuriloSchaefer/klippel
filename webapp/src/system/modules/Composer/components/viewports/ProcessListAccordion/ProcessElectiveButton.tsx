@@ -31,7 +31,7 @@ export default function ProcessElectiveButton({
   const { useGraph } = graphModule.hooks;
 
   const variation = useVariation({ variationId });
-  const graph = useGraph(variationId, (g) => g);
+  const graph = useGraph(variationId);
 
   const [selectedElectiveId, setSelectedElectiveId] = useState<string | undefined>(
     processNode.electiveNodeId

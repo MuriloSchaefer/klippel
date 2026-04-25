@@ -32,7 +32,7 @@ export default function VisualizationListAccordion({
 
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g) => g);
+  const graph = useGraph(variationId);
 
   const visualizationNodes = graph?.state ? Object.values(graph.state.nodes).filter(
     n => n.type === "VISUALIZATION"
@@ -72,16 +72,16 @@ function VisualizationItem({ node, variationId }: any) {
   const theme = useTheme();
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g: any) => g);
+  const graph = useGraph(variationId);
 
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const useMaterials = materialsModule.hooks.useMaterials;
   const variation = useVariation({ variationId });
   // find material node referenced
-  const materialNode = graph?.state?.nodes?.[node.materialNodeId];
+  const materialNode = graph?.state?.nodes?.[node.materialNodeId] as MaterialNode;
   const materialId = materialNode?.materialId;
   const materials = useMaterials(materialId ? [materialId] : []);
-  const material = materialId ? materials[materialId] : undefined;
+  const material = materialId ? materials![materialId] : undefined;
   // derive material label and color using same logic as MaterialListAccordion
   const materialTypes = materialsModule.hooks.useMaterialTypes();
   const materialType = material ? materialTypes[material.type] : undefined;
@@ -180,7 +180,7 @@ function VisualizationEditButton({ node, variationId }: any) {
 
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g: any) => g);
+  const graph = useGraph(variationId);
 
   const svgModule = useModule<ISVGModule>("SVG");
   const svgToolkit = svgModule.hooks.useSVGEditorToolkit();
@@ -335,22 +335,16 @@ function AddVisualizationButton({ variationId, garmentId }: any) {
 
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g) => g);
+  const graph = useGraph(variationId);
 
   const svgModule = useModule<ISVGModule>("SVG");
   const svgToolkit = svgModule.hooks.useSVGEditorToolkit();
 
-  const materialsModule = useModule<IMaterialsModule>("Materials");
   const materialNodes = graph?.state
     ? Object.values(graph.state.nodes).filter(
         (n): n is MaterialNode => n.type === "MATERIAL"
       )
     : [];
-  const materialIds = materialNodes
-    .map((n) => Number(n.materialId))
-    .filter((id) => !Number.isNaN(id));
-  const useMaterials = materialsModule.hooks.useMaterials;
-  const materials = useMaterials(materialIds);
 
   const [name, setName] = useState<string>(
     `visual-${Math.random().toString(36).substring(2, 8)}`

@@ -20,6 +20,7 @@ import useVariation from "@system/modules/Composer/hooks/useVariation";
 import React, { useMemo } from "react";
 import AddPartButton from "./AddPartButton";
 import RemovePartButton from "./RemovePartButton";
+import { VariationGraphState } from "@system/modules/Composer/typings";
 type Item = {
   id: string;
   label: string;
@@ -130,7 +131,7 @@ export default function CompositionTree({
 }>) {
   const graphModule = useModule<IGraphModule>("Graph");
   const { useGraph } = graphModule.hooks;
-  const graph = useGraph(variationId, (g) => g);
+  const graph = useGraph<VariationGraphState>(variationId);
   const tree = useMemo(() => {
     if (!graph.state) return [];
 

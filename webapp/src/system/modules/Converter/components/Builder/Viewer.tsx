@@ -48,8 +48,7 @@ const Viewer = ({ graphId }: { graphId: string }) => {
   const dimensions = useResizeObserver(wrapperRef);
 
   const graph = useGraph<ConversionGraph, ConversionGraph>(
-    graphId,
-    (g) => g as ConversionGraph
+    graphId
   );
 
   const adaptedGraph: D3ConversionGraphData = useMemo(() => {

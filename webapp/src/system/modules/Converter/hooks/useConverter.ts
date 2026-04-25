@@ -18,8 +18,7 @@ export const useConverter = (): Converter | undefined => {
   const { useGraph } = graphModule.hooks;
 
   const conversionGraph = useGraph<ConversionGraph>(
-    CONVERSION_GRAPH_NAME,
-    (g) => g
+    CONVERSION_GRAPH_NAME
   );
 
   if (!conversionGraph.state) return undefined;

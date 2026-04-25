@@ -2,14 +2,19 @@ import { createSelector } from "reselect";
 import { MaterialsModuleState } from "../state";
 import { MaterialsState } from "./state";
 
-const defaultSelector = (state: MaterialsState) => state;
 export type MaterialSelector = (state: MaterialsState) => MaterialsState;
+
+const selectMaterialsModule = (state: { Materials: MaterialsModuleState }) => state.Materials;
+const selectMaterialsState = createSelector(
+  selectMaterialsModule,
+  (state: MaterialsModuleState | undefined) => state?.materials
+);
+
 export const selectMaterials = (selector?: MaterialSelector) => {
-  const usedSelector = selector ?? defaultSelector;
+  if (!selector) return selectMaterialsState;
 
   return createSelector(
-    (state: { Materials: MaterialsModuleState }) => state.Materials,
-    (state: MaterialsModuleState) => state.materials,
-    (state) => state && usedSelector(state.materials),
+    selectMaterialsState,
+    (materials: MaterialsState | undefined) => materials ? selector(materials) : undefined
   );
 };

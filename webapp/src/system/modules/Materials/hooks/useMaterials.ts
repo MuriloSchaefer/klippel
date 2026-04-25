@@ -23,8 +23,6 @@ export default function (materials?: number[]) {
       }, state)
   }, [materials] )
 
-  const mat = useAppSelector(
-    selectMaterials(defaultSelector)
-  );
+  const mat = useAppSelector(selectMaterials(defaultSelector));
   return mat;
 }

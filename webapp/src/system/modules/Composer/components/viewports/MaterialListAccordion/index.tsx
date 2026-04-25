@@ -2,7 +2,7 @@ import { List, ListItem, Typography, useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
 import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IMaterialsModule } from "@system/modules/Materials";
-import type { MaterialNode } from "../../../typings";
+import { VariationGraphState, type MaterialNode } from "../../../typings";
 import AddMaterialButton from "./AddMaterialButton";
 import MaterialItem from "./components/MaterialItem";
 import { useMemo } from "react";
@@ -15,12 +15,12 @@ export default function MaterialListAccordion({
   const theme = useTheme();
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g: any) => g);
-  const materialNodes: MaterialNode[] = useMemo(()=>{
+  const graph = useGraph<VariationGraphState>(variationId);
+  const materialNodes = useMemo(()=>{
     return graph?.state
     ? (Object.values(graph.state.nodes).filter(
-        (n: any) => n.type === "MATERIAL",
-      ) as MaterialNode[])
+        (n): n is MaterialNode => n.type === "MATERIAL",
+      ))
     : [];
   }, [graph.state])
 
@@ -29,9 +29,7 @@ export default function MaterialListAccordion({
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const useMaterials = materialsModule.hooks.useMaterials;
 
-  const materials = useMaterials(materialNodes
-        .map((node) => Number(node.materialId))
-        .filter((id) => !Number.isNaN(id)));
+  const materials = useMaterials();
 
   return (
     <>
@@ -50,7 +48,7 @@ export default function MaterialListAccordion({
                 variationId={variationId}
                 key={node.id}
                 node={node}
-                material={materials[node.materialId]}
+                material={materials![node.materialId]}
               />
             );
           })

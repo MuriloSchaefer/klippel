@@ -12,7 +12,7 @@ export default function ProcessTimeAccordion({
   const theme = useTheme();
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g) => g);
+  const graph = useGraph(variationId);
 
   const converterModule = useModule<IConverterModule>("Converter");
   const converter = converterModule.hooks.useConverter();

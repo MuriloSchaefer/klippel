@@ -1,5 +1,5 @@
+import { useRef, useMemo } from "react";
 import _ from "lodash";
-import { createSelector } from "reselect";
 
 import useModule from "@kernel/hooks/useModule";
 import type { Store } from "@kernel/modules/Store";
@@ -42,15 +42,22 @@ export const useConverterManager = <R = ConverterState>(
 
   const { useGraph } = graphModule.hooks;
   const graph = useGraph<ConversionGraph>(
-    CONVERSION_GRAPH_NAME,
-    (g) => g as ConversionGraph
+    CONVERSION_GRAPH_NAME
   );
   const panelsManager = layoutModule.hooks.usePanelsManager();
 
   const { useAppDispatch, useAppSelector } = storeModule.hooks;
   const dispatch = useAppDispatch();
 
-  const innerSelector = createSelector(selectConverterModule, selector);
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
+  const innerSelector = useMemo(
+    () => (state: { Converter: ConverterState }) => {
+      const converterState = selectConverterModule(state);
+      return converterState ? selectorRef.current(converterState) : undefined;
+    },
+    []
+  );
   const state = useAppSelector(innerSelector);
 
   const _innerState = useAppSelector(selectConverterModule);

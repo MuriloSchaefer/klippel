@@ -58,7 +58,8 @@ const ShortcutHint: React.FC<ShortcutHintProps> = React.memo(({
   const { useAppSelector } = storeModule.hooks;
   
   const showHints = useAppSelector(selectShowHints);
-  const shortcut = useAppSelector(selectShortcutById(shortcutId));
+  const shortcutSelector = useMemo(() => selectShortcutById(shortcutId), [shortcutId]);
+  const shortcut = useAppSelector(shortcutSelector);
   const pressedKeys = useAppSelector(selectPressedKeys);
   
   // Calculate badge position based on placement

@@ -44,7 +44,7 @@ function ProcessItem({
   const { useUnits } = converterModule.hooks;
   const { useMaterials, useMaterialTypes } = materialsModule.hooks;
 
-  const graph = graphModule.hooks.useGraph(variationId, (g) => g);
+  const graph = graphModule.hooks.useGraph(variationId);
   const node = useMemo(
     () => graph.state?.nodes[nodeId] as ProcessNode,
     [graph.state]
@@ -119,7 +119,7 @@ function ProcessItem({
         >
           {materialsConsumptions.map((mc) => {
             const mat =
-              materials[
+              materials![
                 (graph.state!.nodes[mc.targetId] as MaterialNode).materialId
               ];
             const matType = materialTypes[mat.type];
@@ -187,13 +187,11 @@ function NewProcessButton({ variationId }: { variationId: string }) {
   const converterModule = useModule<IConverterModule>("Converter");
   const pointerModule = useModule<IPointerModule>("Pointer");
   const graphModule = useModule<IGraphModule>("Graph");
-  const materialsModule = useModule<IMaterialsModule>("Materials");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { CompoundSelector } = converterModule.components;
 
   const { useGraph } = graphModule.hooks;
-  const { useMaterials } = materialsModule.hooks;
 
   const [form, setForm] = useState<{
     name: string;
@@ -213,21 +211,7 @@ function NewProcessButton({ variationId }: { variationId: string }) {
     materialCosts: [],
   });
   const variation = useVariation({ variationId });
-  const graph = useGraph(variationId, (g) => g);
-
-  const materialNodes = useMemo(() => {
-    return Object.values(graph.state!.nodes).reduce(
-      (acc, curr) =>
-        curr.type === "MATERIAL"
-          ? { ...acc, [curr.id]: curr as MaterialNode }
-          : acc,
-      {} as NodesHashMap<MaterialNode>
-    );
-  }, [graph.state]);
-
-  const materials = useMaterials(
-    Object.values(materialNodes).map((mn) => mn.materialId)
-  );
+  const graph = useGraph(variationId);
 
   const debouncedChange = debounce((e: React.ChangeEvent<any>) => {
     setForm((curr) => ({ ...curr, name: e.target.value }));

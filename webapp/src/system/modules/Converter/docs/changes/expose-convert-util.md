@@ -58,7 +58,7 @@ The function is a plain module export — no React, no Redux, no hooks.
 import { convert } from "../utils/convert";
 
 export const useConverter = (): Converter | undefined => {
-  const conversionGraph = useGraph<ConversionGraph>(CONVERSION_GRAPH_NAME, (g) => g);
+  const conversionGraph = useGraph<ConversionGraph>(CONVERSION_GRAPH_NAME);
   if (!conversionGraph.state) return undefined;
 
   return {
