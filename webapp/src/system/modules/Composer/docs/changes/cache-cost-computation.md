@@ -2,6 +2,7 @@
 
 **Context:** [Composition Graph — structure & conventions](../architecture/composition-graph.ts)
 **Prerequisite:** [Converter — expose `convert` as a pure utility](../../../Converter/docs/changes/expose-convert-util.md)
+**Status**: Implemented
 
 ---
 

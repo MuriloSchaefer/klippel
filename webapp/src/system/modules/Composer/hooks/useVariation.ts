@@ -392,6 +392,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
             label: name,
             graduationId: hash,
             order: maxOrder + i + 1,
+            amount: 0,
             position: { x: 0, y: 0 },
           };
           graph.actions.addNode(node, {

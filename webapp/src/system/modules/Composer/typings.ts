@@ -103,6 +103,7 @@ export type GraduationNode = Node & {
     label: string;
     graduationId: string; // small hash id
     order?: number; // ordering index within garment
+    amount?: number; // number of garments for this graduation
 }
 
 export type ProcessNode = Node & {

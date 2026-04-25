@@ -106,15 +106,21 @@ export default function GraduationListAccordion({ variationId, garmentId }: Read
 function GraduationItem({ node, variationId, garmentId, index, moveUp, moveDown, canMoveUp, canMoveDown }: any) {
   // keep hooks inside component
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState(() => ({ label: node.label ?? "" }));
+  const [form, setForm] = useState(() => ({ label: node.label ?? "", amount: node.amount ?? 0 }));
 
   useEffect(() => {
-    setForm({ label: node.label ?? "" });
-  }, [node.id, node.label]);
+    setForm({ label: node.label ?? "", amount: node.amount ?? 0 });
+  }, [node.id, node.label, node.amount]);
 
   // Debounced update via graph API — use useVariation locally to call updateGraduation and removal
   const variation = useVariation({ variationId });
   const debouncedSave = useMemo(() => debounce((changes: any) => variation.actions.updateGraduation(node.id, changes), 400), [node.id]);
+
+  const handleAmountChange = (value: number) => {
+    const sanitized = Number.isFinite(value) && value >= 0 ? Math.max(0, Math.round(value)) : 0;
+    setForm((s: any) => ({ ...s, amount: sanitized }));
+    debouncedSave({ amount: sanitized });
+  };
 
   return (
     <ListItem
@@ -129,16 +135,34 @@ function GraduationItem({ node, variationId, garmentId, index, moveUp, moveDown,
       }}
     >
       {!isEditing ? (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexGrow: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexGrow: 1, flexWrap: "wrap" }}>
           <Box sx={{ width: 28 }} />
-          <Box sx={{ display: "flex", flexDirection: "column" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", minWidth: 200 }}>
             <Typography sx={{ fontWeight: 500 }}>{node.label}</Typography>
             <Typography color="text.secondary">Ordem: {node.order ?? index}</Typography>
           </Box>
+          <TextField
+            label="Quantidade"
+            size="small"
+            type="number"
+            value={form.amount}
+            onChange={(e) => handleAmountChange(Number(e.target.value))}
+            inputProps={{ min: 0, step: 1 }}
+            sx={{ width: 120 }}
+          />
         </Box>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1, flexGrow: 1 }}>
           <TextField label="Nome" size="small" value={form.label} onChange={(e) => { setForm((s) => ({ ...s, label: e.target.value })); debouncedSave({ label: e.target.value }); }} />
+          <TextField
+            label="Quantidade"
+            size="small"
+            type="number"
+            value={form.amount}
+            onChange={(e) => handleAmountChange(Number(e.target.value))}
+            inputProps={{ min: 0, step: 1 }}
+            sx={{ width: 120 }}
+          />
         </Box>
       )}
 
