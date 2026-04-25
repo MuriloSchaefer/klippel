@@ -6,7 +6,7 @@ import { Manager } from "@kernel/modules/base"
 import { Store } from "@kernel/modules/Store"
 
 import {ViewportType} from '../components/ViewportManager/ViewportTypeProvider'
-import { addToGroup, addViewport, closeViewport, renameViewport, selectViewport, setExtrasViewport } from "../store/viewports/actions"
+import { addToGroup, addViewport, closeViewport, renameViewport, selectViewport, setExtrasViewport, setViewportHasChanged } from "../store/viewports/actions"
 import { VIEWPORT_TYPE_REGISTRY_NAME } from "../constants"
 import { createGroup } from "../store/viewports/groups/actions"
 
@@ -20,6 +20,7 @@ export interface ViewportManager extends Manager {
         closeViewport(name: string):void;
         renameViewport(oldName: string, newName: string): void;
         setExtras(name: string, extras: any): void
+        setHasChanged(name: string, hasChanged: boolean): void;
 
         createGroup(name: string, color: string): void;
         addToGroup(viewportName: string, groupName: string): void;
@@ -76,6 +77,9 @@ export function useViewportManager():ViewportManager{
             },
             addToGroup(viewportName, groupName){
                 dispatch(addToGroup({viewportName, groupName}))
+            },
+            setHasChanged(name, hasChanged){
+                dispatch(setViewportHasChanged({name, hasChanged}))
             }
         }
     }

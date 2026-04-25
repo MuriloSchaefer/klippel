@@ -4,6 +4,7 @@ export interface ViewportState<S = any> {
     type: string;
     group?: string
     extra?: S
+    hasChanged?: boolean
   }
   export interface ViewportGroupState {
     name: string;

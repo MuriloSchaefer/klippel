@@ -12,6 +12,8 @@ import {
   removeFromGroup,
   setExtrasViewport,
   ExtrasViewportSet,
+  setViewportHasChanged,
+  viewportHasChangedSet,
 } from "./actions";
 
 const middlewares = createListenerMiddleware();
@@ -68,6 +70,19 @@ middlewares.startListening({
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
     dispatch(removeFromGroup(payload)); // dispatch event
+  },
+});
+
+middlewares.startListening({
+  actionCreator: setViewportHasChanged,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    const {
+      Layout: {
+        viewportManager: { viewports },
+      },
+    } = getState() as { Layout: LayoutState };
+    dispatch(viewportHasChangedSet({ name: payload.name, hasChanged: viewports[payload.name].hasChanged ?? false })); // dispatch event
   },
 });
 

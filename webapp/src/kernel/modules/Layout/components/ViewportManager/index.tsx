@@ -6,13 +6,14 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
+import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import HomeSharpIcon from "@mui/icons-material/HomeSharp";
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 
 // Kernel
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
+import type { IPointerModule } from "@kernel/modules/Pointer";
 
 // Internals
 import ViewportLoader from "./ViewportLoader";
@@ -28,10 +29,12 @@ type GroupedViewports = {
   [name: string]: ViewportState[];
 };
 
-
 const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
+
+  const pointerModule = useModule<IPointerModule>("Pointer");
+  const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
   const groups = useAppSelector(selectAllGroups);
 
@@ -54,9 +57,9 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
             notGrouped: [...map.notGrouped, state],
           };
         },
-        { notGrouped: [] } as GroupedViewports
+        { notGrouped: [] } as GroupedViewports,
       ),
-    [viewports]
+    [viewports],
   );
 
   const {
@@ -64,7 +67,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   } = useViewportManager();
 
   const handleAddViewport = useCallback(() => {
-    addViewport("Nova aba", "home", undefined, 'new-');
+    addViewport("Nova aba", "home", undefined, "new-");
   }, []);
 
   const handleCloseViewport = useCallback((name: string) => {
@@ -72,7 +75,11 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   }, []);
 
   return (
-    <Box role="viewport-manager" sx={{ ...sx, height: '100%', display: 'flex', flexDirection: 'column' }} {...props}>
+    <Box
+      role="viewport-manager"
+      sx={{ ...sx, height: "100%", display: "flex", flexDirection: "column" }}
+      {...props}
+    >
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Tabs
           value={activeViewport.name}
@@ -98,7 +105,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                   key={`${vp.name}-tab`}
                   id={vp.name}
                   sx={{ width: "fit-content", p: 1 }}
-                  onClick={(e: MouseEvent) => e.button != 2 ? selectViewport(vp.name) : handleCloseViewport(vp.name)}
+                  onClick={(e: MouseEvent) => selectViewport(vp.name)}
                   label={
                     <Box
                       sx={{
@@ -107,14 +114,38 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                         justifyContent: "space-between",
                       }}
                     >
-                      <span>{vp.title}</span>
-                      <CloseSharpIcon
-                        sx={{ width: 0.3, marginLeft: 1, alignItems: "center" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCloseViewport(vp.name);
-                        }}
-                      />
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        {vp.hasChanged && <span>* </span>}
+                        <span>{vp.title}</span>
+                      </Box>
+                      {vp.hasChanged ? (
+                        <PointerContainer
+                          component={<span>Fechar sem salvar?</span>}
+                          onConfirm={() => handleCloseViewport(vp.name)}
+                          actions={[
+                            <ConfirmAndCloseButton
+                              key="confirm-close"
+                              handleConfirm={() => handleCloseViewport(vp.name)}
+                            />,
+                          ]}
+                        >
+                          <CloseSharpIcon
+                            sx={{ width: 0.3, marginLeft: 1 }}
+                          />
+                        </PointerContainer>
+                      ) : (
+                        <CloseSharpIcon
+                          sx={{
+                            width: 0.3,
+                            marginLeft: 1,
+                            alignItems: "center",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCloseViewport(vp.name);
+                          }}
+                        />
+                      )}
                     </Box>
                   }
                   draggable
@@ -141,16 +172,34 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                       justifyContent: "space-between",
                     }}
                   >
-                    <span>{vp.title}</span>
-                    <IconButton size="small" component="span" onClick={(e) => {
+                    <span>{vp.hasChanged ? `*${vp.title}` : vp.title}</span>
+                    {vp.hasChanged ? (
+                      <PointerContainer
+                        component={<span>Fechar sem salvar?</span>}
+                        onConfirm={() => handleCloseViewport(vp.name)}
+                        actions={[
+                          <ConfirmAndCloseButton
+                            key="confirm-close"
+                            handleConfirm={() => handleCloseViewport(vp.name)}
+                          />,
+                        ]}
+                      >
+                        <IconButton size="small" component="span">
+                          <CloseSharpIcon sx={{ width: 0.5, marginLeft: 1 }} />
+                        </IconButton>
+                      </PointerContainer>
+                    ) : (
+                      <IconButton
+                        size="small"
+                        component="span"
+                        onClick={(e) => {
                           e.stopPropagation();
                           handleCloseViewport(vp.name);
-                        }}>
-                      <CloseSharpIcon
-                        sx={{ width: 0.5, marginLeft: 1 }}
-                        
-                      />
-                    </IconButton>
+                        }}
+                      >
+                        <CloseSharpIcon sx={{ width: 0.5, marginLeft: 1 }} />
+                      </IconButton>
+                    )}
                   </Box>
                 }
                 draggable="true"
@@ -186,8 +235,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
         sx={{
           width: "100%",
           flexGrow: 1,
-          overflow: 'auto'
-
+          overflow: "auto",
         }}
       >
         <ViewportLoader />

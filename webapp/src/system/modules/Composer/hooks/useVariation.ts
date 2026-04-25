@@ -1,6 +1,7 @@
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { Store } from "@kernel/modules/Store";
+import { ILayoutModule } from "@kernel/modules/Layout";
 import { selectPart } from "../store/variations/actions";
 import {
   ComposerModuleState,
@@ -27,12 +28,23 @@ export default function useVariation({ variationId }: { variationId: string }) {
   const storeModule = useModule<Store>("Store");
   const svgModule = useModule<ISVGModule>("SVG");
   const materialsModule = useModule<IMaterialsModule>("Materials");
-  const dispatch = storeModule.hooks.useAppDispatch();
-  const useAppSelector = storeModule.hooks.useAppSelector;
-
+  const layoutModule = useModule<ILayoutModule>("Layout");
   const graphModule = useModule<IGraphModule>("Graph");
+
+  const dispatch = storeModule.hooks.useAppDispatch();
   const { useGraph } = graphModule.hooks;
+  const useAppSelector = storeModule.hooks.useAppSelector;
+  const { useViewportManager, useActiveViewport } = layoutModule.hooks;
+
+  const viewportManager = useViewportManager();
+
   const { useMaterials, useMaterialTypes } = materialsModule.hooks;
+
+  const vp = useActiveViewport()
+
+  const markChanged = () => {
+    if (vp) viewportManager.functions.setHasChanged(vp.name, true);
+  };
 
   const materials = useMaterials();
   const materialTypes = useMaterialTypes();
@@ -86,8 +98,9 @@ export default function useVariation({ variationId }: { variationId: string }) {
         };
 
         graph.actions.addNode(node, edges);
+        markChanged();
       },
-      removePart: (partId: string) => graph.actions.removeNode(partId),
+      removePart: (partId: string) => { graph.actions.removeNode(partId); markChanged(); },
       addMaterial: (
         materialId: number,
         label: string,
@@ -125,6 +138,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
             },
           },
         });
+        markChanged();
       },
       removeMaterial: (materialId: number) => {
         const nodeId = Object.values(graph.state?.nodes ?? {}).find(
@@ -137,6 +151,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           return;
         }
         graph.actions.removeNode(nodeId);
+        markChanged();
       },
       addElective: (
         name: string,
@@ -174,15 +189,18 @@ export default function useVariation({ variationId }: { variationId: string }) {
             },
           },
         });
+        markChanged();
       },
       removeElective: (nodeId: string) => {
         graph.actions.removeNode(nodeId);
+        markChanged();
       },
       updateElective: (nodeId: string, changes: Partial<ElectiveNode>) => {
         if (!graph.state) return;
         const curr = graph.state.nodes[nodeId];
         if (!curr) return;
         graph.actions.updateNode({ ...curr, ...changes } as any);
+        markChanged();
       },
       addVisualization: (
         name: string,
@@ -248,6 +266,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           if (dom.stroke) proxy.stroke = colorHex;
           svg?.addProxy(dom.id, proxy);
         }
+        markChanged();
       },
       removeVisualization: (nodeId: string) => {
         if (!graph.state) return;
@@ -256,6 +275,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           svg?.deleteProxy(dom.id);
         }
         graph.actions.removeNode(nodeId);
+        markChanged();
       },
       updateVisualization: (
         nodeId: string,
@@ -325,6 +345,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
 
           svg?.addProxy(dom.id, proxy);
         }
+        markChanged();
       },
       updateMaterial: (nodeId: string, materialId: number) => {
         if (!graph.state) return;
@@ -360,6 +381,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
             svg?.updateProxy(dom.id, proxy);
           }
         }
+        markChanged();
       },
       /**
        * Add multiple graduations to a garment.
@@ -414,17 +436,20 @@ export default function useVariation({ variationId }: { variationId: string }) {
             },
           });
         });
+        markChanged();
       },
       removeGraduation: (nodeId: string) => {
         // update orders of other graduations
 
         graph.actions.removeNode(nodeId);
+        markChanged();
       },
       updateGraduation: (nodeId: string, changes: Partial<GraduationNode>) => {
         if (!graph.state) return;
         const curr = graph.state.nodes[nodeId];
         if (!curr) return;
         graph.actions.updateNode({ ...curr, ...changes } as any);
+        markChanged();
       },
       reorderGraduations: (graduationIds: string[]) => {
         // receives the new graduation order of node ids, where index 0 is the first graduation. Only update nodes that needs to be updated
@@ -438,6 +463,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
             } as GraduationNode);
           }
         });
+        markChanged();
       },
       addProcessMaterialConsumption: (
         processNodeId: string,
@@ -458,6 +484,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           sourceId: materialNodeId,
           amount: amount,
         } as ConsumedByEdge);
+        markChanged();
       },
       removeProcessMaterialConsumption: (
         processNodeId: string,
@@ -465,6 +492,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
       ) => {
         graph.actions.removeEdge(`${processNodeId}->${materialNodeId}`);
         graph.actions.removeEdge(`${materialNodeId}->${processNodeId}`);
+        markChanged();
       },
       updateProcessMaterialConsumption: (
         processNodeId: string,
@@ -479,6 +507,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           `${materialNodeId}->${processNodeId}`,
           { amount: newAmount },
         );
+        markChanged();
       },
       addProcess: (process: {
         name: string;
@@ -515,12 +544,14 @@ export default function useVariation({ variationId }: { variationId: string }) {
             } as ProcessOfEdge,
           },
         } as EdgeMap);
+        markChanged();
       },
       updateProcess: (nodeId: string, changes: Partial<ProcessNode>) => {
         if (!graph.state) return;
         const curr = graph.state.nodes[nodeId];
         if (!curr) return;
         graph.actions.updateNode({ ...curr, ...changes } as any);
+        markChanged();
       },
     },
   };

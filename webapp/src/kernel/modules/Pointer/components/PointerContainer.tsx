@@ -241,7 +241,6 @@ export const PointerContainer = ({
         keepMounted={true}
         onClose={handleClose}
         disableEnforceFocus
-        disableEscapeKeyDown
         role="pointer-panel"
         sx={{
           width: "min-content",
