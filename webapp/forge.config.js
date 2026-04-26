@@ -31,6 +31,7 @@ module.exports = {
       config: {
         bin: 'Klippel',
         options: {
+          license: 'GPL-3.0',
           maintainer: 'Murilo Schaefer',
           homepage: 'https://klippel.app.br'
         },
