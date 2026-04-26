@@ -43,6 +43,7 @@ jobs:
     needs: get-latest-release
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -90,12 +91,37 @@ jobs:
 
       - name: Verify installer exists
         run: |
-          INSTALLER=$(find release-artifacts -type f -name "${{ matrix.artifact-pattern }}" | head -1)
-          if [ -z "$INSTALLER" ]; then
-            echo "⚠ No installer found matching pattern: ${{ matrix.artifact-pattern }}"
-            echo "Release may not have artifacts for this OS"
+          echo "Looking for artifacts matching pattern: ${{ matrix.artifact-pattern }}"
+          
+          # First, find the ZIP file
+          ZIP_FILE=$(find release-artifacts -type f -name "*.zip" | head -1)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "⚠ No ZIP file found in release artifacts"
             exit 0
           fi
+          
+          echo "Found ZIP file: $ZIP_FILE"
+          
+          # Extract to find the actual installer
+          mkdir -p extracted-artifacts
+          unzip -q "$ZIP_FILE" -d extracted-artifacts
+          
+          # Find the actual installer file
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            INSTALLER=$(find extracted-artifacts -type f -name "*.deb" | head -1)
+          elif [ "${{ runner.os }}" == "macOS" ]; then
+            INSTALLER=$(find extracted-artifacts -type f -name "*.zip" | head -1)
+          elif [ "${{ runner.os }}" == "Windows" ]; then
+            INSTALLER=$(find extracted-artifacts -type f -name "*.exe" | head -1)
+          fi
+          
+          if [ -z "$INSTALLER" ]; then
+            echo "⚠ No installer file found after extracting ZIP"
+            echo "Contents of extracted artifacts:"
+            find extracted-artifacts -type f
+            exit 0
+          fi
+          
           echo "INSTALLER_PATH=$INSTALLER" >> $GITHUB_ENV
           echo "Found installer: $INSTALLER"
 
@@ -256,9 +282,21 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release Tested:** ${{ needs.get-latest-release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Installation Tests" >> $GITHUB_STEP_SUMMARY
-          echo "- ✓ Linux (AppImage)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✓ macOS (DMG)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✓ Windows (EXE)" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation Tests Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All installations completed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "| OS | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if test-installation has all passed
+          if [ "${{ needs.test-installation.result }}" == "success" ]; then
+            echo "| Linux | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| macOS | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| Windows | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Linux | ⚠️ Check logs |" >> $GITHUB_STEP_SUMMARY
+            echo "| macOS | ⚠️ Check logs |" >> $GITHUB_STEP_SUMMARY
+            echo "| Windows | ⚠️ Check logs |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Each OS runs independently - failure in one OS does not affect others." >> $GITHUB_STEP_SUMMARY
