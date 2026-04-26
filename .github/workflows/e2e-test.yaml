@@ -46,13 +46,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact-pattern: '*.deb'
-            installer-type: 'deb'
+            artifact-pattern: 'ubuntu-latest.zip'
+            installer-type: 'zip'
           - os: macos-latest
-            artifact-pattern: '*.zip'
+            artifact-pattern: 'macos-latest.zip'
             installer-type: 'zip'
           - os: windows-latest
-            artifact-pattern: '*.exe'
+            artifact-pattern: 'windows-latest.zip'
             installer-type: 'exe'
     
     steps:
