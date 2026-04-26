@@ -6,6 +6,9 @@ module.exports = {
     ignore: [
       /^\/src/,
       /(.eslintrc.json)|(.gitignore)|(electron.vite.config.ts)|(forge.config.cjs)|(tsconfig.*)/,
+      // Exclude prebuilt native modules for non-target platforms.
+      // rpmbuild's brp-strip fails on .bare files for foreign architectures.
+      /node_modules\/.+\/prebuilds\/(android|linux-arm)/,
     ],
   },
   rebuildConfig: {},
