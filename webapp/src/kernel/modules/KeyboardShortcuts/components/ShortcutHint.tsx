@@ -89,8 +89,8 @@ const ShortcutHint: React.FC<ShortcutHintProps> = React.memo(({
       >
         <KeyboardIcon
           sx={{
-            fontSize: '10px',
-            color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.4)',
+            fontSize: '14px',
+            color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.5)',
             transition: 'color 0.1s ease-in-out',
           }}
         />

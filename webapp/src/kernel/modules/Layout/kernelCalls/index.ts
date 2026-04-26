@@ -16,7 +16,7 @@ import { PostBootInitializationProps, StartModuleProps } from "@kernel/modules/b
 import HomeViewport from "../components/ViewportManager/HomeViewport";
 import { switchTheme } from "../store/actions";
 import { type PaletteMode } from "@mui/material";
-import { selectTab } from "../store/ribbonMenu/actions";
+import { collapseSettings, expandSettings, closeDetails, openDetails } from "../store/panels/actions";
 
 export const startModule = ({
   dispatch,
@@ -111,6 +111,35 @@ export const postBootInitialization = ({managers: { storeManager, keyboardManage
       enabled: true,
     })),
   ], {context: `${MODULE_NAME}/ViewportManager`})
+
+  keyboardManager.functions.registerShortcuts([
+    {
+      id: 'layout.panels.settings.toggle',
+      key: 'Ctrl+b',
+      contextId: 'Global',
+      action: () => {
+        const store = storeManager.functions.getStore();
+        if (!store) return;
+        const current = store.getState()?.Layout?.panels?.settings?.state ?? 'expanded';
+        store.dispatch(current === 'expanded' ? collapseSettings() : expandSettings());
+      },
+      description: 'Toggle settings panel (expand/collapse)',
+      enabled: true,
+    },
+    {
+      id: 'layout.panels.details.toggle',
+      key: 'Ctrl+Shift+b',
+      contextId: 'Global',
+      action: () => {
+        const store = storeManager.functions.getStore();
+        if (!store) return;
+        const current = store.getState()?.Layout?.panels?.details?.state ?? 'closed';
+        store.dispatch(current === 'opened' ? closeDetails() : openDetails());
+      },
+      description: 'Toggle details panel (open/close)',
+      enabled: true,
+    },
+  ], {context: 'Global'})
 
   keyboardManager.functions.registerShortcuts([
     {

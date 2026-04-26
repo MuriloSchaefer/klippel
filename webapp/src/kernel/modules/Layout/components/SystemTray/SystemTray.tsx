@@ -6,6 +6,7 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 
 import { selectTheme } from "../../store/selectors";
 import useLayoutManager from "../../hooks/useLayoutManager";
@@ -15,6 +16,9 @@ const SystemTray = () => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
   const { componentRegistry } = storeModule.managers;
+
+  const keyboardShortcutsModule = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutHint } = keyboardShortcutsModule.components;
 
   const selectedTheme = useAppSelector(selectTheme);
   const componentRegistryManager = componentRegistry();
@@ -38,17 +42,19 @@ const SystemTray = () => {
       {Object.entries(registry).map(([key, El]) => (
         <El key={key} />
       ))}
-      <IconButton
-        color="primary"
-        aria-label="switch theme button"
-        onClick={handleThemeSwitch}
-      >
-        {selectedTheme === "light" ? (
-          <DarkModeOutlinedIcon fontSize="small" />
-        ) : (
-          <LightModeOutlinedIcon fontSize="small" />
-        )}
-      </IconButton>
+      <ShortcutHint shortcutId="layout.systemtray.theme.toggle" placement="top-right">
+        <IconButton
+          color="primary"
+          aria-label="switch theme button"
+          onClick={handleThemeSwitch}
+        >
+          {selectedTheme === "light" ? (
+            <DarkModeOutlinedIcon fontSize="small" />
+          ) : (
+            <LightModeOutlinedIcon fontSize="small" />
+          )}
+        </IconButton>
+      </ShortcutHint>
     </Box>
   );
 };

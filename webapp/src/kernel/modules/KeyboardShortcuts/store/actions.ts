@@ -104,8 +104,8 @@ export const keyPressed = createAction(
     metaKey: boolean;
     key: string;
     code: string;
-  }) => ({
-    payload: { key, keyParts, originalEvent }
+  }, phase: 'down' | 'up' = 'down') => ({
+    payload: { key, keyParts, originalEvent, phase }
   })
 );
 

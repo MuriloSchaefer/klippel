@@ -51,14 +51,14 @@ export function postBootInitialization({managers:{keyboardManager}}: PostBootIni
   keyboardManager.functions.registerShortcuts([
     {
       id: `${MODULE_NAME}/ModelSection/createModel`,
-      key: 'Alt+q',
+      key: 'q',
       contextId: `${MODULE_NAME}/ModelSection`,
       action: () => document.getElementById("new-model-form")?.click(),
       description: 'Create a new model',
       enabled: true,
     },{
       id: `${MODULE_NAME}/ModelSection/openModel`,
-      key: 'Alt+w',
+      key: 'w',
       contextId: `${MODULE_NAME}/ModelSection`,
       action: () => document.getElementById("open-model-modal")?.click(),
       description: 'Open an existing model',

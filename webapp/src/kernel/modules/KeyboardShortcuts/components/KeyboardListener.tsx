@@ -116,6 +116,7 @@ const KeyboardListener: React.FC = () => {
     // formatKeyEvent maps 'Control'/'Meta' → 'Ctrl', so the filter must use the same name.
     const normalizeReleasedKey = (key: string): string => {
       if (key === 'Control' || key === 'Meta') return 'Ctrl';
+      if (key.length === 1) return key.toLowerCase();
       return key;
     };
 
@@ -140,7 +141,7 @@ const KeyboardListener: React.FC = () => {
         metaKey: event.metaKey,
         key: event.key,
         code: event.code,
-      }));
+      }, 'up'));
     });
 
   }, [pressedKeys])

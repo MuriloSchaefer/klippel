@@ -105,14 +105,14 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
                   zIndex: 10,
                 }}
                 style={{
-                  left: `${tabEl.offsetLeft + tabEl.offsetWidth - 60}px`,
-                  top: `${tabEl.offsetTop + tabEl.offsetHeight - 15}px`,
+                  left: `${tabEl.offsetLeft + 4}px`,
+                  top: `${tabEl.offsetTop + tabEl.offsetHeight - 26}px`,
                 }}
               >
                 <KeyboardIcon
                   sx={{
-                    fontSize: '10px',
-                    color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.4)',
+                    fontSize: '14px',
+                    color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.5)',
                     transition: 'color 0.1s ease-in-out',
                   }}
                 />

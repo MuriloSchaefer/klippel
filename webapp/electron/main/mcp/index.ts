@@ -14,6 +14,10 @@ import { toggleKeyboardHintsTool } from '../../../src/kernel/modules/Layout/mcpT
 import { toggleKeyboardHintsShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleKeyboardHintsShortcut';
 import { toggleThemeTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleTheme';
 import { toggleThemeShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleThemeShortcut';
+import { toggleSettingsPanelTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleSettingsPanel';
+import { toggleSettingsPanelShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleSettingsPanelShortcut';
+import { toggleDetailsPanelTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleDetailsPanel';
+import { toggleDetailsPanelShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleDetailsPanelShortcut';
 import { openModelTool } from '../../../src/system/modules/Composer/mcpTools/openModel';
 import { createModelTool } from '../../../src/system/modules/Composer/mcpTools/createModel';
 import { createModelShortcutTool } from '../../../src/system/modules/Composer/mcpTools/createModelShortcut';
@@ -34,6 +38,10 @@ export async function startMcpServer() {
   server.registerTool(toggleKeyboardHintsShortcutTool.name, { description: toggleKeyboardHintsShortcutTool.description }, toggleKeyboardHintsShortcutTool.execute);
   server.registerTool(toggleThemeTool.name, { description: toggleThemeTool.description }, toggleThemeTool.execute);
   server.registerTool(toggleThemeShortcutTool.name, { description: toggleThemeShortcutTool.description }, toggleThemeShortcutTool.execute);
+  server.registerTool(toggleSettingsPanelTool.name, { description: toggleSettingsPanelTool.description }, toggleSettingsPanelTool.execute);
+  server.registerTool(toggleSettingsPanelShortcutTool.name, { description: toggleSettingsPanelShortcutTool.description }, toggleSettingsPanelShortcutTool.execute);
+  server.registerTool(toggleDetailsPanelTool.name, { description: toggleDetailsPanelTool.description }, toggleDetailsPanelTool.execute);
+  server.registerTool(toggleDetailsPanelShortcutTool.name, { description: toggleDetailsPanelShortcutTool.description }, toggleDetailsPanelShortcutTool.execute);
   server.registerTool(openModelTool.name, { description: openModelTool.description, inputSchema: { modelName: z.string() } }, ({ modelName }) => openModelTool.execute({ modelName }));
   server.registerTool(createModelTool.name, { description: createModelTool.description, inputSchema: { name: z.string(), id: z.string().optional() } }, ({ name, id }) => createModelTool.execute({ name, id }));
   server.registerTool(createModelShortcutTool.name, { description: createModelShortcutTool.description }, createModelShortcutTool.execute);

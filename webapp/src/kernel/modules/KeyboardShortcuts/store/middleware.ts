@@ -30,7 +30,10 @@ keyboardShortcutsMiddleware.startListening({
       return;
     }
 
-    const { key } = action.payload;
+    const { key, phase } = action.payload;
+
+    // Only trigger shortcuts on keydown — keyup dispatches are for visual feedback only
+    if (phase === 'up') return;
 
     // Skip shortcut matching for modifier-only presses (just visual feedback)
     if (key === 'Ctrl' || key === 'Alt' || key === 'Shift' || key === 'Ctrl+Alt' || key === 'Ctrl+Shift' || key === 'Alt+Shift' || key === 'Ctrl+Alt+Shift') {

@@ -122,7 +122,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                     sx={{ width: "fit-content", p: 1 }}
                     onClick={(e: MouseEvent) => selectViewport(vp.name)}
                     label={
-                      <ShortcutHint shortcutId={`layout.viewport.switch.${vpIndex + 1}`} placement="bottom-right">
+                      <ShortcutHint shortcutId={`layout.viewport.switch.${vpIndex + 1}`} placement="top-right">
                         <Box
                           sx={{
                             display: "flex",
@@ -187,7 +187,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                   }}
                   onClick={() => selectViewport(vp.name)}
                   label={
-                    <ShortcutHint shortcutId={`layout.viewport.switch.${vpIndex + 1}`} placement="bottom-right">
+                    <ShortcutHint shortcutId={`layout.viewport.switch.${vpIndex + 1}`} placement="top-right">
                       <Box
                         sx={{
                           display: "flex",
@@ -235,7 +235,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
           })}
 
         </Tabs>
-        <ShortcutHint shortcutId="layout.viewport.add" placement="bottom-left">
+        <ShortcutHint shortcutId="layout.viewport.add" placement="top-left">
           <IconButton
             id="new-viewport"
             role="add viewport"
