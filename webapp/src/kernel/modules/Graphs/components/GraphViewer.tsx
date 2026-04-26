@@ -17,7 +17,7 @@ const GraphViewer = ({ graphId }: { graphId: string }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(wrapperRef);
 
-  const graph = useGraph<ConversionGraph>(graphId, (g) => g);
+  const graph = useGraph<ConversionGraph>(graphId);
 
   const adaptedGraph: D3Graph = useMemo(() => {
     if (!graph?.state?.nodes)

@@ -40,6 +40,7 @@ export default function CreateBudgetButton() {
       actions={[
         <ConfirmAndCloseButton
           type="submit"
+          id="create-budget-confirm"
           value={"Submit"}
           color="success"
           key="accept"
@@ -64,7 +65,7 @@ export default function CreateBudgetButton() {
                 theme.palette.background.default
               )}`,
             }}
-            colorChange={(color) =>
+            colorChange={(color: { hex: string }) =>
               setForm((curr) => ({ ...curr, color: color.hex }))
             }
           />
@@ -81,7 +82,7 @@ export default function CreateBudgetButton() {
         </Box>
       }
     >
-      <Button color={info.color}>{info.label}</Button>
+      <Button aria-label="create-budget" color={info.color}>{info.label}</Button>
     </PointerContainer>
   );
 }

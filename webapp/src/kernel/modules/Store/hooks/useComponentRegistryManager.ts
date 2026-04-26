@@ -1,6 +1,6 @@
 import { Manager } from "@kernel/modules/base";
 import { AnyAction } from "redux";
-import { ComponentType, useContext } from "react";
+import { ComponentType, useContext, useMemo } from "react";
 import {ComponentRegistries, ComponentRegistryContext, ComponentTypeMap} from "../contexts/componentRegistry";
 
 export type AppAction = AnyAction
@@ -22,7 +22,7 @@ export const useComponentRegistryManager = (): ComponentRegistryManager => {
 
     const { createRegistry, createRegistries, getComponent, getRegistry, registerComponents } = useContext(ComponentRegistryContext)
 
-    const manager: ComponentRegistryManager = {
+    const manager: ComponentRegistryManager = useMemo(() => ({
         functions: {
             createRegistry,
             createRegistries,
@@ -30,7 +30,7 @@ export const useComponentRegistryManager = (): ComponentRegistryManager => {
             getComponent,
             getRegistry,
         }
-    }
+    }), [createRegistry, createRegistries, registerComponents, getComponent, getRegistry])
     return manager
 }
 

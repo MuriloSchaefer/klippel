@@ -34,12 +34,60 @@ export type PartNode = Node & {
     label: string;
 }
 
+export type AttributeAudit = {
+  name: string;
+  rawValue: unknown;
+  rawUnit?: string;
+  normalisedValue?: number;
+  normalisedUnit?: string;
+  wasNormalised: boolean;
+  injectedVariables?: { [varName: string]: number };
+};
+
+export type AttributeNormalisationAudit = {
+  attributeName: string;
+  originalValue: number;
+  originalUnit: string;
+  normalisedValue: number;
+  normalisedUnit: string;
+};
+
+export type ConversionStepAudit = {
+  fromUnit: string;
+  toUnit: string;
+  expression: string;
+  attributeValues: { [varName: string]: number };
+  quantityValues: { [varName: string]: number };
+  result: number;
+};
+
+export type ProcessStepAudit = {
+  processLabel: string;
+  skipped: boolean;
+  skipReason?: string;
+  originalAmount: CompoundValue;
+  attributeNormalisations: AttributeNormalisationAudit[];
+  conversionSteps: ConversionStepAudit[];
+  convertedAmount: number;
+  convertedUnit: string;
+  runningTotal: number;
+  error?: string;
+};
+
+export type CostAudit = {
+  computedAt: string;
+  materialAttributes: AttributeAudit[];
+  steps: ProcessStepAudit[];
+};
+
 export type MaterialNode = Node & {
     type: "MATERIAL";
     label: string;
     materialId: number;
     attributes?: {}
-    typeRestrictions: string[]
+    typeRestrictions: string[];
+    computedCost?: CompoundValue;
+    costAudit?: CostAudit;
 }
 
 export type ElectiveNode = Node & {
@@ -55,6 +103,7 @@ export type GraduationNode = Node & {
     label: string;
     graduationId: string; // small hash id
     order?: number; // ordering index within garment
+    amount?: number; // number of garments for this graduation
 }
 
 export type ProcessNode = Node & {
@@ -63,6 +112,7 @@ export type ProcessNode = Node & {
     processId: string; // small hash id
     costMoney?: CompoundValue; // monetary cost as CompoundValue (use Converter CompoundValue)
     costTime?: CompoundValue; // compound time value (quotient/dividend from Converter)
+    electiveNodeId?: string; // optional reference to an elective node - if set, process only applies when elective.value is true
 }
 
 export type VisualizationDom = {

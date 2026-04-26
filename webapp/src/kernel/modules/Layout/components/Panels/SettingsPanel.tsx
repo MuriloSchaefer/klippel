@@ -11,6 +11,7 @@ import TuneSharp from "@mui/icons-material/TuneSharp";
 
 import { Store } from "@kernel/modules/Store";
 import useModule from "@kernel/hooks/useModule";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 
 import { SETTINGS_PANEL_ID } from "../../constants";
 import usePanelsManager from "../../hooks/usePanelsManager";
@@ -26,6 +27,9 @@ export const SettingsPanel = ({
 }) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
+
+  const keyboardShortcutsModule = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutHint } = keyboardShortcutsModule.components;
 
   const panelsManager = usePanelsManager();
   const panelState = useAppSelector(selectSettingsPanel);
@@ -87,17 +91,20 @@ export const SettingsPanel = ({
               <span>{title ?? "Configurações"}</span>
             </>
           )}
-          <IconButton
-            size="small"
-            component="span"
-            onClick={handleToggleSettings}
-          >
-            {panelState.state === "collapsed" ? (
-              <UnfoldMoreSharpIcon sx={{ transform: "rotate(90deg)" }} />
-            ) : (
-              <UnfoldLessIcon sx={{ transform: "rotate(90deg)" }} />
-            )}
-          </IconButton>
+          <ShortcutHint shortcutId="layout.panels.settings.toggle" placement="bottom-right">
+            <IconButton
+              size="small"
+              component="span"
+              aria-label="toggle settings panel"
+              onClick={handleToggleSettings}
+            >
+              {panelState.state === "collapsed" ? (
+                <UnfoldMoreSharpIcon sx={{ transform: "rotate(90deg)" }} />
+              ) : (
+                <UnfoldLessIcon sx={{ transform: "rotate(90deg)" }} />
+              )}
+            </IconButton>
+          </ShortcutHint>
         </Box>
         <Box
           role="panel-content"

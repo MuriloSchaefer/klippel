@@ -27,7 +27,7 @@ export default function AddMaterialButton({
     materialModule.components;
 
   const variation = useVariation({ variationId });
-  const graph = graphModule.hooks.useGraph(variationId, (g) => g);
+  const graph = graphModule.hooks.useGraph(variationId);
   const [selectedType, setSelectedType] = useState<string>("");
   const [selectedMaterial, setSelectedMaterial] = useState<number | null>(null);
   const [label, setLabel] = useState<string>(

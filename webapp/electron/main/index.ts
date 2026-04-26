@@ -8,6 +8,7 @@ import installExtension, {
 } from "electron-devtools-installer";
 
 import { getAbsPath, initStorageHooks } from "./storage";
+import { startMcpServer } from "./mcp";
 import initScheduler from "./scheduler";
 import { existsSync, outputFile, readdirSync, readFileSync } from "fs-extra";
 import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
@@ -16,6 +17,10 @@ import { initHeliaHooks, initHeliaNode } from "./ipfs";
 
 updateElectronApp();
 if (require("electron-squirrel-startup")) app.quit();
+
+const CDP_PORT = '9222';
+app.commandLine.appendSwitch('remote-debugging-port', CDP_PORT);
+process.env.CDP_PORT = CDP_PORT;
 
 async function createTray(mainWindow: BrowserWindow): Promise<Tray> {
   const tray = new Tray('');
@@ -149,6 +154,11 @@ app.whenReady().then(async () => {
   });
   console.log("creating windows");
   const mainWindow = await createWindow();
+
+  if (process.argv.includes('--mcp')) {
+    await mainWindow.webContents.executeJavaScript('undefined');
+    await startMcpServer();
+  }
   // createTray(mainWindow);
 
   app.on("activate", async function () {

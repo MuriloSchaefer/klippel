@@ -6,13 +6,16 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
+import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import HomeSharpIcon from "@mui/icons-material/HomeSharp";
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 
 // Kernel
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
+import type { IPointerModule } from "@kernel/modules/Pointer";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { MODULE_NAME } from "../../constants";
 
 // Internals
 import ViewportLoader from "./ViewportLoader";
@@ -28,10 +31,15 @@ type GroupedViewports = {
   [name: string]: ViewportState[];
 };
 
-
 const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
+
+  const pointerModule = useModule<IPointerModule>("Pointer");
+  const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
+
+  const keyboardShortcutsModule = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutProvider, ShortcutHint } = keyboardShortcutsModule.components;
 
   const groups = useAppSelector(selectAllGroups);
 
@@ -54,9 +62,15 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
             notGrouped: [...map.notGrouped, state],
           };
         },
-        { notGrouped: [] } as GroupedViewports
+        { notGrouped: [] } as GroupedViewports,
       ),
-    [viewports]
+    [viewports],
+  );
+
+  // Flat ordered list of all viewports — same order as tab rendering — used for Ctrl+N shortcut index.
+  const allViewports = useMemo(
+    () => Object.values(adaptedState).flat(),
+    [adaptedState],
   );
 
   const {
@@ -64,7 +78,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   } = useViewportManager();
 
   const handleAddViewport = useCallback(() => {
-    addViewport("Nova aba", "home", undefined, 'new-');
+    addViewport("Nova aba", "home", undefined, "new-");
   }, []);
 
   const handleCloseViewport = useCallback((name: string) => {
@@ -72,8 +86,15 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   }, []);
 
   return (
-    <Box role="viewport-manager" sx={{ ...sx, height: '100%', display: 'flex', flexDirection: 'column' }} {...props}>
-      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+    <ShortcutProvider contextId={`${MODULE_NAME}/ViewportManager`}>
+    <Box
+      role="viewport-manager"
+      sx={{ ...sx, height: "100%", display: "flex", flexDirection: "column" }}
+      {...props}
+    >
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box aria-label="viewport-tabs" sx={{display:'flex', flexWrap: 'nowrap', alignItems: 'center'}}>
+
         <Tabs
           value={activeViewport.name}
           aria-label="viewport tabs"
@@ -88,90 +109,144 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
             onClick={() => selectViewport("home")}
             id={"home"}
             sx={{ width: "fit-content", minWidth: 0, p: 1 }}
-            //   label={<div>test</div>}
           />
           {Object.entries(adaptedState).map(([groupName, groupedViewports]) => {
             if (groupName === "notGrouped")
-              return groupedViewports.map((vp) => (
+              return groupedViewports.map((vp) => {
+                const vpIndex = allViewports.findIndex((v) => v.name === vp.name);
+                return (
+                  <Tab
+                    value={vp.name}
+                    key={`${vp.name}-tab`}
+                    id={vp.name}
+                    sx={{ width: "fit-content", p: 1 }}
+                    onClick={(e: MouseEvent) => selectViewport(vp.name)}
+                    label={
+                      <ShortcutHint shortcutId={`layout.viewport.switch.${vpIndex + 1}`} placement="top-right">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <Box sx={{ display: "flex", gap: 1 }}>
+                            {vp.hasChanged && <span>* </span>}
+                            <span>{vp.title}</span>
+                          </Box>
+                          {vp.hasChanged ? (
+                            <PointerContainer
+                              component={<span>Fechar sem salvar?</span>}
+                              onConfirm={() => handleCloseViewport(vp.name)}
+                              actions={[
+                                <ConfirmAndCloseButton
+                                  key="confirm-close"
+                                  handleConfirm={() => handleCloseViewport(vp.name)}
+                                />,
+                              ]}
+                            >
+                              <CloseSharpIcon
+                                data-testid="close-viewport-btn"
+                                sx={{ width: 0.3, marginLeft: 1 }}
+                              />
+                            </PointerContainer>
+                          ) : (
+                            <CloseSharpIcon
+                              data-testid="close-viewport-btn"
+                              sx={{
+                                width: 0.3,
+                                marginLeft: 1,
+                                alignItems: "center",
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCloseViewport(vp.name);
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </ShortcutHint>
+                    }
+                    draggable
+                    wrapped
+                  />
+                );
+              });
+            return groupedViewports.map((vp) => {
+              const vpIndex = allViewports.findIndex((v) => v.name === vp.name);
+              return (
                 <Tab
                   value={vp.name}
                   key={`${vp.name}-tab`}
                   id={vp.name}
-                  sx={{ width: "fit-content", p: 1 }}
-                  onClick={(e: MouseEvent) => e.button != 2 ? selectViewport(vp.name) : handleCloseViewport(vp.name)}
+                  sx={{
+                    width: "fit-content",
+                    p: 1,
+                    borderTop: 2,
+                    borderColor: groups[vp.group!].color, // CHORE: remove ! mark
+                  }}
+                  onClick={() => selectViewport(vp.name)}
                   label={
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span>{vp.title}</span>
-                      <CloseSharpIcon
-                        sx={{ width: 0.3, marginLeft: 1, alignItems: "center" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCloseViewport(vp.name);
+                    <ShortcutHint shortcutId={`layout.viewport.switch.${vpIndex + 1}`} placement="top-right">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
                         }}
-                      />
-                    </Box>
+                      >
+                        <span>{vp.hasChanged ? `*${vp.title}` : vp.title}</span>
+                        {vp.hasChanged ? (
+                          <PointerContainer
+                            component={<span>Fechar sem salvar?</span>}
+                            onConfirm={() => handleCloseViewport(vp.name)}
+                            actions={[
+                              <ConfirmAndCloseButton
+                                key="confirm-close"
+                                handleConfirm={() => handleCloseViewport(vp.name)}
+                              />,
+                            ]}
+                          >
+                            <IconButton data-testid="close-viewport-btn" size="small" component="span">
+                              <CloseSharpIcon sx={{ width: 0.5, marginLeft: 1 }} />
+                            </IconButton>
+                          </PointerContainer>
+                        ) : (
+                          <IconButton
+                            data-testid="close-viewport-btn"
+                            size="small"
+                            component="span"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCloseViewport(vp.name);
+                            }}
+                          >
+                            <CloseSharpIcon sx={{ width: 0.5, marginLeft: 1 }} />
+                          </IconButton>
+                        )}
+                      </Box>
+                    </ShortcutHint>
                   }
-                  draggable
+                  draggable="true"
                   wrapped
                 />
-              ));
-            return groupedViewports.map((vp) => (
-              <Tab
-                value={vp.name}
-                key={`${vp.name}-tab`}
-                id={vp.name}
-                sx={{
-                  width: "fit-content",
-                  p: 1,
-                  borderTop: 2,
-                  borderColor: groups[vp.group!].color, // CHORE: remove ! mark
-                }}
-                onClick={() => selectViewport(vp.name)}
-                label={
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <span>{vp.title}</span>
-                    <IconButton size="small" component="span" onClick={(e) => {
-                          e.stopPropagation();
-                          handleCloseViewport(vp.name);
-                        }}>
-                      <CloseSharpIcon
-                        sx={{ width: 0.5, marginLeft: 1 }}
-                        
-                      />
-                    </IconButton>
-                  </Box>
-                }
-                draggable="true"
-                wrapped
-              />
-            ));
+              );
+            });
           })}
 
-          <Tab
-            value="new"
-            key="new"
-            icon={<AddBoxOutlinedIcon />}
-            iconPosition="start"
-            role={"add viewport"}
-            aria-label="Add viewport"
-            id={"new-viewport"}
-            onClick={handleAddViewport}
-            sx={{ width: "fit-content", minWidth: 0, p: 1 }}
-            //   label={<div>test</div>}
-          />
         </Tabs>
+        <ShortcutHint shortcutId="layout.viewport.add" placement="top-left">
+          <IconButton
+            id="new-viewport"
+            role="add viewport"
+            aria-label="Add viewport"
+            onClick={handleAddViewport}
+            size="small"
+          >
+            <AddBoxOutlinedIcon />
+          </IconButton>
+        </ShortcutHint>
+        </Box>
         <Box
           id={VIEWPORT_NOTIFICATIONS_ID}
           role="viewport-notifications"
@@ -186,13 +261,13 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
         sx={{
           width: "100%",
           flexGrow: 1,
-          overflow: 'auto'
-
+          overflow: "auto",
         }}
       >
         <ViewportLoader />
       </Box>
     </Box>
+    </ShortcutProvider>
   );
 };
 

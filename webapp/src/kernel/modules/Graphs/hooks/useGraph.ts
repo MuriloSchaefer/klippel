@@ -1,3 +1,5 @@
+import { useRef, useMemo } from "react";
+import { createSelector } from "reselect";
 import { Edge } from "@kernel/modules/Graphs/interfaces/Edge";
 import { Node } from "@kernel/modules/Graphs/interfaces/Node";
 import {
@@ -15,7 +17,6 @@ import {
   search,
   updateEdge,
 } from "../store/graphInstance/actions";
-import { createSelector } from "reselect";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import _ from "lodash";
@@ -41,18 +42,18 @@ export interface GraphActions {
       node: Node,
       graph: GraphSearch,
       currFindings: Node[],
-      visitedNodes: Node[]
+      visitedNodes: Node[],
     ) => boolean,
     stopCriteria: (
       node: Node,
       graph: GraphSearch,
       currFindings: Node[],
-      visitedNodes: Node[]
+      visitedNodes: Node[],
     ) => boolean,
     getNeighbours: (node: Node, graph: GraphSearch) => string[],
     depth?: number,
     label?: string,
-    id?: string
+    id?: string,
   ): string;
 }
 export interface Graph<T = GraphState, A = GraphActions> {
@@ -70,22 +71,32 @@ export const DEFAULT_EDGES: EdgeMap = { inputs: {}, outputs: {} };
  */
 const useGraph = <G extends GraphState = GraphState, R = G>(
   graphId: string,
-  graphSelector: (g: G | undefined) => R | undefined
+  graphSelector?: (g: G | undefined) => R | undefined,
 ): Graph<R> => {
   const storeModule = useModule<Store>("Store");
   const dispatch = storeModule.hooks.useAppDispatch();
   const useAppSelector = storeModule.hooks.useAppSelector;
 
-  const selector = createSelector(
-    (state: { Graph: GraphsManagerState } | undefined) =>
-      state?.Graph && (state.Graph.graphs[graphId] as G),
-    graphSelector
+  const graphSelectorRef = useRef(graphSelector);
+  graphSelectorRef.current = graphSelector;
+
+  const selector = useMemo(
+    () =>
+      graphSelectorRef.current
+        ? createSelector(
+            (state: { Graph: GraphsManagerState } | undefined) =>
+              state?.Graph ? (state.Graph.graphs[graphId] as G) : undefined,
+            (g) => graphSelectorRef.current!(g),
+          )
+        : (state: { Graph: GraphsManagerState } | undefined) =>
+            state?.Graph ? (state.Graph.graphs[graphId] as R) : undefined,
+    [graphId],
   );
   const graphState = useAppSelector<R | undefined>(selector);
 
   const innerState = useAppSelector(
     (state: { Graph: GraphsManagerState } | undefined) =>
-      state?.Graph && state.Graph.graphs[graphId]
+      state?.Graph && state.Graph.graphs[graphId],
   );
   return {
     id: graphId,
@@ -98,7 +109,7 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
             graphId,
             node: positionedNode,
             edges: edges ?? DEFAULT_EDGES,
-          })
+          }),
         );
       },
       removeNode: (id) => {
@@ -128,7 +139,7 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
         getNeighbours,
         depth,
         label,
-        id
+        id,
       ) => {
         const resultPath = id ?? _.uniqueId("search");
         dispatch(
@@ -142,7 +153,7 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
             getNeighbours,
             depth,
             label: label ?? resultPath,
-          })
+          }),
         );
 
         return resultPath;

@@ -34,14 +34,16 @@ const MaterialSelector = ({
 
   const materialType = useAppSelector(selectMaterialType(type));
   const noFilter = useCallback((option: MaterialState) => true, []);
-  const materials = useAppSelector(
-    selectMaterials((materials) =>
+  const materialsSelector = useMemo(
+    () => selectMaterials((materials) =>
       Object.values(materials)
         .filter((mat) => mat.type === type)
         .filter(filter ?? noFilter)
         .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {})
-    )
+    ),
+    [type, filter, noFilter]
   );
+  const materials = useAppSelector(materialsSelector);
 
   const schemaObj = materialType.schemas[materialType.latestSchema];
   const selector = schemaObj.selector;

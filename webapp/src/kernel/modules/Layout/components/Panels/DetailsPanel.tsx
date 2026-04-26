@@ -9,6 +9,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { Store } from "@kernel/modules/Store";
 import useModule from "@kernel/hooks/useModule";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { fallbackRender } from "@kernel/App";
 
 import { DETAILS_PANEL_ID } from "../../constants";
@@ -35,6 +36,9 @@ export const DetailsPanel = ({
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
+  const keyboardShortcutsModule = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutHint } = keyboardShortcutsModule.components;
+
   const panelsManager = usePanelsManager();
   const panelState = useAppSelector(selectDetailsPanel);
 
@@ -56,9 +60,9 @@ export const DetailsPanel = ({
     <Box
       role="details-panel"
       aria-label="details panel"
-      display={panelState.state === "opened" ? "flex" : "none"}
       sx={{
         ...sx,
+        display: panelState.state === "opened" ? "flex" : "none",
         flexDirection: "column",
         padding: 1,
         gap: 1,
@@ -75,9 +79,11 @@ export const DetailsPanel = ({
         }}
       >
         {!isPortrait && (
-          <IconButton size="small" component="span" onClick={handleToggle}>
-            {panelState.state === "opened" && <CloseSharp />}
-          </IconButton>
+          <ShortcutHint shortcutId="layout.panels.details.toggle" placement="bottom-left">
+            <IconButton size="small" component="span" aria-label="close details panel" onClick={handleToggle}>
+              {panelState.state === "opened" && <CloseSharp />}
+            </IconButton>
+          </ShortcutHint>
         )}
         <span>{title ?? "Detalhes"}</span>
       </Box>

@@ -2,22 +2,22 @@ import { createSelector } from "reselect";
 import { LayoutState } from "../state";
 import { ViewportState } from "./state";
 
-export const selectActiveViewport = createSelector(
-  (state: { Layout: LayoutState }) => state.Layout.viewportManager,
-  (state): string | undefined => state && state.activeViewport
-);
-
 const getViewportManagerState = (state: { Layout: LayoutState }) =>
   state.Layout.viewportManager;
 
+export const selectActiveViewport = createSelector(
+  getViewportManagerState,
+  (state): string | undefined => state?.activeViewport
+);
+
 export const getViewportGroups = createSelector(
-  (state: { Layout: LayoutState }) => state.Layout.viewportManager,
+  getViewportManagerState,
   (state) => state?.groups
 );
 
 export const selectViewportStates = createSelector(
   getViewportManagerState,
-  (state) => state && state.viewports
+  (state) => state?.viewports
 );
 
 export type ViewportStateSelector = <O = ViewportState>(
@@ -32,6 +32,6 @@ export const getViewportState = (
 
   return createSelector(
     getViewportManagerState,
-    (state) => state && usedSelector(state.viewports[name])
+    (state) => state?.viewports?.[name] ? usedSelector(state.viewports[name]) : undefined
   );
 };

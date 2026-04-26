@@ -6,6 +6,7 @@ import { RibbonMenuManager } from "./Layout/hooks/useRibbonMenuManager";
 import { ViewportManager } from "./Layout/hooks/useViewportManager";
 import { ComponentRegistryManager } from "./Store/hooks/useComponentRegistryManager";
 import { StorageAPI, SessionStorageApi } from "../../../electron/preload/storage/typings";
+import { KeyboardShortcutsManager } from "./KeyboardShortcuts/managers/keyboardManager";
 
 export interface Manager {
   functions: {
@@ -20,15 +21,19 @@ export interface StartModuleProps {
     componentRegistryManager: ComponentRegistryManager
     layoutManager: LayoutManager
     ribbonMenuManager: RibbonMenuManager
-    viewportManager: ViewportManager
+    viewportManager: ViewportManager,
+    keyboardManager: KeyboardShortcutsManager
   },
   storage: StorageAPI & SessionStorageApi
 }
+
+export interface PostBootInitializationProps extends StartModuleProps {}
 
 export interface KernelCalls {
   startModule: (props: StartModuleProps) => void,
   restartModule: (storeManager: StartModuleProps) => void,
   shutdownModule: (storeManager: StoreManager) => void
+  postBootInitialization?: (mod: PostBootInitializationProps) => void
 }
 
 interface ManagersMap {
@@ -61,5 +66,25 @@ export interface IModule{
   constants?: {
     [key: string]: unknown;
   };
+  shortcuts?: Shortcut[];
+}
+
+/**
+ * Shortcut definition for keyboard shortcuts
+ * 
+ * @property id - Unique identifier for the shortcut
+ * @property key - Key combination (e.g., "Alt+1", "Ctrl+Shift+P")
+ * @property contextId - Context in which the shortcut is active
+ * @property action - Redux action to dispatch when shortcut is triggered (or null for custom handling)
+ * @property description - Human-readable description
+ * @property enabled - Whether the shortcut is currently enabled
+ */
+export interface Shortcut {
+  id: string;
+  key: string;
+  contextId: string;
+  action: CallableFunction | null;
+  description?: string;
+  enabled?: boolean;
 }
 

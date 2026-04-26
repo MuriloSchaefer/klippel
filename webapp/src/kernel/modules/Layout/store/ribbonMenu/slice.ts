@@ -1,4 +1,4 @@
-import { createSlice, SliceCaseReducers } from "@reduxjs/toolkit";
+import { createSlice, SliceCaseReducers, SliceSelectors } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import { addRibbonTab, selectTab} from "./actions";
 import { RibbonMenuState } from "./state";
@@ -12,7 +12,7 @@ export function persistRibbonMenuState(state: RibbonMenuState) {
   return state;
 }
 
-const slice = createSlice<RibbonMenuState, SliceCaseReducers<RibbonMenuState>, string>({
+const slice = createSlice<RibbonMenuState, SliceCaseReducers<RibbonMenuState>, string, SliceSelectors<RibbonMenuState>>({
     name: `${MODULE_NAME}RibbonMenu`,
     initialState: {
       activeTab: "home",

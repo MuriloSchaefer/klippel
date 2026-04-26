@@ -43,7 +43,7 @@ export default function ProcessMaterialUsageButton({
 
   const materials = useMaterials();
   const variation = useVariation({ variationId });
-  const graph = useGraph(variationId, (g) => g);
+  const graph = useGraph(variationId);
   const [newForm, setNewForm] = useState<{
     type?: string;
     materialId?: number;
@@ -113,7 +113,7 @@ export default function ProcessMaterialUsageButton({
                 <MaterialTypeSelector
                   filter={(t) =>
                     graphMaterials
-                      .map((mn) => materials[mn.materialId].type)
+                      .map((mn) => materials![mn.materialId].type)
                       .includes(t.name)
                   }
                   value={newForm.type}
@@ -161,7 +161,7 @@ export default function ProcessMaterialUsageButton({
                   const materialNode = graph.state!.nodes[
                     e.targetId
                   ] as MaterialNode;
-                  const material = materials[materialNode.materialId];
+                  const material = materials![materialNode.materialId];
                   return (
                     <ListItem>
                       <FormControl>

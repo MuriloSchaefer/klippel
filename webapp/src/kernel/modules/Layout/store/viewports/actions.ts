@@ -30,9 +30,16 @@ export const removeFromGroup = createAction<{viewportName: string}>(
 );
 
 
+export const setViewportHasChanged = createAction<{ name: string; hasChanged: boolean }>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.COMMAND}] Set viewport has changed`
+);
+
 // Events
 export const viewportAdded = createAction<ViewportState>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport added`
+);
+export const viewportHasChangedSet = createAction<{ name: string; hasChanged: boolean }>(
+    `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport has changed set`
 );
 export const viewportSelected = createAction<ViewportState>(
     `[${MODULE_NAME}:Viewports:${ACTION_TYPES.EVENT}] Viewport selected`

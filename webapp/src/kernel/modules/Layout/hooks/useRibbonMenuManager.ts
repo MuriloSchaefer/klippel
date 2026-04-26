@@ -1,21 +1,21 @@
 import useModule from "@kernel/hooks/useModule"
-import { Manager } from "@kernel/modules/base"
+import { Manager, Shortcut } from "@kernel/modules/base"
 import { Store } from "@kernel/modules/Store"
-import { ComponentRegistryContext, ComponentTypeMap } from "@kernel/modules/Store/contexts/componentRegistry"
 import _ from "lodash"
-import React, { useContext } from "react"
+import { useContext } from "react"
 import { SectionsContext } from "../components/RibbonMenu/SectionsProvider"
-import { SECTIONS_REGISTRY_NAME } from "../constants"
 import { addRibbonTab, selectTab } from "../store/ribbonMenu/actions"
-import { selectActiveTab, selectTabs } from "../store/ribbonMenu/selectors"
-import { RibbonTab, RibbonTabState } from "../store/ribbonMenu/state"
+import { selectTabs } from "../store/ribbonMenu/selectors"
+import { RibbonTabState, Tabs } from "../store/ribbonMenu/state"
 
 interface AddTabProps {
     label: string
     type: "dropdown" | "base"
     sectionNames: string[] // component name in the Registry
+    shortcuts?: Shortcut[]
 }
 export interface RibbonMenuManager extends Manager {
+    tabs: Tabs | undefined,
     functions: {
         tabExists: (tabName: string) => boolean
         addNewTab: (tab: AddTabProps) => void
@@ -40,6 +40,7 @@ export function useRibbonMenuManager():RibbonMenuManager{
     const componentRegistryManager = componentRegistry()
     
     return {
+        tabs,
         functions: {
             tabExists(tabName){
                return tabs != undefined && tabName in tabs 

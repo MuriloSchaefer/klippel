@@ -9,7 +9,7 @@ export const getGraphState = (graphId: string, selector?:GraphSelector) => {
     
     return createSelector(
         (state: {Graph: GraphsManagerState}) => state.Graph, 
-        (state) => state && usedSelector(state.graphs[graphId])
+        (state) => state?.graphs?.[graphId] ? usedSelector(state.graphs[graphId]) : undefined
         )
 }
     

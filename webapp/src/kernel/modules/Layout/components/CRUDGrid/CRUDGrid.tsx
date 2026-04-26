@@ -16,6 +16,7 @@ import {
   GridToolbarDensitySelector,
   GridValidRowModel,
   useGridApiRef,
+  type GridToolbarProps,
 } from "@mui/x-data-grid";
 import { useCallback, useState, useContext } from "react";
 
@@ -31,6 +32,13 @@ import { darken, lighten, styled } from "@mui/material/styles";
 
 import { CRUDGridContext, } from "./CRUDGridProvider";
 import type { GridApiCommunity } from "@mui/x-data-grid/internals";
+
+declare module '@mui/x-data-grid' {
+  interface ToolbarPropsOverrides {
+    handleAddRecord?: () => void;
+    addLabel?: string;
+  }
+}
 
 const getBackgroundColor = (color: string, mode: string) =>
   mode === "dark" ? darken(color, 0.7) : lighten(color, 0.7);
@@ -142,10 +150,7 @@ const NoRows = () => (
 const CustomToolbar = ({
   handleAddRecord,
   addLabel,
-}: {
-  handleAddRecord: () => void;
-  addLabel: string;
-}) => {
+}: GridToolbarProps & { handleAddRecord?: () => void; addLabel?: string }) => {
   return (
     <GridToolbarContainer
       sx={{ display: "flex", justifyContent: "space-around" }}

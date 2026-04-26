@@ -18,7 +18,7 @@ export default function ProcessEditButton({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const converterModule = useModule<IConverterModule>("Converter");
   const graphModule = useModule<IGraphModule>("Graph");
-  const graph = graphModule.hooks.useGraph(variationId, (g) => g);
+  const graph = graphModule.hooks.useGraph(variationId);
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { CompoundSelector } = converterModule.components;
   // Ensure costTime and costMoney are always defined (fallback to a default CompoundValue if missing)

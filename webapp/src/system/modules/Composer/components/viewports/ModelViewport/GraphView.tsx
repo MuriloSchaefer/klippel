@@ -36,7 +36,7 @@ export default function GraphView({ variationId }: Readonly<{ variationId: strin
   const dimensions = useResizeObserver(wrapperRef);
 
   // Get the graph for the current variation
-  const graph = useGraph<VariationGraphState>(variationId, (g) => g);
+  const graph = useGraph<VariationGraphState>(variationId);
 
   // Render with d3 grid
   const width = dimensions?.width ?? 700;

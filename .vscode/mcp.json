@@ -1,0 +1,21 @@
+{
+  "servers": {
+    "electron-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest",
+        "--browser-url=http://127.0.0.1:9222"
+      ]
+    },
+    "klippel": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "/home/schaefer/Documents/personal/klippel/webapp/electron/main/mcp/server.ts"
+      ],
+      "env": {
+        "CDP_PORT": "9222"
+      }
+    }
+  }
+}

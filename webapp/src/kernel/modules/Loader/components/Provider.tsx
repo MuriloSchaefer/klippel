@@ -14,7 +14,7 @@ export interface ModulesMap {
         [name: string]: IModule
     },
   }
-const ModulesProvider = ({ children }: { children: React.ReactElement}) => {
+const ModulesProvider = ({ children }: { children: React.ReactElement | React.ReactElement[]}) => {
 
     const [modules, setModules] = useState<ModulesContextType>({
         Store: storeModule

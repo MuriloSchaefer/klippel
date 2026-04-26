@@ -1,4 +1,4 @@
-import { createSlice, SliceCaseReducers } from "@reduxjs/toolkit";
+import { createSlice, SliceCaseReducers, SliceSelectors } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../../constants";
 import { ViewportGroups, ViewportGroupState } from "../state";
 import { createGroup } from "./actions";
@@ -28,7 +28,8 @@ const restoreSession = async (sessionPath: PathLike = ".session/Layout/viewPortM
 const slice = createSlice<
   ViewportGroups,
   SliceCaseReducers<ViewportGroups>,
-  string
+  string,
+  SliceSelectors<ViewportGroups>
 >({
   name: `${MODULE_NAME}ViewportsGroups`,
   initialState: await restoreSession(),

@@ -17,6 +17,7 @@ import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import useVariation from "../../../hooks/useVariation";
 import { debounce } from "@kernel/utils";
+import { VariationGraphState } from "@system/modules/Composer/typings";
 
 export default function ElectiveListAccordion({
   variationId,
@@ -30,13 +31,13 @@ export default function ElectiveListAccordion({
 
   const graphModule = useModule<IGraphModule>("Graph");
   const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId, (g: any) => g);
+  const graph = useGraph<VariationGraphState>(variationId);
 
   const electiveEdges = graph?.state
     ? Object.values(graph.state.edges).filter((e: any) => e.sourceId === garmentId && e.type === "HAS_ELECTIVE")
     : [];
 
-  const electiveNodes = electiveEdges.map((e: any) => graph.state.nodes[e.targetId]);
+  const electiveNodes = electiveEdges.map((e: any) => graph.state?.nodes[e.targetId]);
 
   return (
     <>

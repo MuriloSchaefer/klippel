@@ -1,4 +1,5 @@
 
+import { useMemo } from "react"
 import useModule from "@kernel/hooks/useModule"
 import { Store } from "@kernel/modules/Store"
 
@@ -12,9 +13,10 @@ export function useActiveViewport<S = any>():ViewportState<S>{
 
     const storeModule = useModule<Store>("Store");
     const { useAppSelector } = storeModule.hooks;
-    
+
     const selectedViewport = useAppSelector(selectActiveViewport);
-    return useAppSelector(getViewportState(selectedViewport!))
+    const viewportSelector = useMemo(() => getViewportState(selectedViewport!), [selectedViewport]);
+    return useAppSelector(viewportSelector)
 }
 
 export default useActiveViewport

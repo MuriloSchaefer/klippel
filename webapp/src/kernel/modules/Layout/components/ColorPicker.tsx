@@ -30,7 +30,7 @@ export default function ColorPicker(
       />
       {showDialog && (
         <Dialog
-          onChange={(color, evt) => {
+          onChange={(color: { hex: string }, evt: unknown) => {
             setColor(color.hex);
             setShowDialog(false);
             colorChange?.(color, evt);

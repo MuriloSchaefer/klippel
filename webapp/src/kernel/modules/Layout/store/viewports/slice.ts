@@ -1,4 +1,4 @@
-import { createSlice, SliceCaseReducers } from "@reduxjs/toolkit";
+import { createSlice, SliceCaseReducers, SliceSelectors } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import { viewportManagerState, ViewportState } from "./state";
 import groupsSlice from "./groups/slice";
@@ -10,6 +10,7 @@ import {
   renameViewport,
   selectViewport,
   setExtrasViewport,
+  setViewportHasChanged,
 } from "./actions";
 import { PathLike } from "fs";
 
@@ -74,7 +75,8 @@ const restoreActiveVPSession = async (
 const slice = createSlice<
   viewportManagerState,
   SliceCaseReducers<viewportManagerState>,
-  string
+  string,
+  SliceSelectors<viewportManagerState>
 >({
   name: `${MODULE_NAME}Viewports`,
   initialState: {
@@ -85,12 +87,21 @@ const slice = createSlice<
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(addViewport, (state: viewportManagerState, { payload }) => {
+      const vp = { ...payload, hasChanged: false };
       return {
         ...state,
         viewports: {
           ...state.viewports,
-          [payload.name]: payload,
+          [vp.name]: vp,
         },
+      };
+    });
+    builder.addCase(setViewportHasChanged, (state, { payload: { name, hasChanged } }) => {
+      const vp = { ...state.viewports[name], hasChanged };
+      persistViewportState(vp);
+      return {
+        ...state,
+        viewports: { ...state.viewports, [name]: vp },
       };
     });
     builder.addCase(

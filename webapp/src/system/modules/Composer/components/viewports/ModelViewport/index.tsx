@@ -8,15 +8,17 @@ import CompositionTree from "../CompositionTree/CompositionTree";
 import useVariation from "../../../hooks/useVariation";
 import SVGView from "./SVGView";
 import GraphView from "./GraphView";
-import { useMemo } from "react";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import DetailPanel from "./DetailPanel";
 import WidgetsSharpIcon from "@mui/icons-material/WidgetsSharp";
+import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
+import ProcessTimeAccordion from "../ProcessTimeAccordion";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { ErrorBoundary } from "react-error-boundary";
 import { fallbackRender } from "@kernel/App";
+import React, { useMemo } from "react";
 
-export default function ModelViewport() {
+function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const svgModule = useModule<ISVGModule>("SVG");
   const { ViewportNotificationsTray, SettingsPanel, Accordion, DetailsPanel } =
@@ -75,6 +77,13 @@ export default function ModelViewport() {
           >
             <MaterialListAccordion variationId={activeVP.extra.variationId} />
           </Accordion>
+          <Accordion
+            name="Tempo"
+            icon={<AccessTimeSharpIcon />}
+            summary="Resumo de tempo por processo"
+          >
+            <ProcessTimeAccordion variationId={activeVP.extra.variationId} />
+          </Accordion>
         </SettingsPanel>
 
         <DetailsPanel>
@@ -122,3 +131,5 @@ export default function ModelViewport() {
     </SVGEditorToolkit>
   );
 }
+
+export default React.memo(ModelViewport);

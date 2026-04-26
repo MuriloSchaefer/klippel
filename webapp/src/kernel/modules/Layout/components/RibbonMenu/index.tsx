@@ -1,18 +1,22 @@
-import React, { createElement, useCallback, useMemo } from "react";
+import React, { createElement, useCallback, useMemo, useEffect, useRef } from "react";
 
 import type { BoxProps } from "@mui/material/Box";
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import { TabPanel, TabContext } from "@mui/lab";
+import Chip from '@mui/material/Chip';
+import KeyboardIcon from '@mui/icons-material/Keyboard';
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
+import type { KeyboardShortcuts } from "@kernel/modules/KeyboardShortcuts";
+import { selectShowHints, selectPressedKeys } from "@kernel/modules/KeyboardShortcuts/store/selectors";
 
 import { selectActiveTab, selectTabs } from "../../store/ribbonMenu/selectors";
 import SectionsProvider from "./SectionsProvider";
 import useRibbonMenuManager from "../../hooks/useRibbonMenuManager";
-import { SECTIONS_REGISTRY_NAME } from "../../constants";
+import { MODULE_NAME, SECTIONS_REGISTRY_NAME } from "../../constants";
 
 interface RibbonMenuProps extends BoxProps {
   systemTray?: React.ReactNode;
@@ -23,6 +27,15 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
   const { useAppSelector } = storeModule.hooks;
   const { componentRegistry } = storeModule.managers;
 
+  const keyboardShortcutsModule = useModule<KeyboardShortcuts>("KeyboardShortcuts");
+  const { 
+    keyboardHintContainerSx,
+    keyboardHintKeySx,
+    keyboardHintKeyPressedSx,
+    keyboardHintSeparatorSx,
+  } = keyboardShortcutsModule.styles;
+  const {ShortcutProvider} = keyboardShortcutsModule.components
+
   const componentRegistryManager = componentRegistry();
 
   const ribbonMenuManager = useRibbonMenuManager();
@@ -30,11 +43,16 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
 
   const tabs = useAppSelector(selectTabs);
   const activeTab = useAppSelector(selectActiveTab);
+  const showHints = useAppSelector(selectShowHints);
+  const pressedKeys = useAppSelector(selectPressedKeys);
+  
+  // Refs to track tab elements for hint positioning
+  const tabRefs = useRef<Record<string, HTMLElement | null>>({});
 
   const handleTabSelection = useCallback((name: string) => {
     selectTab(name);
     //setSections(name, [<div>testing</div>])
-  }, []);
+  }, [selectTab]);
 
   if (!activeTab || !tabs) return <></>;
 
@@ -42,29 +60,87 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
     <TabContext value={activeTab}>
       <Box
         sx={{ display: "flex", justifyContent: "space-between"}}
-        role="ribbon-menu-tabs"
         aria-label="ribbon menu tabs"
       >
-        <Tabs
-          value={activeTab}
-          aria-label="ribbon menu tabs"
-          role="ribbon-menu-tabs"
-          textColor="secondary"
-          indicatorColor="secondary"
-        >
-          {Object.entries(tabs).map(([name, tab]) => (
-            <Tab
-              value={name}
-              key={name}
-              label={tab.label}
-              id={name}
-              onClick={() => handleTabSelection(name)}
-              wrapped
-            />
-          ))}
-        </Tabs>
+        <Box sx={{ position: 'relative', flex: 1 }}>
+          <ShortcutProvider contextId={`${MODULE_NAME}/RibbonMenu`} >
+          <Tabs
+            value={activeTab}
+            aria-label="ribbon menu tabs"
+            id="ribbon-menu-tabs"
+            textColor="secondary"
+            indicatorColor="secondary"
+          >
+            {Object.entries(tabs).map(([name, tab], index) => (
+              <Tab
+                value={name}
+                key={name}
+                label={tab.label}
+                id={`${MODULE_NAME}/RibbonMenu/${index}`}
+                onClick={() => handleTabSelection(name)}
+                wrapped
+                ref={(el) => {
+                  tabRefs.current[name] = el;
+                }}
+                sx={{ position: 'relative' }}
+              />
+            ))}
+          </Tabs>
+          {/* Render keyboard hints as overlays */}
+          {showHints && Object.entries(tabs).map(([name, tab], index) => {
+            const shortcutKey = `Alt+${index + 1}`;
+            const keyParts = shortcutKey.split('+');
+            const isPressed = keyParts.some(part => pressedKeys.includes(part));
+            const tabEl = tabRefs.current[name];
+            
+            if (!tabEl) return null;
+            
+            return (
+              <Box
+                key={`hint-${name}`}
+                sx={{
+                  position: 'absolute',
+                  ...keyboardHintContainerSx,
+                  pointerEvents: 'none',
+                  zIndex: 10,
+                }}
+                style={{
+                  left: `${tabEl.offsetLeft + 4}px`,
+                  top: `${tabEl.offsetTop + tabEl.offsetHeight - 26}px`,
+                }}
+              >
+                <KeyboardIcon
+                  sx={{
+                    fontSize: '14px',
+                    color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.5)',
+                    transition: 'color 0.1s ease-in-out',
+                  }}
+                />
+                {keyParts.map((part, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 && (
+                      <Box component="span" sx={keyboardHintSeparatorSx}>
+                        +
+                      </Box>
+                    )}
+                    <Chip
+                      label={part}
+                      size="small"
+                      sx={
+                        pressedKeys.includes(part)
+                          ? keyboardHintKeyPressedSx
+                          : keyboardHintKeySx
+                      }
+                    />
+                  </React.Fragment>
+                ))}
+              </Box>
+            );
+          })}
+          </ShortcutProvider>
+        </Box>
         <Box
-          role="system-tray"
+          id="system-tray"
           aria-label="system tray"
           sx={{ display: "flex", p: 1, alignItems: "center" }}
         >

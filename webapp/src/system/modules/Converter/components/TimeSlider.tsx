@@ -110,8 +110,8 @@ export default function TimeSlider({
       </Box>
 
       <Grid container spacing={2} alignItems="center">
-        <Grid item>{icon}</Grid>
-        <Grid item xs>
+        <Grid>{icon}</Grid>
+        <Grid size="grow">
           <Slider
             value={value}
             min={0}

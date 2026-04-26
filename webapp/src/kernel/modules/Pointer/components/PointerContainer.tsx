@@ -3,6 +3,7 @@ import React, {
   cloneElement,
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -17,6 +18,14 @@ import DragIndicatorSharpIcon from "@mui/icons-material/DragIndicatorSharp";
 
 import useDraggable from "../hooks/useDraggable";
 import { fallbackRender } from "@kernel/App";
+import useModule from "@kernel/hooks/useModule";
+import type { Store } from "@kernel/modules/Store";
+import { pushContext, popContext } from "@kernel/modules/KeyboardShortcuts/store/actions";
+import ShortcutHint from "@kernel/modules/KeyboardShortcuts/components/ShortcutHint";
+import { pushContainer, popContainer, focusContainer } from "../store/actions";
+import { getContainerHandlerMap } from "../pointerContainerRegistry";
+import { POINTER_CONTAINER_CONTEXT_ID } from "../constants";
+import type { PointerState } from "../store/state";
 
 export interface PointerContainerActionProps extends IconButtonProps {
   closeContainer?: (e: MouseEvent) => void;
@@ -24,13 +33,17 @@ export interface PointerContainerActionProps extends IconButtonProps {
 
 export interface PointerContainerProps {}
 
+let instanceCounter = 0;
+
 const ModalContent = ({
   component,
   position,
   actions,
   handleClose,
+  onInteract,
 }: {
   handleClose: (e: MouseEvent) => void;
+  onInteract: () => void;
   component: React.ReactElement<PointerContainerProps>;
   position: {
     x: number;
@@ -71,6 +84,7 @@ const ModalContent = ({
         transformOrigin: "bottom right",
       }}
       elevation={6}
+      onMouseDown={onInteract}
     >
       <Box
         sx={{
@@ -97,23 +111,38 @@ const ModalContent = ({
             <DragIndicatorSharpIcon />
           </IconButton>
 
-          {actions.map((a) =>
-            cloneElement(a, {
-              // sx: { flexGrow: 1 },
+          {actions.map((a, index) => {
+            const cloned = cloneElement(a, {
               size: "small",
               closeContainer: handleClose,
-            })
-          )}
+            });
+            return index === 0 ? (
+              <ShortcutHint
+                key={index}
+                shortcutId="pointer.container.confirmAndClose"
+                placement="top-right"
+              >
+                {cloned}
+              </ShortcutHint>
+            ) : (
+              cloned
+            );
+          })}
 
-          <IconButton
-            color="error"
-            key="reject"
-            onClick={handleClose}
-            size="small"
-            id="close-panel"
+          <ShortcutHint
+            shortcutId="pointer.container.close"
+            placement="bottom-right"
           >
-            <CloseSharpIcon />
-          </IconButton>
+            <IconButton
+              color="error"
+              key="reject"
+              onClick={handleClose}
+              size="small"
+              id="close-panel"
+            >
+              <CloseSharpIcon />
+            </IconButton>
+          </ShortcutHint>
         </Box>
         <Box
           role="pointer-panel-content"
@@ -136,14 +165,31 @@ const ModalContent = ({
 export const PointerContainer = ({
   children,
   onClose,
+  onConfirm,
+  actions,
   ...props
 }: {
   children: React.ReactElement;
   component: React.ReactElement<PointerContainerProps>;
   actions: React.ReactElement<PointerContainerActionProps>[];
   onClose?: (event: MouseEvent) => void;
+  onConfirm?: () => void;
 }) => {
   const [open, setOpen] = useState(false);
+
+  const storeModule = useModule<Store>('Store');
+  const dispatch = storeModule.hooks.useAppDispatch();
+  const focusStack = storeModule.hooks.useAppSelector(
+    (state: any) => (state.Pointer as PointerState | undefined)?.containerFocusStack ?? []
+  );
+  const focusStackRef = useRef(focusStack);
+  focusStackRef.current = focusStack;
+
+  const instanceId = useRef(`pointer-container-${instanceCounter++}`);
+  const onConfirmRef = useRef(onConfirm);
+  onConfirmRef.current = onConfirm;
+  const actionsRef = useRef(actions);
+  actionsRef.current = actions;
 
   const { innerWidth: width, innerHeight: height } = window;
   const windowCenter = [width / 2, height / 2];
@@ -152,17 +198,41 @@ export const PointerContainer = ({
     initialPosition: { x: windowCenter[0], y: windowCenter[1] },
   });
 
-  const handleOpen = useCallback((e: MouseEvent) => {
-    setPosition({ x: e.clientX, y: e.clientY });
-    setOpen(true);
-    e.stopPropagation();
-  }, []);
+  const doClose = useCallback(() => {
+    const stack = focusStackRef.current;
+    const isLast = stack.length === 1 && stack[0] === instanceId.current;
+    setOpen(false);
+    getContainerHandlerMap().delete(instanceId.current);
+    dispatch(popContainer(instanceId.current));
+    if (isLast) dispatch(popContext());
+  }, [dispatch]);
 
   const handleClose = useCallback((e: MouseEvent) => {
-    setOpen(false);
-    e.stopPropagation();
+    doClose();
+    e?.stopPropagation?.();
     onClose?.(e);
-  }, []);
+  }, [doClose, onClose]);
+
+  const handleOpen = useCallback((e: MouseEvent) => {
+    const isFirst = focusStackRef.current.length === 0;
+    setPosition({ x: e.clientX, y: e.clientY });
+    setOpen(true);
+    getContainerHandlerMap().set(instanceId.current, {
+      close: doClose,
+      confirm: (): boolean => {
+        if (actionsRef.current?.[0]?.props?.disabled) return false;
+        onConfirmRef.current?.();
+        return true;
+      },
+    });
+    dispatch(pushContainer(instanceId.current));
+    if (isFirst) dispatch(pushContext(POINTER_CONTAINER_CONTEXT_ID));
+    e.stopPropagation();
+  }, [doClose, dispatch, setPosition]);
+
+  const handleInteract = useCallback(() => {
+    dispatch(focusContainer(instanceId.current));
+  }, [dispatch]);
 
   return (
     <>
@@ -186,6 +256,8 @@ export const PointerContainer = ({
           <ModalContent
             position={position}
             handleClose={handleClose}
+            onInteract={handleInteract}
+            actions={actions}
             {...props}
           />
         ) : (

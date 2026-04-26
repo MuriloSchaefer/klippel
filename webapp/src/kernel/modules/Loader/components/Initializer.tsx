@@ -9,6 +9,7 @@ import storeModule from "@kernel/modules/Store";
 import SVG from "@kernel/modules/SVG";
 import pointerModule from "@kernel/modules/Pointer";
 import Markdown from "@kernel/modules/Markdown";
+import KeyboardShortcuts from "@kernel/modules/KeyboardShortcuts";
 
 import converterModule from "@system/modules/Converter";
 import materialsModule from "@system/modules/Materials";
@@ -21,23 +22,23 @@ import { ModulesMap } from "./Provider";
 import { IModule } from "../../base";
 
 type InitializerProps = {
-  afterLoadComponent: React.ReactElement;
+  afterLoadComponent: React.ReactElement | React.ReactElement[];
   bootLog: (log: string) => void;
 };
 const KERNEL_LOGS = "logs/kernel";
 const getDailyLogFileName = () => {
-    const dt = new Date();
-    return `${KERNEL_LOGS}/${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}`;
-}
+  const dt = new Date();
+  return `${KERNEL_LOGS}/${dt.getFullYear()}/${
+    dt.getMonth() + 1
+  }/${dt.getDate()}`;
+};
 
-const PreInit = (props: Omit<InitializerProps, "bootLog">) => {
+const PreInit = (props: Omit<InitializerProps, "bootLog" | "logName">) => {
   const { useLog } = storeModule.hooks;
   const dt = new Date();
+  const logName = `${getDailyLogFileName()}/boot.log`;
 
-  const bootLog = useLog(
-    MODULE_NAME,
-    `${getDailyLogFileName()}/boot.log`
-  );
+  const bootLog = useLog(MODULE_NAME, logName);
 
   bootLog?.(`New boot ---- ${dt.toLocaleString()}`);
   return <Initializer {...props} bootLog={bootLog} />;
@@ -50,7 +51,7 @@ const Initializer = ({
   const moduleManager = module.managers.modules();
   const graph = useGraph(GRAPH_NAME, (g) => g?.id);
 
-  const [storeInitialized, setStoreInitialized] = useState(false)
+  const [storeInitialized, setStoreInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [graphInitialized, setGraphInitialized] = useState(false);
   const [staticModulesLoaded, setStaticModulesLoaded] = useState(0);
@@ -61,24 +62,25 @@ const Initializer = ({
     () => ({
       [module.name]: module,
       [graphModule.name]: graphModule,
+      [KeyboardShortcuts.name]: KeyboardShortcuts,
       [layoutModule.name]: layoutModule,
     }),
-    []
+    [],
   );
 
   const extraModules: ModulesMap = {
-      kernel: {
-        [SVG.name]:SVG, 
-        [pointerModule.name]:pointerModule, 
-        [Markdown.name]:Markdown
-      },
-      system: {
-        [converterModule.name]: converterModule, 
-        [materialsModule.name]: materialsModule, 
-        [composerModule.name]: composerModule, 
-        // [ordersModule.name]: ordersModule
-      },
-    };
+    kernel: {
+      [SVG.name]: SVG,
+      [pointerModule.name]: pointerModule,
+      [Markdown.name]: Markdown,
+    },
+    system: {
+      [converterModule.name]: converterModule,
+      [materialsModule.name]: materialsModule,
+      [composerModule.name]: composerModule,
+      // [ordersModule.name]: ordersModule
+    },
+  };
 
   const graphsManager = graphModule.managers.graphs();
   const { createGraph, resetGraph } = graphsManager.functions;
@@ -91,24 +93,24 @@ const Initializer = ({
     if (mod && !moduleManager.functions.isModuleLoaded(mod))
       loadStaticModule(staticModules[mod]);
   }, [staticModulesLoaded, storeInitialized]);
-  
+
   useLayoutEffect(() => {
-    if (storeInitialized) return
-    if (staticModulesLoaded === Object.keys(staticModules).length){
+    if (storeInitialized) return;
+    if (staticModulesLoaded === Object.keys(staticModules).length) {
       bootLog(
-        `Loading store module  module=${storeModule.name} version=(${storeModule.version})`
+        `Loading store module  module=${storeModule.name} version=(${storeModule.version})`,
       );
-      moduleManager.functions.reloadModule(storeModule.name)
+      moduleManager.functions.reloadModule(storeModule.name);
       setStoreInitialized(true);
       bootLog(
-        `Store module loaded  module=${storeModule.name} version=(${storeModule.version})`
+        `Store module loaded  module=${storeModule.name} version=(${storeModule.version})`,
       );
     }
   }, [storeInitialized, staticModulesLoaded]);
 
   // LOAD KERNEL MODULES
   useLayoutEffect(() => {
-    if (!storeInitialized) return
+    if (!storeInitialized) return;
 
     // all static modules are loaded and we can now load the kernel ones
     const modName = Object.keys(extraModules.kernel)[kernelModulesLoaded];
@@ -129,8 +131,16 @@ const Initializer = ({
 
   // SET INITIALIZATION COMPLETE
   useLayoutEffect(() => {
-    if (extraModulesLoaded === Object.keys(extraModules.system).length)
+    if (extraModulesLoaded === Object.keys(extraModules.system).length) {
+      Object.values({
+        ...staticModules,
+        ...extraModules.kernel,
+        ...extraModules.system,
+      }).forEach((mod) => {
+        moduleManager.functions.postBootInitialization(mod.name);
+      });
       setIsInitializing(false);
+    }
   }, [extraModulesLoaded]);
 
   // CREATE GRAPH
@@ -171,8 +181,8 @@ const Initializer = ({
             },
           },
           outputs: {},
-        }
-      )
+        },
+      ),
     );
     Object.values(extraModules.kernel).forEach((mod) => {
       mod.depends_on.push("Loader"); // all modules depends on the loader
@@ -190,7 +200,7 @@ const Initializer = ({
           id: mod.name,
           type: "EXTRA_KERNEL_MODULE",
         },
-        { inputs: dependencies, outputs: {} }
+        { inputs: dependencies, outputs: {} },
       );
     });
 
@@ -210,7 +220,7 @@ const Initializer = ({
           id: mod.name,
           type: "EXTRA_SYSTEM_MODULE",
         },
-        { inputs: dependencies, outputs: {} }
+        { inputs: dependencies, outputs: {} },
       );
     });
     setIsInitializing(false);
@@ -219,27 +229,27 @@ const Initializer = ({
   // HELPERS
   function loadStaticModule(mod: IModule) {
     bootLog(
-      `Loading static module  module=${mod.name} version=(${mod.version})`
+      `Loading static module  module=${mod.name} version=(${mod.version})`,
     );
     moduleManager.functions.loadModule(mod, bootLog);
     setStaticModulesLoaded((old) => old + 1);
     bootLog(
-      `Static module loaded  module=${mod.name} version=(${mod.version})`
+      `Static module loaded  module=${mod.name} version=(${mod.version})`,
     );
   }
   function loadKernelModule(mod: IModule) {
     bootLog(
-      `Loading kernel module  module=${mod.name} version=(${mod.version})`
+      `Loading kernel module  module=${mod.name} version=(${mod.version})`,
     );
     moduleManager.functions.loadModule(mod, bootLog);
     setKernelModulesLoaded((old) => old + 1);
     bootLog(
-      `kernel module loaded  module=${mod.name} version=(${mod.version})`
+      `kernel module loaded  module=${mod.name} version=(${mod.version})`,
     );
   }
   function loadExtraSystemModule(mod: IModule) {
     bootLog(
-      `Loading extra module  module=${mod.name} version=(${mod.version})`
+      `Loading extra module  module=${mod.name} version=(${mod.version})`,
     );
     moduleManager.functions.loadModule(mod, bootLog);
     setExtraModulesLoaded((old) => old + 1);
@@ -253,7 +263,7 @@ const Initializer = ({
   }, [isInitializing]);
 
   if (isInitializing) return <div>Iniciando sistema</div>;
-  
+
   return afterLoadComponent;
 };
 
