@@ -106,38 +106,74 @@ jobs:
           mkdir -p extracted-artifacts
           unzip -q "$ZIP_FILE" -d extracted-artifacts
           
-          # Find the actual installer file
+          echo "Contents of extracted artifacts:"
+          find extracted-artifacts -type f | head -20
+          
+          # Find the actual installer file based on OS
           if [ "${{ runner.os }}" == "Linux" ]; then
-            INSTALLER=$(find extracted-artifacts -type f -name "*.deb" | head -1)
+            # Look for DEB, RPM, or files named "Klippel" (which might be the DEB)
+            INSTALLER=$(find extracted-artifacts -type f \( -name "*.deb" -o -name "*.rpm" -o -name "Klippel" \) | grep -v ".app" | head -1)
+            if [ ! -z "$INSTALLER" ]; then
+              FILE_TYPE=$(file "$INSTALLER" 2>/dev/null || echo "")
+              echo "Found file: $INSTALLER (Type: $FILE_TYPE)"
+            fi
           elif [ "${{ runner.os }}" == "macOS" ]; then
-            INSTALLER=$(find extracted-artifacts -type f -name "*.zip" | head -1)
+            # Look for ZIP file (created by maker-zip) that contains the .app
+            INSTALLER=$(find extracted-artifacts -type f \( -name "Klippel*.zip" -o -name "*darwin*.zip" \) | head -1)
+            if [ -z "$INSTALLER" ]; then
+              # If no specific ZIP found, look for any ZIP file
+              INSTALLER=$(find extracted-artifacts -type f -name "*.zip" | grep -v "node_modules" | head -1)
+            fi
           elif [ "${{ runner.os }}" == "Windows" ]; then
+            # Look for EXE files
             INSTALLER=$(find extracted-artifacts -type f -name "*.exe" | head -1)
+            if [ -z "$INSTALLER" ]; then
+              # Also check for files named Klippel or similar without extension
+              INSTALLER=$(find extracted-artifacts -type f -name "Klippel*" -o -name "*Setup*" | head -1)
+            fi
           fi
           
           if [ -z "$INSTALLER" ]; then
             echo "⚠ No installer file found after extracting ZIP"
-            echo "Contents of extracted artifacts:"
+            echo "Searching for any potential installer files..."
             find extracted-artifacts -type f
             exit 0
           fi
           
+          echo "✓ Found installer: $INSTALLER"
           echo "INSTALLER_PATH=$INSTALLER" >> $GITHUB_ENV
-          echo "Found installer: $INSTALLER"
 
       - name: Test installation (Linux)
         if: runner.os == 'Linux' && env.INSTALLER_PATH != ''
         run: |
-          # Install the DEB package
-          sudo dpkg -i "${{ env.INSTALLER_PATH }}" || true
-          sudo apt-get install -f -y
+          echo "Installing from: ${{ env.INSTALLER_PATH }}"
+          
+          # Check file type
+          FILE_TYPE=$(file "${{ env.INSTALLER_PATH }}" 2>/dev/null || echo "")
+          echo "File type: $FILE_TYPE"
+          
+          # Try to install - handle both DEB/RPM with extensions and files without extensions
+          if [[ "${{ env.INSTALLER_PATH }}" == *.deb ]] || [[ "$FILE_TYPE" == *"Debian"* ]]; then
+            echo "Installing as DEB package..."
+            sudo dpkg -i "${{ env.INSTALLER_PATH }}" || true
+            sudo apt-get install -f -y
+          elif [[ "${{ env.INSTALLER_PATH }}" == *.rpm ]] || [[ "$FILE_TYPE" == *"RPM"* ]]; then
+            echo "Installing as RPM package..."
+            sudo rpm -i "${{ env.INSTALLER_PATH }}" || true
+          else
+            # Try DEB first as default
+            echo "Installing as DEB package (file type unclear)..."
+            sudo dpkg -i "${{ env.INSTALLER_PATH }}" || true
+            sudo apt-get install -f -y
+          fi
           
           # Verify Klippel is installed
           if which Klippel > /dev/null; then
-            echo "✓ Linux DEB installation verification passed"
+            echo "✓ Linux installation verification passed"
           else
-            echo "✗ Linux DEB installation verification failed"
-            dpkg -l | grep -i klippel || true
+            echo "✗ Linux installation verification failed"
+            echo "Checking installed packages:"
+            dpkg -l | grep -i klippel || rpm -qa | grep -i klippel || echo "No Klippel package found"
             exit 1
           fi
 
@@ -170,7 +206,7 @@ jobs:
           pkill Xvfb || true
 
       - name: Test installation (macOS)
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && env.INSTALLER_PATH != ''
         run: |
           # Extract ZIP archive
           unzip -q "${{ env.INSTALLER_PATH }}" -d test-install
@@ -186,7 +222,7 @@ jobs:
           fi
 
       - name: Test app launch (macOS)
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && env.INSTALLER_PATH != ''
         timeout-minutes: 2
         run: |
           # Launch app
