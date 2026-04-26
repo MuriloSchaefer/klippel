@@ -72,7 +72,7 @@ export const postBootInitialization = ({managers: { storeManager, keyboardManage
 
   keyboardManager.functions.registerShortcuts([
     {
-      id: `${MODULE_NAME}/ViewportManager/closeViewport`,
+      id: 'layout.viewport.close',
       key: 'Ctrl+w',
       contextId: `${MODULE_NAME}/ViewportManager`,
       action: () => {
@@ -82,6 +82,49 @@ export const postBootInitialization = ({managers: { storeManager, keyboardManage
       },
       description: 'Close the active viewport tab',
       enabled: true,
-    }
-  ], {context: 'global'})
+    },
+    {
+      id: 'layout.viewport.add',
+      key: 'Ctrl+n',
+      contextId: `${MODULE_NAME}/ViewportManager`,
+      action: () => {
+        const btn = document.getElementById('new-viewport') as HTMLElement | null;
+        btn?.click();
+      },
+      description: 'Add a new viewport tab',
+      enabled: true,
+    },
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
+      id: `layout.viewport.switch.${n}`,
+      key: `Ctrl+${n}`,
+      contextId: `${MODULE_NAME}/ViewportManager`,
+      action: () => {
+        const tabsRoot = document.querySelector('[role="viewport-tabs"]');
+        if (!tabsRoot) return;
+        const allTabs = Array.from(tabsRoot.querySelectorAll('[role="tab"]'));
+        const viewportTabs = allTabs.filter(
+          (el) => el.id !== 'home' && el.id !== 'new-viewport',
+        ) as HTMLElement[];
+        viewportTabs[n - 1]?.click();
+      },
+      description: `Switch to viewport ${n}`,
+      enabled: true,
+    })),
+  ], {context: `${MODULE_NAME}/ViewportManager`})
+
+  keyboardManager.functions.registerShortcuts([
+    {
+      id: 'layout.systemtray.theme.toggle',
+      key: 'Ctrl+Shift+t',
+      contextId: 'Global',
+      action: () => {
+        const store = storeManager.functions.getStore();
+        if (!store) return;
+        const current = store.getState()?.Layout?.theme ?? 'dark';
+        store.dispatch(switchTheme({ theme: current === 'dark' ? 'light' : 'dark' }));
+      },
+      description: 'Toggle between light and dark theme',
+      enabled: true,
+    },
+  ], {context: 'Global'})
 }
