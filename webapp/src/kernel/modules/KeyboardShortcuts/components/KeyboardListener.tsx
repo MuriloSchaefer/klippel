@@ -40,6 +40,11 @@ const preventPropagation = (event: KeyboardEvent) =>{
         event.preventDefault();
       }
     }
+    // Prevent Ctrl+W from triggering Chromium's built-in window-close behavior
+    // so the app's own shortcut handler (close active viewport) can run instead.
+    if (event.ctrlKey && !event.altKey && !event.metaKey && event.key === 'w') {
+      event.preventDefault();
+    }
 }
 
 const KeyboardListener: React.FC = () => {

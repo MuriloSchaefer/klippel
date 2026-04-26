@@ -191,6 +191,7 @@ const ModelSelectionModal = ({
           <Button
             disabled={!selectedOption}
             variant="contained"
+            aria-label="confirm-model-selection"
             onClick={() => {
               if (!selectedOption) return;
               onModelSelection(selectedOption);

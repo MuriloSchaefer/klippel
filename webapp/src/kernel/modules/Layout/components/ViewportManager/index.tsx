@@ -14,6 +14,8 @@ import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 import type { IPointerModule } from "@kernel/modules/Pointer";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { MODULE_NAME } from "../../constants";
 
 // Internals
 import ViewportLoader from "./ViewportLoader";
@@ -35,6 +37,9 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
 
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
+
+  const keyboardShortcutsModule = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutProvider } = keyboardShortcutsModule.components;
 
   const groups = useAppSelector(selectAllGroups);
 
@@ -75,6 +80,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
   }, []);
 
   return (
+    <ShortcutProvider contextId={`${MODULE_NAME}/ViewportManager`}>
     <Box
       role="viewport-manager"
       sx={{ ...sx, height: "100%", display: "flex", flexDirection: "column" }}
@@ -130,11 +136,13 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                           ]}
                         >
                           <CloseSharpIcon
+                            data-testid="close-viewport-btn"
                             sx={{ width: 0.3, marginLeft: 1 }}
                           />
                         </PointerContainer>
                       ) : (
                         <CloseSharpIcon
+                          data-testid="close-viewport-btn"
                           sx={{
                             width: 0.3,
                             marginLeft: 1,
@@ -184,12 +192,13 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                           />,
                         ]}
                       >
-                        <IconButton size="small" component="span">
+                        <IconButton data-testid="close-viewport-btn" size="small" component="span">
                           <CloseSharpIcon sx={{ width: 0.5, marginLeft: 1 }} />
                         </IconButton>
                       </PointerContainer>
                     ) : (
                       <IconButton
+                        data-testid="close-viewport-btn"
                         size="small"
                         component="span"
                         onClick={(e) => {
@@ -241,6 +250,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
         <ViewportLoader />
       </Box>
     </Box>
+    </ShortcutProvider>
   );
 };
 

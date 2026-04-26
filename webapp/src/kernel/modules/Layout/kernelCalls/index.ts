@@ -69,4 +69,19 @@ export const postBootInitialization = ({managers: { storeManager, keyboardManage
       }
     ], {context: 'RibbonMenu'})
   });
+
+  keyboardManager.functions.registerShortcuts([
+    {
+      id: `${MODULE_NAME}/ViewportManager/closeViewport`,
+      key: 'Ctrl+w',
+      contextId: `${MODULE_NAME}/ViewportManager`,
+      action: () => {
+        const activeTab = document.querySelector('[role="viewport-tabs"] [aria-selected="true"]');
+        const closeBtn = activeTab?.querySelector('[data-testid="close-viewport-btn"]');
+        closeBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      },
+      description: 'Close the active viewport tab',
+      enabled: true,
+    }
+  ], {context: 'global'})
 }
