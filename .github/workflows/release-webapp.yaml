@@ -25,27 +25,29 @@ jobs:
         run: npm ci
         working-directory: webapp
 
-      - name: Build n Package
-        run: npm run package
+      - name: Build and Make
+        run: npm run make
         working-directory: webapp
 
-      - name: List resulting files
+      - name: List installer artifacts
         if: matrix.os != 'windows-latest'
-        run: ls -la webapp/out/**
+        run: find webapp/out/make -type f | sort
 
-      - name: List windows folder
+      - name: List installer artifacts (windows)
         if: matrix.os == 'windows-latest'
-        run: dir webapp/out 
+        run: Get-ChildItem -Recurse webapp/out/make
 
-      - name: Zip deliverable
+      - name: Zip installers
         if: matrix.os != 'windows-latest'
-        run: zip -q -r webapp/${{matrix.os}}.zip webapp/out
+        run: zip -q -j webapp/${{matrix.os}}.zip $(find webapp/out/make -type f)
 
-      - name: Zip deliverable (windows)
+      - name: Zip installers (windows)
         if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path webapp/out/* -Destination webapp/${{matrix.os}}.zip
+        run: |
+          $files = Get-ChildItem -Recurse -File webapp/out/make | Select-Object -ExpandProperty FullName
+          Compress-Archive -Path $files -Destination webapp/${{matrix.os}}.zip
 
-      - name: Archive production artifacts
+      - name: Archive installer artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.os}}.zip

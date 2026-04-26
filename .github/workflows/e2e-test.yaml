@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.get-tag.outputs.tag }}
-      download-url: ${{ steps.get-tag.outputs.download-url }}
     steps:
       - name: Get latest release tag
         id: get-tag
@@ -25,17 +24,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -z "${{ inputs.release_tag }}" ]; then
-            # Get latest release
             TAG=$(gh release list --repo MuriloSchaefer/klippel --limit 1 --json tagName --jq '.[0].tagName')
           else
             TAG="${{ inputs.release_tag }}"
           fi
-          
+
           if [ -z "$TAG" ]; then
             echo "No releases found"
             exit 1
           fi
-          
+
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Testing release: $TAG"
 
@@ -48,14 +46,11 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact-pattern: 'ubuntu-latest.zip'
-            installer-type: 'zip'
           - os: macos-latest
             artifact-pattern: 'macos-latest.zip'
-            installer-type: 'zip'
           - os: windows-latest
             artifact-pattern: 'windows-latest.zip'
-            installer-type: 'exe'
-    
+
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -63,11 +58,11 @@ jobs:
       - name: Download release artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
           mkdir -p release-artifacts
           echo "Downloading artifacts for pattern: ${{ matrix.artifact-pattern }}"
-          
-          # Try to download artifacts, but don't fail if none match
+
           gh release download ${{ needs.get-latest-release.outputs.tag }} \
             --repo MuriloSchaefer/klippel \
             --pattern "${{ matrix.artifact-pattern }}" \
@@ -76,7 +71,6 @@ jobs:
               EXIT_CODE=$?
               if [ $EXIT_CODE -eq 1 ]; then
                 echo "Warning: No files matched pattern '${{ matrix.artifact-pattern }}'"
-                # List all assets for debugging
                 echo "Available assets in release:"
                 gh release view ${{ needs.get-latest-release.outputs.tag }} \
                   --repo MuriloSchaefer/klippel \
@@ -85,114 +79,101 @@ jobs:
                 exit $EXIT_CODE
               fi
             }
-          
+
           echo "Downloaded artifacts:"
           ls -la release-artifacts/ || echo "No artifacts directory found"
 
       - name: Verify installer exists
+        id: find-installer
+        shell: bash
         run: |
           echo "Looking for artifacts matching pattern: ${{ matrix.artifact-pattern }}"
-          
-          # First, find the ZIP file
+
           ZIP_FILE=$(find release-artifacts -type f -name "*.zip" | head -1)
           if [ -z "$ZIP_FILE" ]; then
             echo "⚠ No ZIP file found in release artifacts"
             exit 0
           fi
-          
+
           echo "Found ZIP file: $ZIP_FILE"
-          
-          # Extract to find the actual installer
+
           mkdir -p extracted-artifacts
           unzip -q "$ZIP_FILE" -d extracted-artifacts
-          
+
           echo "Contents of extracted artifacts:"
           find extracted-artifacts -type f | head -20
-          
-          # Find the actual installer file based on OS
+
           if [ "${{ runner.os }}" == "Linux" ]; then
-            # Look for DEB, RPM, or files named "Klippel" (which might be the DEB)
-            INSTALLER=$(find extracted-artifacts -type f \( -name "*.deb" -o -name "*.rpm" -o -name "Klippel" \) | grep -v ".app" | head -1)
-            if [ ! -z "$INSTALLER" ]; then
-              FILE_TYPE=$(file "$INSTALLER" 2>/dev/null || echo "")
-              echo "Found file: $INSTALLER (Type: $FILE_TYPE)"
+            INSTALLER=$(find extracted-artifacts -type f \( -name "*.deb" -o -name "*.rpm" \) | head -1)
+            if [ -n "$INSTALLER" ]; then
+              echo "Found file: $INSTALLER (Type: $(file "$INSTALLER" 2>/dev/null || echo 'unknown'))"
             fi
           elif [ "${{ runner.os }}" == "macOS" ]; then
-            # Look for ZIP file (created by maker-zip) that contains the .app
             INSTALLER=$(find extracted-artifacts -type f \( -name "Klippel*.zip" -o -name "*darwin*.zip" \) | head -1)
             if [ -z "$INSTALLER" ]; then
-              # If no specific ZIP found, look for any ZIP file
-              INSTALLER=$(find extracted-artifacts -type f -name "*.zip" | grep -v "node_modules" | head -1)
+              INSTALLER=$(find extracted-artifacts -type f -name "*.zip" | head -1)
             fi
           elif [ "${{ runner.os }}" == "Windows" ]; then
-            # Look for EXE files
             INSTALLER=$(find extracted-artifacts -type f -name "*.exe" | head -1)
-            if [ -z "$INSTALLER" ]; then
-              # Also check for files named Klippel or similar without extension
-              INSTALLER=$(find extracted-artifacts -type f -name "Klippel*" -o -name "*Setup*" | head -1)
-            fi
           fi
-          
+
           if [ -z "$INSTALLER" ]; then
             echo "⚠ No installer file found after extracting ZIP"
-            echo "Searching for any potential installer files..."
             find extracted-artifacts -type f
             exit 0
           fi
-          
+
           echo "✓ Found installer: $INSTALLER"
           echo "INSTALLER_PATH=$INSTALLER" >> $GITHUB_ENV
+          echo "installer_path=$INSTALLER" >> $GITHUB_OUTPUT
 
       - name: Test installation (Linux)
-        if: runner.os == 'Linux' && env.INSTALLER_PATH != ''
+        if: runner.os == 'Linux' && steps.find-installer.outputs.installer_path != ''
         run: |
-          echo "Installing from: ${{ env.INSTALLER_PATH }}"
-          
-          # Check file type
-          FILE_TYPE=$(file "${{ env.INSTALLER_PATH }}" 2>/dev/null || echo "")
+          echo "Installing from: $INSTALLER_PATH"
+
+          FILE_TYPE=$(file "$INSTALLER_PATH" 2>/dev/null || echo "")
           echo "File type: $FILE_TYPE"
-          
-          # Try to install - handle both DEB/RPM with extensions and files without extensions
-          if [[ "${{ env.INSTALLER_PATH }}" == *.deb ]] || [[ "$FILE_TYPE" == *"Debian"* ]]; then
+
+          if [[ "$INSTALLER_PATH" == *.deb ]] || [[ "$FILE_TYPE" == *"Debian"* ]]; then
             echo "Installing as DEB package..."
-            sudo dpkg -i "${{ env.INSTALLER_PATH }}" || true
+            sudo dpkg -i "$INSTALLER_PATH" || true
             sudo apt-get install -f -y
-          elif [[ "${{ env.INSTALLER_PATH }}" == *.rpm ]] || [[ "$FILE_TYPE" == *"RPM"* ]]; then
+          elif [[ "$INSTALLER_PATH" == *.rpm ]] || [[ "$FILE_TYPE" == *"RPM"* ]]; then
             echo "Installing as RPM package..."
-            sudo rpm -i "${{ env.INSTALLER_PATH }}" || true
+            sudo rpm -i "$INSTALLER_PATH" || true
           else
-            # Try DEB first as default
             echo "Installing as DEB package (file type unclear)..."
-            sudo dpkg -i "${{ env.INSTALLER_PATH }}" || true
+            sudo dpkg -i "$INSTALLER_PATH" || true
             sudo apt-get install -f -y
           fi
-          
-          # Verify Klippel is installed
-          if which Klippel > /dev/null; then
+
+          if which klippel > /dev/null 2>&1 || which Klippel > /dev/null 2>&1; then
             echo "✓ Linux installation verification passed"
           else
             echo "✗ Linux installation verification failed"
-            echo "Checking installed packages:"
             dpkg -l | grep -i klippel || rpm -qa | grep -i klippel || echo "No Klippel package found"
             exit 1
           fi
 
       - name: Test app launch (Linux)
-        if: runner.os == 'Linux' && env.INSTALLER_PATH != ''
+        if: runner.os == 'Linux' && steps.find-installer.outputs.installer_path != ''
         timeout-minutes: 2
         run: |
           export DISPLAY=:99
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
           sleep 2
-          
-          # Launch app with timeout and capture output
-          timeout 20 "${{ env.INSTALLER_PATH }}" --no-sandbox > app_output.log 2>&1 &
+
+          BINARY=$(which klippel 2>/dev/null || which Klippel 2>/dev/null || echo "")
+          if [ -z "$BINARY" ]; then
+            echo "✗ Klippel binary not found in PATH after install"
+            exit 1
+          fi
+
+          timeout 20 "$BINARY" --no-sandbox > app_output.log 2>&1 &
           APP_PID=$!
-          
-          # Wait a bit for app to start
           sleep 5
-          
-          # Check if process is still running
+
           if ps -p $APP_PID > /dev/null; then
             echo "✓ Linux app launched successfully (PID: $APP_PID)"
             kill $APP_PID 2>/dev/null || true
@@ -201,39 +182,31 @@ jobs:
             cat app_output.log
             exit 1
           fi
-          
-          # Cleanup X server
+
           pkill Xvfb || true
 
       - name: Test installation (macOS)
-        if: runner.os == 'macOS' && env.INSTALLER_PATH != ''
+        if: runner.os == 'macOS' && steps.find-installer.outputs.installer_path != ''
         run: |
-          # Extract ZIP archive
-          unzip -q "${{ env.INSTALLER_PATH }}" -d test-install
-          
-          # Verify key files exist
+          unzip -q "$INSTALLER_PATH" -d test-install
+
           if [ -d "test-install/Klippel.app" ]; then
-            echo "✓ macOS ZIP installation verification passed"
+            echo "✓ macOS installation verification passed"
             ls -la test-install/
           else
-            echo "✗ macOS ZIP installation verification failed"
+            echo "✗ macOS installation verification failed — Klippel.app not found"
             ls -la test-install/
             exit 1
           fi
 
       - name: Test app launch (macOS)
-        if: runner.os == 'macOS' && env.INSTALLER_PATH != ''
+        if: runner.os == 'macOS' && steps.find-installer.outputs.installer_path != ''
         timeout-minutes: 2
         run: |
-          # Launch app
-          timeout 20 open -a "test-install/Klippel.app" --args --no-sandbox > app_output.log 2>&1 &
-          APP_PID=$!
-          
-          # Wait for app to start
+          open test-install/Klippel.app --args --no-sandbox > app_output.log 2>&1 &
           sleep 5
-          
-          # Check if process is running
-          if pgrep -f "Klippel" > /dev/null || ps -p $APP_PID > /dev/null 2>&1; then
+
+          if pgrep -f "Klippel" > /dev/null; then
             echo "✓ macOS app launched successfully"
             pkill -f "Klippel" || true
           else
@@ -243,57 +216,49 @@ jobs:
           fi
 
       - name: Test installation (Windows)
-        if: runner.os == 'Windows' && env.INSTALLER_PATH != ''
-        shell: powershell
+        if: runner.os == 'Windows' && steps.find-installer.outputs.installer_path != ''
+        shell: pwsh
         run: |
-          # Verify installer file
-          if (Test-Path "${{ env.INSTALLER_PATH }}") {
-            $FileInfo = Get-Item "${{ env.INSTALLER_PATH }}"
-            Write-Output "✓ Installer file found: $($FileInfo.FullName)"
-            Write-Output "  Size: $($FileInfo.Length) bytes"
-            
-            # Test silent install to a test directory
-            # Note: This is a dry-run test - actual installation may require elevation
-            & "${{ env.INSTALLER_PATH }}" --help 2>&1 | head -10
-            
-            if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 1) {
-              Write-Output "✓ Windows installation verification passed (executable verified)"
+          $installer = $env:INSTALLER_PATH
+          if (Test-Path $installer) {
+            $info = Get-Item $installer
+            Write-Output "✓ Installer found: $($info.FullName) ($($info.Length) bytes)"
+
+            & $installer /S 2>&1
+            if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq $null) {
+              Write-Output "✓ Windows silent install completed"
             } else {
-              Write-Output "✗ Windows installation verification failed"
+              Write-Output "✗ Windows installation failed (exit code: $LASTEXITCODE)"
               exit 1
             }
           } else {
-            Write-Output "✗ Installer file not found"
+            Write-Output "✗ Installer file not found: $installer"
             exit 1
           }
 
       - name: Test app launch (Windows)
-        if: runner.os == 'Windows' && env.INSTALLER_PATH != ''
+        if: runner.os == 'Windows' && steps.find-installer.outputs.installer_path != ''
         timeout-minutes: 2
-        shell: powershell
+        shell: pwsh
         run: |
-          # Launch app
-          $process = Start-Process -FilePath "${{ env.INSTALLER_PATH }}" `
-            -ArgumentList "--help" `
+          $process = Start-Process -FilePath "Klippel" `
+            -ArgumentList "--no-sandbox" `
             -PassThru `
-            -NoNewWindow `
             -ErrorAction SilentlyContinue
-          
-          # Wait a bit for app to potentially launch
-          Start-Sleep -Seconds 3
-          
-          # Check if process exists or has running windows
+
+          Start-Sleep -Seconds 5
+
           if ($process -and -not $process.HasExited) {
-            Write-Output "✓ Windows app process started successfully"
+            Write-Output "✓ Windows app launched successfully"
             $process | Stop-Process -Force -ErrorAction SilentlyContinue
           } else {
-            # Try to detect if Klippel window opened
-            $klippelProcess = Get-Process -Name "Klippel" -ErrorAction SilentlyContinue
-            if ($klippelProcess) {
+            $running = Get-Process -Name "Klippel" -ErrorAction SilentlyContinue
+            if ($running) {
               Write-Output "✓ Windows app detected running"
-              $klippelProcess | Stop-Process -Force -ErrorAction SilentlyContinue
+              $running | Stop-Process -Force -ErrorAction SilentlyContinue
             } else {
-              Write-Output "ℹ Windows app verification complete (exe is valid)"
+              Write-Output "✗ Windows app failed to launch"
+              exit 1
             }
           }
 
@@ -301,38 +266,64 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: installation-test-${{ matrix.installer-type }}-${{ needs.get-latest-release.outputs.tag }}
+          name: installation-test-${{ matrix.os }}-${{ needs.get-latest-release.outputs.tag }}
           path: |
             release-artifacts/
             test-install/
+            app_output.log
           retention-days: 7
 
   test-summary:
     needs: [get-latest-release, test-installation]
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      contents: write
     steps:
       - name: Test Summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.get-latest-release.outputs.tag }}
+          MATRIX_RESULT: ${{ needs.test-installation.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          echo "## E2E Testing Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Release Tested:** ${{ needs.get-latest-release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Installation Tests Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| OS | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          
-          # Check if test-installation has all passed
-          if [ "${{ needs.test-installation.result }}" == "success" ]; then
-            echo "| Linux | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-            echo "| macOS | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-            echo "| Windows | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          if [ "$MATRIX_RESULT" == "success" ]; then
+            LINUX="✅ Passed"
+            MACOS="✅ Passed"
+            WINDOWS="✅ Passed"
           else
-            echo "| Linux | ⚠️ Check logs |" >> $GITHUB_STEP_SUMMARY
-            echo "| macOS | ⚠️ Check logs |" >> $GITHUB_STEP_SUMMARY
-            echo "| Windows | ⚠️ Check logs |" >> $GITHUB_STEP_SUMMARY
+            LINUX="⚠️ Check logs"
+            MACOS="⚠️ Check logs"
+            WINDOWS="⚠️ Check logs"
           fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Each OS runs independently - failure in one OS does not affect others." >> $GITHUB_STEP_SUMMARY
+
+          TESTED_AT=$(date -u '+%Y-%m-%d %H:%M UTC')
+
+          # Build e2e section into a temp file to avoid embedding
+          # YAML-special characters (--- and |) in the workflow source.
+          E2E_FILE=$(mktemp)
+          printf '\n---\n\n## E2E Test Results\n\n' >> "$E2E_FILE"
+          printf 'Tested: %s · [Run details](%s)\n\n' "$TESTED_AT" "$RUN_URL" >> "$E2E_FILE"
+          printf '| OS | Installation |\n' >> "$E2E_FILE"
+          printf '|---|---|\n' >> "$E2E_FILE"
+          printf '| Linux | %s |\n' "$LINUX" >> "$E2E_FILE"
+          printf '| macOS | %s |\n' "$MACOS" >> "$E2E_FILE"
+          printf '| Windows | %s |\n' "$WINDOWS" >> "$E2E_FILE"
+          printf '\nEach OS runs independently — failure in one does not affect others.\n' >> "$E2E_FILE"
+
+          # Write workflow step summary
+          {
+            echo "## E2E Testing Summary"
+            echo ""
+            echo "**Release Tested:** ${TAG}"
+            cat "$E2E_FILE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Fetch existing release body and append e2e section
+          EXISTING_BODY=$(gh release view "$TAG" \
+            --repo MuriloSchaefer/klippel \
+            --json body --jq '.body // ""')
+
+          gh release edit "$TAG" \
+            --repo MuriloSchaefer/klippel \
+            --notes "${EXISTING_BODY}$(cat "$E2E_FILE")"
