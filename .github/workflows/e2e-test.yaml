@@ -46,11 +46,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact-pattern: '*.AppImage'
-            installer-type: 'appimage'
+            artifact-pattern: '*.deb'
+            installer-type: 'deb'
           - os: macos-latest
-            artifact-pattern: '*.dmg'
-            installer-type: 'dmg'
+            artifact-pattern: '*.zip'
+            installer-type: 'zip'
           - os: windows-latest
             artifact-pattern: '*.exe'
             installer-type: 'exe'
@@ -84,18 +84,16 @@ jobs:
       - name: Test installation (Linux)
         if: runner.os == 'Linux'
         run: |
-          chmod +x "${{ env.INSTALLER_PATH }}"
-          # Extract AppImage to test structure
-          mkdir -p test-install
-          cd test-install
-          ../${{ env.INSTALLER_PATH }} --appimage-extract
+          # Install the DEB package
+          sudo dpkg -i "${{ env.INSTALLER_PATH }}" || true
+          sudo apt-get install -f -y
           
-          # Verify key files exist
-          if [ -f "squashfs-root/usr/bin/Klippel" ] || [ -f "squashfs-root/Klippel" ]; then
-            echo "✓ Linux installation verification passed"
+          # Verify Klippel is installed
+          if which Klippel > /dev/null; then
+            echo "✓ Linux DEB installation verification passed"
           else
-            echo "✗ Linux installation verification failed"
-            ls -la squashfs-root/
+            echo "✗ Linux DEB installation verification failed"
+            dpkg -l | grep -i klippel || true
             exit 1
           fi
 
@@ -130,33 +128,25 @@ jobs:
       - name: Test installation (macOS)
         if: runner.os == 'macOS'
         run: |
-          # Mount the DMG
-          MOUNT_POINT=$(mktemp -d)
-          hdiutil attach "${{ env.INSTALLER_PATH }}" -mountpoint "$MOUNT_POINT"
+          # Extract ZIP archive
+          unzip -q "${{ env.INSTALLER_PATH }}" -d test-install
           
           # Verify key files exist
-          if [ -d "$MOUNT_POINT/Klippel.app" ]; then
-            echo "✓ macOS installation verification passed"
-            ls -la "$MOUNT_POINT/"
+          if [ -d "test-install/Klippel.app" ]; then
+            echo "✓ macOS ZIP installation verification passed"
+            ls -la test-install/
           else
-            echo "✗ macOS installation verification failed"
-            ls -la "$MOUNT_POINT/"
+            echo "✗ macOS ZIP installation verification failed"
+            ls -la test-install/
             exit 1
           fi
-          
-          # Cleanup
-          hdiutil detach "$MOUNT_POINT" || true
 
       - name: Test app launch (macOS)
         if: runner.os == 'macOS'
         timeout-minutes: 2
         run: |
-          # Mount the DMG
-          MOUNT_POINT=$(mktemp -d)
-          hdiutil attach "${{ env.INSTALLER_PATH }}" -mountpoint "$MOUNT_POINT"
-          
           # Launch app
-          timeout 20 open -a "$MOUNT_POINT/Klippel.app" --args --no-sandbox > app_output.log 2>&1 &
+          timeout 20 open -a "test-install/Klippel.app" --args --no-sandbox > app_output.log 2>&1 &
           APP_PID=$!
           
           # Wait for app to start
@@ -171,9 +161,6 @@ jobs:
             cat app_output.log
             exit 1
           fi
-          
-          # Cleanup
-          hdiutil detach "$MOUNT_POINT" || true
 
       - name: Test installation (Windows)
         if: runner.os == 'Windows'
