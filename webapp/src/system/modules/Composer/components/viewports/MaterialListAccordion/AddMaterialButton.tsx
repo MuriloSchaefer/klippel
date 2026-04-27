@@ -12,6 +12,8 @@ import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IMaterialsModule } from "@system/modules/Materials";
 import useVariation from "../../../hooks/useVariation";
 import { IGraphModule } from "@kernel/modules/Graphs";
+import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { MODULE_NAME } from "../../../constants";
 
 export default function AddMaterialButton({
   variationId,
@@ -22,7 +24,10 @@ export default function AddMaterialButton({
   const theme = useTheme();
   const materialModule = useModule<IMaterialsModule>("Materials");
   const graphModule = useModule<IGraphModule>("Graph");
+  const keyboardShortcutsModule =
+    useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
+  const { ShortcutHint } = keyboardShortcutsModule.components;
   const { MaterialTypeMultiSelector, MaterialSelector, MaterialTypeSelector } =
     materialModule.components;
 
@@ -141,8 +146,18 @@ export default function AddMaterialButton({
         </ConfirmAndCloseButton>,
       ]}
     >
-      <Button variant="outlined" color="primary">
-        Adicionar Material
+      <Button
+        id="composer-add-material"
+        aria-label="add-material"
+        variant="outlined"
+        color="primary"
+      >
+        <ShortcutHint
+          placement="top-center"
+          shortcutId={`${MODULE_NAME}/ModelViewport/addMaterial`}
+        >
+          <Typography>Adicionar Material</Typography>
+        </ShortcutHint>
       </Button>
     </PointerContainer>
   );

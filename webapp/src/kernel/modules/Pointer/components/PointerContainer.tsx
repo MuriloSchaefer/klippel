@@ -2,6 +2,7 @@ import React, {
   MouseEvent,
   cloneElement,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -69,6 +70,21 @@ const ModalContent = ({
     () => getQuadrant(position.x, position.y),
     []
   );
+
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const root = contentRef.current;
+    if (!root) return;
+    const selector = [
+      "input:not([type='hidden']):not([disabled])",
+      "textarea:not([disabled])",
+      "select:not([disabled])",
+      "[contenteditable='true']",
+    ].join(",");
+    const first = root.querySelector<HTMLElement>(selector);
+    first?.focus();
+  }, []);
 
   return (
     <Paper
@@ -145,6 +161,7 @@ const ModalContent = ({
           </ShortcutHint>
         </Box>
         <Box
+          ref={contentRef}
           role="pointer-panel-content"
           sx={{
             padding: 1,

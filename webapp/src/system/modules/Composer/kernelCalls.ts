@@ -65,4 +65,31 @@ export function postBootInitialization({managers:{keyboardManager}}: PostBootIni
       enabled: true,
     }
   ], {context: 'RibbonMenu'})
+
+  keyboardManager.functions.registerShortcuts([
+    {
+      id: `${MODULE_NAME}/ModelViewport/viewAsGraph`,
+      key: '1',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => document.getElementById("composer-view-graph")?.click(),
+      description: 'View as graph',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ModelViewport/viewAsSVG`,
+      key: '2',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => document.getElementById("composer-view-svg")?.click(),
+      description: 'View as SVG',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ModelViewport/addMaterial`,
+      key: 'm',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => document.getElementById("composer-add-material")?.click(),
+      description: 'Add material',
+      enabled: true,
+    },
+  ])
 }

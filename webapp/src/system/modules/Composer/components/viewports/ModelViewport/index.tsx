@@ -2,6 +2,8 @@
 import MaterialListAccordion from "../MaterialListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
+import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { MODULE_NAME } from "../../../constants";
 import SaveSharpIcon from "@mui/icons-material/SaveSharp";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import CompositionTree from "../CompositionTree/CompositionTree";
@@ -21,6 +23,8 @@ import React, { useMemo } from "react";
 function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const svgModule = useModule<ISVGModule>("SVG");
+  const keyboardShortcuts = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutProvider, ShortcutHint } = keyboardShortcuts.components;
   const { ViewportNotificationsTray, SettingsPanel, Accordion, DetailsPanel } =
     layoutModule.components;
 
@@ -45,6 +49,7 @@ function ModelViewport() {
 
   return (
     <SVGEditorToolkit>
+      <ShortcutProvider contextId={`${MODULE_NAME}/ModelViewport`}>
       <Box
         sx={{
           position: "relative",
@@ -100,34 +105,47 @@ function ModelViewport() {
             variant="contained"
             aria-label="alterar modo de visualização"
           >
-            <Button
-              onClick={() => {
-                vpManager.functions.setExtras(activeVP.name, {
-                  ...activeVP.extra,
-                  view: "graph",
-                });
-              }}
-              variant={"contained"}
+            <ShortcutHint
+              shortcutId={`${MODULE_NAME}/ModelViewport/viewAsGraph`}
+              placement="bottom-right"
             >
-              Grafo
-            </Button>
-            <Button
-              onClick={() => {
-                vpManager.functions.setExtras(activeVP.name, {
-                  ...activeVP.extra,
-                  view: "svg",
-                });
-              }}
-              sx={{
-                ":hover": { cursor: "pointer", color: "primary.main" },
-              }}
-              variant={"contained"}
+              <Button
+                id="composer-view-graph"
+                onClick={() => {
+                  vpManager.functions.setExtras(activeVP.name, {
+                    ...activeVP.extra,
+                    view: "graph",
+                  });
+                }}
+                variant={"contained"}
+              >
+                Grafo
+              </Button>
+            </ShortcutHint>
+            <ShortcutHint
+              shortcutId={`${MODULE_NAME}/ModelViewport/viewAsSVG`}
+              placement="bottom-right"
             >
-              Desenho
-            </Button>
+              <Button
+                id="composer-view-svg"
+                onClick={() => {
+                  vpManager.functions.setExtras(activeVP.name, {
+                    ...activeVP.extra,
+                    view: "svg",
+                  });
+                }}
+                sx={{
+                  ":hover": { cursor: "pointer", color: "primary.main" },
+                }}
+                variant={"contained"}
+              >
+                Desenho
+              </Button>
+            </ShortcutHint>
           </ButtonGroup>
         </Box>
       </Box>
+      </ShortcutProvider>
     </SVGEditorToolkit>
   );
 }
