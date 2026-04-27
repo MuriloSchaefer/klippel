@@ -22,6 +22,11 @@ import { IMaterialsModule } from "@system/modules/Materials";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { useTheme } from "@mui/material";
 import { CompoundValue } from "@system/modules/Converter/typings";
+import {
+  recomputeAllGradeDeltas,
+  recomputeGradeDelta,
+  dropGraduationFromEdge,
+} from "../utils/consumptionPerGrade";
 
 export default function useVariation({ variationId }: { variationId: string }) {
   const theme = useTheme();
@@ -439,8 +444,19 @@ export default function useVariation({ variationId }: { variationId: string }) {
         markChanged();
       },
       removeGraduation: (nodeId: string) => {
-        // update orders of other graduations
-
+        if (!graph.state) {
+          graph.actions.removeNode(nodeId);
+          markChanged();
+          return;
+        }
+        // sweep the graduation from every CONSUMES / CONSUMED_BY edge
+        for (const edge of Object.values(graph.state.edges)) {
+          if (edge.type !== "CONSUMES" && edge.type !== "CONSUMED_BY") continue;
+          const e = edge as ConsumesEdge | ConsumedByEdge;
+          if (!e.consumptionPerGrade?.[nodeId]) continue;
+          const changes = dropGraduationFromEdge(e, nodeId);
+          graph.actions.updateEdge<ConsumesEdge>(e.id, changes as any);
+        }
         graph.actions.removeNode(nodeId);
         markChanged();
       },
@@ -499,14 +515,71 @@ export default function useVariation({ variationId }: { variationId: string }) {
         materialNodeId: string,
         newAmount: CompoundValue,
       ) => {
-        graph.actions.updateEdge<ConsumesEdge>(
-          `${processNodeId}->${materialNodeId}`,
-          { amount: newAmount },
+        const forwardId = `${processNodeId}->${materialNodeId}`;
+        const reverseId = `${materialNodeId}->${processNodeId}`;
+        const forward = graph.state?.edges[forwardId] as
+          | ConsumesEdge
+          | undefined;
+        const nextDeltas = recomputeAllGradeDeltas(
+          newAmount,
+          forward?.consumptionPerGrade,
         );
-        graph.actions.updateEdge<ConsumedByEdge>(
-          `${materialNodeId}->${processNodeId}`,
-          { amount: newAmount },
-        );
+        graph.actions.updateEdge<ConsumesEdge>(forwardId, {
+          amount: newAmount,
+          gradeDeltas: nextDeltas,
+        });
+        graph.actions.updateEdge<ConsumedByEdge>(reverseId, {
+          amount: newAmount,
+          gradeDeltas: nextDeltas,
+        });
+        markChanged();
+      },
+      setProcessMaterialConsumptionForGraduation: (
+        processNodeId: string,
+        materialNodeId: string,
+        graduationId: string,
+        consumption: CompoundValue,
+      ) => {
+        const forwardId = `${processNodeId}->${materialNodeId}`;
+        const reverseId = `${materialNodeId}->${processNodeId}`;
+        const forward = graph.state?.edges[forwardId] as
+          | ConsumesEdge
+          | undefined;
+        if (!forward) return;
+        const nextConsumption = {
+          ...(forward.consumptionPerGrade ?? {}),
+          [graduationId]: consumption,
+        };
+        const nextDeltas = {
+          ...(forward.gradeDeltas ?? {}),
+        };
+        const delta = recomputeGradeDelta(forward.amount, consumption);
+        if (delta !== undefined) nextDeltas[graduationId] = delta;
+        else delete nextDeltas[graduationId];
+        const changes = {
+          consumptionPerGrade: nextConsumption,
+          gradeDeltas:
+            Object.keys(nextDeltas).length === 0 ? undefined : nextDeltas,
+        };
+        graph.actions.updateEdge<ConsumesEdge>(forwardId, changes);
+        graph.actions.updateEdge<ConsumedByEdge>(reverseId, changes);
+        markChanged();
+      },
+      clearProcessMaterialConsumptionForGraduation: (
+        processNodeId: string,
+        materialNodeId: string,
+        graduationId: string,
+      ) => {
+        const forwardId = `${processNodeId}->${materialNodeId}`;
+        const reverseId = `${materialNodeId}->${processNodeId}`;
+        const forward = graph.state?.edges[forwardId] as
+          | ConsumesEdge
+          | undefined;
+        if (!forward) return;
+        const changes = dropGraduationFromEdge(forward, graduationId);
+        if (Object.keys(changes).length === 0) return;
+        graph.actions.updateEdge<ConsumesEdge>(forwardId, changes as any);
+        graph.actions.updateEdge<ConsumedByEdge>(reverseId, changes as any);
         markChanged();
       },
       addProcess: (process: {

@@ -1,12 +1,23 @@
-import { DeleteSharp, TableViewSharp } from "@mui/icons-material";
+import { DeleteSharp, ExpandMoreSharp, TableViewSharp } from "@mui/icons-material";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
+  Chip,
   Divider,
   FormControl,
+  FormControlLabel,
   IconButton,
+  InputLabel,
   List,
   ListItem,
+  MenuItem,
+  Select,
+  Stack,
+  Switch,
+  Typography,
 } from "@mui/material";
 
 import useModule from "@kernel/hooks/useModule";
@@ -17,6 +28,7 @@ import type { IMaterialsModule } from "@system/modules/Materials";
 import { useCallback, useMemo, useState } from "react";
 import {
   ConsumesEdge,
+  GraduationNode,
   MaterialNode,
 } from "@system/modules/Composer/typings";
 import useVariation from "@system/modules/Composer/hooks/useVariation";
@@ -36,7 +48,7 @@ export default function ProcessMaterialUsageButton({
   const graphModule = useModule<IGraphModule>("Graph");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
-  const { MaterialSelector, MaterialTypeSelector } = materialsModule.components;
+  const { MaterialSelector } = materialsModule.components;
 
   const { useGraph } = graphModule.hooks;
   const { useMaterials } = materialsModule.hooks;
@@ -45,41 +57,16 @@ export default function ProcessMaterialUsageButton({
   const variation = useVariation({ variationId });
   const graph = useGraph(variationId);
   const [newForm, setNewForm] = useState<{
-    type?: string;
-    materialId?: number;
+    materialNodeId?: string;
     amount: CompoundValue;
   }>({
-    type: undefined,
-    materialId: undefined,
+    materialNodeId: undefined,
     amount: {
       quotient: { amount: 1, unit: "kilogramas6" },
       dividend: { amount: 1, unit: "unitario18" },
     },
   });
 
-  const handleAddNewRecord = useCallback(() => {
-    if (!graph.state) return;
-    const materialNode = Object.values(graph.state.nodes).find(
-      (n) =>
-        n.type === "MATERIAL" &&
-        (n as MaterialNode).materialId === newForm.materialId
-    );
-    if (!materialNode)
-      throw Error("Material nao encontrado no modelo. Adicione-o antes");
-    variation.actions.addProcessMaterialConsumption(
-      processNodeId,
-      materialNode.id,
-      newForm.amount
-    );
-    setNewForm({
-      type: undefined,
-      materialId: undefined,
-      amount: {
-        quotient: { amount: 1, unit: "kilogramas6" },
-        dividend: { amount: 1, unit: "unitario18" },
-      },
-    });
-  }, [graph]);
   const graphMaterials = useMemo(
     () =>
       Object.values(graph.state?.nodes ?? {}).filter(
@@ -87,6 +74,30 @@ export default function ProcessMaterialUsageButton({
       ),
     [graph.state]
   );
+
+  const selectedNodeMaterial = useMemo(() => {
+    if (!newForm.materialNodeId || !materials) return undefined;
+    const node = graphMaterials.find((n) => n.id === newForm.materialNodeId);
+    return node ? materials[node.materialId] : undefined;
+  }, [graphMaterials, materials, newForm.materialNodeId]);
+
+  const handleAddNewRecord = useCallback(() => {
+    if (!graph.state) return;
+    if (!newForm.materialNodeId)
+      throw Error("Material nao encontrado no modelo. Adicione-o antes");
+    variation.actions.addProcessMaterialConsumption(
+      processNodeId,
+      newForm.materialNodeId,
+      newForm.amount
+    );
+    setNewForm({
+      materialNodeId: undefined,
+      amount: {
+        quotient: { amount: 1, unit: "kilogramas6" },
+        dividend: { amount: 1, unit: "unitario18" },
+      },
+    });
+  }, [graph, newForm.materialNodeId, newForm.amount, processNodeId, variation.actions]);
 
   const handleMaterialUsageUpdate = useCallback(
     (e: Edge, v: CompoundValue) => {
@@ -101,6 +112,14 @@ export default function ProcessMaterialUsageButton({
     [variation, graph.state]
   )
 
+  const graduations = useMemo(
+    () =>
+      Object.values(graph.state?.nodes ?? {})
+        .filter((n): n is GraduationNode => n.type === "GRADUATION")
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    [graph.state]
+  );
+
   if (!graph.state) return null;
 
   return (
@@ -108,35 +127,36 @@ export default function ProcessMaterialUsageButton({
       component={
         <Box>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <FormControl>
-                <MaterialTypeSelector
-                  filter={(t) =>
-                    graphMaterials
-                      .map((mn) => materials![mn.materialId].type)
-                      .includes(t.name)
-                  }
-                  value={newForm.type}
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Material</InputLabel>
+                <Select
+                  size="small"
+                  label="Nó"
+                  value={newForm.materialNodeId ?? ""}
                   onChange={(e) =>
-                    setNewForm((curr) => ({ ...curr, type: e.target.value }))
+                    setNewForm((curr) => ({
+                      ...curr,
+                      materialNodeId: e.target.value as string,
+                    }))
                   }
-                />
+                >
+                  {graphMaterials.map((n) => (
+                    <MenuItem key={n.id} value={n.id}>
+                      {n.label}
+                    </MenuItem>
+                  ))}
+                </Select>
               </FormControl>
-              <FormControl>
-                {newForm.type && (
+              {selectedNodeMaterial && (
+                <FormControl key={selectedNodeMaterial.id}>
                   <MaterialSelector
-                    type={newForm.type}
-                    filter={(m) =>graphMaterials.map((mn) => mn.materialId).includes(m.id)}
-                    value={newForm.materialId}
-                    onChange={(v) =>
-                      setNewForm((curr) => ({
-                        ...curr,
-                        materialId: v,
-                      }))
-                    }
+                    type={selectedNodeMaterial.type}
+                    value={selectedNodeMaterial.id}
+                    disabled
                   />
-                )}
-              </FormControl>
+                </FormControl>
+              )}
             </Box>
             <FormControl>
               <CompoundSelector
@@ -163,28 +183,147 @@ export default function ProcessMaterialUsageButton({
                   ] as MaterialNode;
                   const material = materials![materialNode.materialId];
                   return (
-                    <ListItem>
-                      <FormControl>
-                        <MaterialSelector
-                          type={material.type}
-                          value={material.id}
-                          disabled
-                        />
-                      </FormControl>
-                      <FormControl>
-                        <CompoundSelector value={e.amount} onChange={(v)=>handleMaterialUsageUpdate(e, v)} />
-                      </FormControl>
-                      <IconButton>
-                        <DeleteSharp
-                          color="error"
-                          onClick={() =>
-                            variation.actions.removeProcessMaterialConsumption(
-                              processNodeId,
-                              materialNode.id
-                            )
-                          }
-                        />
-                      </IconButton>
+                    <ListItem
+                      key={e.id}
+                      sx={{ flexDirection: "column", alignItems: "stretch" }}
+                    >
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <FormControl>
+                          <MaterialSelector
+                            type={material.type}
+                            value={material.id}
+                            disabled
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <CompoundSelector
+                            value={e.amount}
+                            onChange={(v) => handleMaterialUsageUpdate(e, v)}
+                          />
+                        </FormControl>
+                        <IconButton>
+                          <DeleteSharp
+                            color="error"
+                            onClick={() =>
+                              variation.actions.removeProcessMaterialConsumption(
+                                processNodeId,
+                                materialNode.id
+                              )
+                            }
+                          />
+                        </IconButton>
+                      </Box>
+                      {graduations.length > 0 && (
+                        <Accordion
+                          disableGutters
+                          elevation={0}
+                          sx={{
+                            mt: 1,
+                            "&:before": { display: "none" },
+                            backgroundColor: "transparent",
+                          }}
+                        >
+                          <AccordionSummary
+                            expandIcon={<ExpandMoreSharp />}
+                            sx={{ px: 1, minHeight: 32 }}
+                          >
+                            <Typography variant="caption" color="text.secondary">
+                              Consumo por graduação
+                              {Object.keys(e.consumptionPerGrade ?? {}).length >
+                                0 &&
+                                ` · ${
+                                  Object.keys(e.consumptionPerGrade ?? {}).length
+                                } personalizada(s)`}
+                            </Typography>
+                          </AccordionSummary>
+                          <AccordionDetails sx={{ px: 1 }}>
+                          <Stack spacing={1}>
+                            {graduations.map((g) => {
+                              const isOverride =
+                                !!e.consumptionPerGrade?.[g.id];
+                              const consumption =
+                                e.consumptionPerGrade?.[g.id] ?? e.amount;
+                              const delta = e.gradeDeltas?.[g.id];
+                              return (
+                                <Box
+                                  key={g.id}
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ minWidth: 80 }}
+                                  >
+                                    {g.label}
+                                  </Typography>
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={isOverride}
+                                        onChange={(_, checked) => {
+                                          if (checked) {
+                                            variation.actions.setProcessMaterialConsumptionForGraduation(
+                                              processNodeId,
+                                              materialNode.id,
+                                              g.id,
+                                              e.amount
+                                            );
+                                          } else {
+                                            variation.actions.clearProcessMaterialConsumptionForGraduation(
+                                              processNodeId,
+                                              materialNode.id,
+                                              g.id
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    }
+                                    label={
+                                      isOverride ? "personalizar" : "usar padrão"
+                                    }
+                                  />
+                                  <FormControl>
+                                    <CompoundSelector
+                                      value={consumption}
+                                      onChange={(v) =>
+                                        variation.actions.setProcessMaterialConsumptionForGraduation(
+                                          processNodeId,
+                                          materialNode.id,
+                                          g.id,
+                                          v
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                  <Chip
+                                    size="small"
+                                    label={
+                                      delta === undefined
+                                        ? "—"
+                                        : `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}%`
+                                    }
+                                    color={
+                                      delta === undefined
+                                        ? "default"
+                                        : delta >= 0
+                                        ? "success"
+                                        : "warning"
+                                    }
+                                    variant="outlined"
+                                  />
+                                </Box>
+                              );
+                            })}
+                          </Stack>
+                          </AccordionDetails>
+                        </Accordion>
+                      )}
                     </ListItem>
                   );
                 })}

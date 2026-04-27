@@ -3,6 +3,7 @@ import type { ConversionNodes, ConvertionEdges, CompoundValue } from "@system/mo
 import type { MaterialState } from "@system/modules/Materials/store/materials/state";
 import type {
   ConsumesEdge,
+  GraduationNode,
   MaterialNode,
   ProcessNode,
   ElectiveNode,
@@ -11,8 +12,10 @@ import type {
   AttributeAudit,
   AttributeNormalisationAudit,
   ConversionStepAudit,
+  GraduationBreakdownEntry,
 } from "../typings";
 import { traceConversion } from "../components/viewports/MaterialListAccordion/utils/traceConversion";
+import { resolveConsumption } from "./consumptionPerGrade";
 
 const QUANTITY_VARS = new Set(["quantidade", "quantidadeQuociente", "quantidadeDividendo"]);
 
@@ -26,27 +29,50 @@ export function computeMaterialCost({
   graphState: GraphState;
   materialState: MaterialState;
   conversionGraphState: GraphState<ConversionNodes, ConvertionEdges>;
-}): { cost: CompoundValue | undefined; audit: CostAudit | undefined } {
+}): {
+  cost: CompoundValue | undefined;
+  total: CompoundValue | undefined;
+  audit: CostAudit | undefined;
+} {
   if (!materialState?.stock || !conversionGraphState) {
-    return { cost: undefined, audit: undefined };
+    return { cost: undefined, total: undefined, audit: undefined };
   }
 
   const materialNode = graphState.nodes[materialNodeId] as MaterialNode;
   if (!materialNode) {
-    return { cost: undefined, audit: undefined };
+    return { cost: undefined, total: undefined, audit: undefined };
   }
 
   const consumesEdges = Object.values(graphState.edges ?? {}).filter(
     (e): e is ConsumesEdge => e.type === "CONSUMES" && e.targetId === materialNodeId
   );
 
+  const graduations = Object.values(graphState.nodes ?? {})
+    .filter((n): n is GraduationNode => (n as any).type === "GRADUATION")
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
   const totalCost: CompoundValue = {
+    quotient: { amount: 0, unit: materialState.stock.unit },
+    dividend: { amount: 1, unit: "unitario18" },
+  };
+  const totalAggregate: CompoundValue = {
     quotient: { amount: 0, unit: materialState.stock.unit },
     dividend: { amount: 1, unit: "unitario18" },
   };
 
   const processSteps: ProcessStepAudit[] = [];
   const normalisedAttributeNames = new Set<string>();
+
+  const convertOnce = (amount: CompoundValue) =>
+    traceConversion({
+      from: amount,
+      to: {
+        quotient: totalCost.quotient.unit,
+        dividend: totalCost.dividend.unit,
+      },
+      initialParams: materialState.attributes ?? {},
+      conversionGraph: conversionGraphState,
+    });
 
   for (const edge of consumesEdges) {
     const processNode = graphState.nodes[edge.sourceId] as ProcessNode;
@@ -69,15 +95,7 @@ export function computeMaterialCost({
       }
     }
 
-    const conversionTrace = traceConversion({
-      from: edge.amount,
-      to: {
-        quotient: totalCost.quotient.unit,
-        dividend: totalCost.dividend.unit,
-      },
-      initialParams: materialState.attributes ?? {},
-      conversionGraph: conversionGraphState,
-    });
+    const conversionTrace = convertOnce(edge.amount);
 
     if ("error" in conversionTrace && typeof conversionTrace.error === "string") {
       const errorMessage = conversionTrace.error;
@@ -168,6 +186,33 @@ export function computeMaterialCost({
       };
     });
 
+    let graduationBreakdown: GraduationBreakdownEntry[] | undefined;
+    if (graduations.length > 0) {
+      graduationBreakdown = [];
+      for (const g of graduations) {
+        const consumption = resolveConsumption(edge, g.id);
+        const garmentAmount = g.amount ?? 0;
+        const isOverride = !!edge.consumptionPerGrade?.[g.id];
+        let convertedForG = convertedAmount;
+        if (isOverride) {
+          const t = convertOnce(consumption);
+          if (!("error" in t)) convertedForG = t.finalValue;
+          else convertedForG = 0;
+        }
+        const contribution = garmentAmount * convertedForG;
+        totalAggregate.quotient.amount += contribution;
+        graduationBreakdown.push({
+          graduationId: g.id,
+          graduationLabel: g.label,
+          garmentAmount,
+          consumption,
+          gradeDelta: edge.gradeDeltas?.[g.id],
+          convertedAmount: convertedForG,
+          contribution,
+        });
+      }
+    }
+
     processSteps.push({
       processLabel: processNode?.label ?? "Processo desconhecido",
       skipped: false,
@@ -177,6 +222,7 @@ export function computeMaterialCost({
       convertedAmount,
       convertedUnit: totalCost.quotient.unit,
       runningTotal: totalCost.quotient.amount,
+      graduationBreakdown,
     });
   }
 
@@ -215,6 +261,7 @@ export function computeMaterialCost({
 
   return {
     cost: totalCost,
+    total: graduations.length > 0 ? totalAggregate : undefined,
     audit: {
       computedAt: new Date().toISOString(),
       materialAttributes,

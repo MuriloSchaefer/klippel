@@ -27,7 +27,13 @@ computationMiddlewares.startListening({
     // Skip write-backs from this same listener to break the cycle
     if (nodeUpdated.match(action)) {
       const keys = Object.keys(action.payload.changes ?? {});
-      if (keys.length > 0 && keys.every((k) => k === "computedCost" || k === "costAudit")) return;
+      if (
+        keys.length > 0 &&
+        keys.every(
+          (k) => k === "computedCost" || k === "computedTotal" || k === "costAudit"
+        )
+      )
+        return;
     }
 
     listenerApi.cancelActiveListeners();
@@ -47,7 +53,7 @@ computationMiddlewares.startListening({
       const materialState = state.Materials?.materials[materialNode.materialId];
       if (!materialState) continue;
 
-      const { cost, audit } = computeMaterialCost({
+      const { cost, total, audit } = computeMaterialCost({
         materialNodeId: materialNode.id,
         graphState,
         materialState,
@@ -58,7 +64,7 @@ computationMiddlewares.startListening({
         updateNode({
           graphId,
           nodeId: materialNode.id,
-          changes: { computedCost: cost, costAudit: audit },
+          changes: { computedCost: cost, computedTotal: total, costAudit: audit },
         })
       );
     }

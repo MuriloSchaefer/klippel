@@ -19,7 +19,7 @@ export default function MaterialCostAuditContent({
   const converterModule = useModule<IConverterModule>("Converter");
   const useUnits = converterModule.hooks.useUnits;
   
-  const { cost, steps } = useMaterialCostComputation({ variationId, node, material });
+  const { cost, total, steps } = useMaterialCostComputation({ variationId, node, material });
 
   // Collect all unit IDs that need to be fetched
   const allUnitIds = useMemo(() => {
@@ -273,17 +273,53 @@ export default function MaterialCostAuditContent({
                     </Typography>
                   </>
                 )}
+
+                {step.graduationBreakdown && step.graduationBreakdown.length > 0 && (
+                  <Box sx={{ mt: 1, ml: 2, pl: 2, borderLeft: `2px solid ${theme.palette.info.main}` }}>
+                    <Typography variant="caption" sx={{ fontWeight: 500, fontStyle: 'italic', display: 'block', mb: 0.5, color: theme.palette.info.main }}>
+                      Detalhamento por graduação:
+                    </Typography>
+                    {step.graduationBreakdown.map((entry) => {
+                      const consumptionQuotientAbbr = units?.[entry.consumption.quotient.unit]?.abbreviation || entry.consumption.quotient.unit;
+                      const consumptionDividendAbbr = units?.[entry.consumption.dividend.unit]?.abbreviation || entry.consumption.dividend.unit;
+                      return (
+                        <Box key={entry.graduationId} sx={{ mb: 0.5, p: 1, bgcolor: theme.palette.info.main + "10", borderRadius: 0.5 }}>
+                          <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.7rem' }}>
+                            <strong>{entry.graduationLabel}</strong> ({entry.garmentAmount} un):
+                            {" "}{entry.consumption.quotient.amount} {consumptionQuotientAbbr} / {consumptionDividendAbbr}
+                            {entry.gradeDelta !== undefined && (
+                              <> · {entry.gradeDelta >= 0 ? "+" : ""}{entry.gradeDelta.toFixed(1)}%</>
+                            )}
+                          </Typography>
+                          <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.7rem', color: theme.palette.text.secondary }}>
+                            → {entry.convertedAmount.toFixed(4)} {costAbbreviation} × {entry.garmentAmount} = {entry.contribution.toFixed(2)} {costAbbreviation}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
               </Box>
             );
           })}
           <Divider sx={{ my: 2 }} />
           <Box sx={{ p: 2, bgcolor: theme.palette.primary.main + "15", borderRadius: 1 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Soma Total de Uso do Material:
+              Consumo por unidade:
             </Typography>
             <Typography variant="body1" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
               {cost?.quotient.amount.toFixed(2)} {costAbbreviation} / {dividendAbbreviation}
             </Typography>
+            {total && (
+              <>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mt: 1 }}>
+                  Total considerando graduações:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+                  {total.quotient.amount.toFixed(2)} {costAbbreviation}
+                </Typography>
+              </>
+            )}
           </Box>
         </>
       )}

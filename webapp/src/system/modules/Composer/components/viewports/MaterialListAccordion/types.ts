@@ -1,4 +1,5 @@
 import type { CompoundValue } from "@system/modules/Converter/typings";
+import type { GraduationBreakdownEntry } from "../../../typings";
 
 /**
  * Represents a unit conversion applied to a material attribute
@@ -31,4 +32,5 @@ export type ComputationStep = {
   conversionSteps: ConversionStep[];
   attributeConversions: AttributeConversion[];
   error?: string;
+  graduationBreakdown?: GraduationBreakdownEntry[];
 };

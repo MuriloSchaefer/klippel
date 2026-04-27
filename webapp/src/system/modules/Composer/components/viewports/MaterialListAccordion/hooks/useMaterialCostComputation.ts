@@ -14,6 +14,7 @@ export function useMaterialCostComputation({
 }) {
   return useMemo(() => {
     const cost = node.computedCost;
+    const total = node.computedTotal;
 
     const steps: ComputationStep[] = (node.costAudit?.steps ?? [])
       .filter((s) => !s.skipped)
@@ -41,8 +42,9 @@ export function useMaterialCostComputation({
           convertedUnit: an.normalisedUnit,
         })),
         error: s.error,
+        graduationBreakdown: s.graduationBreakdown,
       }));
 
-    return { cost, steps };
+    return { cost, total, steps };
   }, [node]);
 }

@@ -1,5 +1,15 @@
 {
   "mcpServers": {
+    "klippel": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "/home/schaefer/Documents/personal/klippel/webapp/electron/main/mcp/server.ts"
+      ],
+      "env": {
+        "CDP_PORT": "9222"
+      }
+    },
     "electron-devtools": {
       "command": "npx",
       "args": [

@@ -61,6 +61,16 @@ export type ConversionStepAudit = {
   result: number;
 };
 
+export type GraduationBreakdownEntry = {
+  graduationId: string;
+  graduationLabel: string;
+  garmentAmount: number;
+  consumption: CompoundValue;
+  gradeDelta?: number;
+  convertedAmount: number;
+  contribution: number;
+};
+
 export type ProcessStepAudit = {
   processLabel: string;
   skipped: boolean;
@@ -72,6 +82,7 @@ export type ProcessStepAudit = {
   convertedUnit: string;
   runningTotal: number;
   error?: string;
+  graduationBreakdown?: GraduationBreakdownEntry[];
 };
 
 export type CostAudit = {
@@ -87,6 +98,7 @@ export type MaterialNode = Node & {
     attributes?: {}
     typeRestrictions: string[];
     computedCost?: CompoundValue;
+    computedTotal?: CompoundValue; // grade-aware aggregated total (Σ_g graduation.amount × consumption_g)
     costAudit?: CostAudit;
 }
 
@@ -168,13 +180,18 @@ export type VisualizationOfEdge = Edge & {
 }
 export type ConsumesEdge = Edge & {
     type: "CONSUMES";
-    // amount stored on the edge
+    // default consumption (baseline) used when a graduation has no explicit override
     amount: CompoundValue;
+    // explicit consumption per graduation (authoritative when present)
+    consumptionPerGrade?: { [graduationNodeId: string]: CompoundValue };
+    // signed % delta vs amount; persisted but read-only — managed by variation actions
+    gradeDeltas?: { [graduationNodeId: string]: number };
 }
 export type ConsumedByEdge = Edge & {
     type: "CONSUMED_BY";
-    // amount stored on the reverse edge as well
     amount: CompoundValue;
+    consumptionPerGrade?: { [graduationNodeId: string]: CompoundValue };
+    gradeDeltas?: { [graduationNodeId: string]: number };
 }
 export type VariationGraphState = GraphState & {
     nodes: {
