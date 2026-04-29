@@ -232,12 +232,23 @@ export const PointerContainer = ({
 
   const handleOpen = useCallback((e: MouseEvent) => {
     const isFirst = focusStackRef.current.length === 0;
-    setPosition({ x: e.clientX, y: e.clientY });
+    const target = e.currentTarget as HTMLElement | null;
+    const isKeyboardClick =
+      e.detail === 0 || (e.clientX === 0 && e.clientY === 0);
+    if (isKeyboardClick && target) {
+      const rect = target.getBoundingClientRect();
+      setPosition({ x: rect.right, y: rect.bottom });
+    } else {
+      setPosition({ x: e.clientX, y: e.clientY });
+    }
     setOpen(true);
     getContainerHandlerMap().set(instanceId.current, {
       close: doClose,
       confirm: (): boolean => {
-        if (actionsRef.current?.[0]?.props?.disabled) return false;
+        const firstAction = actionsRef.current?.[0];
+        if (firstAction?.props?.disabled) return false;
+        const firstActionHandler = (firstAction?.props as { handleConfirm?: () => void } | undefined)?.handleConfirm;
+        firstActionHandler?.();
         onConfirmRef.current?.();
         return true;
       },

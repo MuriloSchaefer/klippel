@@ -18,6 +18,7 @@ import { toggleSettingsPanelTool } from '../../../src/kernel/modules/Layout/mcpT
 import { toggleSettingsPanelShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleSettingsPanelShortcut';
 import { toggleDetailsPanelTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleDetailsPanel';
 import { toggleDetailsPanelShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleDetailsPanelShortcut';
+import { expandAccordionTool } from '../../../src/kernel/modules/Layout/mcpTools/expandAccordion';
 import { openModelTool } from '../../../src/system/modules/Composer/mcpTools/openModel';
 import { createModelTool } from '../../../src/system/modules/Composer/mcpTools/createModel';
 import { createModelShortcutTool } from '../../../src/system/modules/Composer/mcpTools/createModelShortcut';
@@ -46,13 +47,26 @@ export async function startMcpServer() {
   server.registerTool(toggleSettingsPanelShortcutTool.name, { description: toggleSettingsPanelShortcutTool.description }, toggleSettingsPanelShortcutTool.execute);
   server.registerTool(toggleDetailsPanelTool.name, { description: toggleDetailsPanelTool.description }, toggleDetailsPanelTool.execute);
   server.registerTool(toggleDetailsPanelShortcutTool.name, { description: toggleDetailsPanelShortcutTool.description }, toggleDetailsPanelShortcutTool.execute);
+  server.registerTool(
+    expandAccordionTool.name,
+    { description: expandAccordionTool.description, inputSchema: expandAccordionTool.inputSchema },
+    ({ name }) => expandAccordionTool.execute({ name }),
+  );
   server.registerTool(openModelTool.name, { description: openModelTool.description, inputSchema: { modelName: z.string() } }, ({ modelName }) => openModelTool.execute({ modelName }));
   server.registerTool(createModelTool.name, { description: createModelTool.description, inputSchema: { name: z.string(), id: z.string().optional() } }, ({ name, id }) => createModelTool.execute({ name, id }));
   server.registerTool(createModelShortcutTool.name, { description: createModelShortcutTool.description }, createModelShortcutTool.execute);
   server.registerTool(switchViewTool.name, { description: switchViewTool.description, inputSchema: { view: z.enum(['graph', 'svg']) } }, ({ view }) => switchViewTool.execute({ view }));
   server.registerTool(switchViewShortcutTool.name, { description: switchViewShortcutTool.description, inputSchema: { view: z.enum(['graph', 'svg']) } }, ({ view }) => switchViewShortcutTool.execute({ view }));
-  server.registerTool(addMaterialTool.name, { description: addMaterialTool.description }, addMaterialTool.execute);
-  server.registerTool(addMaterialShortcutTool.name, { description: addMaterialShortcutTool.description }, addMaterialShortcutTool.execute);
+  server.registerTool(
+    addMaterialTool.name,
+    { description: addMaterialTool.description, inputSchema: addMaterialTool.inputSchema },
+    (args) => addMaterialTool.execute(args as any),
+  );
+  server.registerTool(
+    addMaterialShortcutTool.name,
+    { description: addMaterialShortcutTool.description, inputSchema: addMaterialShortcutTool.inputSchema },
+    (args) => addMaterialShortcutTool.execute(args as any),
+  );
   server.registerTool(createBudgetTool.name, { description: createBudgetTool.description, inputSchema: { label: z.string() } }, ({ label }) => createBudgetTool.execute({ label }));
 
   const transport = new StdioServerTransport();

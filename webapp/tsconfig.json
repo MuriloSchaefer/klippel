@@ -18,6 +18,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "rootDir": "./",
+    "ignoreDeprecations": "6.0",
     "jsx": "react-jsx",
     "baseUrl": "./src",
     "paths": {

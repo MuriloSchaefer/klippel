@@ -1,13 +1,86 @@
+import { z } from 'zod';
+
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
+import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
+import { confirmPointerPanelShortcut } from '../../../../kernel/modules/Pointer/components/PointerContainer.shortcut.puppeteer';
+import { pickMaterialTypeFromFocused } from '../../../../system/modules/Materials/components/selectors/MaterialType.shortcut.puppeteer';
+import {
+  pickMaterialByIdFromFocused,
+  pickMaterialByPrincipalAndExtraFromFocused,
+} from '../../../../system/modules/Materials/components/selectors/Material.shortcut.puppeteer';
+
+export const ADD_MATERIAL_SHORTCUT = 'm' as const;
+
+type AddMaterialShortcutInput =
+  | { label?: string; type?: string; material?: string; extra?: string; materialId?: never }
+  | { label: string; type: string; materialId: number; material?: never; extra?: never };
 
 export const addMaterialShortcutTool = {
   name: 'addMaterialShortcut',
-  description: 'Open the add-material panel in the active Composer ModelViewport using the registered keyboard shortcut (m).',
-  inputSchema: { type: 'object' as const, properties: {} },
-  async execute() {
+  description:
+    'Create a new material node using the keyboard shortcut path: triggers "m", tabs through the form, confirms with Ctrl+Enter. With no arguments, opens the panel only (parity with the original behavior).',
+  inputSchema: {
+    label: z.string().optional(),
+    type: z.string().optional(),
+    material: z.string().optional(),
+    extra: z.string().optional(),
+    materialId: z.number().optional(),
+  },
+  async execute(input: AddMaterialShortcutInput = {}) {
     const page = await getPage();
     await page.bringToFront();
-    await page.keyboard.press('m');
-    return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true }) }] };
+
+    await ensureSettingsPanelExpanded(page);
+    await expandAccordion(page, 'Materiais');
+
+    await page.keyboard.press(ADD_MATERIAL_SHORTCUT);
+    await page.waitForSelector('[role="pointer-panel-content"] [data-testid="add-material-form"]');
+
+    // No-arg invocation just opens the panel (preserves original behavior).
+    if (!input.label) {
+      return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true, opened: true }) }] };
+    }
+    if (!input.type) throw new Error('addMaterialShortcut requires "type" when "label" is provided.');
+
+    // Focus is on the label field (first focusable in the panel).
+    await page.keyboard.down('Control');
+    await page.keyboard.press('a');
+    await page.keyboard.up('Control');
+    await page.keyboard.press('Delete');
+    await page.keyboard.type(input.label);
+
+    // Skip the type-restrictions multi-selector (auto-populates from type).
+    await page.keyboard.press('Tab'); // → typeRestrictions
+    await page.keyboard.press('Tab'); // → type
+
+    await pickMaterialTypeFromFocused(page, input.type);
+
+    await page.keyboard.press('Tab'); // → material principal
+
+    if ('materialId' in input && input.materialId !== undefined) {
+      await pickMaterialByIdFromFocused(page, input.materialId);
+    } else if (input.material) {
+      await pickMaterialByPrincipalAndExtraFromFocused(page, {
+        principal: input.material,
+        extra: input.extra,
+      });
+    } else {
+      throw new Error('addMaterialShortcut requires either {material, extra?} or {materialId}.');
+    }
+
+    await confirmPointerPanelShortcut(page);
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: true,
+          label: input.label,
+          type: input.type,
+          ...('materialId' in input ? { materialId: input.materialId } : { material: input.material, extra: input.extra }),
+        }),
+      }],
+    };
   },
 };

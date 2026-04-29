@@ -54,10 +54,10 @@ export default function ShowMaterial({
           {label}
         </Typography>
         <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "row" }}>
-          <Typography sx={{ fontWeight: 500, mr: 1 }}>
+          <Typography sx={{ fontWeight: 500, mr: 1 }} data-testid="material-principal">
             {materialLabel}
           </Typography>
-          <Typography color={theme.palette.text.secondary} sx={{ ml: 1 }}>
+          <Typography color={theme.palette.text.secondary} sx={{ ml: 1 }} data-testid="material-extra">
             (
             {typeof extra === "object" && "label" in extra
               ? extra.label

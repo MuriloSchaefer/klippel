@@ -43,13 +43,14 @@ export default function AddMaterialButton({
   return (
     <PointerContainer
       component={
-        <Box sx={{ minWidth: 320, padding: 2 }}>
+        <Box data-testid="add-material-form" sx={{ minWidth: 320, padding: 2 }}>
           <Box sx={{ display: "flex", gap: 1 }}>
             <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
               <TextField
                 required
                 value={label}
                 label="Label"
+                data-testid="add-material-label"
                 size="small"
                 onChange={(e) => setLabel(e.target.value)}
                 helperText={
@@ -80,7 +81,12 @@ export default function AddMaterialButton({
                 }
               />
             </FormControl>
-            <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
+            <FormControl
+              data-testid="add-material-type-restrictions"
+              sx={{ m: 1, width: "100%" }}
+              fullWidth
+              size="small"
+            >
               <MaterialTypeMultiSelector
                 required
                 label="Tipos permitidos"
@@ -94,7 +100,12 @@ export default function AddMaterialButton({
             </FormControl>
           </Box>
           <Box>
-            <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
+            <FormControl
+              data-testid="add-material-type"
+              sx={{ m: 1, width: "100%" }}
+              fullWidth
+              size="small"
+            >
               <MaterialTypeSelector
                 required
                 value={selectedType}
@@ -106,7 +117,12 @@ export default function AddMaterialButton({
                 labelId="type-label"
               />
             </FormControl>
-            <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
+            <FormControl
+              data-testid="add-material-material"
+              sx={{ m: 1, width: "100%" }}
+              fullWidth
+              size="small"
+            >
               {selectedType ? (
                 <MaterialSelector
                   type={selectedType}
@@ -123,6 +139,7 @@ export default function AddMaterialButton({
       actions={[
         <ConfirmAndCloseButton
           key="confirm"
+          data-testid="add-material-confirm"
           disabled={
             !selectedType ||
             !selectedMaterial ||

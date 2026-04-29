@@ -116,7 +116,12 @@ const MaterialSelector = ({
     <Box
       sx={{ width: "100%", display: "flex", justifyContent: "space-between" }}
     >
-      <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
+      <FormControl
+        data-testid="material-selector-principal"
+        sx={{ m: 1, width: "100%" }}
+        fullWidth
+        size="small"
+      >
         <InputLabel id={`label`} sx={{ textTransform: "capitalize" }}>
           {selector.principal}
         </InputLabel>
@@ -132,16 +137,26 @@ const MaterialSelector = ({
           {Object.entries(groupedMaterials).map(([industry, materials]) => {
             return [
               <ListSubheader>{industry}</ListSubheader>,
-              ...Object.entries(materials).map(([externalId, materials]) => (
-                <MenuItem key={externalId} value={`${industry}-${externalId}`}>
-                  {materials.label}
-                </MenuItem>
-              )),
+              ...Object.entries(materials).map(([externalId, group]) => {
+                const principalKey = `${industry}-${externalId}`;
+                const ids = group.extra.map((m) => m.id).join(",");
+                return (
+                  <MenuItem
+                    key={externalId}
+                    value={principalKey}
+                    data-principal-key={principalKey}
+                    data-material-ids={ids}
+                  >
+                    {group.label}
+                  </MenuItem>
+                );
+              }),
             ];
           })}
         </Select>
       </FormControl>
       <FormControl
+        data-testid="material-selector-extra"
         sx={{ m: 1, minWidth: 120, width: "fit-content" }}
         size="small"
       >
@@ -165,7 +180,11 @@ const MaterialSelector = ({
               groupedMaterials[principalState.split("-")[0]][
                 principalState.split("-")[1]
               ].extra.map((material) => (
-                <MenuItem key={material.id} value={material.id}>
+                <MenuItem
+                  key={material.id}
+                  value={material.id}
+                  data-material-id={material.id}
+                >
                   {selector.extra === "cor" ? (
                     <ColorItem
                       color={material.attributes[selector.extra]}

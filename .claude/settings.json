@@ -4,6 +4,7 @@
       "command": "npx",
       "args": [
         "tsx",
+        "watch",
         "/home/schaefer/Documents/personal/klippel/webapp/electron/main/mcp/server.ts"
       ],
       "env": {
