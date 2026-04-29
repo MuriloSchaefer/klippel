@@ -1,16 +1,35 @@
 name: Release Webapp
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
+
+concurrency:
+  group: release-webapp-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest ]
+        include:
+          - os: ubuntu-latest
+            runner: ubuntu-latest
+          - os: macos-latest
+            runner: macos-latest
+          - os: windows-latest
+            runner: windows-2022
 
     steps:
+      - name: Disable Defender scanning on workspace
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction SilentlyContinue
+          Add-MpPreference -ExclusionPath "${{ github.workspace }}" -ErrorAction SilentlyContinue
+          Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\npm-cache" -ErrorAction SilentlyContinue
+          Add-MpPreference -ExclusionProcess "node.exe","npm.exe","7z.exe" -ErrorAction SilentlyContinue
+
       - name: Check out Git repository
         uses: actions/checkout@v4
 
@@ -22,30 +41,32 @@ jobs:
           cache-dependency-path: 'webapp/package-lock.json'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --no-fund --loglevel=error
         working-directory: webapp
+        env:
+          npm_config_fund: "false"
+          npm_config_audit: "false"
 
       - name: Build and Make
         run: npm run make
         working-directory: webapp
 
       - name: List installer artifacts
-        if: matrix.os != 'windows-latest'
+        if: runner.os != 'Windows'
         run: find webapp/out/make -type f | sort
 
       - name: List installer artifacts (windows)
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: Get-ChildItem -Recurse webapp/out/make
 
       - name: Zip installers
-        if: matrix.os != 'windows-latest'
+        if: runner.os != 'Windows'
         run: zip -q -j webapp/${{matrix.os}}.zip $(find webapp/out/make -type f)
 
       - name: Zip installers (windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          $files = Get-ChildItem -Recurse -File webapp/out/make | Select-Object -ExpandProperty FullName
-          Compress-Archive -Path $files -Destination webapp/${{matrix.os}}.zip
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: 7z a -tzip -mx=3 webapp/${{matrix.os}}.zip ./webapp/out/make/*
 
       - name: Archive installer artifacts
         uses: actions/upload-artifact@v4
