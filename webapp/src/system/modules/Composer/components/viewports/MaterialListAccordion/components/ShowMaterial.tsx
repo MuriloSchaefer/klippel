@@ -4,10 +4,12 @@ import { ErrorBoundary } from "react-error-boundary";
 import useModule from "@kernel/hooks/useModule";
 import type { IConverterModule } from "@system/modules/Converter";
 import type { IPointerModule } from "@kernel/modules/Pointer";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import type { MaterialNode } from "../../../../typings";
 import type { MaterialState } from "@system/modules/Materials/store/materials/state";
 import type { Color } from "@system/modules/Materials/typings";
 import { fallbackRenderLabelOnly } from "@kernel/App";
+import { MODULE_NAME } from "../../../../constants";
 import MaterialCostInfo from "./MaterialCostInfo";
 import MaterialCostAuditContent from "./MaterialCostAuditContent";
 
@@ -37,9 +39,13 @@ export default function ShowMaterial({
   const theme = useTheme();
   const converterModule = useModule<IConverterModule>("Converter");
   const pointerModule = useModule<IPointerModule>("Pointer");
+  const keyboardShortcutsModule = useModule<IKeyboardShortcutsModule>(
+    "KeyboardShortcuts",
+  );
   const useUnits = converterModule.hooks.useUnits;
-  
+
   const { PointerContainer } = pointerModule.components;
+  const { ShortcutHint } = keyboardShortcutsModule.components;
 
   const units = useUnits([material.stock?.unit].filter(Boolean) as string[]);
 
@@ -131,22 +137,36 @@ export default function ShowMaterial({
         </Box>
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <IconButton
-          sx={{
-            "&:hover": { color: theme.palette.error.light },
-          }}
-          onClick={onDelete}
+        <ShortcutHint
+          placement="top-right"
+          shortcutId={`${MODULE_NAME}/MaterialItem/deleteMaterial`}
         >
-          <DeleteOutlineSharp color="error" />
-        </IconButton>
-        <IconButton
-          sx={{
-            "&:hover": { color: theme.palette.primary.main },
-          }}
-          onClick={onEdit}
+          <IconButton
+            data-testid="material-item-delete"
+            aria-label="delete-material"
+            sx={{
+              "&:hover": { color: theme.palette.error.light },
+            }}
+            onClick={onDelete}
+          >
+            <DeleteOutlineSharp color="error" />
+          </IconButton>
+        </ShortcutHint>
+        <ShortcutHint
+          placement="top-right"
+          shortcutId={`${MODULE_NAME}/MaterialItem/editMaterial`}
         >
-          <ModeEditOutlineSharp color="info" />
-        </IconButton>
+          <IconButton
+            data-testid="material-item-edit"
+            aria-label="edit-material"
+            sx={{
+              "&:hover": { color: theme.palette.primary.main },
+            }}
+            onClick={onEdit}
+          >
+            <ModeEditOutlineSharp color="info" />
+          </IconButton>
+        </ShortcutHint>
       </Box>
     </>
   );

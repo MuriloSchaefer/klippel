@@ -27,7 +27,10 @@ export default function EditMaterial({
   }>({ materialId, type });
   
   return (
-    <>
+    <Box
+      data-testid="edit-material-form"
+      sx={{ display: "flex", flexDirection: "row", flexGrow: 1 }}
+    >
       <Box
         sx={{
           flexGrow: 1,
@@ -37,30 +40,36 @@ export default function EditMaterial({
         }}
       >
         <Box sx={{ display: "flex", flexDirection: "column" }}>
-          <MaterialTypeSelector
-            value={form.type}
-            filter={(type) => {
-              return typeRestrictions.includes(type.name);
-            }}
-            onChange={(e) =>
-              setForm((curr) => ({
-                ...curr,
-                type: e.target.value,
-                materialId: undefined,
-              }))
-            }
-          />
-          <MaterialSelector
-            type={form.type}
-            value={form.materialId}
-            onChange={(newId) =>
-              setForm((curr) => ({ ...curr, materialId: newId }))
-            }
-          />
+          <Box data-testid="edit-material-type">
+            <MaterialTypeSelector
+              value={form.type}
+              filter={(type) => {
+                return typeRestrictions.includes(type.name);
+              }}
+              onChange={(e) =>
+                setForm((curr) => ({
+                  ...curr,
+                  type: e.target.value,
+                  materialId: undefined,
+                }))
+              }
+            />
+          </Box>
+          <Box data-testid="edit-material-material">
+            <MaterialSelector
+              type={form.type}
+              value={form.materialId}
+              onChange={(newId) =>
+                setForm((curr) => ({ ...curr, materialId: newId }))
+              }
+            />
+          </Box>
         </Box>
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         <IconButton
+          data-testid="edit-material-save"
+          aria-label="save-material"
           sx={{
             "&:hover": { color: theme.palette.success.main },
           }}
@@ -74,6 +83,8 @@ export default function EditMaterial({
           <SaveSharp />
         </IconButton>
         <IconButton
+          data-testid="edit-material-cancel"
+          aria-label="cancel-edit-material"
           onClick={onCancel}
           sx={{
             "&:hover": { color: theme.palette.error.main },
@@ -82,6 +93,6 @@ export default function EditMaterial({
           <CancelSharp />
         </IconButton>
       </Box>
-    </>
+    </Box>
   );
 }

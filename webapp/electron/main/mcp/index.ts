@@ -19,13 +19,7 @@ import { toggleSettingsPanelShortcutTool } from '../../../src/kernel/modules/Lay
 import { toggleDetailsPanelTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleDetailsPanel';
 import { toggleDetailsPanelShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleDetailsPanelShortcut';
 import { expandAccordionTool } from '../../../src/kernel/modules/Layout/mcpTools/expandAccordion';
-import { openModelTool } from '../../../src/system/modules/Composer/mcpTools/openModel';
-import { createModelTool } from '../../../src/system/modules/Composer/mcpTools/createModel';
-import { createModelShortcutTool } from '../../../src/system/modules/Composer/mcpTools/createModelShortcut';
-import { switchViewTool } from '../../../src/system/modules/Composer/mcpTools/switchView';
-import { switchViewShortcutTool } from '../../../src/system/modules/Composer/mcpTools/switchViewShortcut';
-import { addMaterialTool } from '../../../src/system/modules/Composer/mcpTools/addMaterial';
-import { addMaterialShortcutTool } from '../../../src/system/modules/Composer/mcpTools/addMaterialShortcut';
+import { registerMcpTools as registerComposerTools } from '../../../src/system/modules/Composer/mcpTools';
 import { createBudgetTool } from '../../../src/system/modules/Orders/mcpTools/createBudget';
 
 export async function startMcpServer() {
@@ -52,21 +46,10 @@ export async function startMcpServer() {
     { description: expandAccordionTool.description, inputSchema: expandAccordionTool.inputSchema },
     ({ name }) => expandAccordionTool.execute({ name }),
   );
-  server.registerTool(openModelTool.name, { description: openModelTool.description, inputSchema: { modelName: z.string() } }, ({ modelName }) => openModelTool.execute({ modelName }));
-  server.registerTool(createModelTool.name, { description: createModelTool.description, inputSchema: { name: z.string(), id: z.string().optional() } }, ({ name, id }) => createModelTool.execute({ name, id }));
-  server.registerTool(createModelShortcutTool.name, { description: createModelShortcutTool.description }, createModelShortcutTool.execute);
-  server.registerTool(switchViewTool.name, { description: switchViewTool.description, inputSchema: { view: z.enum(['graph', 'svg']) } }, ({ view }) => switchViewTool.execute({ view }));
-  server.registerTool(switchViewShortcutTool.name, { description: switchViewShortcutTool.description, inputSchema: { view: z.enum(['graph', 'svg']) } }, ({ view }) => switchViewShortcutTool.execute({ view }));
-  server.registerTool(
-    addMaterialTool.name,
-    { description: addMaterialTool.description, inputSchema: addMaterialTool.inputSchema },
-    (args) => addMaterialTool.execute(args as any),
-  );
-  server.registerTool(
-    addMaterialShortcutTool.name,
-    { description: addMaterialShortcutTool.description, inputSchema: addMaterialShortcutTool.inputSchema },
-    (args) => addMaterialShortcutTool.execute(args as any),
-  );
+
+  // Register Composer module tools
+  registerComposerTools(server);
+
   server.registerTool(createBudgetTool.name, { description: createBudgetTool.description, inputSchema: { label: z.string() } }, ({ label }) => createBudgetTool.execute({ label }));
 
   const transport = new StdioServerTransport();

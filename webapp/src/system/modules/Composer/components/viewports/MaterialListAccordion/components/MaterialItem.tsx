@@ -45,6 +45,9 @@ export default function MaterialItem({
       <ListItem
         key={node.id}
         id={node.id}
+        data-testid="material-item"
+        data-material-label={node.label}
+        tabIndex={0}
         sx={{
           mb: 0.5,
           display: "flex",
@@ -52,6 +55,7 @@ export default function MaterialItem({
           alignItems: "center",
           justifyContent: "space-around",
           p: 1,
+          "&:focus-visible": { outline: "2px solid", outlineOffset: 2 },
         }}
       >
         {!isEditing ? (
@@ -65,7 +69,7 @@ export default function MaterialItem({
             node={node}
             material={material}
             onEdit={() => setIsEditing(true)}
-            onDelete={() => variation.actions.removeMaterial(node.materialId)}
+            onDelete={() => variation.actions.removeMaterialNode(node.id)}
           />
         ) : (
           <EditMaterial

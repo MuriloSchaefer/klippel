@@ -145,14 +145,10 @@ export default function useVariation({ variationId }: { variationId: string }) {
         });
         markChanged();
       },
-      removeMaterial: (materialId: number) => {
-        const nodeId = Object.values(graph.state?.nodes ?? {}).find(
-          (n) =>
-            n.type === "MATERIAL" &&
-            (n as MaterialNode).materialId === materialId,
-        )?.id;
-        if (!nodeId) {
-          console.error("Material node not found for materialId:", materialId);
+      removeMaterialNode: (nodeId: string) => {
+        const node = graph.state?.nodes?.[nodeId];
+        if (!node || node.type !== "MATERIAL") {
+          console.error("Material node not found for id:", nodeId);
           return;
         }
         graph.actions.removeNode(nodeId);

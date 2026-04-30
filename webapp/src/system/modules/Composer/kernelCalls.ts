@@ -91,5 +91,29 @@ export function postBootInitialization({managers:{keyboardManager}}: PostBootIni
       description: 'Add material',
       enabled: true,
     },
+    {
+      id: `${MODULE_NAME}/MaterialItem/editMaterial`,
+      key: 'e',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="material-item"]');
+        const btn = row?.querySelector('[data-testid="material-item-edit"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Edit focused material',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/MaterialItem/deleteMaterial`,
+      key: 'Shift+m',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="material-item"]');
+        const btn = row?.querySelector('[data-testid="material-item-delete"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Remove focused material',
+      enabled: true,
+    },
   ])
 }
