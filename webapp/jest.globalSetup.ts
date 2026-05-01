@@ -3,22 +3,43 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { request as httpRequest } from 'node:http';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
-const CDP_URL = `http://localhost:${CDP_PORT}/json/version`;
+const CDP_VERSION_URL = `http://localhost:${CDP_PORT}/json/version`;
+const CDP_LIST_URL = `http://localhost:${CDP_PORT}/json/list`;
 const STARTUP_TIMEOUT_MS = Number(process.env.KLIPPEL_STARTUP_TIMEOUT_MS ?? 90_000);
 
-const probeCdp = (): Promise<boolean> =>
+const httpGet = (url: string): Promise<{ status: number; body: string } | null> =>
   new Promise((resolve) => {
-    const req = httpRequest(CDP_URL, { method: 'GET', timeout: 1000 }, (res) => {
-      res.resume();
-      resolve(res.statusCode === 200);
+    const req = httpRequest(url, { method: 'GET', timeout: 1000 }, (res: any) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk: string) => { body += chunk; });
+      res.on('end', () => resolve({ status: res.statusCode ?? 0, body }));
     });
-    req.on('error', () => resolve(false));
+    req.on('error', () => resolve(null));
     req.on('timeout', () => {
       req.destroy();
-      resolve(false);
+      resolve(null);
     });
     req.end();
   });
+
+// CDP is "ready" when /json/version is up AND at least one page target exists
+// with a real renderer URL. The installed (packaged) app loads its renderer
+// from `file://...`, so we accept any non-empty, non-about:blank URL.
+const probeCdp = async (): Promise<boolean> => {
+  const version = await httpGet(CDP_VERSION_URL);
+  if (!version || version.status !== 200) return false;
+  const list = await httpGet(CDP_LIST_URL);
+  if (!list || list.status !== 200) return false;
+  try {
+    const targets = JSON.parse(list.body) as Array<{ type?: string; url?: string }>;
+    return targets.some(
+      (t) => t.type === 'page' && t.url && t.url !== 'about:blank',
+    );
+  } catch {
+    return false;
+  }
+};
 
 export default async function globalSetup() {
   if (await probeCdp()) {
