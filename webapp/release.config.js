@@ -22,6 +22,9 @@ module.exports = {
         { "path": "dist/ubuntu-latest.zip", "label": "Ubuntu-${nextRelease.version}" },
         { "path": "dist/macos-latest.zip", "label": "MacOs-${nextRelease.version}" },
         { "path": "dist/windows-latest.zip", "label": "Windows-${nextRelease.version}" },
+        { "path": "dist/klippel-tests-ubuntu-latest.zip", "label": "MCP-Tests-Ubuntu-${nextRelease.version}" },
+        { "path": "dist/klippel-tests-macos-latest.zip", "label": "MCP-Tests-MacOs-${nextRelease.version}" },
+        { "path": "dist/klippel-tests-windows-latest.zip", "label": "MCP-Tests-Windows-${nextRelease.version}" },
       ]
     }],
   ],

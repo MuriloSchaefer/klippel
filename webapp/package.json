@@ -55,7 +55,8 @@
     "prebuild": "electron-vite build",
     "package": "electron-vite build && electron-forge package",
     "make": "electron-vite build && electron-forge make",
-    "publish": "electron-forge publish"
+    "publish": "electron-forge publish",
+    "package:tests": "node scripts/build-test-bundle.mjs"
   },
   "repository": {
     "url": "git@github.com:MuriloSchaefer/klippel.git"

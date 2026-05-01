@@ -73,6 +73,28 @@ jobs:
         with:
           name: ${{matrix.os}}.zip
           path: webapp/${{matrix.os}}.zip
+
+      - name: Build standalone MCP tests bundle
+        run: npm run package:tests
+        working-directory: webapp
+
+      - name: Zip MCP tests bundle (unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd webapp/out/test-bundle
+          zip -qr "../../klippel-tests-${{matrix.os}}.zip" .
+
+      - name: Zip MCP tests bundle (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          7z a -tzip -mx=3 webapp/klippel-tests-${{matrix.os}}.zip ./webapp/out/test-bundle/*
+
+      - name: Archive MCP tests bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: klippel-tests-${{matrix.os}}.zip
+          path: webapp/klippel-tests-${{matrix.os}}.zip
     
   release:
     needs: build

@@ -26,9 +26,30 @@ export default async function globalSetup() {
     return;
   }
 
+  const installedBin = process.env.KLIPPEL_BIN_PATH;
   const useXvfb = process.env.KLIPPEL_USE_XVFB === '1';
-  const cmd = useXvfb ? 'xvfb-run' : 'yarn';
-  const args = useXvfb ? ['-a', 'yarn', 'dev'] : ['dev'];
+
+  let cmd: string;
+  let args: string[];
+
+  if (installedBin) {
+    // Drive the installed Klippel binary directly. Used by the bundled test
+    // runner that ships alongside releases — it spawns its own Electron
+    // instance from the installed app and exposes CDP for puppeteer.
+    const baseArgs = [`--remote-debugging-port=${CDP_PORT}`];
+    if (process.platform === 'linux') baseArgs.push('--no-sandbox');
+    if (useXvfb) {
+      cmd = 'xvfb-run';
+      args = ['-a', installedBin, ...baseArgs];
+    } else {
+      cmd = installedBin;
+      args = baseArgs;
+    }
+  } else {
+    // Dev mode: launch the local repo via `yarn dev`.
+    cmd = useXvfb ? 'xvfb-run' : 'yarn';
+    args = useXvfb ? ['-a', 'yarn', 'dev'] : ['dev'];
+  }
 
   const child = spawn(cmd, args, {
     cwd: process.cwd(),
@@ -46,5 +67,5 @@ export default async function globalSetup() {
     if (await probeCdp()) return;
     await sleep(500);
   }
-  throw new Error(`Klippel dev app did not expose CDP on :${CDP_PORT} within ${STARTUP_TIMEOUT_MS}ms`);
+  throw new Error(`Klippel did not expose CDP on :${CDP_PORT} within ${STARTUP_TIMEOUT_MS}ms`);
 }

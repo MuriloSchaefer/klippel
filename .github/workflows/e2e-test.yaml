@@ -52,12 +52,15 @@ jobs:
           - os: ubuntu-latest
             runner: ubuntu-latest
             artifact-pattern: 'ubuntu-latest.zip'
+            tests-pattern: 'klippel-tests-ubuntu-latest.zip'
           - os: macos-latest
             runner: macos-latest
             artifact-pattern: 'macos-latest.zip'
+            tests-pattern: 'klippel-tests-macos-latest.zip'
           - os: windows-latest
             runner: windows-2022
             artifact-pattern: 'windows-latest.zip'
+            tests-pattern: 'klippel-tests-windows-latest.zip'
 
     steps:
       - name: Disable Defender scanning on workspace
@@ -321,6 +324,68 @@ jobs:
             }
           }
 
+      - name: Install Node.js (for MCP tests bundle)
+        if: steps.find-installer.outputs.installer_path != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download MCP tests bundle
+        id: download-tests
+        if: steps.find-installer.outputs.installer_path != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          mkdir -p tests-artifacts
+          echo "Downloading tests bundle: ${{ matrix.tests-pattern }}"
+          if gh release download ${{ needs.get-latest-release.outputs.tag }} \
+              --repo MuriloSchaefer/klippel \
+              --pattern "${{ matrix.tests-pattern }}" \
+              --dir tests-artifacts 2>&1; then
+            ZIP=$(find tests-artifacts -type f -name "*.zip" | head -1)
+            if [ -n "$ZIP" ]; then
+              mkdir -p test-bundle
+              unzip -q -o "$ZIP" -d test-bundle
+              echo "tests_bundle_path=test-bundle" >> $GITHUB_OUTPUT
+              echo "✓ Tests bundle ready at test-bundle"
+            else
+              echo "⚠ No tests bundle zip found after download"
+            fi
+          else
+            echo "⚠ Tests bundle not available for this release"
+          fi
+
+      - name: Run MCP tools tests (Linux)
+        id: mcp-tests-linux
+        if: runner.os == 'Linux' && steps.download-tests.outputs.tests_bundle_path != ''
+        timeout-minutes: 15
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          sleep 2
+          export KLIPPEL_USE_XVFB=0
+          chmod +x test-bundle/run-tests.sh
+          ./test-bundle/run-tests.sh "$KLIPPEL_BIN"
+          pkill Xvfb || true
+
+      - name: Run MCP tools tests (macOS)
+        id: mcp-tests-macos
+        if: runner.os == 'macOS' && steps.download-tests.outputs.tests_bundle_path != ''
+        timeout-minutes: 15
+        run: |
+          BINARY=$(find "$APP_PATH/Contents/MacOS" -maxdepth 1 -type f -perm +111 | head -1)
+          chmod +x test-bundle/run-tests.sh
+          ./test-bundle/run-tests.sh "$BINARY"
+
+      - name: Run MCP tools tests (Windows)
+        id: mcp-tests-windows
+        if: runner.os == 'Windows' && steps.download-tests.outputs.tests_bundle_path != ''
+        timeout-minutes: 15
+        shell: cmd
+        run: |
+          call test-bundle\run-tests.cmd "%KLIPPEL_EXE%"
+
       - name: Record step results
         if: always()
         shell: bash
@@ -329,9 +394,11 @@ jobs:
           OS_KEY="${{ matrix.os }}"
           INSTALL="${{ steps.install-linux.outcome }}${{ steps.install-macos.outcome }}${{ steps.install-windows.outcome }}"
           LAUNCH="${{ steps.launch-linux.outcome }}${{ steps.launch-macos.outcome }}${{ steps.launch-windows.outcome }}"
+          MCP="${{ steps.mcp-tests-linux.outcome }}${{ steps.mcp-tests-macos.outcome }}${{ steps.mcp-tests-windows.outcome }}"
           INSTALL=${INSTALL:-skipped}
           LAUNCH=${LAUNCH:-skipped}
-          printf '%s\n%s\n%s\n' "$OS_KEY" "$INSTALL" "$LAUNCH" > "status/${OS_KEY}.txt"
+          MCP=${MCP:-skipped}
+          printf '%s\n%s\n%s\n%s\n' "$OS_KEY" "$INSTALL" "$LAUNCH" "$MCP" > "status/${OS_KEY}.txt"
           cat "status/${OS_KEY}.txt"
 
       - name: Upload status
@@ -350,6 +417,7 @@ jobs:
           path: |
             release-artifacts/
             test-install/
+            tests-artifacts/
             app_output.log
           retention-days: 7
 
@@ -383,31 +451,48 @@ jobs:
             esac
           }
 
+          # Installation column collapses install + launch outcomes:
+          # - both success → success
+          # - either failure → failure
+          # - both skipped → skipped
+          # - mixed (success + skipped) → skipped (incomplete signal)
+          combine_install() {
+            local a="$1" b="$2"
+            if [ "$a" = "failure" ] || [ "$b" = "failure" ]; then echo "failure"; return; fi
+            if [ "$a" = "success" ] && [ "$b" = "success" ]; then echo "success"; return; fi
+            echo "skipped"
+          }
+
           read_status() {
             local file="status/$1.txt"
             if [ -f "$file" ]; then
               INSTALL=$(sed -n '2p' "$file")
               LAUNCH=$(sed -n '3p' "$file")
+              MCP=$(sed -n '4p' "$file")
             else
               INSTALL="skipped"
               LAUNCH="skipped"
+              MCP="skipped"
             fi
+            INSTALL=${INSTALL:-skipped}
+            LAUNCH=${LAUNCH:-skipped}
+            MCP=${MCP:-skipped}
           }
 
-          read_status ubuntu-latest;  LINUX_INSTALL=$(fmt "$INSTALL");  LINUX_LAUNCH=$(fmt "$LAUNCH")
-          read_status macos-latest;   MAC_INSTALL=$(fmt "$INSTALL");    MAC_LAUNCH=$(fmt "$LAUNCH")
-          read_status windows-latest; WIN_INSTALL=$(fmt "$INSTALL");    WIN_LAUNCH=$(fmt "$LAUNCH")
+          read_status ubuntu-latest;  LINUX_INSTALL=$(fmt "$(combine_install "$INSTALL" "$LAUNCH")"); LINUX_MCP=$(fmt "$MCP")
+          read_status macos-latest;   MAC_INSTALL=$(fmt "$(combine_install "$INSTALL" "$LAUNCH")");   MAC_MCP=$(fmt "$MCP")
+          read_status windows-latest; WIN_INSTALL=$(fmt "$(combine_install "$INSTALL" "$LAUNCH")");   WIN_MCP=$(fmt "$MCP")
 
           TESTED_AT=$(date -u '+%Y-%m-%d %H:%M UTC')
 
           E2E_FILE=$(mktemp)
           printf '\n---\n\n## E2E Test Results\n\n' >> "$E2E_FILE"
           printf 'Tested: %s · [Run details](%s)\n\n' "$TESTED_AT" "$RUN_URL" >> "$E2E_FILE"
-          printf '| OS | Installation | Launch |\n' >> "$E2E_FILE"
+          printf '| OS | Installation | MCP tools tests |\n' >> "$E2E_FILE"
           printf '|---|---|---|\n' >> "$E2E_FILE"
-          printf '| Linux | %s | %s |\n'   "$LINUX_INSTALL" "$LINUX_LAUNCH" >> "$E2E_FILE"
-          printf '| macOS | %s | %s |\n'   "$MAC_INSTALL"   "$MAC_LAUNCH"   >> "$E2E_FILE"
-          printf '| Windows | %s | %s |\n' "$WIN_INSTALL"   "$WIN_LAUNCH"   >> "$E2E_FILE"
+          printf '| Linux | %s | %s |\n'   "$LINUX_INSTALL" "$LINUX_MCP" >> "$E2E_FILE"
+          printf '| macOS | %s | %s |\n'   "$MAC_INSTALL"   "$MAC_MCP"   >> "$E2E_FILE"
+          printf '| Windows | %s | %s |\n' "$WIN_INSTALL"   "$WIN_MCP"   >> "$E2E_FILE"
           printf '\nEach OS runs independently — failure in one does not affect others.\n' >> "$E2E_FILE"
 
           {
