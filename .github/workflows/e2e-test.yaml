@@ -68,9 +68,15 @@ jobs:
         shell: pwsh
         run: |
           Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction SilentlyContinue
+          Set-MpPreference -DisableBehaviorMonitoring $true -ErrorAction SilentlyContinue
+          Set-MpPreference -DisableScriptScanning $true -ErrorAction SilentlyContinue
+          Set-MpPreference -DisableArchiveScanning $true -ErrorAction SilentlyContinue
           Add-MpPreference -ExclusionPath "${{ github.workspace }}" -ErrorAction SilentlyContinue
           Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\Klippel" -ErrorAction SilentlyContinue
-          Add-MpPreference -ExclusionProcess "Klippel.exe","Setup.exe" -ErrorAction SilentlyContinue
+          Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\SquirrelTemp" -ErrorAction SilentlyContinue
+          Add-MpPreference -ExclusionPath "$env:TEMP" -ErrorAction SilentlyContinue
+          Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\npm-cache" -ErrorAction SilentlyContinue
+          Add-MpPreference -ExclusionProcess "Klippel.exe","Setup.exe","Update.exe","node.exe","npm.exe" -ErrorAction SilentlyContinue
 
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -124,7 +130,11 @@ jobs:
           find extracted-artifacts -type f | head -20
 
           if [ "${{ runner.os }}" == "Linux" ]; then
-            INSTALLER=$(find extracted-artifacts -type f \( -name "*.deb" -o -name "*.rpm" \) | head -1)
+            # Prefer .deb on Ubuntu — RPM-on-Debian fails dependency resolution.
+            INSTALLER=$(find extracted-artifacts -type f -name "*.deb" | head -1)
+            if [ -z "$INSTALLER" ]; then
+              INSTALLER=$(find extracted-artifacts -type f -name "*.rpm" | head -1)
+            fi
             if [ -n "$INSTALLER" ]; then
               echo "Found file: $INSTALLER (Type: $(file "$INSTALLER" 2>/dev/null || echo 'unknown'))"
             fi
@@ -226,6 +236,7 @@ jobs:
 
           APP_PATH=$(find test-install -maxdepth 4 -type d -name "*.app" | head -1)
           if [ -n "$APP_PATH" ]; then
+            APP_PATH=$(cd "$APP_PATH" && pwd)
             echo "✓ macOS installation verification passed (app: $APP_PATH)"
             echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
             ls -la test-install/
@@ -415,11 +426,9 @@ jobs:
         with:
           name: installation-test-${{ matrix.os }}-${{ needs.get-latest-release.outputs.tag }}
           path: |
-            release-artifacts/
-            test-install/
-            tests-artifacts/
             app_output.log
           retention-days: 7
+          if-no-files-found: ignore
 
   test-summary:
     needs: [get-latest-release, test-installation]

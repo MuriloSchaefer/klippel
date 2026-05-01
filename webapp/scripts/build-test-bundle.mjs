@@ -127,7 +127,13 @@ if [ -z "\${1:-}" ]; then
   exit 2
 fi
 
-export KLIPPEL_BIN_PATH="$1"
+# Resolve to an absolute path before changing directories so relative paths
+# passed by the caller still work.
+case "$1" in
+  /*) KLIPPEL_BIN_PATH="$1" ;;
+  *)  KLIPPEL_BIN_PATH="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")" ;;
+esac
+export KLIPPEL_BIN_PATH
 shift || true
 
 cd "$(dirname "$0")"
