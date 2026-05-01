@@ -45,6 +45,12 @@ const preventPropagation = (event: KeyboardEvent) =>{
     if (event.ctrlKey && !event.altKey && !event.metaKey && event.key === 'w') {
       event.preventDefault();
     }
+    // Prevent Ctrl+M from being swallowed by the OS / window manager (e.g.
+    // window minimize on some desktops) so the app's focus-material-list
+    // shortcut runs instead.
+    if (event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'm' || event.key === 'M')) {
+      event.preventDefault();
+    }
 }
 
 const KeyboardListener: React.FC = () => {

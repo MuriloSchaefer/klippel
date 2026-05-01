@@ -10,7 +10,7 @@ import {
   pickMaterialByPrincipalAndExtraFromFocused,
 } from '../../../../system/modules/Materials/components/selectors/Material.shortcut.puppeteer';
 
-export const ADD_MATERIAL_SHORTCUT = 'm' as const;
+export const ADD_MATERIAL_SHORTCUT = 'a' as const;
 
 type AddMaterialShortcutInput =
   | { label?: string; type?: string; material?: string; extra?: string; materialId?: never }
@@ -19,7 +19,7 @@ type AddMaterialShortcutInput =
 export const addMaterialShortcutTool = {
   name: 'addMaterialShortcut',
   description:
-    'Create a new material node using the keyboard shortcut path: triggers "m", tabs through the form, confirms with Ctrl+Enter. With no arguments, opens the panel only (parity with the original behavior).',
+    'Create a new material node using the keyboard shortcut path: triggers "a", tabs through the form, confirms with Ctrl+Enter. With no arguments, opens the panel only (parity with the original behavior).',
   inputSchema: {
     label: z.string().optional(),
     type: z.string().optional(),

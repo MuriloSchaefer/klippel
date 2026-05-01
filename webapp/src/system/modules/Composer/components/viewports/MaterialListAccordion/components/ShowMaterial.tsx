@@ -24,6 +24,7 @@ export default function ShowMaterial({
   variationId,
   node,
   material,
+  isFocused = false,
 }: {
   label: string;
   materialLabel: string;
@@ -35,6 +36,7 @@ export default function ShowMaterial({
   variationId: string;
   node: MaterialNode;
   material: MaterialState;
+  isFocused?: boolean;
 }) {
   const theme = useTheme();
   const converterModule = useModule<IConverterModule>("Converter");
@@ -140,6 +142,7 @@ export default function ShowMaterial({
         <ShortcutHint
           placement="top-right"
           shortcutId={`${MODULE_NAME}/MaterialItem/deleteMaterial`}
+          alwaysShow={isFocused}
         >
           <IconButton
             data-testid="material-item-delete"
@@ -155,6 +158,7 @@ export default function ShowMaterial({
         <ShortcutHint
           placement="top-right"
           shortcutId={`${MODULE_NAME}/MaterialItem/editMaterial`}
+          alwaysShow={isFocused}
         >
           <IconButton
             data-testid="material-item-edit"

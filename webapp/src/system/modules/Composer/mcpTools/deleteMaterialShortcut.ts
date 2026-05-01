@@ -14,7 +14,7 @@ type DeleteMaterialShortcutInput = { label: string };
 export const deleteMaterialShortcutTool = {
   name: 'deleteMaterialShortcut',
   description:
-    'Delete a material node by focusing its row and pressing the remove-material shortcut (Shift+m).',
+    'Delete a material node by focusing its row and pressing the remove-material shortcut (d).',
   inputSchema: {
     label: z.string().describe('Visible label of the material node to delete.'),
   },

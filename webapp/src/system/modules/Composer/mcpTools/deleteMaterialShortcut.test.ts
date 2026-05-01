@@ -52,7 +52,7 @@ describe('deleteMaterialShortcut (E2E)', () => {
     if (browser) await browser.disconnect();
   });
 
-  it('deletes a material node via Shift+m on the focused row', async () => {
+  it('deletes a material node via "d" on the focused row', async () => {
     const label = 'Tricoline (delete-shortcut-test)';
     await deleteMaterialIfExists(label);
     await addMaterialShortcutTool.execute({

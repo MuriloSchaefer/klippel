@@ -8,11 +8,15 @@ const STARTUP_TIMEOUT_MS = Number(process.env.KLIPPEL_STARTUP_TIMEOUT_MS ?? 90_0
 
 const probeCdp = (): Promise<boolean> =>
   new Promise((resolve) => {
-    const req = httpRequest(CDP_URL, { method: 'GET' }, (res) => {
+    const req = httpRequest(CDP_URL, { method: 'GET', timeout: 1000 }, (res) => {
       res.resume();
       resolve(res.statusCode === 200);
     });
     req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
     req.end();
   });
 

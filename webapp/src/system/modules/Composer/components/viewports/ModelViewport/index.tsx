@@ -75,13 +75,18 @@ function ModelViewport() {
           >
             <CompositionTree variationId={activeVP.extra.variationId} />
           </Accordion>
-          <Accordion
-            name="Materiais"
-            icon={<WidgetsSharpIcon />}
-            summary="Materiais referenciados na composição"
+          <ShortcutHint
+            shortcutId={`${MODULE_NAME}/MaterialList/focus`}
+            placement="top-right"
           >
-            <MaterialListAccordion variationId={activeVP.extra.variationId} />
-          </Accordion>
+            <Accordion
+              name="Materiais"
+              icon={<WidgetsSharpIcon />}
+              summary="Materiais referenciados na composição"
+            >
+              <MaterialListAccordion variationId={activeVP.extra.variationId} />
+            </Accordion>
+          </ShortcutHint>
           <Accordion
             name="Tempo"
             icon={<AccessTimeSharpIcon />}

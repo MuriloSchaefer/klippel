@@ -11,6 +11,11 @@ import { editMaterialTool } from './editMaterial';
 import { editMaterialShortcutTool } from './editMaterialShortcut';
 import { deleteMaterialTool } from './deleteMaterial';
 import { deleteMaterialShortcutTool } from './deleteMaterialShortcut';
+import { focusMaterialListTool } from './focusMaterialList';
+import { cycleMaterialFocusTool } from './cycleMaterialFocus';
+import { selectMaterialByLabelTool } from './selectMaterialByLabel';
+import { editFocusedMaterialTool } from './editFocusedMaterial';
+import { deleteFocusedMaterialTool } from './deleteFocusedMaterial';
 
 const TOOLS = [
   openModelTool,
@@ -24,6 +29,11 @@ const TOOLS = [
   editMaterialShortcutTool,
   deleteMaterialTool,
   deleteMaterialShortcutTool,
+  focusMaterialListTool,
+  cycleMaterialFocusTool,
+  selectMaterialByLabelTool,
+  editFocusedMaterialTool,
+  deleteFocusedMaterialTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

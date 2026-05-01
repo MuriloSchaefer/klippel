@@ -156,6 +156,22 @@ export default function AddMaterialButton({
                 label,
                 typeRestrictions
               );
+              // Focus the freshly added row once it mounts.
+              const addedLabel = label;
+              const start = Date.now();
+              const tryFocus = () => {
+                const row = document.querySelector(
+                  `[data-testid="material-item"][data-material-label="${addedLabel}"]`
+                ) as HTMLElement | null;
+                if (row) {
+                  row.focus();
+                  return;
+                }
+                if (Date.now() - start < 1500) {
+                  requestAnimationFrame(tryFocus);
+                }
+              };
+              requestAnimationFrame(tryFocus);
             }
           }}
         >

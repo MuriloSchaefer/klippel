@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ListItem } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
 import useModule from "@kernel/hooks/useModule";
@@ -24,6 +24,16 @@ export default function MaterialItem({
   const materialTypes = materialsModule.hooks.useMaterialTypes();
   const variation = useVariation({ variationId });
   const [isEditing, setIsEditing] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const rowRef = useRef<HTMLLIElement | null>(null);
+  const refocusAfterEditRef = useRef(false);
+
+  useEffect(() => {
+    if (!isEditing && refocusAfterEditRef.current) {
+      refocusAfterEditRef.current = false;
+      rowRef.current?.focus();
+    }
+  }, [isEditing]);
 
   // Find material type and schema
   const materialType = materialTypes[material?.type];
@@ -45,9 +55,18 @@ export default function MaterialItem({
       <ListItem
         key={node.id}
         id={node.id}
+        ref={rowRef}
         data-testid="material-item"
         data-material-label={node.label}
         tabIndex={0}
+        onFocus={(e) => {
+          if (e.currentTarget === e.target) setIsFocused(true);
+        }}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsFocused(false);
+          }
+        }}
         sx={{
           mb: 0.5,
           display: "flex",
@@ -55,7 +74,14 @@ export default function MaterialItem({
           alignItems: "center",
           justifyContent: "space-around",
           p: 1,
-          "&:focus-visible": { outline: "2px solid", outlineOffset: 2 },
+          border: "2px solid transparent",
+          borderRadius: 1,
+          transition: "border-color 0.15s, box-shadow 0.15s",
+          "&:focus, &:focus-visible, &:focus-within": {
+            outline: "none",
+            borderColor: "primary.main",
+            boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.light}`,
+          },
         }}
       >
         {!isEditing ? (
@@ -68,6 +94,7 @@ export default function MaterialItem({
             variationId={variationId}
             node={node}
             material={material}
+            isFocused={isFocused}
             onEdit={() => setIsEditing(true)}
             onDelete={() => variation.actions.removeMaterialNode(node.id)}
           />
@@ -76,9 +103,13 @@ export default function MaterialItem({
             type={material.type}
             typeRestrictions={node.typeRestrictions}
             materialId={node.materialId}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => {
+              refocusAfterEditRef.current = true;
+              setIsEditing(false);
+            }}
             onSave={(materialId) => {
               variation.actions.updateMaterial(node.id, materialId);
+              refocusAfterEditRef.current = true;
               setIsEditing(false);
             }}
           />
