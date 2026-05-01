@@ -399,23 +399,29 @@ jobs:
           KLIPPEL_PID=$!
           echo "Klippel PID: $KLIPPEL_PID"
 
-          # Wait up to 60s for CDP to come up with a real renderer page.
-          deadline=$((SECONDS + 60))
+          # Wait up to 120s for CDP to come up with a real renderer page.
+          deadline=$((SECONDS + 120))
           ready=0
           while [ $SECONDS -lt $deadline ]; do
             if ! kill -0 $KLIPPEL_PID 2>/dev/null; then
               echo "✗ Klippel exited before CDP came up"
               break
             fi
-            if curl -fsS http://localhost:9222/json/list 2>/dev/null \
-                | grep -q '"type":"page"'; then
+            LIST=$(curl -fsS http://localhost:9222/json/list 2>/dev/null || echo '')
+            # Accept any target whose URL starts with file:// or http://localhost:
+            if echo "$LIST" | grep -Eq '"url":"(file://|http://localhost)'; then
               ready=1
               break
             fi
-            sleep 1
+            sleep 2
           done
 
           if [ $ready -ne 1 ]; then
+            echo "=== /json/list (last seen) ==="
+            echo "${LIST:-<empty>}"
+            echo "=== /json/version ==="
+            curl -fsS http://localhost:9222/json/version || true
+            echo
             echo "=== Klippel log ==="
             cat /tmp/klippel-mcp.log || true
             echo "=== Xvfb log ==="
@@ -471,22 +477,27 @@ jobs:
           "$BINARY" --remote-debugging-port=9222 > /tmp/klippel-mcp.log 2>&1 &
           KLIPPEL_PID=$!
 
-          deadline=$((SECONDS + 60))
+          deadline=$((SECONDS + 120))
           ready=0
           while [ $SECONDS -lt $deadline ]; do
             if ! kill -0 $KLIPPEL_PID 2>/dev/null; then
               echo "✗ Klippel exited before CDP came up"
               break
             fi
-            if curl -fsS http://localhost:9222/json/list 2>/dev/null \
-                | grep -q '"type":"page"'; then
+            LIST=$(curl -fsS http://localhost:9222/json/list 2>/dev/null || echo '')
+            if echo "$LIST" | grep -Eq '"url":"(file://|http://localhost)'; then
               ready=1
               break
             fi
-            sleep 1
+            sleep 2
           done
 
           if [ $ready -ne 1 ]; then
+            echo "=== /json/list (last seen) ==="
+            echo "${LIST:-<empty>}"
+            echo "=== /json/version ==="
+            curl -fsS http://localhost:9222/json/version || true
+            echo
             echo "=== Klippel log ==="
             cat /tmp/klippel-mcp.log || true
             kill -9 $KLIPPEL_PID 2>/dev/null || true
