@@ -10,7 +10,7 @@ import installExtension, {
 import { getAbsPath, initStorageHooks } from "./storage";
 import { startMcpServer } from "./mcp";
 import initScheduler from "./scheduler";
-import { existsSync, outputFile, readdirSync, readFileSync } from "fs-extra";
+import { existsSync, ensureDirSync, outputFile, readdirSync, readFileSync } from "fs-extra";
 import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
 import { debounce } from "./utils";
 import { initHeliaHooks, initHeliaNode } from "./ipfs";
@@ -71,6 +71,7 @@ async function createWindow(): Promise<BrowserWindow> {
   }, 100);
 
 
+  ensureDirSync(getAbsPath('workspaces'));
   let workspace = readdirSync(getAbsPath('workspaces'))[0]
   if (existsSync(getAbsPath('.session/Store/state.json'))){
     workspace = JSON.parse(readFileSync(getAbsPath('.session/Store/state.json')).toString()).selectedWorkspace

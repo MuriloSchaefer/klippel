@@ -386,9 +386,14 @@ jobs:
           XVFB_PID=$!
           sleep 2
 
+          # Klippel reads ~/klippel/envs/$ENV_NAME/workspaces; older builds
+          # crash if ENV_NAME is unset or the dir is missing. Pre-create both.
+          export ENV_NAME=default
+          mkdir -p "$HOME/klippel/envs/$ENV_NAME/workspaces"
+
           # Launch the installed app ourselves so we control logging.
           # globalSetup will see CDP already up and attach instead of spawning.
-          echo "Launching $KLIPPEL_BIN with CDP on :9222"
+          echo "Launching $KLIPPEL_BIN with CDP on :9222 (ENV_NAME=$ENV_NAME)"
           "$KLIPPEL_BIN" --no-sandbox --remote-debugging-port=9222 \
             > /tmp/klippel-mcp.log 2>&1 &
           KLIPPEL_PID=$!
@@ -458,7 +463,11 @@ jobs:
             echo "✗ Could not locate executable inside $APP_PATH"
             exit 1
           fi
-          echo "Launching $BINARY with CDP on :9222"
+
+          export ENV_NAME=default
+          mkdir -p "$HOME/klippel/envs/$ENV_NAME/workspaces"
+
+          echo "Launching $BINARY with CDP on :9222 (ENV_NAME=$ENV_NAME)"
           "$BINARY" --remote-debugging-port=9222 > /tmp/klippel-mcp.log 2>&1 &
           KLIPPEL_PID=$!
 
@@ -504,6 +513,8 @@ jobs:
         timeout-minutes: 15
         shell: cmd
         run: |
+          set ENV_NAME=default
+          mkdir "%USERPROFILE%\klippel\envs\default\workspaces" 2>nul
           call test-bundle\run-tests.cmd "%KLIPPEL_EXE%"
 
       - name: Record step results
