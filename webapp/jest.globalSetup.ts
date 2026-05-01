@@ -1,6 +1,9 @@
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { request as httpRequest } from 'node:http';
+import { openSync, readFileSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_VERSION_URL = `http://localhost:${CDP_PORT}/json/version`;
@@ -72,21 +75,58 @@ export default async function globalSetup() {
     args = useXvfb ? ['-a', 'yarn', 'dev'] : ['dev'];
   }
 
+  // When driving an installed binary (CI / on-device diagnostics) the silent
+  // failure mode is brutal — capture stdio to a log file and surface it on
+  // timeout. Local `yarn dev` keeps the original behavior unless KLIPPEL_DEV_LOG=1.
+  const logPath = join(tmpdir(), `klippel-test-runner-${Date.now()}.log`);
+  let stdio: any;
+  if (process.env.KLIPPEL_DEV_LOG === '1') {
+    stdio = 'inherit';
+  } else if (installedBin) {
+    const fd = openSync(logPath, 'a');
+    stdio = ['ignore', fd, fd];
+  } else {
+    stdio = 'ignore';
+  }
+
   const child = spawn(cmd, args, {
     cwd: process.cwd(),
-    stdio: process.env.KLIPPEL_DEV_LOG === '1' ? 'inherit' : 'ignore',
+    stdio,
     detached: true,
     env: { ...process.env },
   });
   child.unref();
+  child.on('error', (err: any) => {
+    // eslint-disable-next-line no-console
+    console.error(`[globalSetup] spawn error: ${err?.message ?? err}`);
+  });
+  child.on('exit', (code: any, signal: any) => {
+    if (code !== 0 && code !== null) {
+      // eslint-disable-next-line no-console
+      console.error(`[globalSetup] child exited early: code=${code} signal=${signal}`);
+    }
+  });
 
   (globalThis as any).__KLIPPEL_DEV_PID__ = child.pid;
   (globalThis as any).__KLIPPEL_OWNED_PROCESS__ = true;
+  (globalThis as any).__KLIPPEL_LOG_PATH__ = installedBin ? logPath : undefined;
 
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
   while (Date.now() < deadline) {
     if (await probeCdp()) return;
     await sleep(500);
   }
-  throw new Error(`Klippel did not expose CDP on :${CDP_PORT} within ${STARTUP_TIMEOUT_MS}ms`);
+
+  let logTail = '';
+  if (installedBin && existsSync(logPath)) {
+    try {
+      const buf = readFileSync(logPath, 'utf8');
+      logTail = `\n--- last lines of ${logPath} ---\n${buf.split('\n').slice(-80).join('\n')}\n--- end ---`;
+    } catch {
+      logTail = `\n(could not read log at ${logPath})`;
+    }
+  }
+  throw new Error(
+    `Klippel did not expose CDP on :${CDP_PORT} within ${STARTUP_TIMEOUT_MS}ms${logTail}`,
+  );
 }
