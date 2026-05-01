@@ -372,22 +372,131 @@ jobs:
         if: runner.os == 'Linux' && steps.download-tests.outputs.tests_bundle_path != ''
         timeout-minutes: 15
         run: |
+          set -x
+
+          # Clean up anything left over from the launch step.
+          pkill -9 -f Klippel 2>/dev/null || true
+          pkill -9 -f klippel 2>/dev/null || true
+          pkill -9 Xvfb 2>/dev/null || true
+          rm -f "$HOME/.config/Klippel/SingletonLock" "$HOME/.config/klippel/SingletonLock" 2>/dev/null || true
+          sleep 1
+
           export DISPLAY=:99
-          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
+          XVFB_PID=$!
           sleep 2
+
+          # Launch the installed app ourselves so we control logging.
+          # globalSetup will see CDP already up and attach instead of spawning.
+          echo "Launching $KLIPPEL_BIN with CDP on :9222"
+          "$KLIPPEL_BIN" --no-sandbox --remote-debugging-port=9222 \
+            > /tmp/klippel-mcp.log 2>&1 &
+          KLIPPEL_PID=$!
+          echo "Klippel PID: $KLIPPEL_PID"
+
+          # Wait up to 60s for CDP to come up with a real renderer page.
+          deadline=$((SECONDS + 60))
+          ready=0
+          while [ $SECONDS -lt $deadline ]; do
+            if ! kill -0 $KLIPPEL_PID 2>/dev/null; then
+              echo "✗ Klippel exited before CDP came up"
+              break
+            fi
+            if curl -fsS http://localhost:9222/json/list 2>/dev/null \
+                | grep -q '"type":"page"'; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ $ready -ne 1 ]; then
+            echo "=== Klippel log ==="
+            cat /tmp/klippel-mcp.log || true
+            echo "=== Xvfb log ==="
+            cat /tmp/xvfb.log || true
+            kill -9 $KLIPPEL_PID 2>/dev/null || true
+            kill -9 $XVFB_PID 2>/dev/null || true
+            exit 1
+          fi
+          echo "✓ CDP is up with at least one page"
+
+          # Run the bundled jest. globalSetup will probe-and-attach.
           export KLIPPEL_USE_XVFB=0
+          unset KLIPPEL_BIN_PATH  # avoid a second spawn attempt
           chmod +x test-bundle/run-tests.sh
-          ./test-bundle/run-tests.sh "$KLIPPEL_BIN"
-          pkill Xvfb || true
+
+          # Launcher requires an arg; it sets KLIPPEL_BIN_PATH but we just
+          # unset it post-script-source isn't possible — invoke jest directly.
+          cd test-bundle
+          if [ ! -d node_modules ]; then
+            npm install --no-audit --no-fund --loglevel=error
+          fi
+          npx jest
+          JEST_EXIT=$?
+          cd ..
+
+          echo "=== Klippel log (post-jest) ==="
+          tail -n 100 /tmp/klippel-mcp.log || true
+
+          kill -9 $KLIPPEL_PID 2>/dev/null || true
+          kill -9 $XVFB_PID 2>/dev/null || true
+
+          exit $JEST_EXIT
 
       - name: Run MCP tools tests (macOS)
         id: mcp-tests-macos
         if: runner.os == 'macOS' && steps.download-tests.outputs.tests_bundle_path != ''
         timeout-minutes: 15
         run: |
+          set -x
+          pkill -9 -f Klippel 2>/dev/null || true
+          sleep 1
+
           BINARY=$(find "$APP_PATH/Contents/MacOS" -maxdepth 1 -type f -perm +111 | head -1)
-          chmod +x test-bundle/run-tests.sh
-          ./test-bundle/run-tests.sh "$BINARY"
+          if [ -z "$BINARY" ]; then
+            echo "✗ Could not locate executable inside $APP_PATH"
+            exit 1
+          fi
+          echo "Launching $BINARY with CDP on :9222"
+          "$BINARY" --remote-debugging-port=9222 > /tmp/klippel-mcp.log 2>&1 &
+          KLIPPEL_PID=$!
+
+          deadline=$((SECONDS + 60))
+          ready=0
+          while [ $SECONDS -lt $deadline ]; do
+            if ! kill -0 $KLIPPEL_PID 2>/dev/null; then
+              echo "✗ Klippel exited before CDP came up"
+              break
+            fi
+            if curl -fsS http://localhost:9222/json/list 2>/dev/null \
+                | grep -q '"type":"page"'; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ $ready -ne 1 ]; then
+            echo "=== Klippel log ==="
+            cat /tmp/klippel-mcp.log || true
+            kill -9 $KLIPPEL_PID 2>/dev/null || true
+            exit 1
+          fi
+          echo "✓ CDP is up with at least one page"
+
+          cd test-bundle
+          if [ ! -d node_modules ]; then
+            npm install --no-audit --no-fund --loglevel=error
+          fi
+          npx jest
+          JEST_EXIT=$?
+          cd ..
+
+          echo "=== Klippel log (post-jest) ==="
+          tail -n 100 /tmp/klippel-mcp.log || true
+          kill -9 $KLIPPEL_PID 2>/dev/null || true
+          exit $JEST_EXIT
 
       - name: Run MCP tools tests (Windows)
         id: mcp-tests-windows
