@@ -115,7 +115,7 @@ jobs:
           echo "Found ZIP file: $ZIP_FILE"
 
           mkdir -p extracted-artifacts
-          tar -xf "$ZIP_FILE" -C extracted-artifacts
+          unzip -o "$ZIP_FILE" -d extracted-artifacts
 
           echo "Contents of extracted artifacts:"
           find extracted-artifacts -type f | head -20
