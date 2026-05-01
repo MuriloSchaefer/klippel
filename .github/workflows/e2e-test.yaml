@@ -399,6 +399,7 @@ jobs:
           KLIPPEL_PID=$!
           echo "Klippel PID: $KLIPPEL_PID"
 
+
           # Wait up to 120s for CDP to come up with a real renderer page.
           deadline=$((SECONDS + 120))
           ready=0
@@ -409,7 +410,7 @@ jobs:
             fi
             LIST=$(curl -fsS http://localhost:9222/json/list 2>/dev/null || echo '')
             # Accept any target whose URL starts with file:// or http://localhost:
-            if echo "$LIST" | grep -Eq '"url":"(file://|http://localhost)'; then
+            if echo "$LIST" | grep -Eq '"url":[[:space:]]*"(file://|http://localhost)'; then
               ready=1
               break
             fi
@@ -485,7 +486,7 @@ jobs:
               break
             fi
             LIST=$(curl -fsS http://localhost:9222/json/list 2>/dev/null || echo '')
-            if echo "$LIST" | grep -Eq '"url":"(file://|http://localhost)'; then
+            if echo "$LIST" | grep -Eq '"url":[[:space:]]*"(file://|http://localhost)'; then
               ready=1
               break
             fi
