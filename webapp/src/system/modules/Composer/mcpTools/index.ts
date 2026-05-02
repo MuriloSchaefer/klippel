@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { openModelTool } from './openModel';
+import { openModelShortcutTool } from './openModelShortcut';
 import { createModelTool } from './createModel';
 import { createModelShortcutTool } from './createModelShortcut';
 import { switchViewTool } from './switchView';
@@ -19,6 +20,7 @@ import { deleteFocusedMaterialTool } from './deleteFocusedMaterial';
 
 const TOOLS = [
   openModelTool,
+  openModelShortcutTool,
   createModelTool,
   createModelShortcutTool,
   switchViewTool,

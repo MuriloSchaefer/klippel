@@ -27,13 +27,14 @@ export default function useModelsManager() {
     },
     openModel: (model: Model) => {
       const variationId: string = uniqueId("variation-instance-");
-      viewportManager.functions.addViewport(
+      const vpName = viewportManager.functions.addViewport(
         model.name,
         "ModelViewport",
         undefined,
         "model",
         { id: model.id, variationId, view: 'graph' }
       );
+      viewportManager.functions.selectViewport(vpName);
       dispatch(openModel({ model, variationId }));
     },
   };

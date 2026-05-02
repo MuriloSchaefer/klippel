@@ -1,4 +1,4 @@
-import { ipcMain, app } from "electron";
+import { ipcMain, app, type IpcMainEvent, type IpcMainInvokeEvent } from "electron";
 import { type PathLike } from "fs";
 import {
   //files
@@ -21,6 +21,16 @@ import type { BrowserWindow } from "electron/main";
 import { resolve } from "path";
 
 export const HOME = app.getPath("home") + "/klippel/envs/" + (process.env["ENV_NAME"] ?? "default");
+function safeSend(
+  event: IpcMainEvent | IpcMainInvokeEvent,
+  channel: string,
+  ...args: unknown[]
+) {
+  const sender = event.sender;
+  if (!sender || sender.isDestroyed()) return;
+  sender.send(channel, ...args);
+}
+
 export function getAbsPath(path: PathLike, onError?: (err: Error) => void) {
   const absPath = resolve(`${HOME}/${path}`);
   let err;
@@ -54,15 +64,15 @@ export function initStorageHooks(
     "write-blob",
     (event, path, buffer, options: WriteFileOptions | string) => {
       const absPath = getAbsPath(path, (err) =>
-        event.sender.send("write-blob-error", err.message)
+        safeSend(event, "write-blob-error", err.message)
       );
       if (!absPath) return;
 
       outputFile(absPath, buffer, options, (err) => {
         if (err) {
-          event.sender.send("write-blob-error", err.message);
+          safeSend(event, "write-blob-error", err.message);
         } else {
-          event.sender.send("blob-written", path);
+          safeSend(event, "blob-written", path);
         }
       });
     }
@@ -70,22 +80,22 @@ export function initStorageHooks(
 
   ipcMain.on("append-file", (event, path, buffer, options) => {
     const absPath = getAbsPath(path, (err) =>
-      event.sender.send("append-file-error", err.message)
+      safeSend(event, "append-file-error", err.message)
     );
     if (!absPath) return;
 
     appendFile(absPath, buffer, (err) => {
       if (err) {
-        event.sender.send("append-file-error", err.message);
+        safeSend(event, "append-file-error", err.message);
       } else {
-        event.sender.send("file-appended", path);
+        safeSend(event, "file-appended", path);
       }
     });
   });
 
   ipcMain.handle("read-file", async (event, path, options) => {
     const absPath = getAbsPath(path, (err) =>
-      event.sender.send(`file-read-${path}-error`, err.message)
+      safeSend(event, `file-read-${path}-error`, err.message)
     );
     if (!absPath) return;
     return readFileSync(absPath, options);
@@ -96,7 +106,7 @@ export function initStorageHooks(
     const absDestPath = getAbsPath(destPath);
     if (!absSourcePath || !absDestPath) return;
     if (absSourcePath === absDestPath) {
-      event.sender.send(
+      safeSend(event, 
         "copy-file-error",
         "Source and destination paths are the same"
       );
@@ -104,36 +114,36 @@ export function initStorageHooks(
     }
     copyFile(absSourcePath, absDestPath, flags, (err) => {
       if (err) {
-        event.sender.send("copy-file-error", err.message);
+        safeSend(event, "copy-file-error", err.message);
       } else {
-        event.sender.send("file-copied", destPath);
+        safeSend(event, "file-copied", destPath);
       }
     });
   });
 
   ipcMain.on("watch-file", (event, path) => {
     const absPath = getAbsPath(path, (err) =>
-      event.sender.send(`file-watch-${path}-error`, err.message)
+      safeSend(event, `file-watch-${path}-error`, err.message)
     );
     if (!absPath) return;
     watchFile(absPath, (curr, prev) => {
       const eventPrefix = `file-watch-${path}`;
       if (curr.mtime !== prev.mtime) {
-        event.sender.send(`${eventPrefix}-changed`, path);
+        safeSend(event, `${eventPrefix}-changed`, path);
       }
     });
   });
 
   ipcMain.on("move-file", (event, sourcePath, destPath, flags) => {
     const absSourcePath = getAbsPath(sourcePath, (err) =>
-      event.sender.send("move-file-error", err.message)
+      safeSend(event, "move-file-error", err.message)
     );
     const absDestPath = getAbsPath(destPath, (err) =>
-      event.sender.send("move-file-error", err.message)
+      safeSend(event, "move-file-error", err.message)
     );
     if (!absSourcePath || !absDestPath) return;
     if (absSourcePath === absDestPath) {
-      event.sender.send(
+      safeSend(event, 
         "move-file-error",
         "Source and destination paths are the same"
       );
@@ -141,23 +151,23 @@ export function initStorageHooks(
     }
     copyFile(absSourcePath, absDestPath, flags, (err) => {
       if (err) {
-        event.sender.send("move-file-error", err.message);
+        safeSend(event, "move-file-error", err.message);
       } else {
-        event.sender.send("file-moved", destPath);
+        safeSend(event, "file-moved", destPath);
       }
     });
   });
 
   ipcMain.on("sym-link", (event, sourcePath, destPath, type) => {
     const absSourcePath = getAbsPath(sourcePath, (err) =>
-      event.sender.send("sym-link-error", err.message)
+      safeSend(event, "sym-link-error", err.message)
     );
     const absDestPath = getAbsPath(destPath, (err) =>
-      event.sender.send("sym-link-error", err.message)
+      safeSend(event, "sym-link-error", err.message)
     );
     if (!absSourcePath || !absDestPath) return;
     if (absSourcePath === absDestPath) {
-      event.sender.send(
+      safeSend(event, 
         "sym-link-error",
         "Source and destination paths are the same"
       );
@@ -165,28 +175,28 @@ export function initStorageHooks(
     }
     symlink(absSourcePath, absDestPath, type, (err) => {
       if (err) {
-        event.sender.send("sym-link-error", err.message);
+        safeSend(event, "sym-link-error", err.message);
       } else {
-        event.sender.send("file-symlinked", destPath);
+        safeSend(event, "file-symlinked", destPath);
       }
     });
   });
   ipcMain.on("delete-file", (event, path) => {
     const absPath = getAbsPath(path, (err) =>
-      event.sender.send("delete-file-error", err.message)
+      safeSend(event, "delete-file-error", err.message)
     );
     if (!absPath) return;
     remove(absPath, (err) => {
       if (err) {
-        event.sender.send("delete-file-error", err.message);
+        safeSend(event, "delete-file-error", err.message);
       } else {
-        event.sender.send("file-deleted", path);
+        safeSend(event, "file-deleted", path);
       }
     });
   });
   ipcMain.handle("exists", (event, path) => {
     const absPath = getAbsPath(path, (err) =>
-      event.sender.send("exists-error", err.message)
+      safeSend(event, "exists-error", err.message)
     );
     if (!absPath) return;
     return existsSync(absPath);
@@ -207,7 +217,7 @@ export function initStorageHooks(
     ) => {
       // ts-ignore
       const absDir = getAbsPath(dir, (err) =>
-        event.sender.send("search-dir-error", err.message)
+        safeSend(event, "search-dir-error", err.message)
       );
       if (!absDir) return;
       return glob(patterns, { ...options, cwd: absDir });
@@ -216,14 +226,14 @@ export function initStorageHooks(
 
   ipcMain.on("ensure-dir", (event, path) => {
     const absPath = getAbsPath(path, (err) =>
-      event.sender.send("create-dir-error", err.message)
+      safeSend(event, "create-dir-error", err.message)
     );
     if (!absPath) return;
     ensureDir(absPath, (err) => {
       if (err) {
-        event.sender.send("create-dir-error", err.message);
+        safeSend(event, "create-dir-error", err.message);
       } else {
-        event.sender.send("dir-created", path);
+        safeSend(event, "dir-created", path);
       }
     });
   });
@@ -245,6 +255,7 @@ export function initStorageHooks(
 
   // Scheduler tasks
   const saveSessionTask = new Task("save-session", () => {
+    if (mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return;
     console.debug("Call save session!");
     mainWindow.webContents.send("save-session");
   });

@@ -103,7 +103,13 @@ function ModelViewport() {
           />
         </DetailsPanel>
 
-        <ErrorBoundary fallbackRender={fallbackRender}>{view}</ErrorBoundary>
+        <Box
+          id="composer-active-view"
+          data-active-view={activeVP.extra.view}
+          sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+        >
+          <ErrorBoundary fallbackRender={fallbackRender}>{view}</ErrorBoundary>
+        </Box>
 
         <Box sx={{ position: "absolute", top: 16, left: 16 }}>
           <ButtonGroup

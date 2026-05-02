@@ -62,6 +62,7 @@ async function createWindow(): Promise<BrowserWindow> {
     ) as typeof DEFAULT_WINDOW_CONFIG;
   }
   const saveWindowState = debounce(() => {
+    if (mainWindow.isDestroyed()) return;
     const newWindowConfig: typeof DEFAULT_WINDOW_CONFIG = {
       ...mainWindow.getBounds(),
       title: mainWindow.title,
@@ -76,14 +77,14 @@ async function createWindow(): Promise<BrowserWindow> {
   if (existsSync(getAbsPath('.session/Store/state.json'))){
     workspace = JSON.parse(readFileSync(getAbsPath('.session/Store/state.json')).toString()).selectedWorkspace
   }
-  const helia = await initHeliaNode(workspace)
+  // const helia = await initHeliaNode(workspace)
   const scheduler = initScheduler();
   
-  if (helia){
-    helia.start()
-    initHeliaHooks(helia)
-    console.debug("Helia node started. PeerId: ", helia.libp2p.peerId.toString())
-  }
+  // if (helia){
+  //   helia.start()
+  //   initHeliaHooks(helia)
+  //   console.debug("Helia node started. PeerId: ", helia.libp2p.peerId.toString())
+  // }
 
   const mainWindow = new BrowserWindow({
     ...config,
@@ -109,9 +110,11 @@ async function createWindow(): Promise<BrowserWindow> {
   });
   const onClose =  (event: any) => {
     event?.preventDefault();
-    mainWindow.webContents.send("save-session");
+    if (!mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send("save-session");
+    }
     app.quit();
-    mainWindow.hide();
+    if (!mainWindow.isDestroyed()) mainWindow.hide();
   }
   mainWindow.on("close",onClose);
   app.on('before-quit', () => {

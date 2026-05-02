@@ -18,22 +18,32 @@ jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
 
 import { switchViewTool } from './switchView';
 import { switchViewShortcutTool } from './switchViewShortcut';
+import { createModelTool } from './createModel';
+import { openModelTool } from './openModel';
+import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
 
-const SVG_VIEW_SELECTOR = '#svg-editor-wrapper';
 const GRAPH_BUTTON_SELECTOR = '#composer-view-graph';
 const SVG_BUTTON_SELECTOR = '#composer-view-svg';
 
+const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
+
+const waitForFormClosed = async (p: Page) => {
+  await p.waitForFunction(
+    () => !document.querySelector('[role="pointer-panel-content"] #name'),
+    { timeout: 10_000 },
+  );
+};
+
 const waitForView = async (view: 'graph' | 'svg') => {
   if (!page) throw new Error('No page');
-  if (view === 'svg') {
-    await page.waitForSelector(SVG_VIEW_SELECTOR, { timeout: 10_000 });
-  } else {
-    await page.waitForFunction(
-      (sel: string) => !document.querySelector(sel),
-      { timeout: 10_000 },
-      SVG_VIEW_SELECTOR,
-    );
-  }
+  await page.waitForFunction(
+    (target: string) =>
+      document
+        .getElementById('composer-active-view')
+        ?.getAttribute('data-active-view') === target,
+    { timeout: 10_000 },
+    view,
+  );
 };
 
 describe('switchView (E2E)', () => {
@@ -42,9 +52,20 @@ describe('switchView (E2E)', () => {
     const pages = await browser.pages();
     page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
     if (!page) throw new Error('No renderer page found in Electron');
+
+    await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
+    await switchRibbonTabTool.execute({ label: 'Compositor' });
+    await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
+
+    const id = `e2e-${uniqueSuffix()}`;
+    const name = `E2E ${id}`;
+    await createModelTool.execute({ name, id });
+    await waitForFormClosed(page);
+    await openModelTool.execute({ modelName: name });
+
     await page.waitForSelector(GRAPH_BUTTON_SELECTOR, { timeout: 10_000 });
     await page.waitForSelector(SVG_BUTTON_SELECTOR, { timeout: 10_000 });
-  }, 15_000);
+  }, 45_000);
 
   afterAll(async () => {
     if (browser) await browser.disconnect();

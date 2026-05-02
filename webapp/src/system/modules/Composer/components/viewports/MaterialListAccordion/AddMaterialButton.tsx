@@ -67,8 +67,8 @@ export default function AddMaterialButton({
                     <Typography
                       sx={{
                         color:
-                          label &&
-                          !Object.keys(graph.state!.nodes).includes(
+                          label && graph.state &&
+                          !Object.keys(graph.state.nodes).includes(
                             label.toLowerCase().replaceAll(/\s+/g, "-")
                           )
                             ? theme.palette.success.main
@@ -144,9 +144,10 @@ export default function AddMaterialButton({
             !selectedType ||
             !selectedMaterial ||
             !label ||
+            (graph.state &&
             Object.keys(graph.state!.nodes).includes(
               label.toLowerCase().replaceAll(/\s+/g, "-")
-            )
+            ))
           }
           handleConfirm={() => {
             if (selectedType && selectedMaterial) {

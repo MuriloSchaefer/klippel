@@ -44,7 +44,7 @@ export const addMaterialTool = {
     await ensureSettingsPanelExpanded(page);
     await expandAccordion(page, 'Materiais');
 
-    await openPointerPanel(page, '#composer-add-material', MATERIAL_FORM_TESTID);
+    await page.click("#composer-add-material");
 
     await page.waitForSelector(MATERIAL_LABEL_SELECTOR);
     await page.click(MATERIAL_LABEL_SELECTOR);

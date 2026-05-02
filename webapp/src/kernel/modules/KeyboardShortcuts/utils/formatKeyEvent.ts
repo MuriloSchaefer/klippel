@@ -86,8 +86,9 @@ export function shouldIgnoreKeyEvent(event: KeyboardEvent): boolean {
     target.tagName === 'SELECT' ||
     target.isContentEditable
   ) {
-    // Allow Escape, Tab, and Ctrl+Enter (confirm) even in inputs
-    if (event.key === 'Escape' || event.key === 'Tab') {
+    // Allow Escape, Tab, AltGraph (toggles hints overlay), and Ctrl+Enter
+    // (confirm) even in inputs.
+    if (event.key === 'Escape' || event.key === 'Tab' || event.key === 'AltGraph') {
       return false;
     }
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {

@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { useCallback, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
@@ -19,6 +19,11 @@ import useModelsList from "../../hooks/useModelsList";
 import ModelPreview from "./ModelPreview";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { Input } from "@mui/material";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import {
+  CONFIRM_MODEL_SELECTION_SHORTCUT_ID,
+  MODEL_SELECTION_MODAL_CONTEXT_ID,
+} from "../../constants";
 
 type ModelSelectionModalProps = SystemModalProps & {
   onModelSelection: (model: Model) => void;
@@ -56,6 +61,10 @@ const ModelSelectionModal = ({
 }: ModelSelectionModalProps) => {
   const markdownModule = useModule<IMarkdownModule>("Markdown");
 
+  const keyboardShortcutsModule =
+    useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutProvider, ShortcutHint } = keyboardShortcutsModule.components;
+
   const {
     hooks: { useSVGManager },
   } = useModule<ISVGModule>("SVG");
@@ -76,6 +85,9 @@ const ModelSelectionModal = ({
   const [selectedOption, setSelectedOption] = useState<Model | undefined>(
     undefined
   );
+  const [search, setSearch] = useState("");
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const acceptInputRef = useRef(false);
 
   const selectOption = useCallback((model: Model)=>{
     if (model.svg){
@@ -84,10 +96,73 @@ const ModelSelectionModal = ({
     setSelectedOption(model)
   }, [svgManager.functions, setSelectedOption])
 
+  const confirmSelection = useCallback(() => {
+    if (!selectedOption) return;
+    onModelSelection(selectedOption);
+    closeModal?.();
+  }, [selectedOption, onModelSelection, closeModal]);
+
+  const filteredModels = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return models;
+    return models.filter(
+      (m) =>
+        m.name.toLowerCase().includes(term) ||
+        (m.id ?? "").toLowerCase().includes(term),
+    );
+  }, [models, search]);
+
+  useEffect(() => {
+    // Autofocus the search field on mount so users can type immediately.
+    // The trigger key (e.g. "w") may still be in flight when the modal mounts;
+    // ignore any input events until the originating keystroke has settled,
+    // then clear whatever leaked through and start accepting real input.
+    const id = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+      setSearch("");
+      acceptInputRef.current = true;
+    }, 50);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const moveSelection = useCallback(
+    (delta: 1 | -1) => {
+      if (filteredModels.length === 0) return;
+      const currentIndex = selectedOption
+        ? filteredModels.findIndex((m) => m.name === selectedOption.name)
+        : -1;
+      const nextIndex =
+        currentIndex === -1
+          ? delta === 1
+            ? 0
+            : filteredModels.length - 1
+          : (currentIndex + delta + filteredModels.length) % filteredModels.length;
+      selectOption(filteredModels[nextIndex]);
+    },
+    [filteredModels, selectedOption, selectOption],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        moveSelection(1);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        moveSelection(-1);
+      }
+    },
+    [moveSelection],
+  );
+
   return (
+    <ShortcutProvider contextId={MODEL_SELECTION_MODAL_CONTEXT_ID}>
     <Paper
       elevation={6}
       id="open-model-modal"
+      onKeyDown={handleKeyDown}
       sx={{
         position: "absolute",
         top: "50%",
@@ -115,28 +190,46 @@ const ModelSelectionModal = ({
             p:5
           }}
         >
-          <Input />
+          <Input
+            id="open-model-search"
+            inputRef={searchInputRef}
+            placeholder="Buscar modelo..."
+            value={search}
+            onChange={(e) => {
+              if (!acceptInputRef.current) return;
+              setSearch(e.target.value);
+            }}
+            autoFocus
+          />
           {/* <Input endAdornment={<SearchSharp />}/> */}
-          {models.map((m) => (
-            <ListItem
-              key={_.uniqueId()}
-              disableGutters
-              sx={{ width: "fit-content" }}
-            >
-              <ListItemText
-                primary={<Box sx={{}}>{m.name}</Box>}
-                secondary={m.id}
-                id={m.name}
-                color={
-                  selectedOption?.name === m.name ? "primary" : "secondary"
-                }
-                onClick={() => selectOption(m)}
+          {filteredModels.map((m) => {
+            const isSelected = selectedOption?.name === m.name;
+            return (
+              <ListItem
+                key={_.uniqueId()}
+                disableGutters
+                aria-selected={isSelected}
                 sx={{
-                  cursor: "pointer",
+                  width: "fit-content",
+                  border: '2px solid',
+                  borderColor: isSelected ? 'primary.main' : 'transparent',
+                  borderRadius: 1,
+                  px: 1,
                 }}
-              />
-            </ListItem>
-          ))}
+              >
+                <ListItemText
+                  primary={<Box sx={{}}>{m.name}</Box>}
+                  secondary={m.id}
+                  id={m.name}
+                  color={isSelected ? "primary" : "secondary"}
+                  onClick={() => selectOption(m)}
+                  sx={{
+                    cursor: "pointer",
+                  }}
+                />
+              </ListItem>
+            );
+          })}
         </StyledList>
 
         <Box sx={{ overflow: "auto", width: "100%", display: 'flex', gap:2 }}>
@@ -188,21 +281,23 @@ const ModelSelectionModal = ({
             flexDirection: "row-reverse",
           }}
         >
-          <Button
-            disabled={!selectedOption}
-            variant="contained"
-            aria-label="confirm-model-selection"
-            onClick={() => {
-              if (!selectedOption) return;
-              onModelSelection(selectedOption);
-              closeModal?.();
-            }}
+          <ShortcutHint
+            shortcutId={CONFIRM_MODEL_SELECTION_SHORTCUT_ID}
+            placement="bottom-right"
           >
-            Selecionar
-          </Button>
+            <Button
+              disabled={!selectedOption}
+              variant="contained"
+              aria-label="confirm-model-selection"
+              onClick={confirmSelection}
+            >
+              Selecionar
+            </Button>
+          </ShortcutHint>
         </Box>
       </StyledModal>
     </Paper>
+    </ShortcutProvider>
   );
 };
 

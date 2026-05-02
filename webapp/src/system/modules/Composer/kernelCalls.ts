@@ -5,7 +5,11 @@ import modelsMiddlewares from "./store/models/middlewares";
 import variationMiddlewares from "./store/variations/middlewares";
 import computationMiddlewares from "./store/computation/middlewares";
 import { saveSession } from "./store/models/actions";
-import { MODULE_NAME } from "./constants";
+import {
+  MODULE_NAME,
+  CONFIRM_MODEL_SELECTION_SHORTCUT_ID,
+  MODEL_SELECTION_MODAL_CONTEXT_ID,
+} from "./constants";
 import slice from "./store/slice";
 import ModelViewport from "./components/viewports/ModelViewport";
 
@@ -65,6 +69,23 @@ export function postBootInitialization({managers:{keyboardManager}}: PostBootIni
       enabled: true,
     }
   ], {context: 'RibbonMenu'})
+
+  keyboardManager.functions.registerShortcuts([
+    {
+      id: CONFIRM_MODEL_SELECTION_SHORTCUT_ID,
+      key: 'Enter',
+      contextId: MODEL_SELECTION_MODAL_CONTEXT_ID,
+      action: () => {
+        const btn = document.querySelector(
+          '[aria-label="confirm-model-selection"]'
+        ) as HTMLButtonElement | null;
+        if (!btn || btn.disabled) return;
+        btn.click();
+      },
+      description: 'Selecionar modelo',
+      enabled: true,
+    },
+  ])
 
   keyboardManager.functions.registerShortcuts([
     {
