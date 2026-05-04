@@ -1,7 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { runOptimizationLoop } from '../optimizer/agentLoop';
+import { registerGoal, listGoals } from '../optimizer/goals/registry';
+import { materialCostGoal } from '../optimizer/goals/materialCostGoal';
+import { runOptimizationLoop } from '../optimizer/runner';
 
 import { closeViewportTool } from '../../../src/kernel/modules/Layout/mcpTools/closeViewport';
 import { closeViewportShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/closeViewportShortcut';
@@ -24,6 +26,9 @@ import { registerMcpTools as registerComposerTools } from '../../../src/system/m
 import { createBudgetTool } from '../../../src/system/modules/Orders/mcpTools/createBudget';
 
 export async function startMcpServer() {
+  // Register all optimization goals before the server starts
+  registerGoal(materialCostGoal);
+
   const server = new McpServer({ name: 'klippel', version: '1.0.0' });
 
   server.registerTool(closeViewportTool.name, { description: closeViewportTool.description }, closeViewportTool.execute);
@@ -54,17 +59,29 @@ export async function startMcpServer() {
   server.registerTool(createBudgetTool.name, { description: createBudgetTool.description, inputSchema: { label: z.string() } }, ({ label }) => createBudgetTool.execute({ label }));
 
   server.registerTool(
+    'listOptimizationGoals',
+    { description: 'List all registered optimization goals with their names and descriptions.' },
+    async () => {
+      const goals = listGoals();
+      return { content: [{ type: 'text' as const, text: JSON.stringify({ goals }) }] };
+    },
+  );
+
+  server.registerTool(
     'runOptimizationLoop',
     {
       description:
-        'Run a simulated-annealing optimization agent on the currently open garment variation. It autonomously swaps materials to minimize cost while respecting each node\'s type restrictions. Returns a summary with initial/final cost, improvement percentage, and the moves taken.',
+        'Run the simulated-annealing optimizer for a named goal. Call listOptimizationGoals first to discover available goals. Returns initial/final cost, improvement %, and the move history.',
       inputSchema: {
-        maxIterations: z.number().optional().describe('Maximum number of swap attempts (default 50).'),
+        goal: z.string().describe('Name of the registered optimization goal, e.g. "minimizeMaterialCost".'),
+        maxIterations: z.number().optional().describe('Maximum swap attempts (default 50).'),
         targetReduction: z.number().optional().describe('Stop early when cost drops by this fraction, e.g. 0.15 for 15%.'),
+        initialTemperature: z.number().optional().describe('SA starting temperature (default 1.0).'),
+        coolingRate: z.number().optional().describe('SA cooling multiplier per step (default 0.85).'),
       },
     },
-    async ({ maxIterations, targetReduction }) => {
-      const result = await runOptimizationLoop({ maxIterations, targetReduction });
+    async ({ goal, maxIterations, targetReduction, initialTemperature, coolingRate }) => {
+      const result = await runOptimizationLoop(goal, { maxIterations, targetReduction, initialTemperature, coolingRate });
       return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
     },
   );
