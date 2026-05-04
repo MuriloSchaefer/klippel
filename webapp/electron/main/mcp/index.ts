@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { runOptimizationLoop } from '../optimizer/agentLoop';
 
 import { closeViewportTool } from '../../../src/kernel/modules/Layout/mcpTools/closeViewport';
 import { closeViewportShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/closeViewportShortcut';
@@ -51,6 +52,22 @@ export async function startMcpServer() {
   registerComposerTools(server);
 
   server.registerTool(createBudgetTool.name, { description: createBudgetTool.description, inputSchema: { label: z.string() } }, ({ label }) => createBudgetTool.execute({ label }));
+
+  server.registerTool(
+    'runOptimizationLoop',
+    {
+      description:
+        'Run a simulated-annealing optimization agent on the currently open garment variation. It autonomously swaps materials to minimize cost while respecting each node\'s type restrictions. Returns a summary with initial/final cost, improvement percentage, and the moves taken.',
+      inputSchema: {
+        maxIterations: z.number().optional().describe('Maximum number of swap attempts (default 50).'),
+        targetReduction: z.number().optional().describe('Stop early when cost drops by this fraction, e.g. 0.15 for 15%.'),
+      },
+    },
+    async ({ maxIterations, targetReduction }) => {
+      const result = await runOptimizationLoop({ maxIterations, targetReduction });
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
+    },
+  );
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

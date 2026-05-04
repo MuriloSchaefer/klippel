@@ -2,7 +2,7 @@ import {
   configureStore,
   ListenerMiddlewareInstance,
 } from "@reduxjs/toolkit";
-import React, { Reducer, useCallback, useMemo, useState } from "react";
+import React, { Reducer, useCallback, useEffect, useMemo, useState } from "react";
 import { Provider as ReduxProvider } from "react-redux";
 import {
   combineReducers,
@@ -54,6 +54,11 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const getStore = useCallback(()=>store, [store])
+
+  useEffect(() => {
+    (window as any).__klippel = { getState: () => store.getState() };
+    return () => { delete (window as any).__klippel; };
+  }, [store]);
 
   return (
       <ReduxProvider store={store}>

@@ -1,5 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
+import {
+  getActiveVariationIdTool,
+  getMaterialNodesTool,
+  getAvailableMaterialsTool,
+  getGarmentCostSummaryTool,
+} from './queryComposerState';
 import { openModelTool } from './openModel';
 import { openModelShortcutTool } from './openModelShortcut';
 import { createModelTool } from './createModel';
@@ -19,6 +25,10 @@ import { editFocusedMaterialTool } from './editFocusedMaterial';
 import { deleteFocusedMaterialTool } from './deleteFocusedMaterial';
 
 const TOOLS = [
+  getActiveVariationIdTool,
+  getMaterialNodesTool,
+  getAvailableMaterialsTool,
+  getGarmentCostSummaryTool,
   openModelTool,
   openModelShortcutTool,
   createModelTool,
