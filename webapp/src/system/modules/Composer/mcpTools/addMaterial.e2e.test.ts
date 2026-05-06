@@ -109,13 +109,15 @@ afterAll(async () => {
   cleanupWorkspace('e2e-addMaterial');
 });
 
-beforeEach(async () => {
-  if (page) {
-    await closeAllOpenContainers(page);
-  }
-}, 15_000);
 
 describe('addMaterial via click (E2E)', () => {
+
+  afterEach(async () => {
+    if (page) {
+      await closeAllOpenContainers(page);
+    }
+  }, 15_000);
+
   it('adds a material node by id', async () => {
     const label = 'Malha PV (test)';
     await deleteMaterialIfExists(label, deleteMaterialTool);
@@ -143,10 +145,17 @@ describe('addMaterial via click (E2E)', () => {
     await expect(
       addMaterialTool.execute({ label: 'broken', type: 'malha' } as any),
     ).rejects.toThrow(/material/i);
+    
   }, 30_000);
 });
 
 describe('addMaterial via shortcut (E2E)', () => {
+
+  beforeEach(async () => {
+    if (page) {
+      await closeAllOpenContainers(page);
+    }
+  }, 15_000);
   it('opens the panel when called with no arguments', async () => {
     const result = await addMaterialShortcutTool.execute();
     expect(JSON.parse(result.content[0].text)).toMatchObject({ success: true, opened: true });

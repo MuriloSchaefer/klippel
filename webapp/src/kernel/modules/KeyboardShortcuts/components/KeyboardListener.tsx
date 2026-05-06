@@ -163,15 +163,17 @@ const KeyboardListener: React.FC = () => {
 
   }, [pressedKeys])
   
-  useEffect(() => {    
-    // Listen to keydown and keyup events globally
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    
-    // Cleanup
+  useEffect(() => {
+    // Capture phase: MUI Modal stops propagation of Escape after handling it
+    // internally, which would prevent shortcut matching for windows that own
+    // Esc layering (e.g. PointerContainer). Listening in capture lets us see
+    // the keydown before MUI swallows it.
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
+
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keyup', handleKeyUp, true);
     };
   }, [dispatch, pressedKeys]);
   

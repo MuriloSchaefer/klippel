@@ -143,6 +143,29 @@ export const postBootInitialization = ({managers: { storeManager, keyboardManage
 
   keyboardManager.functions.registerShortcuts([
     {
+      id: 'global.input.blur',
+      key: 'Escape',
+      contextId: 'Global',
+      action: () => {
+        // If a popover listbox (Autocomplete / Select) is open, MUI handles
+        // Esc by closing the listbox and keeping the input focused. Skip the
+        // blur so Esc layers: first Esc closes the listbox, next Esc blurs.
+        if (document.querySelector('ul[role="listbox"]')) return;
+        const el = document.activeElement as HTMLElement | null;
+        if (!el) return;
+        const isTextEntry =
+          el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          el.isContentEditable === true;
+        if (isTextEntry) el.blur();
+      },
+      description: 'Remove focus from the active input or textarea',
+      enabled: true,
+    },
+  ], {context: 'Global'})
+
+  keyboardManager.functions.registerShortcuts([
+    {
       id: 'layout.systemtray.theme.toggle',
       key: 'Ctrl+Shift+t',
       contextId: 'Global',

@@ -19,6 +19,19 @@ export const startModule = ({
     return topId ? handlerMap.get(topId) : undefined;
   };
 
+  const isFocusedTextEntry = (): boolean => {
+    const el = document.activeElement as HTMLElement | null;
+    if (!el) return false;
+    return (
+      el.tagName === 'INPUT' ||
+      el.tagName === 'TEXTAREA' ||
+      el.isContentEditable === true
+    );
+  };
+
+  const isListboxOpen = (): boolean =>
+    document.querySelector('ul[role="listbox"]') !== null;
+
   keyboardManager.functions.registerShortcuts([
     {
       id: 'pointer.container.confirmAndClose',
@@ -42,6 +55,15 @@ export const startModule = ({
       contextId: POINTER_CONTAINER_CONTEXT_ID,
       description: 'Close container',
       action: () => {
+        // Esc precedence inside a container:
+        //   1. open listbox (Autocomplete/Select): MUI closes it, do nothing.
+        //   2. focused input/textarea: blur it.
+        //   3. otherwise: close the container.
+        if (isListboxOpen()) return;
+        if (isFocusedTextEntry()) {
+          (document.activeElement as HTMLElement).blur();
+          return;
+        }
         getTopHandlers()?.close();
       },
       enabled: true,

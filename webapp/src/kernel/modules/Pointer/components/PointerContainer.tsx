@@ -267,7 +267,13 @@ export const PointerContainer = ({
       <Modal
         open={open}
         keepMounted={true}
-        onClose={handleClose}
+        onClose={(_event: object, reason: string) => {
+          // Esc is handled by the keyboard shortcut (with input-blur
+          // precedence). Ignore MUI's auto-close on escape so the shortcut is
+          // the single source of truth.
+          if (reason === 'escapeKeyDown') return;
+          handleClose(_event as MouseEvent);
+        }}
         disableEnforceFocus
         role="pointer-panel"
         sx={{

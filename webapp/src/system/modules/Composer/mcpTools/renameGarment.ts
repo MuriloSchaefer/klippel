@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { blurActiveElement } from '../../../../../electron/main/mcp/helpers/focus';
 import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
 import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
 import { clickGarmentTreeItem } from '../components/viewports/CompositionTree/CompositionTree.click.puppeteer';
@@ -30,7 +29,7 @@ export const renameGarmentTool = {
     await ensureGarmentDetailsAccordionExpanded(page);
     await fillGarmentName(page, name);
     await new Promise((resolve) => setTimeout(resolve, RENAME_DEBOUNCE_MS));
-    await blurActiveElement(page);
+    await page.keyboard.press('Escape');
     return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true, name }) }] };
   },
 };

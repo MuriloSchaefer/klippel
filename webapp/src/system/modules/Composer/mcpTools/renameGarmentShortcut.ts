@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { blurActiveElement } from '../../../../../electron/main/mcp/helpers/focus';
 import {
   triggerOpenGarmentDetails,
   triggerRenameGarment,
@@ -21,12 +20,12 @@ export const renameGarmentShortcutTool = {
     const page = await getPage();
     await page.bringToFront();
     // Make sure no material item is focused — otherwise "e" would edit it.
-    await blurActiveElement(page);
+    await page.keyboard.press('Escape');
     await triggerOpenGarmentDetails(page);
     await triggerRenameGarment(page);
     await typeGarmentNameFromFocused(page, name);
     await new Promise((resolve) => setTimeout(resolve, RENAME_DEBOUNCE_MS));
-    await blurActiveElement(page);
+    await page.keyboard.press('Escape');
     return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true, name }) }] };
   },
 };
