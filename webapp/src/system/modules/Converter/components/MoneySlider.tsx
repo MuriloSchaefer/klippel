@@ -67,7 +67,7 @@ export default function MoneySlider({
         </Typography>
         {slots?.coumpoundSelector}
       </Box>
-      <Grid container spacing={2} alignItems="center">
+      <Grid container spacing={2} sx={{ alignItems: "center" }}>
         <Grid>{icon}</Grid>
         <Grid size="grow">
           <Slider

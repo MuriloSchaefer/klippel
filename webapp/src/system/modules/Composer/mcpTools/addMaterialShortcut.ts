@@ -4,7 +4,10 @@ import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
 import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
 import { confirmPointerPanelShortcut } from '../../../../kernel/modules/Pointer/components/PointerContainer.shortcut.puppeteer';
-import { pickMaterialTypeFromFocused } from '../../../../system/modules/Materials/components/selectors/MaterialType.shortcut.puppeteer';
+import {
+  pickMaterialTypeFromFocused,
+  toggleMaterialTypeOptionFromFocused,
+} from '../../../../system/modules/Materials/components/selectors/MaterialType.shortcut.puppeteer';
 import {
   pickMaterialByIdFromFocused,
   pickMaterialByPrincipalAndExtraFromFocused,
@@ -50,8 +53,9 @@ export const addMaterialShortcutTool = {
     await page.keyboard.press('Delete');
     await page.keyboard.type(input.label);
 
-    // Skip the type-restrictions multi-selector (auto-populates from type).
+    // Restrict allowed types first; otherwise the type Autocomplete is filtered to nothing.
     await page.keyboard.press('Tab'); // → typeRestrictions
+    await toggleMaterialTypeOptionFromFocused(page, input.type);
     await page.keyboard.press('Tab'); // → type
 
     await pickMaterialTypeFromFocused(page, input.type);

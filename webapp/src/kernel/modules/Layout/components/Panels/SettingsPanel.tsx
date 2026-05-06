@@ -120,8 +120,8 @@ export const SettingsPanel = ({
         >
           <ErrorBoundary fallbackRender={fallbackRender}>
             {Array.isArray(children) ? children.map((child, idx) =>
-              cloneElement(child, { state: panelState.state, key: idx })
-            ) : cloneElement(children, { state: panelState.state })}
+              cloneElement(child, { state: panelState.state, key: idx } as any)
+            ) : cloneElement(children, { state: panelState.state } as any)}
           </ErrorBoundary>
         </Box>
       </Box>

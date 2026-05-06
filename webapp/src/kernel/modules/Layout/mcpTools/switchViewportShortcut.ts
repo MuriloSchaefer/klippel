@@ -14,7 +14,7 @@ export const switchViewportShortcutTool = {
     const page = await getPage();
     await page.bringToFront();
     await page.keyboard.down('Control');
-    await page.keyboard.press(`${viewportIndex}`);
+    await page.keyboard.press(`${viewportIndex}` as any);
     await page.keyboard.up('Control');
     return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true }) }] };
   },

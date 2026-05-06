@@ -74,9 +74,9 @@ export default function CompoundSelector({
 
   return (
     <Box
+      component="div"
       role="compound-selector"
-      width={"min-content"}
-      sx={{ display: "flex", gap: 1, alignItems: "baseline"}}
+      sx={{ width: "min-content", display: "flex", gap: 1, alignItems: "baseline"}}
     >
       {label && <Typography gutterBottom sx={{minWidth: '50px'}}>{label}</Typography>}
       <Box sx={{ display: "flex", gap: 1, alignItems: "baseline"}}>

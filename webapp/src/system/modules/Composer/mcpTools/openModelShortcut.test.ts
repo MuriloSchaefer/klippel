@@ -2,6 +2,7 @@
  * E2E tests for the openModelShortcut MCP tool. Skips when CDP is unreachable.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
+import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -69,6 +70,7 @@ describe('openModelShortcut (E2E)', () => {
     const pages = await browser.pages();
     page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
     if (!page) throw new Error('No renderer page found in Electron');
+    await resetWorkspace(page, 'e2e-openModelShortcut', 'empty');
     await page.waitForFunction(() => document.readyState === 'complete', { timeout: 20_000 });
     await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
     await switchRibbonTabTool.execute({ label: 'Compositor' });
@@ -77,6 +79,7 @@ describe('openModelShortcut (E2E)', () => {
 
   afterAll(async () => {
     if (browser) await browser.disconnect();
+    cleanupWorkspace('e2e-openModelShortcut');
   });
 
   beforeEach(async () => {

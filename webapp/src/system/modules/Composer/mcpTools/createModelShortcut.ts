@@ -20,9 +20,7 @@ export const createModelShortcutTool = {
     }
     const page = await getPage();
     await page.bringToFront();
-    await page.keyboard.down('Alt');
     await page.keyboard.press('q');
-    await page.keyboard.up('Alt');
     await page.waitForSelector('[role="pointer-panel-content"] #name');
     await fillCreateModelForm(page, name, id);
     await page.click('#new-model-form-accept');

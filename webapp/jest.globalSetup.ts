@@ -70,9 +70,9 @@ export default async function globalSetup() {
       args = baseArgs;
     }
   } else {
-    // Dev mode: launch the local repo via `yarn dev`.
-    cmd = useXvfb ? 'xvfb-run' : 'yarn';
-    args = useXvfb ? ['-a', 'yarn', 'dev'] : ['dev'];
+    // Dev mode: launch the local repo via `npm run dev`.
+    cmd = useXvfb ? 'xvfb-run' : 'npm';
+    args = useXvfb ? ['-a', 'npm', 'run', 'dev'] : ['run', 'dev'];
   }
 
   // When driving an installed binary (CI / on-device diagnostics) the silent

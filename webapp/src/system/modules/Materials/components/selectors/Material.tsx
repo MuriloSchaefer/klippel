@@ -39,13 +39,13 @@ const MaterialSelector = ({
       Object.values(materials)
         .filter((mat) => mat.type === type)
         .filter(filter ?? noFilter)
-        .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {})
+        .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {} as Record<number, MaterialState>)
     ),
     [type, filter, noFilter]
   );
-  const materials = useAppSelector(materialsSelector);
+  const materials = (useAppSelector(materialsSelector) ?? {}) as Record<number, MaterialState>;
 
-  const schemaObj = materialType.schemas[materialType.latestSchema];
+  const schemaObj = materialType!.schemas[materialType!.latestSchema];
   const selector = schemaObj.selector;
 
   // adapt entries to be able to split into 2 selectors.
@@ -57,7 +57,11 @@ const MaterialSelector = ({
     };
   } = useMemo(
     () =>
-      Object.values(materials).reduce((acc, curr) => {
+      Object.values(materials).reduce<{
+        [industry: string]: {
+          [externalId: string]: { label: string; extra: MaterialState[] };
+        };
+      }>((acc, curr) => {
         if (acc[curr.industry]) {
           if (acc[curr.industry][curr.externalId])
             return {

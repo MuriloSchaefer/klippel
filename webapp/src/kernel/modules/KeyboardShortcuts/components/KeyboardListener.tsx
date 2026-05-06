@@ -51,6 +51,17 @@ const preventPropagation = (event: KeyboardEvent) =>{
     if (event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'm' || event.key === 'M')) {
       event.preventDefault();
     }
+    // Prevent Ctrl+Alt+letter from being swallowed by the OS / window manager
+    // (e.g. GNOME maps Ctrl+Alt+D to "Show Desktop") so app shortcuts run.
+    if (
+      event.ctrlKey &&
+      event.altKey &&
+      !event.metaKey &&
+      event.code &&
+      event.code.startsWith('Key')
+    ) {
+      event.preventDefault();
+    }
 }
 
 const KeyboardListener: React.FC = () => {

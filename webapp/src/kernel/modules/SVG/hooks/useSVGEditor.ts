@@ -17,8 +17,8 @@ interface SVGEditorProps {
 }
 
 interface SVGEditor {
-  svgRef: React.RefObject<SVGSVGElement>;
-  wrapperRef: React.RefObject<HTMLDivElement>;
+  svgRef: React.RefObject<SVGSVGElement | null>;
+  wrapperRef: React.RefObject<HTMLDivElement | null>;
   container: ReturnType<typeof useD3Container>;
   width: number;
   height: number;

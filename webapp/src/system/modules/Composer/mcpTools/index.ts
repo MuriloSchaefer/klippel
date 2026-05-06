@@ -17,6 +17,10 @@ import { cycleMaterialFocusTool } from './cycleMaterialFocus';
 import { selectMaterialByLabelTool } from './selectMaterialByLabel';
 import { editFocusedMaterialTool } from './editFocusedMaterial';
 import { deleteFocusedMaterialTool } from './deleteFocusedMaterial';
+import { openGarmentDetailsTool } from './openGarmentDetails';
+import { openGarmentDetailsShortcutTool } from './openGarmentDetailsShortcut';
+import { renameGarmentTool } from './renameGarment';
+import { renameGarmentShortcutTool } from './renameGarmentShortcut';
 
 const TOOLS = [
   openModelTool,
@@ -36,6 +40,10 @@ const TOOLS = [
   selectMaterialByLabelTool,
   editFocusedMaterialTool,
   deleteFocusedMaterialTool,
+  openGarmentDetailsTool,
+  openGarmentDetailsShortcutTool,
+  renameGarmentTool,
+  renameGarmentShortcutTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

@@ -19,6 +19,8 @@ export const openModelTool = {
     const page = await getPage();
     await page.click('#open-model-modal');
     await page.waitForSelector('[role="list-options"]');
+    await page.waitForSelector('#open-model-search');
+    await page.keyboard.type(modelName)
     const found = await clickModelOptionByName(page, modelName);
     if (!found) throw new Error(`Model "${modelName}" not found`);
     await waitForConfirmModelSelectionEnabled(page);

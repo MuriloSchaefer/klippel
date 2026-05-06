@@ -2,6 +2,7 @@
  * E2E test for the editMaterialShortcut MCP tool. Skips if CDP is unreachable.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
+import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -16,14 +17,52 @@ jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
   },
 }));
 
-import { addMaterialTool } from './addMaterial';
 import { editMaterialShortcutTool } from './editMaterialShortcut';
-import { deleteMaterialTool } from './deleteMaterial';
+import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
 import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
 import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
+import { deleteMaterialShortcutTool } from './deleteMaterialShortcut';
+import { addMaterialShortcutTool } from './addMaterialShortcut';
+import { createModelShortcutTool } from './createModelShortcut';
+import { openModelShortcutTool } from './openModelShortcut';
+
+const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
+
+const waitForFormClosed = async (p: Page) => {
+  await p.waitForFunction(
+    () => !document.querySelector('[role="pointer-panel-content"] #name'),
+    { timeout: 10_000 },
+  );
+};
 
 const rowSel = (label: string) =>
   `[data-testid="material-item"][data-material-label="${label}"]`;
+
+const closeAllOpenContainers = async (p: Page) => {
+  for (let i = 0; i < 5; i++) {
+    const hasOpen = await p.evaluate(
+      () =>
+        Boolean(
+          document.querySelector('[role="pointer-panel"]') ||
+            document.querySelector('[role="pointer-panel-content"]') ||
+            document.querySelector('[role="list-options"]') ||
+            document.querySelector('ul[role="listbox"]'),
+        ),
+    );
+    if (!hasOpen) return;
+    await p.keyboard.press('Escape');
+    await p
+      .waitForFunction(
+        () =>
+          !document.querySelector('[role="pointer-panel"]') &&
+          !document.querySelector('[role="pointer-panel-content"]') &&
+          !document.querySelector('[role="list-options"]') &&
+          !document.querySelector('ul[role="listbox"]'),
+        { timeout: 500 },
+      )
+      .catch(() => {});
+  }
+};
 
 describe('editMaterialShortcut (E2E)', () => {
   beforeAll(async () => {
@@ -31,19 +70,35 @@ describe('editMaterialShortcut (E2E)', () => {
     const pages = await browser.pages();
     page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
     if (!page) throw new Error('No renderer page found in Electron');
-  }, 15_000);
+    await resetWorkspace(page, 'e2e-editMaterialShortcut', 'empty');
+
+    await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
+    await switchRibbonTabTool.execute({ label: 'Compositor' });
+    await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
+
+    const id = `e2e-${uniqueSuffix()}`;
+    const name = `E2E ${id}`;
+    await createModelShortcutTool.execute({ name, id });
+    await waitForFormClosed(page);
+    await openModelShortcutTool.execute({ modelName: name });
+  }, 45_000);
 
   afterAll(async () => {
     if (browser) await browser.disconnect();
+    cleanupWorkspace('e2e-editMaterialShortcut');
   });
+
+  beforeEach(async () => {
+    if (page) await closeAllOpenContainers(page);
+  }, 15_000);
 
   it('edits a material node via the keyboard path', async () => {
     const label = 'Tricoline (edit-shortcut-test)';
     await ensureSettingsPanelExpanded(page!);
     await expandAccordion(page!, 'Materiais');
     const exists = await page!.$(rowSel(label));
-    if (exists) await deleteMaterialTool.execute({ label });
-    await addMaterialTool.execute({
+    if (exists) await deleteMaterialShortcutTool.execute({ label });
+    await addMaterialShortcutTool.execute({
       label,
       type: 'tecido',
       material: 'tricoline',
@@ -58,6 +113,6 @@ describe('editMaterialShortcut (E2E)', () => {
     );
     await page!.waitForSelector(rowSel(label));
 
-    await deleteMaterialTool.execute({ label });
+    await deleteMaterialShortcutTool.execute({ label });
   }, 60_000);
 });

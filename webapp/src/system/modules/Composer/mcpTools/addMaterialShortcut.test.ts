@@ -7,6 +7,7 @@
  * field via Tab and confirm via Ctrl+Enter without any DOM clicks.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
+import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -24,8 +25,13 @@ jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
 import { addMaterialShortcutTool } from './addMaterialShortcut';
 import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
 import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
+import { createModelTool } from './createModel';
+import { openModelTool } from './openModel';
+import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
 
 const labelToNodeId = (label: string) => label.toLowerCase().replace(/\s+/g, '-');
+
+const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
 const deleteMaterialIfExists = async (label: string) => {
   if (!page) return;
@@ -51,10 +57,25 @@ describe('addMaterialShortcut (E2E)', () => {
     const pages = await browser.pages();
     page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
     if (!page) throw new Error('No renderer page found in Electron');
-  }, 15_000);
+    await resetWorkspace(page, 'e2e-addMaterialShortcut', 'empty');
+
+    await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
+    await switchRibbonTabTool.execute({ label: 'Compositor' });
+    await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
+
+    const id = `e2e-${uniqueSuffix()}`;
+    const name = `E2E ${id}`;
+    await createModelTool.execute({ name, id });
+    await page.waitForFunction(
+      () => !document.querySelector('[role="pointer-panel-content"] #name'),
+      { timeout: 10_000 },
+    );
+    await openModelTool.execute({ modelName: name });
+  }, 45_000);
 
   afterAll(async () => {
     if (browser) await browser.disconnect();
+    cleanupWorkspace('e2e-addMaterialShortcut');
   });
 
   it('opens the panel when called with no arguments', async () => {

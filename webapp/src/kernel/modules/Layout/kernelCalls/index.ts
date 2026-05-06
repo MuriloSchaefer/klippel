@@ -128,7 +128,7 @@ export const postBootInitialization = ({managers: { storeManager, keyboardManage
     },
     {
       id: 'layout.panels.details.toggle',
-      key: 'Ctrl+Shift+b',
+      key: 'Ctrl+Alt+b',
       contextId: 'Global',
       action: () => {
         const store = storeManager.functions.getStore();

@@ -88,9 +88,7 @@ export default function TimeSlider({
             size="small"
             type="number"
             sx={{minWidth:80}}
-            InputLabelProps={{
-              shrink: true,
-            }}
+            slotProps={{ inputLabel: { shrink: true } }}
             value={100}
           />
           <Select
@@ -109,7 +107,7 @@ export default function TimeSlider({
         {slots?.coumpoundSelector}
       </Box>
 
-      <Grid container spacing={2} alignItems="center">
+      <Grid container spacing={2} sx={{ alignItems: "center" }}>
         <Grid>{icon}</Grid>
         <Grid size="grow">
           <Slider

@@ -5,6 +5,7 @@ import modelsMiddlewares from "./store/models/middlewares";
 import variationMiddlewares from "./store/variations/middlewares";
 import computationMiddlewares from "./store/computation/middlewares";
 import { saveSession } from "./store/models/actions";
+import { selectPart } from "./store/variations/actions";
 import {
   MODULE_NAME,
   CONFIRM_MODEL_SELECTION_SHORTCUT_ID,
@@ -51,7 +52,32 @@ export function startModule({
 }
 
 
-export function postBootInitialization({managers:{keyboardManager}}: PostBootInitializationProps) {
+const getActiveVariationId = (store: any): string | undefined => {
+  const state = store.getState?.();
+  const vpManager = state?.Layout?.viewportManager;
+  if (!vpManager) return undefined;
+  const activeName = vpManager.activeViewport;
+  return vpManager.viewports?.[activeName]?.extra?.variationId;
+};
+
+const ensureGarmentDetailsAccordionExpanded = () => {
+  const summary = document.querySelector(
+    '[role="accordion-Detalhes da Peça"] [aria-controls="accordion-Detalhes da Peça-content"]',
+  ) as HTMLElement | null;
+  if (summary && summary.getAttribute('aria-expanded') !== 'true') summary.click();
+};
+
+const focusGarmentNameInput = (attempts = 0) => {
+  const input = document.getElementById('garment-name') as HTMLInputElement | null;
+  if (input) {
+    input.focus();
+    input.select?.();
+    return;
+  }
+  if (attempts < 30) setTimeout(() => focusGarmentNameInput(attempts + 1), 50);
+};
+
+export function postBootInitialization({managers:{keyboardManager, storeManager}}: PostBootInitializationProps) {
   keyboardManager.functions.registerShortcuts([
     {
       id: `${MODULE_NAME}/ModelSection/createModel`,
@@ -160,12 +186,7 @@ export function postBootInitialization({managers:{keyboardManager}}: PostBootIni
           }
           if (Date.now() - start < 1500) {
             setTimeout(attempt, 50);
-          } else if (!findFirstRow()) {
-            // List confirmed empty after timeout — fall back to add button.
-            document
-              .getElementById('composer-add-material')
-              ?.focus();
-          }
+          } 
         };
         // First attempt after the click's synchronous focus shifts settle.
         setTimeout(attempt, 0);
@@ -209,10 +230,37 @@ export function postBootInitialization({managers:{keyboardManager}}: PostBootIni
       contextId: `${MODULE_NAME}/ModelViewport`,
       action: () => {
         const row = document.activeElement?.closest('[data-testid="material-item"]');
-        const btn = row?.querySelector('[data-testid="material-item-edit"]') as HTMLButtonElement | null;
-        btn?.click();
+        if (row) {
+          const btn = row.querySelector('[data-testid="material-item-edit"]') as HTMLButtonElement | null;
+          btn?.click();
+          return;
+        }
+        const store = storeManager.functions.getStore();
+        if (!store) return;
+        const variationId = getActiveVariationId(store);
+        if (!variationId) return;
+        store.dispatch(selectPart({ variationId, partId: 'garment' }));
+        setTimeout(() => {
+          ensureGarmentDetailsAccordionExpanded();
+          focusGarmentNameInput();
+        }, 50);
       },
-      description: 'Edit focused material',
+      description: 'Edit focused material, or rename the garment',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ModelViewport/openGarmentDetails`,
+      key: 'Ctrl+Alt+p',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const store = storeManager.functions.getStore();
+        if (!store) return;
+        const variationId = getActiveVariationId(store);
+        if (!variationId) return;
+        store.dispatch(selectPart({ variationId, partId: 'garment' }));
+        setTimeout(ensureGarmentDetailsAccordionExpanded, 50);
+      },
+      description: 'Select garment and open details accordion',
       enabled: true,
     },
     {

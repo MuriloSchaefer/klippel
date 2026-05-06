@@ -16,7 +16,7 @@ export function useActiveViewport<S = any>():ViewportState<S>{
 
     const selectedViewport = useAppSelector(selectActiveViewport);
     const viewportSelector = useMemo(() => getViewportState(selectedViewport!), [selectedViewport]);
-    return useAppSelector(viewportSelector)
+    return useAppSelector(viewportSelector) as ViewportState<S>
 }
 
 export default useActiveViewport

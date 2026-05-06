@@ -32,7 +32,7 @@ const SystemModal = ({
 
   return (
     <>
-      <Modal open={open} onClose={handleClose} components={{Backdrop: undefined}}>
+      <Modal open={open} onClose={handleClose} slots={{backdrop: undefined}}>
         <Paper
           elevation={6}
           id="modal-content"

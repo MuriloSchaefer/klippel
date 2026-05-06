@@ -18,6 +18,7 @@ import { InfoOutlineSharp } from "@mui/icons-material";
 import PointerContainer from "./modules/Pointer/components/PointerContainer";
 
 export function fallbackRender({ error, resetErrorBoundary }: FallbackProps) {
+  const err = error as Error;
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
   return (
     <Paper
@@ -25,7 +26,7 @@ export function fallbackRender({ error, resetErrorBoundary }: FallbackProps) {
       role="error"
       sx={{ padding: 2, width: "100%", overflowX: "auto" }}
     >
-      <pre style={{ color: "red" }}>{error.stack}</pre>
+      <pre style={{ color: "red" }}>{err.stack}</pre>
       <Button onClick={resetErrorBoundary}>Tentar novamente</Button>
       <Button onClick={() => console.log("report error")}>Reportar</Button>
     </Paper>
@@ -36,14 +37,14 @@ export function fallbackRenderLabelOnly({
   error,
   resetErrorBoundary,
 }: FallbackProps) {
-
+  const err = error as Error;
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
   return (
     <Typography
       color="error"
       sx={{ display: "flex", alignItems: "center", gap: 1 }}
     >
-      Erro: {error.message}{" "}
+      Erro: {err.message}{" "}
       <PointerContainer
         component={
           <Paper
@@ -51,7 +52,7 @@ export function fallbackRenderLabelOnly({
             role="error"
             sx={{ padding: 2, width: "100%", overflowX: "auto" }}
           >
-            <pre style={{ color: "red" }}>{error.stack}</pre>
+            <pre style={{ color: "red" }}>{err.stack}</pre>
             <Button onClick={resetErrorBoundary}>Tentar novamente</Button>
             <Button onClick={() => console.log("report error")}>
               Reportar

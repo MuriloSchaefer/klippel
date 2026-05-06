@@ -10,5 +10,5 @@ export default (): MaterialTypesState =>{
     const { useAppSelector } = storeModule.hooks;
 
     const materialTypes = useAppSelector(selectMaterialTypes)
-    return materialTypes
+    return materialTypes ?? {}
 }

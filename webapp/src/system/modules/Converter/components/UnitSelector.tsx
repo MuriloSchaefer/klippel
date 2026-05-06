@@ -103,7 +103,7 @@ const UnitSelector = ({
             ({ id, name, abbreviation, label }) => (
               <MenuItem key={id} value={id} sx={{display: 'flex', gap:1, alignItems: 'center'}}>
                 <Typography>{abbreviation}</Typography>
-                <Typography fontSize={12} sx={{ opacity: 0.5 }}>
+                <Typography sx={{ fontSize: 12, opacity: 0.5 }}>
                   ({name})
                 </Typography>
               </MenuItem>

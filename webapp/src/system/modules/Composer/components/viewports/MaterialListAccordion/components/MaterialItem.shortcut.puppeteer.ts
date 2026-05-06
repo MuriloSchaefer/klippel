@@ -64,3 +64,75 @@ export const triggerEditMaterialFromFocused = async (page: Page) => {
 export const triggerDeleteMaterialFromFocused = async (page: Page) => {
   await page.keyboard.press(DELETE_MATERIAL_SHORTCUT);
 };
+
+/**
+ * Read the `data-material-label` of the currently focused material row, or
+ * `null` if no material row holds focus.
+ */
+export const getFocusedMaterialLabel = async (page: Page): Promise<string | null> => {
+  return page.evaluate(() => {
+    const a = document.activeElement as HTMLElement | null;
+    if (!a?.matches('[data-testid="material-item"]')) return null;
+    return a.getAttribute('data-material-label');
+  });
+};
+
+export type FocusedMaterialListTarget =
+  | { type: 'material-item'; label: string | null }
+  | { type: 'add-material-button' }
+  | { type: 'unknown'; tag: string }
+  | null;
+
+/**
+ * Describe what holds focus right after `Ctrl+M`: the focused material row,
+ * the add-material button (when the list is empty), or something unexpected.
+ */
+export const getFocusedMaterialListTarget = async (
+  page: Page,
+): Promise<FocusedMaterialListTarget> => {
+  return page.evaluate(() => {
+    const a = document.activeElement as HTMLElement | null;
+    if (!a) return null;
+    if (a.matches('[data-testid="material-item"]')) {
+      return { type: 'material-item' as const, label: a.getAttribute('data-material-label') };
+    }
+    if (a.id === 'composer-add-material') {
+      return { type: 'add-material-button' as const };
+    }
+    return { type: 'unknown' as const, tag: a.tagName.toLowerCase() };
+  });
+};
+
+/**
+ * Find a material row whose `data-material-label` matches `needle`
+ * (case-insensitive, exact preferred over substring), focus it, and wait for
+ * focus to actually land on it. Returns the matched label or `null`.
+ */
+export const focusMaterialByLabelMatch = async (
+  page: Page,
+  needle: string,
+): Promise<string | null> => {
+  const matched = await page.evaluate((q: string) => {
+    const rows = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-testid="material-item"]'),
+    );
+    const lower = q.toLowerCase();
+    const exact = rows.find(
+      (r) => (r.getAttribute('data-material-label') ?? '').toLowerCase() === lower,
+    );
+    const partial = rows.find((r) =>
+      (r.getAttribute('data-material-label') ?? '').toLowerCase().includes(lower),
+    );
+    const target = exact ?? partial;
+    if (!target) return null;
+    target.focus();
+    return target.getAttribute('data-material-label');
+  }, needle);
+  if (!matched) return null;
+  await page.waitForFunction(
+    (l: string) => document.activeElement?.getAttribute('data-material-label') === l,
+    { timeout: 2_000 },
+    matched,
+  );
+  return matched;
+};

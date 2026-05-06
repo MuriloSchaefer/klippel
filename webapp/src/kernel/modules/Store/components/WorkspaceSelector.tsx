@@ -14,7 +14,7 @@ export default function WorkspaceSelector() {
     selectModuleState("Store", (s) => {
       return s?.workspaces;
     })
-  );
+  ) ?? [];
   return (
     <Box sx={{display: 'flex'}}>
       <FormControl variant="standard" sx={{ minWidth: 120 }}>

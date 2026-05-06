@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import {
+  getFocusedMaterialLabel,
   triggerFocusNextMaterial,
   triggerFocusPrevMaterial,
 } from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
@@ -29,15 +30,9 @@ export const cycleMaterialFocusTool = {
       await press(page);
     }
 
-    const focused = await page.evaluate(() => {
-      const a = document.activeElement as HTMLElement | null;
-      if (a?.matches('[data-testid="material-item"]')) {
-        return { label: a.getAttribute('data-material-label') };
-      }
-      return null;
-    });
+    const label = await getFocusedMaterialLabel(page);
 
-    if (!focused) {
+    if (!label) {
       throw new Error(
         'cycleMaterialFocus: no material item is focused. Call focusMaterialList first.',
       );
@@ -45,7 +40,7 @@ export const cycleMaterialFocusTool = {
 
     return {
       content: [
-        { type: 'text' as const, text: JSON.stringify({ success: true, direction, count, focused }) },
+        { type: 'text' as const, text: JSON.stringify({ success: true, direction, count, focused: { label } }) },
       ],
     };
   },

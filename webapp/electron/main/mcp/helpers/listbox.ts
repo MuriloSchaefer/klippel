@@ -58,9 +58,8 @@ export const clickOptionByDataValue = async (page: Page, value: string | number)
 };
 
 export const typeaheadAndCommit = async (page: Page, text: string) => {
-  await page.waitForSelector('ul[role="listbox"]');
-  await page.keyboard.type(text, { delay: 20 });
-  await new Promise((r) => setTimeout(r, 80));
-  await page.keyboard.press('Enter');
-  await waitForListboxClosed(page);
+  // MUI Select typeahead is timing-sensitive and not all callers'
+  // listboxes auto-highlight, so commit by clicking the matching option
+  // directly rather than relying on Enter against an unknown highlight.
+  await pickOptionFromOpenListbox(page, text);
 };

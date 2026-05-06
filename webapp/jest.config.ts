@@ -5,7 +5,7 @@ export default async (): Promise<Config> => {
   return {
     verbose: true,
     maxWorkers: 1,
-    testEnvironment: 'node',
+    testEnvironment: '<rootDir>/jest.screenshotEnv.cjs',
     setupFiles: ['<rootDir>/jest.setup.ts'],
     globalSetup: '<rootDir>/jest.globalSetup.ts',
     globalTeardown: '<rootDir>/jest.globalTeardown.ts',

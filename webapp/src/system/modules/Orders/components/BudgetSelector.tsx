@@ -25,7 +25,7 @@ export default function BudgetSelector(props: SelectProps<string>) {
       autoWidth
       inputProps={{ sx: { display: "flex", gap: 1 } }}
     >
-      {budgets.map((budget) => (
+      {Object.values(budgets ?? {}).map((budget) => (
         <MenuItem
           key={budget.id}
           value={budget.id}

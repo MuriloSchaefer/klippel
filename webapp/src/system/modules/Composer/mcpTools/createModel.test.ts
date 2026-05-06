@@ -5,6 +5,7 @@
  * verifies the new model is reachable via the open-model modal.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
+import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -54,6 +55,7 @@ describe('createModel (E2E)', () => {
     const pages = await browser.pages();
     page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
     if (!page) throw new Error('No renderer page found in Electron');
+    await resetWorkspace(page, 'e2e-createModel', 'empty');
     await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
     await switchRibbonTabTool.execute({ label: 'Compositor' });
     await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
@@ -61,6 +63,7 @@ describe('createModel (E2E)', () => {
 
   afterAll(async () => {
     if (browser) await browser.disconnect();
+    cleanupWorkspace('e2e-createModel');
   });
 
   it('creates a model with an explicit id and name', async () => {

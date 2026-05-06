@@ -1,6 +1,9 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { triggerFocusMaterialList } from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
+import {
+  getFocusedMaterialListTarget,
+  triggerFocusMaterialList,
+} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
 
 export const focusMaterialListTool = {
   name: 'focusMaterialList',
@@ -14,17 +17,7 @@ export const focusMaterialListTool = {
     await ensureSettingsPanelExpanded(page);
     await triggerFocusMaterialList(page);
 
-    const focused = await page.evaluate(() => {
-      const a = document.activeElement as HTMLElement | null;
-      if (!a) return null;
-      if (a.matches('[data-testid="material-item"]')) {
-        return { type: 'material-item', label: a.getAttribute('data-material-label') };
-      }
-      if (a.id === 'composer-add-material') {
-        return { type: 'add-material-button' };
-      }
-      return { type: 'unknown', tag: a.tagName.toLowerCase() };
-    });
+    const focused = await getFocusedMaterialListTarget(page);
 
     return {
       content: [

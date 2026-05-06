@@ -76,7 +76,7 @@ From [CLAUDE.md](../../../CLAUDE.md): every shortcut registered with `keyboardMa
 - [ ] Each non-trivial widget has a `*.click.puppeteer.ts` driver next to its component.
 - [ ] If the widget has a shortcut surface, it also has a `*.shortcut.puppeteer.ts` driver exporting the binding constant and a `trigger…` (or `…FromFocused`) function with a post-condition `waitForSelector`.
 - [ ] Every registered shortcut has a visible `ShortcutHint` on its control.
-- [ ] Tool files contain no `page.evaluate` / DOM traversal and no hard-coded key combos — only driver calls, plus direct `page.click`/`page.type` on selectors owned by the tool itself.
+- [ ] Tool files contain **no inline browser-evaluated callbacks** — no `page.evaluate`, `evaluateHandle`, `waitForFunction`, `$eval`, or `$$eval` with a function/script — and no DOM traversal and no hard-coded key combos — only driver calls, plus direct `page.click`/`page.type`/`waitForSelector` on selectors owned by the tool itself. (See "Never run inline browser-evaluated callbacks inside tools" below.)
 - [ ] Click-driver selectors are `data-testid`, `role`, or `aria-label` — never CSS class names or DOM order.
 - [ ] Drivers do not call `getPage()` and do not import from `electron/main/*` (except `helpers/`).
 - [ ] Shortcut-variant tool is keyboard-only: triggers via `*.shortcut.puppeteer.ts`, types into focused inputs, uses tool-owned `Tab`s. No `*.click.puppeteer.ts` import.
@@ -84,9 +84,31 @@ From [CLAUDE.md](../../../CLAUDE.md): every shortcut registered with `keyboardMa
 - [ ] The module's `mcpTools/index.ts` registers both variants on the passed-in server. `electron/main/mcp/index.ts` only imports the module registrar.
 - [ ] `<tool>.test.ts` exists next to the tool, drives `tool.execute` against the live dev app, and skips when CDP is unreachable.
 
+## Never run inline browser-evaluated callbacks inside tools
+
+Tool files (`mcpTools/*.ts`) **must not** pass an inline function or script string to any Puppeteer API that ships it to the renderer. That covers, at minimum:
+
+- `page.evaluate(fn | script)`
+- `page.evaluateHandle(fn | script)`
+- `page.waitForFunction(fn | script, …)`
+- `page.$eval(sel, fn)` and `page.$$eval(sel, fn)`
+- `frame.evaluate(...)` and the equivalents on `ElementHandle`
+
+This means no DOM reads, no `document.activeElement` blurs, no querySelector probes, no `waitForFunction(() => …)`, no inline IIFEs.
+
+**Why:**
+- Under Jest coverage, ts-jest+istanbul instruments the tool source and rewrites every function body to reference `cov_*` counters. Puppeteer serializes the function with `.toString()` and ships it to the renderer, where those counters don't exist → `ReferenceError: cov_xxx is not defined` at runtime. The instrumentation hits *every* serialized callback, not just `page.evaluate`.
+- Even if it worked, DOM-poking inline in a tool bypasses the driver layer that owns selectors and keyboard contracts. The tool is supposed to compose drivers, not reach into the DOM.
+
+**How to apply:**
+- If you need DOM state or a wait condition, expose it through a `*.click.puppeteer.ts` or `*.shortcut.puppeteer.ts` driver, or a helper under `electron/main/mcp/helpers/`. Both are excluded from coverage instrumentation by `coveragePathIgnorePatterns`; the helpers file additionally pins this with `/* istanbul ignore file */` at the top — apply the same pragma when adding new driver/helper files. Drivers and helpers may call `page.evaluate` / `page.waitForFunction` / `$eval` freely because they are not instrumented.
+- The `page.waitFor*` family that accepts only selectors/timing (`waitForSelector`, `waitForNavigation`, `waitForResponse`) is fine in tools — those don't ship a function to the renderer.
+- If you think you need to clear focus before a global shortcut fires, you don't: pointer panels (`PointerContainer`) already focus their first form element on open, and stray focus elsewhere is the prior tool's responsibility to leave clean. Just press the key and let `waitForSelector` enforce the post-condition.
+
 ## Don'ts
 
 - Don't put zod schemas or DOM logic in `electron/main/mcp/index.ts`.
+- Don't pass an inline function or script string to *any* Puppeteer API from a tool file (`page.evaluate`, `evaluateHandle`, `waitForFunction`, `$eval`, `$$eval`, frame/handle equivalents) — see the dedicated section above.
 - Don't re-implement listbox / panel walks inside an `mcpTools/*.ts` — extract to a driver or helper.
 - Don't ship a shortcut without a `ShortcutHint`.
 - Don't make the shortcut tool reach for click drivers when focus is wrong — let it fail loudly.

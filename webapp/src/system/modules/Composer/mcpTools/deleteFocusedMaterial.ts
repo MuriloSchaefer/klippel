@@ -1,5 +1,8 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { triggerDeleteMaterialFromFocused } from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
+import {
+  getFocusedMaterialLabel,
+  triggerDeleteMaterialFromFocused,
+} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
 import { waitForMaterialItemRemoved } from '../components/viewports/MaterialListAccordion/components/MaterialItem.click.puppeteer';
 
 export const deleteFocusedMaterialTool = {
@@ -11,11 +14,7 @@ export const deleteFocusedMaterialTool = {
     const page = await getPage();
     await page.bringToFront();
 
-    const label = await page.evaluate(() => {
-      const a = document.activeElement as HTMLElement | null;
-      if (!a?.matches('[data-testid="material-item"]')) return null;
-      return a.getAttribute('data-material-label');
-    });
+    const label = await getFocusedMaterialLabel(page);
 
     if (!label) {
       throw new Error(

@@ -1,4 +1,9 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
+import {
+  clickModelOptionByName,
+  waitForConfirmModelSelectionEnabled,
+  waitForModalClosed,
+} from './openModel.puppeteer';
 
 export const OPEN_MODEL_SHORTCUT = 'w' as const;
 
@@ -23,28 +28,12 @@ export const openModelShortcutTool = {
       return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true, opened: true }) }] };
     }
 
-    const found = await page.$$eval(
-      '[role="list-options"] [id]',
-      (els, name) => {
-        const el = els.find((e) => e.getAttribute('id') === name);
-        if (el) {
-          el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-          return true;
-        }
-        return false;
-      },
-      modelName,
-    );
+    const found = await clickModelOptionByName(page, modelName);
     if (!found) throw new Error(`Model "${modelName}" not found`);
 
-    await page.waitForFunction(
-      () => !document.querySelector('[aria-label="confirm-model-selection"]:disabled'),
-      { timeout: 10_000 },
-    );
+    await waitForConfirmModelSelectionEnabled(page);
     await page.click('[aria-label="confirm-model-selection"]');
-    await page
-      .waitForFunction(() => !document.getElementById('modal-content'), { timeout: 5_000 })
-      .catch(() => {});
+    await waitForModalClosed(page);
 
     return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true, modelName }) }] };
   },

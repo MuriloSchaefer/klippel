@@ -1,5 +1,8 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { triggerEditMaterialFromFocused } from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
+import {
+  getFocusedMaterialLabel,
+  triggerEditMaterialFromFocused,
+} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
 
 export const editFocusedMaterialTool = {
   name: 'editFocusedMaterial',
@@ -10,11 +13,7 @@ export const editFocusedMaterialTool = {
     const page = await getPage();
     await page.bringToFront();
 
-    const label = await page.evaluate(() => {
-      const a = document.activeElement as HTMLElement | null;
-      if (!a?.matches('[data-testid="material-item"]')) return null;
-      return a.getAttribute('data-material-label');
-    });
+    const label = await getFocusedMaterialLabel(page);
 
     if (!label) {
       throw new Error(

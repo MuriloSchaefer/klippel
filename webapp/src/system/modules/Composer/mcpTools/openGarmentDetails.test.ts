@@ -1,5 +1,5 @@
 /**
- * E2E test for the deleteMaterial MCP tool. Skips if CDP is unreachable.
+ * E2E test for the openGarmentDetails MCP tool. Skips if CDP is unreachable.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
@@ -17,30 +17,27 @@ jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
   },
 }));
 
-import { addMaterialTool } from './addMaterial';
-import { deleteMaterialTool } from './deleteMaterial';
+import { openGarmentDetailsTool } from './openGarmentDetails';
 import { createModelTool } from './createModel';
 import { openModelTool } from './openModel';
 import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
-describe('deleteMaterial (E2E)', () => {
+describe('openGarmentDetails (E2E)', () => {
   beforeAll(async () => {
     browser = await puppeteer.connect({ browserURL: CDP_URL, defaultViewport: null });
     const pages = await browser.pages();
     page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
     if (!page) throw new Error('No renderer page found in Electron');
-    await resetWorkspace(page, 'e2e-deleteMaterial', 'empty');
+    await resetWorkspace(page, 'e2e-openGarmentDetails', 'empty');
 
     await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
     await switchRibbonTabTool.execute({ label: 'Compositor' });
     await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
 
     const id = `e2e-${uniqueSuffix()}`;
-    const name = `E2E DeleteMaterial ${id}`;
+    const name = `E2E OpenDetails ${id}`;
     await createModelTool.execute({ name, id });
     await page.waitForFunction(
       () => !document.querySelector('[role="pointer-panel-content"] #name'),
@@ -51,31 +48,26 @@ describe('deleteMaterial (E2E)', () => {
 
   afterAll(async () => {
     if (browser) await browser.disconnect();
-    cleanupWorkspace('e2e-deleteMaterial');
+    cleanupWorkspace('e2e-openGarmentDetails');
   });
 
-  it('deletes a material node by label', async () => {
-    const label = 'Tricoline (delete-test)';
-    await ensureSettingsPanelExpanded(page!);
-    await expandAccordion(page!, 'Materiais');
-    const exists = await page!.$(`[data-testid="material-item"][data-material-label="${label}"]`);
-    if (exists) await deleteMaterialTool.execute({ label });
-    await addMaterialTool.execute({
-      label,
-      type: 'tecido',
-      material: 'tricoline',
-    });
-    await page!.waitForSelector(
-      `[data-testid="material-item"][data-material-label="${label}"]`,
-      { timeout: 10_000 },
-    );
-
-    await deleteMaterialTool.execute({ label });
+  it('selects the garment and opens the details panel with accordion expanded', async () => {
+    await openGarmentDetailsTool.execute();
 
     await page!.waitForFunction(
-      (sel: string) => !document.querySelector(sel),
-      { timeout: 10_000 },
-      `[data-testid="material-item"][data-material-label="${label}"]`,
+      () => {
+        const panel = document.querySelector('[role="details-panel"]') as HTMLElement | null;
+        return !!panel && window.getComputedStyle(panel).display !== 'none';
+      },
+      { timeout: 5000 },
     );
+    await page!.waitForFunction(
+      () =>
+        document
+          .querySelector('[role="accordion-Detalhes da Peça"] [aria-controls="accordion-Detalhes da Peça-content"]')
+          ?.getAttribute('aria-expanded') === 'true',
+      { timeout: 5000 },
+    );
+    await page!.waitForSelector('#garment-name', { timeout: 5000 });
   }, 30_000);
 });

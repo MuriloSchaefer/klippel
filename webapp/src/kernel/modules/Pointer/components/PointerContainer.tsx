@@ -292,7 +292,7 @@ export const PointerContainer = ({
           <Box></Box>
         )}
       </Modal>
-      {cloneElement(children, { onClick: handleOpen })}
+      {cloneElement(children, { onClick: handleOpen } as any)}
     </>
   );
 };

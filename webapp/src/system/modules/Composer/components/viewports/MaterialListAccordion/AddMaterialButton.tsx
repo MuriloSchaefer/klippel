@@ -40,8 +40,16 @@ export default function AddMaterialButton({
   );
   const [typeRestrictions, setTypeRestrictions] = useState<string[]>([]);
 
+  const resetForm = () => {
+    setSelectedType("");
+    setSelectedMaterial(null);
+    setTypeRestrictions([]);
+    setLabel(`material-${Math.random().toString(36).substring(2, 8)}`);
+  };
+
   return (
     <PointerContainer
+      onClose={resetForm}
       component={
         <Box data-testid="add-material-form" sx={{ minWidth: 320, padding: 2 }}>
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -83,7 +91,7 @@ export default function AddMaterialButton({
             </FormControl>
             <FormControl
               data-testid="add-material-type-restrictions"
-              sx={{ m: 1, width: "100%" }}
+              sx={{ m: 1 }}
               fullWidth
               size="small"
             >
@@ -91,7 +99,7 @@ export default function AddMaterialButton({
                 required
                 label="Tipos permitidos"
                 value={typeRestrictions}
-                sx={{ minWidth: 160 }}
+                sx={{ minWidth: 200 }}
                 onChange={(e) => {
                   setTypeRestrictions(e.target.value as string[]);
                 }}
@@ -109,6 +117,7 @@ export default function AddMaterialButton({
               <MaterialTypeSelector
                 required
                 value={selectedType}
+                filter={(mt) => typeRestrictions.includes(mt.name)}
                 onChange={(e) => {
                   setSelectedType(e.target.value);
                   if (!(e.target.value in typeRestrictions))
@@ -173,6 +182,7 @@ export default function AddMaterialButton({
                 }
               };
               requestAnimationFrame(tryFocus);
+              resetForm();
             }
           }}
         >

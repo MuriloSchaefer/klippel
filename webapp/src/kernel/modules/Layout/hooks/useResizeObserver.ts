@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from "react";
 
-export const useResizeObserver = (ref: React.RefObject<HTMLDivElement>) => {
+export const useResizeObserver = (ref: React.RefObject<HTMLDivElement | null>) => {
     const [dimensions, setDimensions] = useState<DOMRectReadOnly | undefined>();
   
     useLayoutEffect(() => {

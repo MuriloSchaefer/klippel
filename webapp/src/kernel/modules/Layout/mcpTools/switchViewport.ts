@@ -1,4 +1,5 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
+import { clickViewportTabByIndex } from '../components/ViewportManager/ViewportTabs.click.puppeteer';
 
 export const switchViewportTool = {
   name: 'switchViewport',
@@ -12,18 +13,7 @@ export const switchViewportTool = {
   },
   async execute({ viewportIndex }: { viewportIndex: number }) {
     const page = await getPage();
-    const clicked = await page.evaluate((index: number) => {
-      const tabsRoot = document.querySelector('[role="viewport-tabs"]');
-      if (!tabsRoot) return false;
-      const allTabs = Array.from(tabsRoot.querySelectorAll('[role="tab"]'));
-      const viewportTabs = allTabs.filter(
-        (el) => el.id !== 'home' && el.id !== 'new-viewport',
-      );
-      const target = viewportTabs[index - 1] as HTMLElement | undefined;
-      if (!target) return false;
-      target.click();
-      return true;
-    }, viewportIndex);
+    const clicked = await clickViewportTabByIndex(page, viewportIndex);
     if (!clicked) throw new Error(`Viewport at index ${viewportIndex} not found`);
     return { content: [{ type: 'text' as const, text: JSON.stringify({ success: true }) }] };
   },

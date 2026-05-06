@@ -148,6 +148,7 @@ export default function CompositionTree({
 
   const modelVariation = useVariation({ variationId });
   return (
+    <Box data-testid="composition-tree">
     <RichTreeView
       items={tree}
       aria-label="composition tree"
@@ -167,5 +168,6 @@ export default function CompositionTree({
       }}
       sx={{ flexGrow: 1, maxWidth: "100%", overflowY: "auto" }}
     />
+    </Box>
   );
 }
