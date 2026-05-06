@@ -19,9 +19,9 @@ Jazz handles the full data surface: structured CRDT data (CoMap/CoList), binary 
                  ↕ IPC
 ┌─────────────────────── Electron Main ──────────────────────────────┐
 │  Jazz Node (jazz-nodejs)                                            │
-│  ├── Account: cryptographic identity, persisted in .jazz/           │
+│  ├── Account: cryptographic identity, persisted in workspace folder │
 │  ├── CoValues: synced via Jazz Cloud relay or direct WebRTC peers   │
-│  └── Local persistence: LevelDB under .jazz/db                     │
+│  └── Local persistence: SQLite at {workspace}/jazz.sqlite           │
 └─────────────────────────────────────────────────────────────────────┘
                  ↕ Jazz sync (WebSocket to Jazz Cloud or direct P2P)
          Other devices with the same Account or Group membership
@@ -54,27 +54,27 @@ Jazz handles the full data surface: structured CRDT data (CoMap/CoList), binary 
 
 ---
 
-## RBAC (Role-Based Access Control) Layer
+## PBAC (Policy-Based Access Control) Layer
 
-Jazz's built-in Group roles (`reader`/`writer`/`admin`) are coarse-grained — workspace-level only. A custom RBAC layer on top provides fine-grained control: **per user × per module × per action**.
+Jazz's built-in Group roles (`reader`/`writer`/`admin`) are coarse-grained — workspace-level only. A custom PBAC layer on top provides fine-grained control: **per user × per module × per action**, expressed as explicit allow/deny policy statements rather than pre-defined role buckets.
 
 ### Concepts
 
-- **Action** — a string identifier `"{Module}:{verb}"` for every command that mutates data
-- **Role** — a named set of allowed actions (custom, creatable by admin)
-- **Assignment** — maps a Jazz account ID to a role within a workspace
-- **Admin** — workspace owner always has all permissions; other admins are assigned the built-in `admin` role
+- **Action** — a string identifier `"{Module}:{verb}"` for every command that mutates data (wildcards supported: `"Composer:*"`)
+- **Policy** — a named document containing one or more statements; each statement carries an `effect` ("allow" or "deny") and a list of actions it covers
+- **Assignment** — maps a Jazz account ID to a policy within a workspace
+- **Evaluation order** — explicit `deny` overrides `allow`; default effect is `deny`
 
-### Built-in Roles (not deletable)
+### Built-in Policies (not deletable)
 
-| Role       | Allowed actions                                                      |
+| Policy     | Statements                                                           |
 | ---------- | -------------------------------------------------------------------- |
-| `owner`  | All actions (implicit, workspace creator)                            |
-| `admin`  | All actions + manage roles + assign roles                            |
-| `editor` | All content actions (create/update/delete models, materials, orders) |
-| `viewer` | Read-only (no mutation actions)                                      |
+| `owner`  | Allow all actions (implicit for workspace creator)                   |
+| `admin`  | Allow all actions including `Permissions:*`                         |
+| `editor` | Allow all content actions (`Composer:*`, `Materials:*`, `Orders:*`) |
+| `viewer` | Allow read-only implicit access; deny all mutation actions           |
 
-Custom roles can be created, named, and granted any subset of actions.
+Custom policies can be created with any combination of allow/deny statements targeting specific actions or wildcards.
 
 ### Action Catalog (by module)
 
@@ -84,31 +84,39 @@ Composer:updateGraph      Composer:attachSvg
 Materials:createMaterial  Materials:updateMaterial  Materials:deleteMaterial
 Orders:createBudget       Orders:updateBudget       Orders:deleteBudget
 Store:shareWorkspace      Store:acceptInvite
-Permissions:createRole    Permissions:updateRole    Permissions:deleteRole
-Permissions:assignRole    Permissions:revokeRole
+Permissions:createPolicy  Permissions:updatePolicy  Permissions:deletePolicy
+Permissions:assignPolicy  Permissions:revokePolicy
 ```
 
 ---
 
-## RBAC CoSchema — additions to `src/kernel/modules/Store/schema.ts`
+## PBAC CoSchema — additions to `src/kernel/modules/Store/schema.ts`
 
 ```typescript
-export class RoleCoMap extends CoMap {
+// A single allow/deny statement within a policy.
+// statementsJson on PolicyCoMap is a JSON array of these objects (stored inline
+// for atomic updates — avoids per-statement CRDT overhead).
+interface PolicyStatement {
+  effect: "allow" | "deny";
+  actions: string[];   // e.g. ["Composer:*"] or ["Materials:createMaterial"]
+}
+
+export class PolicyCoMap extends CoMap {
   id = co.string;
   name = co.string;
   description = co.optional.string;
-  allowedActionsJson = co.string;  // JSON array of action strings
-  isBuiltIn = co.boolean;          // built-in roles cannot be deleted
+  statementsJson = co.string;  // JSON array of PolicyStatement objects
+  isBuiltIn = co.boolean;      // built-in policies cannot be deleted
 }
 
-export class RolesMap extends CoMap.Record(RoleCoMap) {}  // keyed by roleId
+export class PoliciesMap extends CoMap.Record(PolicyCoMap) {}  // keyed by policyId
 
-export class UserRoleAssignment extends CoMap {
+export class UserPolicyAssignment extends CoMap {
   accountId = co.string;   // Jazz Account public ID
-  roleId = co.string;
+  policyId = co.string;
 }
 
-export class UserRolesList extends CoList.Of(co.ref(UserRoleAssignment)) {}
+export class UserPoliciesList extends CoList.Of(co.ref(UserPolicyAssignment)) {}
 
 // WorkspaceCoMap gains two new fields:
 export class WorkspaceCoMap extends CoMap {
@@ -116,8 +124,8 @@ export class WorkspaceCoMap extends CoMap {
   models = co.ref(ModelsMap);
   materials = co.ref(MaterialsList);
   budgets = co.ref(BudgetsList);
-  roles = co.ref(RolesMap);            // NEW — all roles for this workspace
-  userRoles = co.ref(UserRolesList);   // NEW — account → role assignments
+  policies = co.ref(PoliciesMap);           // NEW — all policies for this workspace
+  userPolicies = co.ref(UserPoliciesList);  // NEW — account → policy assignments
 }
 ```
 
@@ -135,11 +143,11 @@ interface IPermissionsModule extends IModule {
   depends_on: ["Store"];
   hooks: {
     usePermissions: () => PermissionsHook;
-    useCurrentUserRole: () => RoleCoMap | undefined;
+    useCurrentUserPolicy: () => PolicyCoMap | undefined;
   };
   components: {
-    RoleManager: React.FC;          // admin panel: CRUD roles
-    UserPermissionsPanel: React.FC; // admin panel: assign roles to members
+    PolicyManager: React.FC;         // admin panel: CRUD policies
+    UserPermissionsPanel: React.FC;  // admin panel: assign policies to members
   };
 }
 ```
@@ -147,10 +155,15 @@ interface IPermissionsModule extends IModule {
 ### `slice.ts`
 
 ```typescript
+interface PolicyStatement {
+  effect: "allow" | "deny";
+  actions: string[];
+}
+
 interface PermissionsState {
-  roles: Record<string, { id: string; name: string; allowedActions: string[]; isBuiltIn: boolean }>;
-  userRoles: Array<{ accountId: string; roleId: string }>;
-  currentUserRoleId: string | undefined;
+  policies: Record<string, { id: string; name: string; statements: PolicyStatement[]; isBuiltIn: boolean }>;
+  userPolicies: Array<{ accountId: string; policyId: string }>;
+  currentUserPolicyId: string | undefined;
 }
 ```
 
@@ -158,19 +171,28 @@ interface PermissionsState {
 
 Two responsibilities:
 
-1. **Sync**: on workspace load, hydrate `PermissionsState` from Jazz `WorkspaceCoMap.roles` and `.userRoles`
-2. **Enforcement**: intercept all command actions tagged with `meta.requiredPermission`. Block + dispatch `permissionDenied` if the current user's role doesn't include the required action:
+1. **Sync**: on workspace load, hydrate `PermissionsState` from Jazz `WorkspaceCoMap.policies` and `.userPolicies`
+2. **Enforcement**: intercept all command actions tagged with `meta.requiredPermission`. Evaluate the current user's policy statements (deny overrides allow, default deny) and block + dispatch `permissionDenied` if not allowed:
 
 ```typescript
+function evaluate(statements: PolicyStatement[], action: string): boolean {
+  const matches = (pattern: string) =>
+    pattern === action ||
+    (pattern.endsWith(":*") && action.startsWith(pattern.slice(0, -1)));
+
+  // Explicit deny wins regardless of allow statements
+  if (statements.some(s => s.effect === "deny" && s.actions.some(matches))) return false;
+  return statements.some(s => s.effect === "allow" && s.actions.some(matches));
+}
+
 middlewares.startListening({
   predicate: (action) => action?.meta?.requiredPermission !== undefined,
   effect: async (action, { getState, dispatch }) => {
     const permission = action.meta.requiredPermission as string;
-    const { Permissions, Store } = getState();
-    const myRole = Permissions.roles[Permissions.currentUserRoleId];
-    if (!myRole?.allowedActions.includes(permission)) {
+    const { Permissions } = getState();
+    const policy = Permissions.policies[Permissions.currentUserPolicyId];
+    if (!policy || !evaluate(policy.statements, permission)) {
       dispatch(permissionDenied({ action: action.type, required: permission }));
-      // returning here stops the action from reaching domain middleware
     }
   }
 });
@@ -196,31 +218,32 @@ function usePermissions(): {
 
 Used in components to conditionally render admin controls or disable buttons.
 
-### `components/RoleManager.tsx`
+### `components/PolicyManager.tsx`
 
-- Table listing all roles (name, description, action checkboxes)
+- Table listing all policies (name, description, statement rows per action with allow/deny toggle)
 - Actions grouped by module (Composer, Materials, Orders, Store, Permissions)
-- "New Role" button → inline row creation
-- Edit role name/description inline
-- Delete role button (disabled for built-in roles)
-- Changes dispatch `createRole` / `updateRole` / `deleteRole` commands
-- Only visible to users with `Permissions:createRole` permission
+- "New Policy" button → inline row creation with empty statement list
+- Edit policy name/description inline
+- Add/remove statements per policy (effect + actions)
+- Delete policy button (disabled for built-in policies)
+- Changes dispatch `createPolicy` / `updatePolicy` / `deletePolicy` commands
+- Only visible to users with `Permissions:createPolicy` permission
 
 ### `components/UserPermissionsPanel.tsx`
 
 - Lists all workspace members (from Jazz Group membership)
-- Shows each member's current role (dropdown to change)
-- Dispatches `assignRole` / `revokeRole` commands
-- Only visible to users with `Permissions:assignRole` permission
+- Shows each member's current policy (dropdown to change)
+- Dispatches `assignPolicy` / `revokePolicy` commands
+- Only visible to users with `Permissions:assignPolicy` permission
 
 ### New actions in `actions.ts`
 
 ```typescript
-export const createRole = createAction<{ name: string; allowedActions: string[] }>("Permissions/createRole");
-export const updateRole = createAction<{ roleId: string; name?: string; description?: string; allowedActions?: string[] }>("Permissions/updateRole");
-export const deleteRole = createAction<{ roleId: string }>("Permissions/deleteRole");
-export const assignRole = createAction<{ accountId: string; roleId: string }>("Permissions/assignRole");
-export const revokeRole = createAction<{ accountId: string }>("Permissions/revokeRole");
+export const createPolicy = createAction<{ name: string; statements: PolicyStatement[] }>("Permissions/createPolicy");
+export const updatePolicy = createAction<{ policyId: string; name?: string; description?: string; statements?: PolicyStatement[] }>("Permissions/updatePolicy");
+export const deletePolicy = createAction<{ policyId: string }>("Permissions/deletePolicy");
+export const assignPolicy = createAction<{ accountId: string; policyId: string }>("Permissions/assignPolicy");
+export const revokePolicy = createAction<{ accountId: string }>("Permissions/revokePolicy");
 export const permissionDenied = createAction<{ action: string; required: string }>("Permissions/permissionDenied");
 ```
 
@@ -287,15 +310,17 @@ export class KlippelAccount extends Account {
 import { createJazzNode } from "jazz-nodejs";
 import { KlippelAccount } from "../../src/kernel/modules/Store/schema";
 
-export async function initJazzNode(homePath: string) {
+export async function initJazzNode(workspacePath: string) {
   const node = await createJazzNode({
     AccountSchema: KlippelAccount,
-    storage: { type: "leveldb", path: `${homePath}/.jazz/db` },
+    storage: { type: "sqlite", path: `${workspacePath}/jazz.sqlite` },
     sync: { server: "wss://cloud.jazz.tools" },  // optional, configurable
   });
   return node;
 }
 ```
+
+Jazz data — CoValues and the account identity — lives in `jazz.sqlite` inside the active workspace folder, co-located with other workspace files.
 
 **IPC handlers to register (in `electron/main/jazz.ts`):**
 
@@ -306,7 +331,7 @@ export async function initJazzNode(homePath: string) {
 | `jazz-list-workspaces`  | `handle` | Returns array of `{name, coId}`        |
 | `jazz-load-workspace`   | `handle` | Returns full workspace CoValue snapshot  |
 | `jazz-mutate`           | `handle` | Apply a mutation patch to a CoValue      |
-| `jazz-share-workspace`  | `handle` | Creates invite link (reader/editor role) |
+| `jazz-share-workspace`  | `handle` | Creates invite link (defaultPolicy name) |
 | `jazz-accept-invite`    | `handle` | Joins shared workspace via invite link   |
 | `jazz-subscribe`        | `on`     | Subscribe renderer to CoValue updates    |
 | `jazz-unsubscribe`      | `on`     | Unsubscribe                              |
@@ -324,8 +349,8 @@ export const jazzApi = {
   listWorkspaces: () => ipcRenderer.invoke("jazz-list-workspaces"),
   loadWorkspace: (coId: string) => ipcRenderer.invoke("jazz-load-workspace", coId),
   mutate: (coId: string, patch: unknown) => ipcRenderer.invoke("jazz-mutate", { coId, patch }),
-  shareWorkspace: (coId: string, role: "reader" | "editor") =>
-    ipcRenderer.invoke("jazz-share-workspace", { coId, role }),
+  shareWorkspace: (coId: string, defaultPolicy: string) =>
+    ipcRenderer.invoke("jazz-share-workspace", { coId, defaultPolicy }),
   acceptInvite: (inviteLink: string) => ipcRenderer.invoke("jazz-accept-invite", inviteLink),
   subscribe: (coId: string, listener: (data: unknown) => void) => {
     const channel = `jazz-update-${coId}`;
@@ -366,7 +391,7 @@ interface StoreState {
 ### `src/kernel/modules/Store/actions.ts` (ADD)
 
 ```typescript
-export const shareWorkspace = createAction<{ workspace: string; role: "reader" | "editor" }>("Store/shareWorkspace");
+export const shareWorkspace = createAction<{ workspace: string; defaultPolicy: string }>("Store/shareWorkspace");
 export const acceptWorkspaceInvite = createAction<{ inviteLink: string }>("Store/acceptWorkspaceInvite");
 export const syncStatusChanged = createAction<{ status: "offline" | "syncing" | "synced" }>("Store/syncStatusChanged");
 ```
@@ -394,7 +419,7 @@ export const syncStatusChanged = createAction<{ status: "offline" | "syncing" | 
 ### `WorkspaceShare.tsx` (NEW — in `src/kernel/modules/Store/components/`)
 
 - Shows current workspace CoID as sharable invite link
-- Role selector (reader / editor)
+- Default policy selector (built-in or custom policies)
 - "Copy invite link" button
 - Rendered inside SettingsPanel accordion
 
@@ -413,9 +438,9 @@ export const syncStatusChanged = createAction<{ status: "offline" | "syncing" | 
 ## Main Process Init Changes — `electron/main/index.ts` (MODIFY)
 
 ```typescript
-// After: const homePath = ...
-const jazzNode = await initJazzNode(homePath);   // NEW — before window creation
-initJazzHooks(jazzNode, mainWindow);              // NEW
+// After: const workspacePath = ...
+const jazzNode = await initJazzNode(workspacePath);   // NEW — before window creation
+initJazzHooks(jazzNode, mainWindow);                  // NEW
 
 // Remove: const heliaNode = await initHeliaNode(workspace)
 // Remove: initHeliaHooks(heliaNode)
@@ -441,33 +466,33 @@ This is incremental — old workspaces continue to work; each migrates once on f
 
 ## File Change Summary
 
-| File                                                                   | Change                                                                              |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `electron/main/jazz.ts`                                              | NEW — Jazz node init + all IPC handlers                                            |
-| `electron/main/index.ts`                                             | MODIFY — call initJazzNode, remove Helia init                                      |
-| `electron/preload/jazz.ts`                                           | NEW — Jazz IPC bridge                                                              |
-| `electron/preload/index.ts`                                          | MODIFY — expose `jazz` in contextBridge                                          |
-| `electron/preload/typings.ts`                                        | MODIFY — add JazzAPI type                                                          |
-| `electron/main/ipfs.ts`                                              | DORMANT (no callers, leave or delete)                                               |
-| `electron/preload/ipfs.ts`                                           | DORMANT (was already empty)                                                         |
-| `src/kernel/modules/Store/schema.ts`                                 | NEW — CoSchema definitions (includes RBAC types)                                   |
-| `src/kernel/modules/Store/slice.ts`                                  | MODIFY — add coId, syncStatus, accountId                                           |
-| `src/kernel/modules/Store/middlewares.ts`                            | MODIFY — Jazz mutations replace JSON file writes for workspace data                |
-| `src/kernel/modules/Store/actions.ts`                                | MODIFY — add share/invite/syncStatus actions                                       |
-| `src/kernel/modules/Store/components/WorkspaceShare.tsx`             | NEW                                                                                 |
-| `src/kernel/modules/Store/components/AccountSettings.tsx`            | NEW                                                                                 |
-| `src/kernel/modules/Permissions/index.ts`                            | NEW — kernel module definition                                                     |
-| `src/kernel/modules/Permissions/slice.ts`                            | NEW — roles, userRoles, currentUserRoleId state                                    |
-| `src/kernel/modules/Permissions/middlewares.ts`                      | NEW — permission enforcement + Jazz sync                                           |
-| `src/kernel/modules/Permissions/actions.ts`                          | NEW — createRole, updateRole, deleteRole, assignRole, revokeRole, permissionDenied |
-| `src/kernel/modules/Permissions/hooks/usePermissions.ts`             | NEW —`can(action)` hook                                                          |
-| `src/kernel/modules/Permissions/components/RoleManager.tsx`          | NEW — CRUD UI for roles                                                            |
-| `src/kernel/modules/Permissions/components/UserPermissionsPanel.tsx` | NEW — assign roles to members                                                      |
-| `src/system/modules/Composer/actions.ts`                             | MODIFY — tag commands with `meta.requiredPermission`                             |
-| `src/system/modules/Composer/middlewares.ts`                         | MODIFY — graph/SVG save/load via Jazz                                              |
-| `src/system/modules/Materials/actions.ts`                            | MODIFY — tag commands with `meta.requiredPermission`                             |
-| `src/system/modules/Materials/middlewares.ts`                        | MODIFY — materials via Jazz                                                        |
-| `src/system/modules/Orders/actions.ts`                               | MODIFY — tag commands with `meta.requiredPermission`                             |
+| File                                                                      | Change                                                                                  |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `electron/main/jazz.ts`                                                 | NEW — Jazz node init (SQLite storage) + all IPC handlers                               |
+| `electron/main/index.ts`                                                | MODIFY — call initJazzNode, remove Helia init                                          |
+| `electron/preload/jazz.ts`                                              | NEW — Jazz IPC bridge                                                                  |
+| `electron/preload/index.ts`                                             | MODIFY — expose `jazz` in contextBridge                                              |
+| `electron/preload/typings.ts`                                           | MODIFY — add JazzAPI type                                                              |
+| `electron/main/ipfs.ts`                                                 | DORMANT (no callers, leave or delete)                                                   |
+| `electron/preload/ipfs.ts`                                              | DORMANT (was already empty)                                                             |
+| `src/kernel/modules/Store/schema.ts`                                    | NEW — CoSchema definitions (includes PBAC types)                                       |
+| `src/kernel/modules/Store/slice.ts`                                     | MODIFY — add coId, syncStatus, accountId                                               |
+| `src/kernel/modules/Store/middlewares.ts`                               | MODIFY — Jazz mutations replace JSON file writes for workspace data                    |
+| `src/kernel/modules/Store/actions.ts`                                   | MODIFY — add share/invite/syncStatus actions                                           |
+| `src/kernel/modules/Store/components/WorkspaceShare.tsx`                | NEW                                                                                     |
+| `src/kernel/modules/Store/components/AccountSettings.tsx`               | NEW                                                                                     |
+| `src/kernel/modules/Permissions/index.ts`                               | NEW — kernel module definition                                                         |
+| `src/kernel/modules/Permissions/slice.ts`                               | NEW — policies, userPolicies, currentUserPolicyId state                                |
+| `src/kernel/modules/Permissions/middlewares.ts`                         | NEW — policy evaluation (deny overrides allow, default deny) + Jazz sync               |
+| `src/kernel/modules/Permissions/actions.ts`                             | NEW — createPolicy, updatePolicy, deletePolicy, assignPolicy, revokePolicy, permissionDenied |
+| `src/kernel/modules/Permissions/hooks/usePermissions.ts`                | NEW — `can(action)` hook using policy evaluation                                     |
+| `src/kernel/modules/Permissions/components/PolicyManager.tsx`           | NEW — CRUD UI for policies and their statements                                        |
+| `src/kernel/modules/Permissions/components/UserPermissionsPanel.tsx`    | NEW — assign policies to members                                                       |
+| `src/system/modules/Composer/actions.ts`                                | MODIFY — tag commands with `meta.requiredPermission`                                 |
+| `src/system/modules/Composer/middlewares.ts`                            | MODIFY — graph/SVG save/load via Jazz                                                  |
+| `src/system/modules/Materials/actions.ts`                               | MODIFY — tag commands with `meta.requiredPermission`                                 |
+| `src/system/modules/Materials/middlewares.ts`                           | MODIFY — materials via Jazz                                                            |
+| `src/system/modules/Orders/actions.ts`                                  | MODIFY — tag commands with `meta.requiredPermission`                                 |
 
 ## Dependencies to Add
 
@@ -484,15 +509,17 @@ No other new dependencies. Helia packages remain in package.json but become unus
 
 ## Verification Plan
 
-1. **Offline first:** Start with no network. Create workspace, add model, add materials. Quit and reopen. Confirm everything reloads from Jazz local LevelDB.
+1. **Offline first:** Start with no network. Create workspace, add model, add materials. Quit and reopen. Confirm everything reloads from Jazz local SQLite.
 2. **Single-device round-trip:** Verify workspace list, graph, and materials reload from Jazz CoValues (not `.session/` JSON files) on relaunch.
 3. **Multi-device sync:** Copy account seed to second machine. Create a model on machine A. Confirm it appears on machine B after both go online.
-4. **Sharing:** Generate invite link from machine A. Accept on machine B with a different account. Verify reader can view, editor can modify.
+4. **Sharing:** Generate invite link from machine A. Accept on machine B with a different account. Verify the default policy is applied on join.
 5. **Legacy migration:** Open an old local workspace (no `.jazz-id` file). Verify auto-migration creates Jazz CoValues and writes `.jazz-id`. Subsequent opens skip migration.
 6. **Graph fidelity:** Save a complex graph (50+ nodes, 100+ edges). Reload. Verify round-trip through `graphJson` serialization is lossless.
 7. **SVG via BinaryCoStream:** Attach an SVG to a model. Confirm it syncs to second device and renders correctly.
 8. **Existing session state unaffected:** Layout, viewport positions, and theme still persist to `.session/` files as before.
-9. **RBAC — role CRUD:** As admin, create a custom role "Cost Analyst" with only `Materials:*` and `Orders:*` actions. Update its name. Delete it. Verify built-in roles cannot be deleted.
-10. **RBAC — enforcement:** Assign a member the `viewer` role. Confirm they cannot create a model (`Composer:createModel` blocked), receive `permissionDenied` action in Redux, and the UI disables the create button via `usePermissions().can()`.
-11. **RBAC — assign/revoke:** Assign a member from `viewer` to `editor`. Confirm they can now save graph changes. Revoke back to `viewer`. Confirm access is revoked.
-12. **RBAC — sync:** Change a role's permissions on machine A (admin). Confirm the updated permission set syncs to machine B (member) without restart.
+9. **PBAC — policy CRUD:** As admin, create a custom policy "Cost Analyst" with allow statements for `Materials:*` and `Orders:*`. Update its name. Delete it. Verify built-in policies cannot be deleted.
+10. **PBAC — deny override:** Create a policy with `allow: ["Composer:*"]` and `deny: ["Composer:deleteModel"]`. Assign to a member. Confirm they can create and update models but cannot delete one.
+11. **PBAC — enforcement:** Assign a member the `viewer` policy. Confirm they cannot create a model (`Composer:createModel` blocked), receive `permissionDenied` in Redux, and the UI disables the create button via `usePermissions().can()`.
+12. **PBAC — assign/revoke:** Assign a member from `viewer` to `editor`. Confirm they can now save graph changes. Revoke back to `viewer`. Confirm access is revoked.
+13. **PBAC — sync:** Update a policy's statements on machine A (admin). Confirm the updated policy syncs to machine B (member) without restart.
+14. **SQLite co-location:** Confirm `jazz.sqlite` is created inside the workspace folder on first launch and that switching workspaces loads data from the correct SQLite file.
