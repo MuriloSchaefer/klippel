@@ -21,7 +21,9 @@ Jazz handles the full data surface: structured CRDT data (CoMap/CoList), binary 
 │  Jazz Node (jazz-nodejs)                                            │
 │  ├── Account: cryptographic identity, persisted in workspace folder │
 │  ├── CoValues: synced via Jazz Cloud relay or direct WebRTC peers   │
-│  └── Local persistence: SQLite at {workspace}/jazz.sqlite           │
+│  ├── Local persistence: SQLite at {workspace}/jazz.sqlite           │
+│  └── Device registration: MAC address read at startup, written to   │
+│      WorkspaceCoMap.devices and passed to renderer via IPC          │
 └─────────────────────────────────────────────────────────────────────┘
                  ↕ Jazz sync (WebSocket to Jazz Cloud or direct P2P)
          Other devices with the same Account or Group membership
@@ -49,6 +51,9 @@ Jazz handles the full data surface: structured CRDT data (CoMap/CoList), binary 
 | Description markdown      | `z.string()` field                                      | Small enough to store inline                                               |
 | Materials catalog         | `CoList<MaterialCoMap>`                                 | Ordered, mergeable                                                         |
 | Orders / Budgets          | `CoList<BudgetCoMap>`                                   | Ordered, mergeable                                                         |
+| Teams                     | `CoMap.Record(TeamCoMap)`                               | Keyed by teamId; membership stored inline as JSON                          |
+| Devices                   | `CoMap.Record(DeviceCoMap)`                             | Keyed by MAC address; registered at first launch per device                |
+| Policy assignments        | `UserPoliciesList`, `TeamPoliciesList`, `DevicePoliciesList` | Separate lists per subject type                                   |
 
 > **Graph storage rationale:** Graph nodes/edges are always loaded and saved as a whole unit (no collaborative per-node concurrent editing). Storing the graph as a serialized JSON string in a single CoMap field is faster (atomic replace) and avoids per-entry CRDT overhead. Per Jazz's own performance guidance: use `z.string()`/`z.object()` over nested CoMaps for data that updates atomically.
 
@@ -56,36 +61,52 @@ Jazz handles the full data surface: structured CRDT data (CoMap/CoList), binary 
 
 ## PBAC (Policy-Based Access Control) Layer
 
-Jazz's built-in Group roles (`reader`/`writer`/`admin`) are coarse-grained — workspace-level only. A custom PBAC layer on top provides fine-grained control: **per user × per module × per action**, expressed as explicit allow/deny policy statements rather than pre-defined role buckets.
+Jazz's built-in Group roles (`reader`/`writer`/`admin`) are coarse-grained — workspace-level only. A custom PBAC layer on top provides fine-grained control: **per user × per module × per action**, expressed as explicit allow/deny policy statements that can be attached to individual users, teams, or specific devices.
 
 ### Concepts
 
 - **Action** — a string identifier `"{Module}:{verb}"` for every command that mutates data (wildcards supported: `"Composer:*"`)
 - **Policy** — a named document containing one or more statements; each statement carries an `effect` ("allow" or "deny") and a list of actions it covers
-- **Assignment** — maps a Jazz account ID to a policy within a workspace
-- **Evaluation order** — explicit `deny` overrides `allow`; default effect is `deny`
+- **Team** — a named group of users within a workspace; a policy can be assigned to the whole team
+- **Device** — a physical machine identified by its MAC address; each user may have multiple devices, each of which can carry its own policy
+- **Evaluation** — all policies that apply to a request (device + user + teams) are merged; explicit `deny` from any source overrides any `allow`; default effect is `deny`
 
 ### Built-in Policies (not deletable)
 
 | Policy     | Statements                                                           |
 | ---------- | -------------------------------------------------------------------- |
 | `owner`  | Allow all actions (implicit for workspace creator)                   |
-| `admin`  | Allow all actions including `Permissions:*`                         |
+| `admin`  | Allow all actions including `Permissions:*` and `Teams:*`           |
 | `editor` | Allow all content actions (`Composer:*`, `Materials:*`, `Orders:*`) |
 | `viewer` | Allow read-only implicit access; deny all mutation actions           |
 
 Custom policies can be created with any combination of allow/deny statements targeting specific actions or wildcards.
 
+### Policy Evaluation (multi-source)
+
+For any gated action, the enforcement middleware collects statements from all three subject types and evaluates them together:
+
+```
+effective statements = deviceStatements ∪ userStatements ∪ teamStatements
+result = deny if any deny matches, else allow if any allow matches, else deny
+```
+
+This means a device-level deny can restrict a user even if their user policy grants access — useful for locking down shared or unmanaged machines.
+
 ### Action Catalog (by module)
 
 ```
-Composer:createModel      Composer:updateModel    Composer:deleteModel
-Composer:updateGraph      Composer:attachSvg
-Materials:createMaterial  Materials:updateMaterial  Materials:deleteMaterial
-Orders:createBudget       Orders:updateBudget       Orders:deleteBudget
-Store:shareWorkspace      Store:acceptInvite
-Permissions:createPolicy  Permissions:updatePolicy  Permissions:deletePolicy
-Permissions:assignPolicy  Permissions:revokePolicy
+Composer:createModel        Composer:updateModel      Composer:deleteModel
+Composer:updateGraph        Composer:attachSvg
+Materials:createMaterial    Materials:updateMaterial  Materials:deleteMaterial
+Orders:createBudget         Orders:updateBudget       Orders:deleteBudget
+Store:shareWorkspace        Store:acceptInvite
+Permissions:createPolicy    Permissions:updatePolicy  Permissions:deletePolicy
+Permissions:assignPolicy    Permissions:revokePolicy
+Teams:createTeam            Teams:updateTeam          Teams:deleteTeam
+Teams:addMember             Teams:removeMember
+Teams:assignTeamPolicy      Teams:revokeTeamPolicy
+Devices:labelDevice         Devices:assignDevicePolicy  Devices:revokeDevicePolicy
 ```
 
 ---
@@ -101,6 +122,8 @@ interface PolicyStatement {
   actions: string[];   // e.g. ["Composer:*"] or ["Materials:createMaterial"]
 }
 
+// ── Policies ────────────────────────────────────────────────────────────────
+
 export class PolicyCoMap extends CoMap {
   id = co.string;
   name = co.string;
@@ -111,6 +134,8 @@ export class PolicyCoMap extends CoMap {
 
 export class PoliciesMap extends CoMap.Record(PolicyCoMap) {}  // keyed by policyId
 
+// ── User → Policy assignments ────────────────────────────────────────────────
+
 export class UserPolicyAssignment extends CoMap {
   accountId = co.string;   // Jazz Account public ID
   policyId = co.string;
@@ -118,14 +143,57 @@ export class UserPolicyAssignment extends CoMap {
 
 export class UserPoliciesList extends CoList.Of(co.ref(UserPolicyAssignment)) {}
 
-// WorkspaceCoMap gains two new fields:
+// ── Teams ────────────────────────────────────────────────────────────────────
+
+export class TeamCoMap extends CoMap {
+  id = co.string;
+  name = co.string;
+  description = co.optional.string;
+  memberAccountIdsJson = co.string;  // JSON array of account ID strings
+}
+
+export class TeamsMap extends CoMap.Record(TeamCoMap) {}  // keyed by teamId
+
+export class TeamPolicyAssignment extends CoMap {
+  teamId = co.string;
+  policyId = co.string;
+}
+
+export class TeamPoliciesList extends CoList.Of(co.ref(TeamPolicyAssignment)) {}
+
+// ── Devices ──────────────────────────────────────────────────────────────────
+
+export class DeviceCoMap extends CoMap {
+  id = co.string;              // MAC address (primary key, written at registration)
+  accountId = co.string;       // Jazz Account public ID this device belongs to
+  label = co.optional.string;  // human-readable name set by admin ("Alice's MacBook")
+  platform = co.optional.string; // "darwin" | "win32" | "linux"
+  registeredAt = co.number;
+  lastSeenAt = co.number;
+}
+
+export class DevicesMap extends CoMap.Record(DeviceCoMap) {}  // keyed by MAC address
+
+export class DevicePolicyAssignment extends CoMap {
+  deviceId = co.string;   // MAC address
+  policyId = co.string;
+}
+
+export class DevicePoliciesList extends CoList.Of(co.ref(DevicePolicyAssignment)) {}
+
+// ── WorkspaceCoMap (full, with all new fields) ───────────────────────────────
+
 export class WorkspaceCoMap extends CoMap {
   metadata = co.ref(WorkspaceMetadata);
   models = co.ref(ModelsMap);
   materials = co.ref(MaterialsList);
   budgets = co.ref(BudgetsList);
-  policies = co.ref(PoliciesMap);           // NEW — all policies for this workspace
-  userPolicies = co.ref(UserPoliciesList);  // NEW — account → policy assignments
+  policies = co.ref(PoliciesMap);              // all policies for this workspace
+  userPolicies = co.ref(UserPoliciesList);     // account → policy
+  teams = co.ref(TeamsMap);                    // named member groups
+  teamPolicies = co.ref(TeamPoliciesList);     // team → policy
+  devices = co.ref(DevicesMap);               // registered devices across all members
+  devicePolicies = co.ref(DevicePoliciesList); // device → policy
 }
 ```
 
@@ -144,10 +212,14 @@ interface IPermissionsModule extends IModule {
   hooks: {
     usePermissions: () => PermissionsHook;
     useCurrentUserPolicy: () => PolicyCoMap | undefined;
+    useCurrentDevicePolicy: () => PolicyCoMap | undefined;
+    useUserTeams: (accountId: string) => TeamCoMap[];
   };
   components: {
-    PolicyManager: React.FC;         // admin panel: CRUD policies
-    UserPermissionsPanel: React.FC;  // admin panel: assign policies to members
+    PolicyManager: React.FC;         // admin: CRUD policies and their statements
+    UserPermissionsPanel: React.FC;  // admin: assign policies directly to members
+    TeamManager: React.FC;           // admin: CRUD teams, membership, team policies
+    DeviceManager: React.FC;         // admin: view all devices per user, assign device policies
   };
 }
 ```
@@ -161,18 +233,33 @@ interface PolicyStatement {
 }
 
 interface PermissionsState {
+  // Policies
   policies: Record<string, { id: string; name: string; statements: PolicyStatement[]; isBuiltIn: boolean }>;
+
+  // User-level assignments
   userPolicies: Array<{ accountId: string; policyId: string }>;
+
+  // Teams
+  teams: Record<string, { id: string; name: string; description?: string; memberAccountIds: string[] }>;
+  teamPolicies: Array<{ teamId: string; policyId: string }>;
+
+  // Devices
+  devices: Record<string, { id: string; accountId: string; label?: string; platform?: string; registeredAt: number; lastSeenAt: number }>;
+  devicePolicies: Array<{ deviceId: string; policyId: string }>;
+
+  // Current session
   currentUserPolicyId: string | undefined;
+  currentDeviceId: string | undefined;  // MAC address of the running machine
 }
 ```
 
 ### `middlewares.ts`
 
-Two responsibilities:
+Three responsibilities:
 
-1. **Sync**: on workspace load, hydrate `PermissionsState` from Jazz `WorkspaceCoMap.policies` and `.userPolicies`
-2. **Enforcement**: intercept all command actions tagged with `meta.requiredPermission`. Evaluate the current user's policy statements (deny overrides allow, default deny) and block + dispatch `permissionDenied` if not allowed:
+1. **Sync**: on workspace load, hydrate all `PermissionsState` fields from Jazz `WorkspaceCoMap`
+2. **Device registration**: on startup, dispatch `registerDevice` with the MAC address returned by `jazz-get-device-id`; the middleware upserts the device record and updates `lastSeenAt`
+3. **Enforcement**: intercept all command actions tagged with `meta.requiredPermission`. Collect statements from all three applicable sources and evaluate (deny overrides allow, default deny):
 
 ```typescript
 function evaluate(statements: PolicyStatement[], action: string): boolean {
@@ -180,18 +267,42 @@ function evaluate(statements: PolicyStatement[], action: string): boolean {
     pattern === action ||
     (pattern.endsWith(":*") && action.startsWith(pattern.slice(0, -1)));
 
-  // Explicit deny wins regardless of allow statements
   if (statements.some(s => s.effect === "deny" && s.actions.some(matches))) return false;
   return statements.some(s => s.effect === "allow" && s.actions.some(matches));
+}
+
+function collectStatements(state: RootState): PolicyStatement[] {
+  const { Permissions, Store } = state;
+  const userId = Store.accountId;
+  const deviceId = Permissions.currentDeviceId;
+
+  const statementsFor = (policyId: string | undefined) =>
+    policyId ? (Permissions.policies[policyId]?.statements ?? []) : [];
+
+  const userPolicyId = Permissions.userPolicies.find(u => u.accountId === userId)?.policyId;
+  const devicePolicyId = Permissions.devicePolicies.find(d => d.deviceId === deviceId)?.policyId;
+
+  const userTeamIds = Object.values(Permissions.teams)
+    .filter(t => t.memberAccountIds.includes(userId ?? ""))
+    .map(t => t.id);
+  const teamStatements = userTeamIds.flatMap(teamId => {
+    const policyId = Permissions.teamPolicies.find(tp => tp.teamId === teamId)?.policyId;
+    return statementsFor(policyId);
+  });
+
+  return [
+    ...statementsFor(devicePolicyId),
+    ...statementsFor(userPolicyId),
+    ...teamStatements,
+  ];
 }
 
 middlewares.startListening({
   predicate: (action) => action?.meta?.requiredPermission !== undefined,
   effect: async (action, { getState, dispatch }) => {
     const permission = action.meta.requiredPermission as string;
-    const { Permissions } = getState();
-    const policy = Permissions.policies[Permissions.currentUserPolicyId];
-    if (!policy || !evaluate(policy.statements, permission)) {
+    const statements = collectStatements(getState());
+    if (!evaluate(statements, permission)) {
       dispatch(permissionDenied({ action: action.type, required: permission }));
     }
   }
@@ -216,15 +327,14 @@ function usePermissions(): {
 }
 ```
 
-Used in components to conditionally render admin controls or disable buttons.
+Collects all statements for the current session (device + user + teams) and exposes `can()` for conditional UI rendering.
 
 ### `components/PolicyManager.tsx`
 
 - Table listing all policies (name, description, statement rows per action with allow/deny toggle)
-- Actions grouped by module (Composer, Materials, Orders, Store, Permissions)
+- Actions grouped by module (Composer, Materials, Orders, Store, Permissions, Teams, Devices)
 - "New Policy" button → inline row creation with empty statement list
-- Edit policy name/description inline
-- Add/remove statements per policy (effect + actions)
+- Edit policy name/description inline; add/remove statements (effect + actions)
 - Delete policy button (disabled for built-in policies)
 - Changes dispatch `createPolicy` / `updatePolicy` / `deletePolicy` commands
 - Only visible to users with `Permissions:createPolicy` permission
@@ -232,19 +342,57 @@ Used in components to conditionally render admin controls or disable buttons.
 ### `components/UserPermissionsPanel.tsx`
 
 - Lists all workspace members (from Jazz Group membership)
-- Shows each member's current policy (dropdown to change)
+- Shows each member's directly assigned policy (dropdown to change)
+- Shows team memberships for each member (read-only, managed via TeamManager)
 - Dispatches `assignPolicy` / `revokePolicy` commands
 - Only visible to users with `Permissions:assignPolicy` permission
+
+### `components/TeamManager.tsx`
+
+- Table listing all teams (name, description, assigned policy, member count)
+- "New Team" button → inline row creation
+- Edit team name/description inline
+- Member list per team: add member (account picker from workspace members), remove member
+- Policy dropdown per team (assign/revoke team policy)
+- Delete team button
+- Changes dispatch `createTeam` / `updateTeam` / `deleteTeam` / `addTeamMember` / `removeTeamMember` / `assignTeamPolicy` / `revokeTeamPolicy`
+- Only visible to users with `Teams:createTeam` permission
+
+### `components/DeviceManager.tsx`
+
+- Lists all members; each member row expands to show their registered devices
+- Device row shows: MAC address (truncated), platform icon, label, last seen date, assigned policy
+- "Label" inline edit (friendly name for the device)
+- Policy dropdown per device (assign/revoke device policy)
+- No device creation — devices self-register on first launch
+- Changes dispatch `labelDevice` / `assignDevicePolicy` / `revokeDevicePolicy`
+- Only visible to users with `Devices:assignDevicePolicy` permission
 
 ### New actions in `actions.ts`
 
 ```typescript
+// Policies
 export const createPolicy = createAction<{ name: string; statements: PolicyStatement[] }>("Permissions/createPolicy");
 export const updatePolicy = createAction<{ policyId: string; name?: string; description?: string; statements?: PolicyStatement[] }>("Permissions/updatePolicy");
 export const deletePolicy = createAction<{ policyId: string }>("Permissions/deletePolicy");
 export const assignPolicy = createAction<{ accountId: string; policyId: string }>("Permissions/assignPolicy");
 export const revokePolicy = createAction<{ accountId: string }>("Permissions/revokePolicy");
 export const permissionDenied = createAction<{ action: string; required: string }>("Permissions/permissionDenied");
+
+// Teams
+export const createTeam = createAction<{ name: string; description?: string }>("Teams/createTeam");
+export const updateTeam = createAction<{ teamId: string; name?: string; description?: string }>("Teams/updateTeam");
+export const deleteTeam = createAction<{ teamId: string }>("Teams/deleteTeam");
+export const addTeamMember = createAction<{ teamId: string; accountId: string }>("Teams/addTeamMember");
+export const removeTeamMember = createAction<{ teamId: string; accountId: string }>("Teams/removeTeamMember");
+export const assignTeamPolicy = createAction<{ teamId: string; policyId: string }>("Teams/assignTeamPolicy");
+export const revokeTeamPolicy = createAction<{ teamId: string }>("Teams/revokeTeamPolicy");
+
+// Devices
+export const registerDevice = createAction<{ deviceId: string; platform?: string }>("Devices/registerDevice");
+export const labelDevice = createAction<{ deviceId: string; label: string }>("Devices/labelDevice");
+export const assignDevicePolicy = createAction<{ deviceId: string; policyId: string }>("Devices/assignDevicePolicy");
+export const revokeDevicePolicy = createAction<{ deviceId: string }>("Devices/revokeDevicePolicy");
 ```
 
 ---
@@ -288,11 +436,66 @@ export class BudgetCoMap extends CoMap {
 
 export class BudgetsList extends CoList.Of(co.ref(BudgetCoMap)) {}
 
+// ── PBAC ─────────────────────────────────────────────────────────────────────
+
+export class PolicyCoMap extends CoMap {
+  id = co.string;
+  name = co.string;
+  description = co.optional.string;
+  statementsJson = co.string;
+  isBuiltIn = co.boolean;
+}
+export class PoliciesMap extends CoMap.Record(PolicyCoMap) {}
+
+export class UserPolicyAssignment extends CoMap {
+  accountId = co.string;
+  policyId = co.string;
+}
+export class UserPoliciesList extends CoList.Of(co.ref(UserPolicyAssignment)) {}
+
+export class TeamCoMap extends CoMap {
+  id = co.string;
+  name = co.string;
+  description = co.optional.string;
+  memberAccountIdsJson = co.string;
+}
+export class TeamsMap extends CoMap.Record(TeamCoMap) {}
+
+export class TeamPolicyAssignment extends CoMap {
+  teamId = co.string;
+  policyId = co.string;
+}
+export class TeamPoliciesList extends CoList.Of(co.ref(TeamPolicyAssignment)) {}
+
+export class DeviceCoMap extends CoMap {
+  id = co.string;
+  accountId = co.string;
+  label = co.optional.string;
+  platform = co.optional.string;
+  registeredAt = co.number;
+  lastSeenAt = co.number;
+}
+export class DevicesMap extends CoMap.Record(DeviceCoMap) {}
+
+export class DevicePolicyAssignment extends CoMap {
+  deviceId = co.string;
+  policyId = co.string;
+}
+export class DevicePoliciesList extends CoList.Of(co.ref(DevicePolicyAssignment)) {}
+
+// ── Root types ────────────────────────────────────────────────────────────────
+
 export class WorkspaceCoMap extends CoMap {
   metadata = co.ref(WorkspaceMetadata);
   models = co.ref(ModelsMap);
   materials = co.ref(MaterialsList);
   budgets = co.ref(BudgetsList);
+  policies = co.ref(PoliciesMap);
+  userPolicies = co.ref(UserPoliciesList);
+  teams = co.ref(TeamsMap);
+  teamPolicies = co.ref(TeamPoliciesList);
+  devices = co.ref(DevicesMap);
+  devicePolicies = co.ref(DevicePoliciesList);
 }
 
 export class WorkspaceList extends CoList.Of(co.ref(WorkspaceCoMap)) {}
@@ -308,7 +511,17 @@ export class KlippelAccount extends Account {
 
 ```typescript
 import { createJazzNode } from "jazz-nodejs";
+import { networkInterfaces } from "os";
 import { KlippelAccount } from "../../src/kernel/modules/Store/schema";
+
+function getMacAddress(): string {
+  const ifaces = networkInterfaces();
+  for (const iface of Object.values(ifaces)) {
+    const entry = iface?.find(i => !i.internal && i.mac !== "00:00:00:00:00:00");
+    if (entry) return entry.mac;
+  }
+  return "unknown";
+}
 
 export async function initJazzNode(workspacePath: string) {
   const node = await createJazzNode({
@@ -320,21 +533,22 @@ export async function initJazzNode(workspacePath: string) {
 }
 ```
 
-Jazz data — CoValues and the account identity — lives in `jazz.sqlite` inside the active workspace folder, co-located with other workspace files.
+Jazz data — CoValues and the account identity — lives in `jazz.sqlite` inside the active workspace folder, co-located with other workspace files. On startup the main process reads the machine's primary MAC address via `os.networkInterfaces()`, registers it in `WorkspaceCoMap.devices`, and exposes it to the renderer via `jazz-get-device-id`.
 
 **IPC handlers to register (in `electron/main/jazz.ts`):**
 
-| Handler                   | Type       | Purpose                                  |
-| ------------------------- | ---------- | ---------------------------------------- |
-| `jazz-get-account-id`   | `handle` | Returns account public ID                |
-| `jazz-create-workspace` | `handle` | Creates WorkspaceCoMap, returns CoID     |
-| `jazz-list-workspaces`  | `handle` | Returns array of `{name, coId}`        |
-| `jazz-load-workspace`   | `handle` | Returns full workspace CoValue snapshot  |
-| `jazz-mutate`           | `handle` | Apply a mutation patch to a CoValue      |
-| `jazz-share-workspace`  | `handle` | Creates invite link (defaultPolicy name) |
-| `jazz-accept-invite`    | `handle` | Joins shared workspace via invite link   |
-| `jazz-subscribe`        | `on`     | Subscribe renderer to CoValue updates    |
-| `jazz-unsubscribe`      | `on`     | Unsubscribe                              |
+| Handler                   | Type       | Purpose                                                          |
+| ------------------------- | ---------- | ---------------------------------------------------------------- |
+| `jazz-get-account-id`   | `handle` | Returns account public ID                                        |
+| `jazz-get-device-id`    | `handle` | Returns MAC address of the current machine                       |
+| `jazz-create-workspace` | `handle` | Creates WorkspaceCoMap, returns CoID                             |
+| `jazz-list-workspaces`  | `handle` | Returns array of `{name, coId}`                                |
+| `jazz-load-workspace`   | `handle` | Returns full workspace CoValue snapshot                          |
+| `jazz-mutate`           | `handle` | Apply a mutation patch to a CoValue                              |
+| `jazz-share-workspace`  | `handle` | Creates invite link (defaultPolicy name)                         |
+| `jazz-accept-invite`    | `handle` | Joins shared workspace via invite link                           |
+| `jazz-subscribe`        | `on`     | Subscribe renderer to CoValue updates                            |
+| `jazz-unsubscribe`      | `on`     | Unsubscribe                                                      |
 
 Jazz change callbacks → fire `jazz-update-{coId}` IPC events back to renderer.
 
@@ -345,6 +559,7 @@ Jazz change callbacks → fire `jazz-update-{coId}` IPC events back to renderer.
 ```typescript
 export const jazzApi = {
   getAccountId: () => ipcRenderer.invoke("jazz-get-account-id"),
+  getDeviceId: () => ipcRenderer.invoke("jazz-get-device-id"),
   createWorkspace: (name: string) => ipcRenderer.invoke("jazz-create-workspace", name),
   listWorkspaces: () => ipcRenderer.invoke("jazz-list-workspaces"),
   loadWorkspace: (coId: string) => ipcRenderer.invoke("jazz-load-workspace", coId),
@@ -433,6 +648,23 @@ export const syncStatusChanged = createAction<{ status: "offline" | "syncing" | 
 - Shows account ID (truncated public key)
 - Export/import account seed for pairing devices
 
+### `TeamManager.tsx` (NEW — in `src/kernel/modules/Permissions/components/`)
+
+- Table of all teams: name, description, member count, assigned policy
+- "New Team" button → inline row; delete button per team
+- Expand team row → member list with add/remove controls (account picker)
+- Policy dropdown per team; dispatches `assignTeamPolicy` / `revokeTeamPolicy`
+- Requires `Teams:createTeam` permission to be visible
+
+### `DeviceManager.tsx` (NEW — in `src/kernel/modules/Permissions/components/`)
+
+- Lists workspace members; each member expands to show all their registered devices
+- Device row: truncated MAC, platform icon, label (inline edit), last seen, assigned policy
+- Policy dropdown per device; dispatches `assignDevicePolicy` / `revokeDevicePolicy`
+- Label edit dispatches `labelDevice`
+- No creation UI — devices register automatically on first launch
+- Requires `Devices:assignDevicePolicy` permission to be visible
+
 ---
 
 ## Main Process Init Changes — `electron/main/index.ts` (MODIFY)
@@ -466,33 +698,35 @@ This is incremental — old workspaces continue to work; each migrates once on f
 
 ## File Change Summary
 
-| File                                                                      | Change                                                                                  |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `electron/main/jazz.ts`                                                 | NEW — Jazz node init (SQLite storage) + all IPC handlers                               |
-| `electron/main/index.ts`                                                | MODIFY — call initJazzNode, remove Helia init                                          |
-| `electron/preload/jazz.ts`                                              | NEW — Jazz IPC bridge                                                                  |
-| `electron/preload/index.ts`                                             | MODIFY — expose `jazz` in contextBridge                                              |
-| `electron/preload/typings.ts`                                           | MODIFY — add JazzAPI type                                                              |
-| `electron/main/ipfs.ts`                                                 | DORMANT (no callers, leave or delete)                                                   |
-| `electron/preload/ipfs.ts`                                              | DORMANT (was already empty)                                                             |
-| `src/kernel/modules/Store/schema.ts`                                    | NEW — CoSchema definitions (includes PBAC types)                                       |
-| `src/kernel/modules/Store/slice.ts`                                     | MODIFY — add coId, syncStatus, accountId                                               |
-| `src/kernel/modules/Store/middlewares.ts`                               | MODIFY — Jazz mutations replace JSON file writes for workspace data                    |
-| `src/kernel/modules/Store/actions.ts`                                   | MODIFY — add share/invite/syncStatus actions                                           |
-| `src/kernel/modules/Store/components/WorkspaceShare.tsx`                | NEW                                                                                     |
-| `src/kernel/modules/Store/components/AccountSettings.tsx`               | NEW                                                                                     |
-| `src/kernel/modules/Permissions/index.ts`                               | NEW — kernel module definition                                                         |
-| `src/kernel/modules/Permissions/slice.ts`                               | NEW — policies, userPolicies, currentUserPolicyId state                                |
-| `src/kernel/modules/Permissions/middlewares.ts`                         | NEW — policy evaluation (deny overrides allow, default deny) + Jazz sync               |
-| `src/kernel/modules/Permissions/actions.ts`                             | NEW — createPolicy, updatePolicy, deletePolicy, assignPolicy, revokePolicy, permissionDenied |
-| `src/kernel/modules/Permissions/hooks/usePermissions.ts`                | NEW — `can(action)` hook using policy evaluation                                     |
-| `src/kernel/modules/Permissions/components/PolicyManager.tsx`           | NEW — CRUD UI for policies and their statements                                        |
-| `src/kernel/modules/Permissions/components/UserPermissionsPanel.tsx`    | NEW — assign policies to members                                                       |
-| `src/system/modules/Composer/actions.ts`                                | MODIFY — tag commands with `meta.requiredPermission`                                 |
-| `src/system/modules/Composer/middlewares.ts`                            | MODIFY — graph/SVG save/load via Jazz                                                  |
-| `src/system/modules/Materials/actions.ts`                               | MODIFY — tag commands with `meta.requiredPermission`                                 |
-| `src/system/modules/Materials/middlewares.ts`                           | MODIFY — materials via Jazz                                                            |
-| `src/system/modules/Orders/actions.ts`                                  | MODIFY — tag commands with `meta.requiredPermission`                                 |
+| File                                                                          | Change                                                                                           |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `electron/main/jazz.ts`                                                     | NEW — Jazz node init (SQLite storage), MAC address reading, all IPC handlers                    |
+| `electron/main/index.ts`                                                    | MODIFY — call initJazzNode, remove Helia init                                                   |
+| `electron/preload/jazz.ts`                                                  | NEW — Jazz IPC bridge (includes getDeviceId)                                                    |
+| `electron/preload/index.ts`                                                 | MODIFY — expose `jazz` in contextBridge                                                       |
+| `electron/preload/typings.ts`                                               | MODIFY — add JazzAPI type                                                                       |
+| `electron/main/ipfs.ts`                                                     | DORMANT (no callers, leave or delete)                                                            |
+| `electron/preload/ipfs.ts`                                                  | DORMANT (was already empty)                                                                      |
+| `src/kernel/modules/Store/schema.ts`                                        | NEW — CoSchema definitions (workspace, models, materials, PBAC, teams, devices)                 |
+| `src/kernel/modules/Store/slice.ts`                                         | MODIFY — add coId, syncStatus, accountId                                                        |
+| `src/kernel/modules/Store/middlewares.ts`                                   | MODIFY — Jazz mutations replace JSON file writes for workspace data                             |
+| `src/kernel/modules/Store/actions.ts`                                       | MODIFY — add share/invite/syncStatus actions                                                    |
+| `src/kernel/modules/Store/components/WorkspaceShare.tsx`                    | NEW                                                                                              |
+| `src/kernel/modules/Store/components/AccountSettings.tsx`                   | NEW                                                                                              |
+| `src/kernel/modules/Permissions/index.ts`                                   | NEW — kernel module definition (hooks + 4 admin components)                                     |
+| `src/kernel/modules/Permissions/slice.ts`                                   | NEW — policies, userPolicies, teams, teamPolicies, devices, devicePolicies, currentDeviceId     |
+| `src/kernel/modules/Permissions/middlewares.ts`                             | NEW — multi-source policy evaluation + device registration + Jazz sync                          |
+| `src/kernel/modules/Permissions/actions.ts`                                 | NEW — policy, team, and device management actions + permissionDenied                            |
+| `src/kernel/modules/Permissions/hooks/usePermissions.ts`                    | NEW — `can(action)` hook (merges device + user + team statements)                            |
+| `src/kernel/modules/Permissions/components/PolicyManager.tsx`               | NEW — CRUD UI for policies and their statements                                                 |
+| `src/kernel/modules/Permissions/components/UserPermissionsPanel.tsx`        | NEW — assign policies directly to members                                                       |
+| `src/kernel/modules/Permissions/components/TeamManager.tsx`                 | NEW — CRUD teams, membership, and team policy assignments                                       |
+| `src/kernel/modules/Permissions/components/DeviceManager.tsx`               | NEW — view and manage per-device policies and labels                                            |
+| `src/system/modules/Composer/actions.ts`                                    | MODIFY — tag commands with `meta.requiredPermission`                                          |
+| `src/system/modules/Composer/middlewares.ts`                                | MODIFY — graph/SVG save/load via Jazz                                                           |
+| `src/system/modules/Materials/actions.ts`                                   | MODIFY — tag commands with `meta.requiredPermission`                                          |
+| `src/system/modules/Materials/middlewares.ts`                               | MODIFY — materials via Jazz                                                                     |
+| `src/system/modules/Orders/actions.ts`                                      | MODIFY — tag commands with `meta.requiredPermission`                                          |
 
 ## Dependencies to Add
 
@@ -503,7 +737,7 @@ This is incremental — old workspaces continue to work; each migrates once on f
 }
 ```
 
-No other new dependencies. Helia packages remain in package.json but become unused.
+MAC address reading uses Node's built-in `os.networkInterfaces()` — no extra package needed. Helia packages remain in package.json but become unused.
 
 ---
 
@@ -523,3 +757,10 @@ No other new dependencies. Helia packages remain in package.json but become unus
 12. **PBAC — assign/revoke:** Assign a member from `viewer` to `editor`. Confirm they can now save graph changes. Revoke back to `viewer`. Confirm access is revoked.
 13. **PBAC — sync:** Update a policy's statements on machine A (admin). Confirm the updated policy syncs to machine B (member) without restart.
 14. **SQLite co-location:** Confirm `jazz.sqlite` is created inside the workspace folder on first launch and that switching workspaces loads data from the correct SQLite file.
+15. **Teams — CRUD:** Create a team "Design", add two members, assign the `editor` policy. Verify both members gain editor-level access. Remove one member; confirm their access reverts to their user-level policy.
+16. **Teams — multi-source merge:** Assign a member to two teams: team A has `allow: ["Composer:*"]`, team B has `deny: ["Composer:deleteModel"]`. Confirm the member can create models but not delete them (deny from team B wins).
+17. **Teams — sync:** Create a team on machine A (admin). Confirm the team and its membership appear in `DeviceManager` / `TeamManager` on machine B without restart.
+18. **Devices — auto-registration:** Launch the app on a new machine. Open `DeviceManager`; confirm the device appears under the user's row with the correct platform and a recent `lastSeenAt`.
+19. **Devices — label:** Set a label "Alice's MacBook" on a device. Confirm the label persists after restart and is visible to other admins.
+20. **Devices — policy restricts user policy:** Assign a member the `editor` user policy but attach a `deny: ["Composer:deleteModel"]` device policy to their laptop. Log in on that laptop; confirm delete is blocked. Log in on a second device with no device policy; confirm delete is allowed (user policy applies unmodified).
+21. **Devices — multiple devices per user:** Register two devices under the same account. Confirm `DeviceManager` lists both under the correct user row and that policies applied to each device are independent.
