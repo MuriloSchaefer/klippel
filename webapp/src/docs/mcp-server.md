@@ -239,35 +239,46 @@ app.whenReady().then(async () => {
 
 **Each module owns the tests for its MCP tools.** There is no top-level `webapp/test-mcp-tool.js` script and no central "MCP test suite" — tools are tested inside the module that exports them, using the module's own test runner setup.
 
-Tests live next to the tool file:
+Tests live next to the tool files. **One E2E suite per feature, covering both click and shortcut variants** in a single file named `<feature>.e2e.test.ts`:
 
 ```
 src/system/modules/Composer/mcpTools/
   addMaterial.ts
-  addMaterial.test.ts          ← exercises addMaterialTool.execute end-to-end
   addMaterialShortcut.ts
-  addMaterialShortcut.test.ts
+  addMaterial.e2e.test.ts      ← covers BOTH addMaterialTool and addMaterialShortcutTool
 ```
+
+The suite uses one CDP connection, one workspace fixture, and one feature-level setup, then splits into two top-level `describe` blocks — `'<feature> via click (E2E)'` and `'<feature> via shortcut (E2E)'`. Shared helpers (cleanup, label-to-id mapping, etc.) live at module scope so both blocks reuse them.
+
+A feature with no shortcut variant still uses the `<feature>.e2e.test.ts` name with a single `describe` block.
 
 A tool test must:
 
 1. **Drive the real tool's `execute` function**, not re-implement the interaction. If the test types into the form by hand it is testing the form, not the tool.
 2. **Boot the renderer and connect Puppeteer** the same way the production server does — through `getPage()` against a running Electron instance with `--remote-debugging-port=9222`. No mocked DOM, no jsdom.
 3. **Assert observable outcomes**, not internal state. The same selectors the tool uses for its post-conditions are what the test should verify.
+4. **Keep the shortcut block keyboard-pure.** Inside the `'<feature> via shortcut (E2E)'` describe — including its `beforeEach`, helpers, and inline cleanup — every dependent MCP tool call must use the `<other>ShortcutTool` variant. Do not seed fixtures or clean up state by calling the click-variant `<other>Tool` (or by inlining its DOM clicks) from the shortcut block. A shortcut suite that arranges state via clicks silently exercises the click path too, so a regression in the keyboard contract can pass while the click path still works. Helpers shared between blocks must take the tool variant as an argument (or be split into `…Click` / `…Shortcut` pairs). Cross-feature setup with no shortcut equivalent (`switchRibbonTabTool`, `resetWorkspace`, etc.) and lightweight DOM waits (`waitForSelector`, existence probes) are exempt — the rule applies when both variants exist.
 
-The recommended layout is one test file per tool, each calling `tool.execute(input)` and asserting that the resulting UI state matches expectations. When click and shortcut variants exist, each gets its own file so the failures point at exactly one variant.
+The recommended layout is one E2E suite per feature (`<feature>.e2e.test.ts`), with two `describe` blocks pointing test failures at the click variant or the shortcut variant explicitly. Each `it` calls `tool.execute(input)` and asserts the resulting UI state.
 
 ```ts
-// src/system/modules/Composer/mcpTools/addMaterial.test.ts (sketch)
+// src/system/modules/Composer/mcpTools/addMaterial.e2e.test.ts (sketch)
 import { addMaterialTool } from './addMaterial';
-import { getPage } from '../../../../../electron/main/mcp/puppeteer';
+import { addMaterialShortcutTool } from './addMaterialShortcut';
 
-describe('addMaterial', () => {
+beforeAll(async () => { /* connect CDP, reset workspace, open fixture model */ });
+afterAll(async () => { /* disconnect, cleanup workspace */ });
+
+describe('addMaterial via click (E2E)', () => {
   it('adds a material node by id', async () => {
-    const page = await getPage();
-    // arrange: open a model viewport, etc.
     await addMaterialTool.execute({ label: 'Malha PV', type: 'malha', materialId: 1 });
-    // assert via the same selectors the tool waits on, plus a check that the node appears.
+    await page.waitForSelector('[data-testid="material-node"][data-label="Malha PV"]');
+  });
+});
+
+describe('addMaterial via shortcut (E2E)', () => {
+  it('adds a material node by id via the keyboard path', async () => {
+    await addMaterialShortcutTool.execute({ label: 'Malha PV', type: 'malha', materialId: 1 });
     await page.waitForSelector('[data-testid="material-node"][data-label="Malha PV"]');
   });
 });

@@ -97,14 +97,14 @@ describe('switchView (E2E)', () => {
 
   describe('switchViewShortcut tool', () => {
     it('switches to svg view via the "2" shortcut key', async () => {
-      await switchViewTool.execute({ view: 'graph' });
+      await switchViewShortcutTool.execute({ view: 'graph' });
       await waitForView('graph');
       await switchViewShortcutTool.execute({ view: 'svg' });
       await waitForView('svg');
     }, 20_000);
 
     it('switches to graph view via the "1" shortcut key', async () => {
-      await switchViewTool.execute({ view: 'svg' });
+      await switchViewShortcutTool.execute({ view: 'svg' });
       await waitForView('svg');
       await switchViewShortcutTool.execute({ view: 'graph' });
       await waitForView('graph');

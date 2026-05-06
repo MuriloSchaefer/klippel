@@ -11,7 +11,7 @@ This skill captures the conventions for the MCP server, its Puppeteer drivers, t
 
 - `electron/main/mcp/index.ts` is a bootstrapper. It must not contain per-tool zod schemas or DOM logic.
 - Each module exposes its tools through `mcpTools/index.ts` exporting `registerMcpTools(server)`. The root `McpServer` is constructed in `electron/main/mcp/index.ts` and handed to every module.
-- Tool tests live next to the tool: `mcpTools/<tool>.test.ts`. There is no top-level test harness for tools.
+- Tool tests live next to the tools as a per-feature E2E suite: `mcpTools/<feature>.e2e.test.ts`. **One file covers both the click and shortcut variants** of the feature, with one `describe` block per variant. There is no top-level test harness for tools.
 - The MCP SDK only allows one `McpServer` per stdio transport, so `registerMcpTools(server)` is the per-module "sub-server" — that function is the boundary.
 
 ## Paired tools: `<action>` + `<action>Shortcut`
@@ -54,6 +54,18 @@ If a helper would work for ten components without modification, it belongs in `e
 
 From [CLAUDE.md](../../../CLAUDE.md): every shortcut registered with `keyboardManager.functions.registerShortcuts` must be paired with a visible `ShortcutHint` (from `@kernel/modules/KeyboardShortcuts`) on the matching control. Use the wrapper form by default; render `ShortcutHint` manually only when wrapping breaks parent layout. **No hidden bindings.**
 
+## Shortcut tests compose with shortcut tools only
+
+Inside a `'<feature> via shortcut (E2E)'` describe block — including its setup, teardown, and any helper that runs there — every dependent MCP tool call must use the **shortcut** variant. Do not call `<action>Tool` (the click variant) for setup, fixture seeding, or cleanup inside the shortcut block, and do not reach into the DOM with click-equivalent `page.click(...)` / icon-button traversal as a substitute.
+
+**Why:** A shortcut suite that arranges state via the click variant is silently testing the click path too. If the shortcut tool's keyboard contract regresses but the click path still works, fixture seeding masks the failure. Keeping the shortcut block keyboard-pure means a green run actually proves the shortcut path works end to end.
+
+**How to apply:**
+- In the shortcut `describe`, prefer `<other>ShortcutTool.execute(...)` for all dependent tool calls (e.g. seed materials with `addMaterialShortcutTool`, delete with `deleteMaterialShortcutTool`, create models with `createModelShortcutTool`).
+- Helpers shared between the click and shortcut blocks must accept the tool variant as an argument (or be split into `…Click` / `…Shortcut` pairs) so each block stays on its own path.
+- Cross-feature setup that has no shortcut equivalent (e.g. `switchRibbonTabTool`, `resetWorkspace`) is fine in either block — the rule only applies when both variants exist.
+- Lightweight DOM waits/assertions (`waitForSelector`, `$(...)` existence probes) are not "tool calls" and remain allowed in either block.
+
 ## Test harness
 
 - `webapp/jest.globalSetup.ts` probes CDP on `KLIPPEL_CDP_PORT` (default 9222). If unreachable it spawns `yarn dev` (or `xvfb-run yarn dev` when `KLIPPEL_USE_XVFB=1`) and waits up to `KLIPPEL_STARTUP_TIMEOUT_MS` (default 90 s).
@@ -68,7 +80,7 @@ From [CLAUDE.md](../../../CLAUDE.md): every shortcut registered with `keyboardMa
 3. **Create both tool files** under the owning module's `mcpTools/`: `<action>.ts` (click variant, composes click drivers) and `<action>Shortcut.ts` (shortcut variant, composes shortcut drivers + tool-owned `Tab`s).
 4. **Register the shortcut** in the relevant component via `keyboardManager.functions.registerShortcuts` and wrap (or manually pair) the trigger control with `ShortcutHint`.
 5. **Wire the module's `mcpTools/index.ts`** so `registerMcpTools(server)` attaches both tools. Ensure `electron/main/mcp/index.ts` calls the module's registrar (one-line import + call only — no schemas there).
-6. **Write `<tool>.test.ts` and `<tool>Shortcut.test.ts`** next to the tools. Connect via CDP, mock `getPage`, call `execute`, assert the resulting DOM/store state. Skip on CDP unreachable.
+6. **Write `<feature>.e2e.test.ts`** next to the tools — one suite covers both variants. Connect via CDP and reset workspace once in `beforeAll`; expose two top-level `describe` blocks (`'<feature> via click (E2E)'` and `'<feature> via shortcut (E2E)'`) that mock `getPage`, call `execute`, and assert resulting DOM/store state. Use a single workspace fixture name (e.g. `e2e-<feature>`) shared by both blocks. Skip on CDP unreachable.
 7. **If the change is non-trivial,** record it via the `create-change-documents` skill in the affected module's `docs/changes/`.
 
 ## Pre-merge checklist
@@ -82,7 +94,8 @@ From [CLAUDE.md](../../../CLAUDE.md): every shortcut registered with `keyboardMa
 - [ ] Shortcut-variant tool is keyboard-only: triggers via `*.shortcut.puppeteer.ts`, types into focused inputs, uses tool-owned `Tab`s. No `*.click.puppeteer.ts` import.
 - [ ] Shortcut drivers' field helpers are `…FromFocused` and never `page.click` to recover focus.
 - [ ] The module's `mcpTools/index.ts` registers both variants on the passed-in server. `electron/main/mcp/index.ts` only imports the module registrar.
-- [ ] `<tool>.test.ts` exists next to the tool, drives `tool.execute` against the live dev app, and skips when CDP is unreachable.
+- [ ] `<feature>.e2e.test.ts` exists next to the tools with one `describe` block per variant (click + shortcut), drives each `tool.execute` against the live dev app, shares a single CDP connection and workspace fixture, and skips when CDP is unreachable.
+- [ ] The shortcut `describe` block (and any helper called from it) only invokes shortcut-variant tools for dependent MCP actions — no click-variant `<action>Tool` setup/cleanup, no inline DOM clicks substituting for one.
 
 ## Never run inline browser-evaluated callbacks inside tools
 
