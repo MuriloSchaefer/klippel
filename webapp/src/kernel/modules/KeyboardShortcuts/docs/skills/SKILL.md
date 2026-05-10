@@ -401,6 +401,29 @@ Follow this dot-separated pattern:
 - Make IDs searchable in codebase
 - Don't use dashes or underscores within ID (only dots)
 
+### CRUD binding convention (`a` / `e` / `d`)
+
+**Every list-style surface (Material, Graduation, Visualization, …) uses the same bare letters for create/update/delete:**
+
+| Action | Binding |
+|---|---|
+| Add a new item to the list | `a` |
+| Edit the focused item | `e` |
+| Delete the focused item | `d` |
+
+**Why:** muscle memory — once a user learns one list, every other list works the same. Diverging per-list (e.g. `r` for rename) is the inconsistency this rule eliminates.
+
+**How to apply:**
+
+- Each list registers its bindings under its **own dedicated context** (`${MODULE_NAME}/${ListName}`), e.g. `Composer/MaterialList`, `Composer/GraduationList`, `Composer/VisualizationList`. The dedicated context is non-negotiable: `a` / `e` / `d` will collide across lists if they share a parent context, so each list must own a `ShortcutProvider` whose `contextId` is active **only** while that list is mounted/focused.
+- Activate via the list's own `ShortcutProvider` — `a` / `e` / `d` only fire while the list is the active context, so the same letters can mean "add material" inside the material list and "add visualization" inside the visualization list without conflict.
+- `e` and `d` always operate on the **focused row** (resolved via `document.activeElement.closest('[data-testid="<list>-item"]')`); `a` always opens the list's add affordance.
+- Reorder, rename-distinct-from-edit, and other list-specific actions get their own letters (e.g. `w` / `s` for reorder) and must not shadow `a` / `e` / `d`.
+- New lists adopt this convention from day one. Existing lists that diverge (e.g. graduation's `g` / `r` / `d`) should be migrated as a follow-up, not left as an exception.
+- Each control still renders `ShortcutHint` per the no-shortcut-without-a-hint rule (CLAUDE.md).
+
+If a chord variant is needed (e.g. for a list-level "add many" affordance), use `Shift+A` / `Shift+E` / `Shift+D` — keep the letter consistent with the action.
+
 ### Key Combination Format
 
 **Rules**:

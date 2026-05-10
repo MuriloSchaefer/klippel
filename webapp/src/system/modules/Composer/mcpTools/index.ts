@@ -33,6 +33,12 @@ import { focusGraduationListTool } from './focusGraduationList';
 import { cycleGraduationFocusTool } from './cycleGraduationFocus';
 import { uploadVariationSVGTool } from './uploadVariationSVG';
 import { uploadVariationSVGShortcutTool } from './uploadVariationSVGShortcut';
+import { addVisualizationTool } from './addVisualization';
+import { addVisualizationShortcutTool } from './addVisualizationShortcut';
+import { editVisualizationTool } from './editVisualization';
+import { editVisualizationShortcutTool } from './editVisualizationShortcut';
+import { deleteVisualizationTool } from './deleteVisualization';
+import { deleteVisualizationShortcutTool } from './deleteVisualizationShortcut';
 
 const TOOLS = [
   openModelTool,
@@ -68,6 +74,12 @@ const TOOLS = [
   cycleGraduationFocusTool,
   uploadVariationSVGTool,
   uploadVariationSVGShortcutTool,
+  addVisualizationTool,
+  addVisualizationShortcutTool,
+  editVisualizationTool,
+  editVisualizationShortcutTool,
+  deleteVisualizationTool,
+  deleteVisualizationShortcutTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

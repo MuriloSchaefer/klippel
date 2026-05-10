@@ -304,6 +304,26 @@ Valid examples:
 - `Modal` - Active in modals only
 - `Editor` - Active in editor contexts
 
+### CRUD binding convention (`a` / `e` / `d`)
+
+Every list-style surface uses the same bare letters for create / update / delete:
+
+| Action | Binding |
+|---|---|
+| Add a new item | `a` |
+| Edit the focused item | `e` |
+| Delete the focused item | `d` |
+
+**Rules:**
+
+- Each list registers its bindings under its **own dedicated context** (`${MODULE_NAME}/${ListName}`, e.g. `Composer/MaterialList`, `Composer/VisualizationList`). Sharing a parent context will cause `a` / `e` / `d` to collide across lists.
+- `e` / `d` operate on the focused row; `a` opens the list's add affordance.
+- Reorder and other list-specific actions take other letters (e.g. `w` / `s`) and must not shadow `a` / `e` / `d`.
+- Chord variants follow the same letters (`Shift+A` / `Shift+E` / `Shift+D`) — keep the letter aligned with the action.
+- New lists adopt this from day one; non-conformant existing lists should be migrated.
+
+See [skills/SKILL.md → CRUD binding convention](./skills/SKILL.md#crud-binding-convention-aed) for the full rationale.
+
 ## Common Patterns
 
 ### Pattern: Toolbar Button with Shortcut

@@ -12,6 +12,7 @@ import {
   MODEL_SELECTION_MODAL_CONTEXT_ID,
   MATERIAL_LIST_CONTEXT_ID,
   GRADUATION_LIST_CONTEXT_ID,
+  VISUALIZATION_LIST_CONTEXT_ID,
   SVG_EMPTY_STATE_CONTEXT_ID,
   UPLOAD_SVG_SHORTCUT_ID,
 } from "./constants";
@@ -441,6 +442,139 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
         setTimeout(attempt, 0);
       },
       description: 'Move focused graduation up',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/VisualizationList/focus`,
+      key: 'Ctrl+Alt+v',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const accordion = document.querySelector(
+          '[role="accordion-Visualização"]'
+        ) as HTMLElement | null;
+        if (!accordion) return;
+        const summary = accordion.querySelector(
+          '[aria-controls="accordion-Visualização-content"]'
+        ) as HTMLElement | null;
+        if (!summary) return;
+
+        const isExpanded = () =>
+          summary.getAttribute('aria-expanded') === 'true';
+        const wasExpanded = isExpanded();
+        const rowFocusedInside = !!document.activeElement?.closest(
+          '[role="accordion-Visualização"] [data-testid="visualization-item"]'
+        );
+
+        if (wasExpanded && rowFocusedInside) {
+          summary.click();
+          return;
+        }
+
+        if (!wasExpanded) summary.click();
+
+        const findFirstRow = () =>
+          accordion.querySelector(
+            '[data-testid="visualization-item"]'
+          ) as HTMLElement | null;
+        const findAddBtn = () =>
+          accordion.querySelector(
+            '#composer-add-visualization'
+          ) as HTMLElement | null;
+        const findContent = () =>
+          accordion.querySelector(
+            '[data-accordion-content="Visualização"]'
+          ) as HTMLElement | null;
+
+        const start = Date.now();
+        const attempt = () => {
+          const first = findFirstRow();
+          if (first) {
+            first.focus();
+            if (document.activeElement === first) return;
+          } else {
+            const addBtn = findAddBtn();
+            if (addBtn) {
+              addBtn.focus();
+              if (document.activeElement === addBtn) return;
+            } else {
+              const content = findContent();
+              if (content) {
+                content.focus();
+                if (document.activeElement === content) return;
+              }
+            }
+          }
+          if (Date.now() - start < 1500) {
+            setTimeout(attempt, 50);
+          }
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Toggle / focus visualization list',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/VisualizationList/addVisualization`,
+      key: 'a',
+      contextId: VISUALIZATION_LIST_CONTEXT_ID,
+      action: () => {
+        document.getElementById('composer-add-visualization')?.click();
+      },
+      description: 'Add visualization',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/VisualizationItem/focusNext`,
+      key: 'ArrowDown',
+      contextId: VISUALIZATION_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="visualization-item"]');
+        if (!current) return;
+        const next = current.nextElementSibling as HTMLElement | null;
+        if (next?.matches('[data-testid="visualization-item"]')) {
+          next.focus();
+        }
+      },
+      description: 'Focus next visualization item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/VisualizationItem/focusPrev`,
+      key: 'ArrowUp',
+      contextId: VISUALIZATION_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="visualization-item"]');
+        if (!current) return;
+        const prev = current.previousElementSibling as HTMLElement | null;
+        if (prev?.matches('[data-testid="visualization-item"]')) {
+          prev.focus();
+        }
+      },
+      description: 'Focus previous visualization item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/VisualizationItem/editVisualization`,
+      key: 'e',
+      contextId: VISUALIZATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="visualization-item"]');
+        const btn = row?.querySelector('[data-testid="visualization-item-edit"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Edit focused visualization',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/VisualizationItem/deleteVisualization`,
+      key: 'd',
+      contextId: VISUALIZATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="visualization-item"]');
+        const btn = row?.querySelector('[data-testid="visualization-item-delete"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Remove focused visualization',
       enabled: true,
     },
     {

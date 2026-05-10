@@ -7,7 +7,11 @@ import { debounce } from "@kernel/utils";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { useEffect, useMemo, useState } from "react";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
-import { GRADUATION_LIST_CONTEXT_ID, MODULE_NAME } from "../../../../constants";
+import {
+  GRADUATION_LIST_CONTEXT_ID,
+  MODULE_NAME,
+  VISUALIZATION_LIST_CONTEXT_ID,
+} from "../../../../constants";
 import ElectiveListAccordion from "../../../viewports/ElectiveListAccordion";
 import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
 import VisualizationListAccordion from "../../VisualizationListAccordion";
@@ -109,16 +113,19 @@ export default function GarmentDetails({
           />
         </Accordion>
       </FocusShortcutProvider>
-      <Accordion
-        name="Visualização"
-        icon={undefined}
-        summary="Víncule materiais com objetos na arte."
-      >
-        <VisualizationListAccordion
-          variationId={variationId}
-          garmentId={selectedPart}
-        />
-      </Accordion>
+      <FocusShortcutProvider contextId={VISUALIZATION_LIST_CONTEXT_ID}>
+        <Accordion
+          name="Visualização"
+          icon={undefined}
+          shortcutHint={`${MODULE_NAME}/VisualizationList/focus`}
+          summary="Víncule materiais com objetos na arte."
+        >
+          <VisualizationListAccordion
+            variationId={variationId}
+            garmentId={selectedPart}
+          />
+        </Accordion>
+      </FocusShortcutProvider>
       <Accordion
         name="Eletivos da Peça"
         icon={undefined}
