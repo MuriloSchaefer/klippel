@@ -139,7 +139,7 @@ describe('addMaterial via click (E2E)', () => {
 
 describe('addMaterial via shortcut (E2E)', () => {
 
-  beforeEach(async () => {
+  afterEach(async () => {
     if (page) {
       await closeAllOpenContainers(page);
     }

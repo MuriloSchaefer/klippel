@@ -7,6 +7,7 @@ import { triggerFocusMaterialList } from '../components/viewports/MaterialListAc
 import { pickMaterialTypeFromFocused, toggleMaterialTypeOptionFromFocused } from '@system/modules/Materials/components/selectors/drivers/MaterialType.shortcut.puppeteer';
 import { pickMaterialByIdFromFocused, pickMaterialByPrincipalAndExtraFromFocused } from '@system/modules/Materials/components/selectors/drivers/Material.shortcut.puppeteer';
 import { confirmPointerPanelShortcut } from '@kernel/modules/Pointer/components/drivers/PointerContainer.shortcut.puppeteer';
+import { waitForClickable } from '@helpers/puppeteer/clickable';
 
 
 export const ADD_MATERIAL_SHORTCUT = 'a' as const;
@@ -36,6 +37,7 @@ export const addMaterialShortcutTool = {
     // 'a' is scoped to the MaterialList focus context; ensure focus lands
     // inside the accordion before pressing.
     await triggerFocusMaterialList(page);
+    await waitForClickable(page, "#composer-add-material");
     await page.keyboard.press(ADD_MATERIAL_SHORTCUT);
     await page.waitForSelector('[role="pointer-panel-content"] [data-testid="add-material-form"]');
 
