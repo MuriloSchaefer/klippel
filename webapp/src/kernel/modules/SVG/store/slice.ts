@@ -145,6 +145,7 @@ const slice = createSlice({
         return {
           ...state,
           svgs: {
+            ...state.svgs,
             [path]: newState,
           },
         };
@@ -155,6 +156,7 @@ const slice = createSlice({
       (state: SVGModuleState, { payload: { path } }) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             progress: "started",
@@ -193,6 +195,7 @@ const slice = createSlice({
       ) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             instances: {
@@ -214,6 +217,7 @@ const slice = createSlice({
       (state: SVGModuleState, { payload: { path, instanceName, zoom } }) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             instances: {
@@ -232,6 +236,7 @@ const slice = createSlice({
       (state: SVGModuleState, { payload: { path, instanceName, x, y } }) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             instances: {
@@ -253,6 +258,7 @@ const slice = createSlice({
       ) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             instances: {
@@ -279,6 +285,7 @@ const slice = createSlice({
       (state: SVGModuleState, { payload: { path, instanceName, id } }) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             instances: {
@@ -307,6 +314,7 @@ const slice = createSlice({
       ) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             instances: {
@@ -329,6 +337,7 @@ const slice = createSlice({
       ) => ({
         ...state,
         svgs: {
+          ...state.svgs,
           [path]: {
             ...state.svgs[path],
             instances: Object.entries(state.svgs[path].instances).reduce((acc, [name, inst])=> {

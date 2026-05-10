@@ -1,76 +1,20 @@
-import type { ISVGModule } from "@kernel/modules/SVG";
-import useModule from "@kernel/hooks/useModule";
-import useVariation from "../../../hooks/useVariation";
 import { useTheme, Box, Typography, Button } from "@mui/material";
-import DragAndDropSVG from "./assets/animated-drag-n-drop/DragAndDrop.svg";
-import React, { useRef, useCallback, useState, useMemo } from "react";
-import { uploadSVG } from "../../../../Composer/store/variations/actions";
+import React, { useRef, useCallback, useState } from "react";
+import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
-import { debounce } from "@kernel/utils";
-import { zoomIdentity, ZoomTransform } from "d3";
+import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import DragAndDropSVG from "../assets/animated-drag-n-drop/DragAndDrop.svg";
+import { uploadSVG } from "../../../../store/variations/actions";
+import {
+  SVG_EMPTY_STATE_CONTEXT_ID,
+  UPLOAD_SVG_SHORTCUT_ID,
+} from "../../../../constants";
 
-export function SVGModelViewport({
-  variationId,
-}: Readonly<{ variationId: string }>) {
-  const {
-    hooks: { useSVGEditor, useSVG },
-    d3Components: { Grid },
-  } = useModule<ISVGModule>("SVG");
+export const SVG_EMPTY_STATE_TESTID = "svg-empty-state";
+export const UPLOAD_SVG_BUTTON_TESTID = "upload-svg-button";
+export const UPLOAD_SVG_INPUT_TESTID = "upload-svg-input";
 
-  const variation = useVariation({ variationId });
-  const svg = useSVG(variation.state.svg!, variationId);
-  const editor = useSVGEditor({
-    svgPath: variation.state.svg!,
-    instanceName: variationId,
-    beforeInjection: (svg) => svg,
-  });
-
-  const debouncedSaveZoom = useMemo(
-    () => debounce((transform: ZoomTransform) => svg?.saveZoom(transform), 700),
-    [svg]
-  );
-
-  editor.container.underlays([
-    Grid({
-      xSettings: {
-        range: [-1, editor.width + 1],
-        domain: [-1, editor.width + 1],
-      },
-      ySettings: {
-        range: [-1, editor.height + 1],
-        domain: [-1, editor.height + 1],
-      },
-      dimensions: [editor.width, editor.height],
-    })
-      .transformZoom((root, zoomFunc) => {
-        if (
-          svg?.state.instance.zoom !== undefined &&
-          svg?.state.instance.pan !== undefined
-        ) {
-          zoomFunc.transform(root, 
-            zoomIdentity
-              .translate(svg.state.instance.pan[0], svg.state.instance.pan[1])
-              .scale(svg.state.instance.zoom)
-          );
-        } else {
-          zoomFunc.translateBy(root, editor.width / 2, editor.height / 2);
-        }
-      })
-      .onZoom(debouncedSaveZoom).build,
-  ]);
-
-  return (
-    <div
-      ref={editor.wrapperRef}
-      id="svg-editor-wrapper"
-      style={{ height: "100%", width: "100%", minWidth: 500 }}
-    >
-      <svg ref={editor.svgRef} id={`svg-editor`} width="100%" height="100%" />
-    </div>
-  );
-}
-
-export default function SVGView({
+export default function SVGEmptyState({
   variationId,
 }: Readonly<{ variationId: string }>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,9 +22,12 @@ export default function SVGView({
   const theme = useTheme();
 
   const storeModule = useModule<Store>("Store");
-  const variation = useVariation({ variationId });
-
   const dispatch = storeModule.hooks.useAppDispatch();
+
+  const keyboardShortcuts = useModule<IKeyboardShortcutsModule>(
+    "KeyboardShortcuts"
+  );
+  const { ShortcutProvider, ShortcutHint } = keyboardShortcuts.components;
 
   const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -92,19 +39,22 @@ export default function SVGView({
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    const files = e.dataTransfer.files;
-    if (!files || !files.length || files.length > 1)
-      throw new Error("Please upload a single SVG file.");
-    const file = files[0];
-    const blob = new Blob([file], { type: "image/svg+xml" });
-    blob
-      .text()
-      .then((svgContent) => dispatch(uploadSVG({ variationId, svgContent })));
-  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
+      const files = e.dataTransfer.files;
+      if (!files || !files.length || files.length > 1)
+        throw new Error("Please upload a single SVG file.");
+      const file = files[0];
+      const blob = new Blob([file], { type: "image/svg+xml" });
+      blob
+        .text()
+        .then((svgContent) => dispatch(uploadSVG({ variationId, svgContent })));
+    },
+    [dispatch, variationId]
+  );
 
   const handleButtonClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -121,12 +71,13 @@ export default function SVGView({
         .text()
         .then((svgContent) => dispatch(uploadSVG({ variationId, svgContent })));
     },
-    []
+    [dispatch, variationId]
   );
 
-  if (!variation.state.svg) {
-    return (
+  return (
+    <ShortcutProvider contextId={SVG_EMPTY_STATE_CONTEXT_ID}>
       <Box
+        data-testid={SVG_EMPTY_STATE_TESTID}
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -158,7 +109,6 @@ export default function SVGView({
                 height: 150,
                 display: "block",
                 margin: "0 auto",
-                // CSS palette variables for SVG
                 "--drop-area-bg":
                   theme.palette.mode === "dark"
                     ? theme.palette.grey[900]
@@ -184,19 +134,25 @@ export default function SVGView({
           Por favor arraste e solte um arquivo SVG ou faça upload através do
           botão.
         </Typography>
-        <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          Fazer upload de SVG
-        </Button>
+        <ShortcutHint shortcutId={UPLOAD_SVG_SHORTCUT_ID} placement="bottom-right">
+          <Button
+            data-testid={UPLOAD_SVG_BUTTON_TESTID}
+            variant="contained"
+            color="primary"
+            onClick={handleButtonClick}
+          >
+            Fazer upload de SVG
+          </Button>
+        </ShortcutHint>
         <input
           ref={fileInputRef}
+          data-testid={UPLOAD_SVG_INPUT_TESTID}
           type="file"
           accept="image/svg+xml"
           style={{ display: "none" }}
           onChange={handleFileChange}
         />
       </Box>
-    );
-  }
-
-  return <SVGModelViewport variationId={variationId} />;
+    </ShortcutProvider>
+  );
 }

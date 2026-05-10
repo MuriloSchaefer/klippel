@@ -42,6 +42,7 @@ const ModalContent = ({
   actions,
   handleClose,
   onInteract,
+  isFocused,
 }: {
   handleClose: (e: MouseEvent) => void;
   onInteract: () => void;
@@ -51,6 +52,7 @@ const ModalContent = ({
     y: number;
   };
   actions: React.ReactElement<PointerContainerActionProps>[];
+  isFocused: boolean;
 }) => {
   const { innerWidth: width, innerHeight: height } = window;
   const windowCenter = [width / 2, height / 2];
@@ -96,10 +98,12 @@ const ModalContent = ({
         transform: `translate(${quadrant % 2 === 0 ? "-100%" : "0"}, ${
           quadrant > 2 ? "-100%" : "0"
         })`,
-        transition: "width 1s ease-in-out",
+        transition: "width 1s ease-in-out, border-color 120ms ease-in-out, box-shadow 120ms ease-in-out",
         transformOrigin: "bottom right",
+        border: "2px solid",
+        borderColor: isFocused ? "primary.main" : "transparent",
       }}
-      elevation={6}
+      elevation={isFocused ? 12 : 6}
       onMouseDown={onInteract}
     >
       <Box
@@ -184,6 +188,7 @@ export const PointerContainer = ({
   onClose,
   onConfirm,
   actions,
+  skipRefocus = false,
   ...props
 }: {
   children: React.ReactElement;
@@ -191,6 +196,7 @@ export const PointerContainer = ({
   actions: React.ReactElement<PointerContainerActionProps>[];
   onClose?: (event: MouseEvent) => void;
   onConfirm?: () => void;
+  skipRefocus?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -203,6 +209,9 @@ export const PointerContainer = ({
   focusStackRef.current = focusStack;
 
   const instanceId = useRef(`pointer-container-${instanceCounter++}`);
+  const isFocused =
+    focusStack.length > 0 &&
+    focusStack[focusStack.length - 1] === instanceId.current;
   const onConfirmRef = useRef(onConfirm);
   onConfirmRef.current = onConfirm;
   const actionsRef = useRef(actions);
@@ -225,12 +234,12 @@ export const PointerContainer = ({
     if (isLast) dispatch(popContext());
     const toRestore = previousFocusRef.current;
     previousFocusRef.current = null;
-    if (toRestore && document.contains(toRestore)) {
+    if (!skipRefocus && toRestore && document.contains(toRestore)) {
       // Defer until after the modal has unmounted so focus isn't pulled back
       // into MUI's lingering focus traps.
       setTimeout(() => toRestore.focus(), 0);
     }
-  }, [dispatch]);
+  }, [dispatch, skipRefocus]);
 
   const handleClose = useCallback((e: MouseEvent) => {
     doClose();
@@ -303,6 +312,7 @@ export const PointerContainer = ({
             handleClose={handleClose}
             onInteract={handleInteract}
             actions={actions}
+            isFocused={isFocused}
             {...props}
           />
         ) : (

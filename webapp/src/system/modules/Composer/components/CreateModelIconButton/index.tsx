@@ -39,6 +39,7 @@ export const CreateModelIconButton = forwardRef<HTMLButtonElement>(
 
     return (
       <PointerContainer
+        skipRefocus
         component={
           <Box
             component={"form"}

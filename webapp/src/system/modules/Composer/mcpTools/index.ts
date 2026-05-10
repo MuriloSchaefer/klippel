@@ -31,6 +31,8 @@ import { reorderGraduationTool } from './reorderGraduation';
 import { reorderGraduationShortcutTool } from './reorderGraduationShortcut';
 import { focusGraduationListTool } from './focusGraduationList';
 import { cycleGraduationFocusTool } from './cycleGraduationFocus';
+import { uploadVariationSVGTool } from './uploadVariationSVG';
+import { uploadVariationSVGShortcutTool } from './uploadVariationSVGShortcut';
 
 const TOOLS = [
   openModelTool,
@@ -64,6 +66,8 @@ const TOOLS = [
   reorderGraduationShortcutTool,
   focusGraduationListTool,
   cycleGraduationFocusTool,
+  uploadVariationSVGTool,
+  uploadVariationSVGShortcutTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

@@ -12,6 +12,8 @@ import {
   MODEL_SELECTION_MODAL_CONTEXT_ID,
   MATERIAL_LIST_CONTEXT_ID,
   GRADUATION_LIST_CONTEXT_ID,
+  SVG_EMPTY_STATE_CONTEXT_ID,
+  UPLOAD_SVG_SHORTCUT_ID,
 } from "./constants";
 import slice from "./store/slice";
 import ModelViewport from "./components/viewports/ModelViewport";
@@ -439,6 +441,19 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
         setTimeout(attempt, 0);
       },
       description: 'Move focused graduation up',
+      enabled: true,
+    },
+    {
+      id: UPLOAD_SVG_SHORTCUT_ID,
+      key: 'u',
+      contextId: SVG_EMPTY_STATE_CONTEXT_ID,
+      action: () => {
+        const btn = document.querySelector(
+          '[data-testid="upload-svg-button"]'
+        ) as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Upload SVG to variation',
       enabled: true,
     },
     {

@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect } from 'react';
+import { useStore } from 'react-redux';
 import useModule from '@kernel/hooks/useModule';
 import { Store } from '@kernel/modules/Store';
 import { formatKeyEvent, shouldIgnoreKeyEvent } from '../utils';
 import { keyPressed, toggleShowHints } from '../store/actions';
 import { selectPressedKeys } from '../store';
+import { selectShortcutByKey, selectEnabled } from '../store/selectors';
 
 /**
  * KeyboardListener is a global component that captures all keyboard events
@@ -64,11 +66,22 @@ const preventPropagation = (event: KeyboardEvent) =>{
     }
 }
 
+const MODIFIER_ONLY_KEYS = new Set([
+  'Ctrl',
+  'Alt',
+  'Shift',
+  'Ctrl+Alt',
+  'Ctrl+Shift',
+  'Alt+Shift',
+  'Ctrl+Alt+Shift',
+]);
+
 const KeyboardListener: React.FC = () => {
   const storeModule = useModule<Store>('Store');
   const { useAppDispatch, useAppSelector } = storeModule.hooks;
   const dispatch = useAppDispatch();
   const pressedKeys = useAppSelector(selectPressedKeys)
+  const store = useStore();
   
   // Track if Alt was pressed alone (no other keys pressed while held)
 
@@ -81,17 +94,17 @@ const KeyboardListener: React.FC = () => {
 
       // Normalize the key event to a standard format
       const key = formatKeyEvent(event);
-      
+
       // Build keyParts for visual feedback
       let keyParts: string[] = [];
-      
+
       if (!key) {
         // For modifier-only presses, track which modifiers are held
         // This allows visual feedback even when no shortcut is triggered
         if (event.ctrlKey || event.metaKey) keyParts.push('Ctrl');
         if (event.altKey) keyParts.push('Alt');
         if (event.shiftKey) keyParts.push('Shift');
-        
+
         // If no modifiers at all, ignore this event
         if (keyParts.length === 0) {
           return;
@@ -99,6 +112,19 @@ const KeyboardListener: React.FC = () => {
       } else {
         // Split key into parts for visual feedback (e.g., "Alt+1" -> ["Alt", "1"])
         keyParts = key.split('+');
+      }
+
+      // If this keydown matches an enabled shortcut in the active context,
+      // cancel the browser default. Mirrors the gating in middleware.ts so we
+      // only suppress the default action for keys that will fire a shortcut.
+      // Without this, e.g. Enter that closes a modal would be re-fired as an
+      // implicit click on the trigger button MUI's Modal refocuses on close.
+      const matchKey = key || keyParts.join('+');
+      if (matchKey && !MODIFIER_ONLY_KEYS.has(matchKey)) {
+        const state = store.getState();
+        if (selectEnabled(state) && selectShortcutByKey(matchKey)(state)) {
+          event.preventDefault();
+        }
       }
       
       const currState = new Set(pressedKeys)
