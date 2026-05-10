@@ -3,7 +3,7 @@ import {
   clickOptionByDataValue,
   typeaheadAndCommit,
   waitForListboxClosed,
-} from '../../../../../../electron/main/mcp/helpers/listbox';
+} from '@helpers/puppeteer/listbox';
 
 /**
  * Pick a material by its visible principal/extra labels. Assumes focus is on the

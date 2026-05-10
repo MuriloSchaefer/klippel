@@ -58,7 +58,8 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "./*"),
       "@kernel": resolve(__dirname, "./kernel"),
-      "@system": resolve(__dirname, "./system")
+      "@system": resolve(__dirname, "./system"),
+      "@helpers": resolve(__dirname, "./helpers")
     }
   },
   optimizeDeps: {

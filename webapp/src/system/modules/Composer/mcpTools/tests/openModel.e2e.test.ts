@@ -3,7 +3,7 @@
  * Skips when CDP is unreachable.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
-import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
+import { cleanupWorkspace, resetWorkspace } from '../../../../../helpers/puppeteer/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -11,73 +11,66 @@ const CDP_URL = `http://localhost:${CDP_PORT}`;
 let browser: Browser | null = null;
 let page: Page | null = null;
 
-jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
+jest.mock('../../../../../../electron/main/mcp/puppeteer', () => ({
   getPage: () => {
     if (!page) throw new Error(`Klippel dev app not reachable at ${CDP_URL}.`);
     return page;
   },
 }));
 
-import { createModelTool } from './createModel';
-import { createModelShortcutTool } from './createModelShortcut';
-import { openModelTool } from './openModel';
-import { openModelShortcutTool } from './openModelShortcut';
-import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
+import { createModelTool } from '../createModel';
+import { createModelShortcutTool } from '../createModelShortcut';
+import { openModelTool } from '../openModel';
+import { openModelShortcutTool } from '../openModelShortcut';
+import { switchRibbonTabTool } from '../../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
 const waitForFormClosed = async (p: Page) => {
-  await p.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"] #name'),
-    { timeout: 10_000 },
-  );
+  await p.waitForSelector('[role="pointer-panel-content"] #name', {
+    hidden: true,
+    timeout: 10_000,
+  });
 };
 
 const closeOpenModelModal = async (p: Page) => {
   await p.keyboard.press('Escape');
   await p
-    .waitForFunction(
-      () => !document.querySelector('[role="list-options"]'),
-      { timeout: 5_000 },
-    )
+    .waitForSelector('[role="list-options"]', { hidden: true, timeout: 5_000 })
     .catch(() => {});
 };
 
 const closeAllOpenContainers = async (p: Page) => {
+  // Modal is keepMounted, so [role="pointer-panel"] always exists; rely on
+  // [role="pointer-panel-content"] / list-options as the open signal.
   for (let i = 0; i < 5; i++) {
-    const hasOpen = await p.evaluate(
-      () =>
-        Boolean(
-          document.querySelector('[role="pointer-panel"]') ||
-            document.querySelector('[role="pointer-panel-content"]') ||
-            document.querySelector('[role="list-options"]'),
-        ),
-    );
+    const hasOpen = (await p.$('[role="pointer-panel-content"]')) ||
+      (await p.$('[role="list-options"]'));
     if (!hasOpen) return;
     await p.keyboard.press('Escape');
     await p
-      .waitForFunction(
-        () =>
-          !document.querySelector('[role="pointer-panel"]') &&
-          !document.querySelector('[role="pointer-panel-content"]') &&
-          !document.querySelector('[role="list-options"]'),
-        { timeout: 500 },
-      )
+      .waitForSelector('[role="pointer-panel-content"]', { hidden: true, timeout: 500 })
+      .catch(() => {});
+    await p
+      .waitForSelector('[role="list-options"]', { hidden: true, timeout: 500 })
       .catch(() => {});
   }
 };
 
 const expectSelectedTab = async (p: Page, name: string) => {
-  await p.waitForFunction(
-    (target: string) => {
-      const tab = document.querySelector(
-        '[role="viewport-tabs"] [aria-selected="true"]',
-      );
-      return Boolean(tab && tab.textContent?.includes(target));
-    },
-    { timeout: 10_000 },
-    name,
-  );
+  // Poll the selected tab's text content; can't be expressed as a single
+  // selector since we need substring-match against textContent.
+  const start = Date.now();
+  while (Date.now() - start < 10_000) {
+    const found = await p.$$eval(
+      '[role="viewport-tabs"] [aria-selected="true"]',
+      (els, target) => els.some((e) => (e.textContent ?? '').includes(target)),
+      name,
+    );
+    if (found) return;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  throw new Error(`expectSelectedTab: tab containing "${name}" not selected within 10s`);
 };
 
 beforeAll(async () => {
@@ -85,9 +78,8 @@ beforeAll(async () => {
   const pages = await browser.pages();
   page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
   if (!page) throw new Error('No renderer page found in Electron');
-  await resetWorkspace(page, 'e2e-openModel', 'empty');
-  await page.waitForFunction(() => document.readyState === 'complete', { timeout: 20_000 });
-  await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
+  await resetWorkspace(page, 'e2e-openModel');
+  await page.waitForSelector('#ribbon-menu-tabs', { timeout: 20_000 });
   await switchRibbonTabTool.execute({ label: 'Compositor' });
   await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
 }, 30_000);

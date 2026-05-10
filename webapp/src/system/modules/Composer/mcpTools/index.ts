@@ -21,6 +21,16 @@ import { openGarmentDetailsTool } from './openGarmentDetails';
 import { openGarmentDetailsShortcutTool } from './openGarmentDetailsShortcut';
 import { renameGarmentTool } from './renameGarment';
 import { renameGarmentShortcutTool } from './renameGarmentShortcut';
+import { addGraduationsTool } from './addGraduations';
+import { addGraduationsShortcutTool } from './addGraduationsShortcut';
+import { editGraduationTool } from './editGraduation';
+import { editGraduationShortcutTool } from './editGraduationShortcut';
+import { deleteGraduationTool } from './deleteGraduation';
+import { deleteGraduationShortcutTool } from './deleteGraduationShortcut';
+import { reorderGraduationTool } from './reorderGraduation';
+import { reorderGraduationShortcutTool } from './reorderGraduationShortcut';
+import { focusGraduationListTool } from './focusGraduationList';
+import { cycleGraduationFocusTool } from './cycleGraduationFocus';
 
 const TOOLS = [
   openModelTool,
@@ -44,6 +54,16 @@ const TOOLS = [
   openGarmentDetailsShortcutTool,
   renameGarmentTool,
   renameGarmentShortcutTool,
+  addGraduationsTool,
+  addGraduationsShortcutTool,
+  editGraduationTool,
+  editGraduationShortcutTool,
+  deleteGraduationTool,
+  deleteGraduationShortcutTool,
+  reorderGraduationTool,
+  reorderGraduationShortcutTool,
+  focusGraduationListTool,
+  cycleGraduationFocusTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

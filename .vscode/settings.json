@@ -5,5 +5,10 @@
     },
     "github-actions.workflows.pinned.workflows": [
         ".github/workflows/bump-version.yaml"
-    ]
+    ],
+    "jest.rootPath": "webapp",
+    "jest.nodeEnv": {
+        "ENV_NAME": "benchmark",
+        "BASE_WORKSPACE": "empty"
+    }
 }

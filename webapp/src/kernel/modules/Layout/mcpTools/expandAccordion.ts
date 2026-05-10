@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { ensureSettingsPanelExpanded } from '../components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../components/Panels/Accordion.click.puppeteer';
+import { ensureSettingsPanelExpanded } from '../components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '../components/Panels/drivers/Accordion.click.puppeteer';
 
 export const expandAccordionTool = {
   name: 'expandAccordion',

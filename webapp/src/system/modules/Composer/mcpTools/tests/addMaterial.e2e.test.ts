@@ -10,7 +10,7 @@
  * harness — and must drive the tools themselves, not re-implement the form flow.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
-import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
+import { cleanupWorkspace, resetWorkspace } from '@helpers/puppeteer/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -18,56 +18,44 @@ const CDP_URL = `http://localhost:${CDP_PORT}`;
 let browser: Browser | null = null;
 let page: Page | null = null;
 
-jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
+jest.mock('../../../../../../electron/main/mcp/puppeteer', () => ({
   getPage: () => {
     if (!page) throw new Error(`Klippel dev app not reachable at ${CDP_URL}. Start it with \`yarn dev\`.`);
     return page;
   },
 }));
 
-import { addMaterialTool } from './addMaterial';
-import { addMaterialShortcutTool } from './addMaterialShortcut';
-import { deleteMaterialTool } from './deleteMaterial';
-import { deleteMaterialShortcutTool } from './deleteMaterialShortcut';
-import { createModelTool } from './createModel';
-import { openModelTool } from './openModel';
-import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
+import { addMaterialTool } from '../addMaterial';
+import { addMaterialShortcutTool } from '../addMaterialShortcut';
+import { deleteMaterialTool } from '../deleteMaterial';
+import { deleteMaterialShortcutTool } from '../deleteMaterialShortcut';
+import { createModelTool } from '../createModel';
+import { openModelTool } from '../openModel';
+import { switchRibbonTabTool } from '../../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
 const labelToNodeId = (label: string) => label.toLowerCase().replace(/\s+/g, '-');
 
 const waitForFormClosed = async (p: Page) => {
-  await p.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"] #name'),
-    { timeout: 10_000 },
-  );
+  await p.waitForSelector('[role="pointer-panel-content"] #name', {
+    hidden: true,
+    timeout: 10_000,
+  });
 };
 
 const closeAllOpenContainers = async (p: Page) => {
+  // Modal is keepMounted, so [role="pointer-panel"] always exists; rely on
+  // [role="pointer-panel-content"] / listbox presence as the open signal.
   for (let i = 0; i < 5; i++) {
-    const hasOpen = await p.evaluate(
-      () =>
-        Boolean(
-          document.querySelector('[role="pointer-panel"]') ||
-            document.querySelector('[role="pointer-panel-content"]') ||
-            document.querySelector('[role="list-options"]') ||
-            document.querySelector('ul[role="listbox"]'),
-        ),
-    );
+    const hasOpen = (await p.$('[role="pointer-panel-content"]')) ||
+      (await p.$('ul[role="listbox"]'));
     if (!hasOpen) return;
     await p.keyboard.press('Escape');
     await p
-      .waitForFunction(
-        () =>
-          !document.querySelector('[role="pointer-panel"]') &&
-          !document.querySelector('[role="pointer-panel-content"]') &&
-          !document.querySelector('[role="list-options"]') &&
-          !document.querySelector('ul[role="listbox"]'),
-        { timeout: 500 },
-      )
+      .waitForSelector('[role="pointer-panel-content"]', { hidden: true, timeout: 500 })
       .catch(() => {});
   }
 };
@@ -83,7 +71,7 @@ const deleteMaterialIfExists = async (
   const exists = await page.$(`li[id="${nodeId}"]`);
   if (!exists) return;
   await tool.execute({ label });
-  await page.waitForFunction((id: string) => !document.getElementById(id), { timeout: 5_000 }, nodeId);
+  await page.waitForSelector(`li[id="${nodeId}"]`, { hidden: true, timeout: 5_000 });
 };
 
 beforeAll(async () => {
@@ -91,7 +79,7 @@ beforeAll(async () => {
   const pages = await browser.pages();
   page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
   if (!page) throw new Error('No renderer page found in Electron');
-  await resetWorkspace(page, 'e2e-addMaterial', 'empty');
+  await resetWorkspace(page, 'e2e-addMaterial');
 
   await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
   await switchRibbonTabTool.execute({ label: 'Compositor' });

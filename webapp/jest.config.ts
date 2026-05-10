@@ -24,7 +24,8 @@ export default async (): Promise<Config> => {
     extensionsToTreatAsEsm: ['.ts'],
     moduleNameMapper: {
         '@kernel(.*)$': '<rootDir>/src/kernel/$1',
-        '@system(.*)$': '<rootDir>/src/kernel/$1',
+        '@system(.*)$': '<rootDir>/src/system/$1',
+        '@helpers(.*)$': '<rootDir>/src/helpers/$1',
         '^(\\.{1,2}/.*)\\.js$': '$1',
     },
     coverageThreshold: {
@@ -41,6 +42,7 @@ export default async (): Promise<Config> => {
         '/node_modules/',
         '\\.puppeteer\\.ts$',
         '/electron/main/mcp/',
+        '/src/helpers/puppeteer/',
     ],
     globals: {
        // environment variables available during testing 

@@ -1,11 +1,8 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import {
-  getFocusedMaterialLabel,
-  triggerFocusNextMaterial,
-  triggerFocusPrevMaterial,
-} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
+import { getFocusedMaterialLabel, triggerFocusNextMaterial, triggerFocusPrevMaterial } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.shortcut.puppeteer';
+
 
 type CycleMaterialFocusInput = {
   direction: 'next' | 'prev';

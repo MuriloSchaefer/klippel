@@ -105,8 +105,22 @@ const keyboardShortcutsSlice = createSlice({
       state.contextStack.push(contextId);
     });
     
-    // Pop a context from the stack
-    builder.addCase(popContext, (state) => {
+    // Pop a context from the stack. With a contextId, removes the most
+    // recent occurrence (top-down). Without one, pops the top.
+    builder.addCase(popContext, (state, action) => {
+      const { contextId } = action.payload;
+      if (contextId) {
+        for (let i = state.contextStack.length - 1; i >= 1; i--) {
+          if (state.contextStack[i] === contextId) {
+            state.contextStack.splice(i, 1);
+            return;
+          }
+        }
+        console.warn(
+          `[KeyboardShortcuts] Context ${contextId} not found on stack to pop`
+        );
+        return;
+      }
       if (state.contextStack.length > 1) {
         state.contextStack.pop();
       } else {

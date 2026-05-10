@@ -207,6 +207,7 @@ export const PointerContainer = ({
   onConfirmRef.current = onConfirm;
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const { innerWidth: width, innerHeight: height } = window;
   const windowCenter = [width / 2, height / 2];
@@ -222,6 +223,13 @@ export const PointerContainer = ({
     getContainerHandlerMap().delete(instanceId.current);
     dispatch(popContainer(instanceId.current));
     if (isLast) dispatch(popContext());
+    const toRestore = previousFocusRef.current;
+    previousFocusRef.current = null;
+    if (toRestore && document.contains(toRestore)) {
+      // Defer until after the modal has unmounted so focus isn't pulled back
+      // into MUI's lingering focus traps.
+      setTimeout(() => toRestore.focus(), 0);
+    }
   }, [dispatch]);
 
   const handleClose = useCallback((e: MouseEvent) => {
@@ -233,6 +241,9 @@ export const PointerContainer = ({
   const handleOpen = useCallback((e: MouseEvent) => {
     const isFirst = focusStackRef.current.length === 0;
     const target = e.currentTarget as HTMLElement | null;
+    const active = document.activeElement as HTMLElement | null;
+    previousFocusRef.current =
+      active && active !== document.body ? active : target;
     const isKeyboardClick =
       e.detail === 0 || (e.clientX === 0 && e.clientY === 0);
     if (isKeyboardClick && target) {

@@ -1,5 +1,5 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { clickViewportTabByIndex } from '../components/ViewportManager/ViewportTabs.click.puppeteer';
+import { clickViewportTabByIndex } from '../components/ViewportManager/drivers/ViewportTabs.click.puppeteer';
 
 export const switchViewportTool = {
   name: 'switchViewport',

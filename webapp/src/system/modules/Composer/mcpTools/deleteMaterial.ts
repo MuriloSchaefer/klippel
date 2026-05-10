@@ -1,13 +1,10 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
-import {
-  clickDeleteMaterial,
-  waitForMaterialItem,
-  waitForMaterialItemRemoved,
-} from '../components/viewports/MaterialListAccordion/components/MaterialItem.click.puppeteer';
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
+import { clickDeleteMaterial, waitForMaterialItem, waitForMaterialItemRemoved } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.click.puppeteer';
+
 
 type DeleteMaterialInput = { label: string };
 

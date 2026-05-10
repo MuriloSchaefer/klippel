@@ -3,7 +3,7 @@ import MaterialListAccordion from "../MaterialListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import { MODULE_NAME } from "../../../constants";
+import { MATERIAL_LIST_CONTEXT_ID, MODULE_NAME } from "../../../constants";
 import SaveSharpIcon from "@mui/icons-material/SaveSharp";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import CompositionTree from "../CompositionTree/CompositionTree";
@@ -24,7 +24,7 @@ function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const svgModule = useModule<ISVGModule>("SVG");
   const keyboardShortcuts = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
-  const { ShortcutProvider, ShortcutHint } = keyboardShortcuts.components;
+  const { ShortcutProvider, FocusShortcutProvider, ShortcutHint } = keyboardShortcuts.components;
   const { ViewportNotificationsTray, SettingsPanel, Accordion, DetailsPanel } =
     layoutModule.components;
 
@@ -75,18 +75,16 @@ function ModelViewport() {
           >
             <CompositionTree variationId={activeVP.extra.variationId} />
           </Accordion>
-          <ShortcutHint
-            shortcutId={`${MODULE_NAME}/MaterialList/focus`}
-            placement="top-right"
-          >
-            <Accordion
-              name="Materiais"
-              icon={<WidgetsSharpIcon />}
-              summary="Materiais referenciados na composição"
-            >
-              <MaterialListAccordion variationId={activeVP.extra.variationId} />
-            </Accordion>
-          </ShortcutHint>
+            <FocusShortcutProvider contextId={MATERIAL_LIST_CONTEXT_ID}>
+              <Accordion
+              shortcutHint={`${MODULE_NAME}/MaterialList/focus`}
+                name="Materiais"
+                icon={<WidgetsSharpIcon />}
+                summary="Materiais referenciados na composição"
+              >
+                <MaterialListAccordion variationId={activeVP.extra.variationId} />
+              </Accordion>
+            </FocusShortcutProvider>
           <Accordion
             name="Tempo"
             icon={<AccessTimeSharpIcon />}

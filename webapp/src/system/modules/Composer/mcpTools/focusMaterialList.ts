@@ -1,9 +1,6 @@
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import {
-  getFocusedMaterialListTarget,
-  triggerFocusMaterialList,
-} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
+import { getFocusedMaterialListTarget, triggerFocusMaterialList } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.shortcut.puppeteer';
 
 export const focusMaterialListTool = {
   name: 'focusMaterialList',

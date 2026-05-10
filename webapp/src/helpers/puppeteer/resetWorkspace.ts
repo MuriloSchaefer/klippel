@@ -13,7 +13,7 @@ const STORE_STATE_FILE = join(SESSION_DIR, 'Store', 'state.json');
 export const resetWorkspace = async (
   page: Page,
   target: string,
-  base?: string,
+  base: string | undefined = process.env.BASE_WORKSPACE,
 ) => {
   const targetDir = join(WORKSPACES_DIR, target);
   if (existsSync(targetDir)) {

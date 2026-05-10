@@ -1,9 +1,6 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import {
-  clickModelOptionByName,
-  waitForConfirmModelSelectionEnabled,
-  waitForModalClosed,
-} from './openModel.puppeteer';
+import { clickModelOptionByName, waitForConfirmModelSelectionEnabled, waitForModalClosed } from '../components/OpenModelIconButton/drivers/openModel.puppeteer';
+
 
 export const OPEN_MODEL_SHORTCUT = 'w' as const;
 

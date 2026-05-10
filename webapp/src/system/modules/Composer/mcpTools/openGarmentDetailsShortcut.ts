@@ -1,5 +1,5 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { triggerOpenGarmentDetails } from '../components/viewports/ModelViewport/DetailPanel/GarmentDetails.shortcut.puppeteer';
+import { triggerOpenGarmentDetails } from '../components/viewports/ModelViewport/DetailPanel/drivers/GarmentDetails.shortcut.puppeteer';
 
 export const openGarmentDetailsShortcutTool = {
   name: 'openGarmentDetailsShortcut',

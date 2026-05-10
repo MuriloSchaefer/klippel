@@ -1,19 +1,15 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
-import {
-  focusMaterialItem,
-  triggerEditMaterialFromFocused,
-} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
-import { waitForMaterialItem } from '../components/viewports/MaterialListAccordion/components/MaterialItem.click.puppeteer';
-import { confirmEditMaterialFromFocused } from '../components/viewports/MaterialListAccordion/components/EditMaterial.shortcut.puppeteer';
-import { pickMaterialTypeFromFocused } from '../../../../system/modules/Materials/components/selectors/MaterialType.shortcut.puppeteer';
-import {
-  pickMaterialByIdFromFocused,
-  pickMaterialByPrincipalAndExtraFromFocused,
-} from '../../../../system/modules/Materials/components/selectors/Material.shortcut.puppeteer';
+
+
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
+import { waitForMaterialItem } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.click.puppeteer';
+import { focusMaterialItem, triggerEditMaterialFromFocused } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.shortcut.puppeteer';
+import { pickMaterialTypeFromFocused } from '@system/modules/Materials/components/selectors/drivers/MaterialType.shortcut.puppeteer';
+import { pickMaterialByIdFromFocused, pickMaterialByPrincipalAndExtraFromFocused } from '@system/modules/Materials/components/selectors/drivers/Material.shortcut.puppeteer';
+import { confirmEditMaterialFromFocused } from '../components/viewports/MaterialListAccordion/components/drivers/EditMaterial.shortcut.puppeteer';
 
 type EditMaterialShortcutInput =
   | { label: string; type?: string; material: string; extra?: string; materialId?: never }

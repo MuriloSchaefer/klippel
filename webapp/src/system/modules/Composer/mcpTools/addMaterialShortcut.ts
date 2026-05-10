@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
-import { confirmPointerPanelShortcut } from '../../../../kernel/modules/Pointer/components/PointerContainer.shortcut.puppeteer';
-import {
-  pickMaterialTypeFromFocused,
-  toggleMaterialTypeOptionFromFocused,
-} from '../../../../system/modules/Materials/components/selectors/MaterialType.shortcut.puppeteer';
-import {
-  pickMaterialByIdFromFocused,
-  pickMaterialByPrincipalAndExtraFromFocused,
-} from '../../../../system/modules/Materials/components/selectors/Material.shortcut.puppeteer';
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
+import { triggerFocusMaterialList } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.shortcut.puppeteer';
+import { pickMaterialTypeFromFocused, toggleMaterialTypeOptionFromFocused } from '@system/modules/Materials/components/selectors/drivers/MaterialType.shortcut.puppeteer';
+import { pickMaterialByIdFromFocused, pickMaterialByPrincipalAndExtraFromFocused } from '@system/modules/Materials/components/selectors/drivers/Material.shortcut.puppeteer';
+import { confirmPointerPanelShortcut } from '@kernel/modules/Pointer/components/drivers/PointerContainer.shortcut.puppeteer';
+
 
 export const ADD_MATERIAL_SHORTCUT = 'a' as const;
 
@@ -37,6 +33,9 @@ export const addMaterialShortcutTool = {
     await ensureSettingsPanelExpanded(page);
     await expandAccordion(page, 'Materiais');
 
+    // 'a' is scoped to the MaterialList focus context; ensure focus lands
+    // inside the accordion before pressing.
+    await triggerFocusMaterialList(page);
     await page.keyboard.press(ADD_MATERIAL_SHORTCUT);
     await page.waitForSelector('[role="pointer-panel-content"] [data-testid="add-material-form"]');
 

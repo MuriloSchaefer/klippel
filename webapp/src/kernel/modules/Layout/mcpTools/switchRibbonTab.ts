@@ -1,5 +1,5 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { clickRibbonTab } from './switchRibbonTab.puppeteer';
+import { clickRibbonTab } from './drivers/switchRibbonTab.puppeteer';
 
 export const switchRibbonTabTool = {
   name: 'switchRibbonTab',

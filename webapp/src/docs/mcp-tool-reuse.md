@@ -10,7 +10,7 @@ The fix: **co-locate a puppeteer driver next to the component it drives**, and h
 
 ## The rule
 
-> If a component has a non-trivial interaction surface (open/select/confirm, multi-step), it ships **two** drivers next to its `.tsx` file: a `<Component>.click.puppeteer.ts` (UI clicks) and a `<Component>.shortcut.puppeteer.ts` (keyboard shortcuts). MCP tools compose drivers; they do not re-implement DOM walks or guess key combos.
+> If a component has a non-trivial interaction surface (open/select/confirm, multi-step), it ships **two** drivers in a `drivers/` subfolder next to its `.tsx` file: a `drivers/<Component>.click.puppeteer.ts` (UI clicks) and a `drivers/<Component>.shortcut.puppeteer.ts` (keyboard shortcuts). MCP tools compose drivers; they do not re-implement DOM walks or guess key combos. Tool-owned drivers (composing widget drivers + orchestration) live in `mcpTools/drivers/`. E2E tests live in `mcpTools/tests/`.
 
 "Non-trivial" means anything beyond a single `page.click(selector)`. A bare `<Button id="...">` does not need a driver — a tool can click it directly. A `MaterialSelector` (combobox + portal listbox + async options) does.
 
@@ -30,28 +30,33 @@ Two layers, mirroring how the rest of the codebase is organised:
 src/
   system/modules/Materials/components/selectors/
     Material.tsx                          ← React component
-    Material.click.puppeteer.ts           ← click driver: openSelector, pickMaterial, …
-    Material.shortcut.puppeteer.ts        ← shortcut driver: focusAndOpenSelector, …
     MaterialType.tsx
-    MaterialType.click.puppeteer.ts
-    MaterialType.shortcut.puppeteer.ts
+    drivers/
+      Material.click.puppeteer.ts         ← click driver: openSelector, pickMaterial, …
+      Material.shortcut.puppeteer.ts      ← shortcut driver: focusAndOpenSelector, …
+      MaterialType.click.puppeteer.ts
+      MaterialType.shortcut.puppeteer.ts
 
   kernel/modules/Pointer/components/
     PointerContainer.tsx
-    PointerContainer.click.puppeteer.ts   ← openPanel, confirm, close (clicks)
-    PointerContainer.shortcut.puppeteer.ts ← confirmShortcut (Ctrl+Enter), closeShortcut (Esc), …
+    drivers/
+      PointerContainer.click.puppeteer.ts    ← openPanel, confirm, close (clicks)
+      PointerContainer.shortcut.puppeteer.ts ← confirmShortcut (Ctrl+Enter), closeShortcut (Esc), …
 
   system/modules/Composer/mcpTools/
     addMaterial.ts                        ← composes the *click* drivers
     addMaterialShortcut.ts                ← composes the *shortcut* drivers
+    drivers/                              ← tool-owned drivers, if any
+    tests/
+      addMaterial.e2e.test.ts             ← covers both variants
 ```
 
 A component is allowed to ship only the click driver if it has no shortcut surface (e.g. a label `TextField`). It must never ship only the shortcut driver — every shortcut also has a visible control (see [CLAUDE.md](../../../CLAUDE.md) on `ShortcutHint`).
 
 Rationale:
 
-- **Co-location** — the driver and the component change together. When you alter the DOM (`data-testid`, `role`, structure), the matching `.puppeteer.ts` is right there.
-- **Discoverability** — `grep -r .puppeteer.ts` lists every reusable driver. No central registry to keep in sync.
+- **Co-location** — the driver and the component change together via the sibling `drivers/` folder. When you alter the DOM (`data-testid`, `role`, structure), the matching `.puppeteer.ts` is right next door.
+- **Discoverability** — `grep -r .puppeteer.ts` lists every reusable driver, and every `drivers/` folder visibly groups them. No central registry to keep in sync.
 - **No renderer imports inside drivers** — the driver only takes a `Page` and selectors/strings. It does not import the React component, Redux, or `window.electron.*`. The constraints from [mcp-server.md](./mcp-server.md#constraints) still apply.
 - **`mcpTools/` files stay thin** — each one is a recipe of driver calls plus the tool's `name`/`description`/`inputSchema`. They do not contain DOM-walking helpers.
 
@@ -121,7 +126,7 @@ electron/main/mcp/helpers/
   pointer-panel.ts  ← any PointerContainer-driven panel
 ```
 
-Rule of thumb: if the helper would work for ten different components without modification, it belongs under `electron/main/mcp/helpers/`. Otherwise it belongs in the component's `.puppeteer.ts`.
+Rule of thumb: if the helper would work for ten different components without modification, it belongs under `electron/main/mcp/helpers/`. Otherwise it belongs in the component's `drivers/*.puppeteer.ts`.
 
 ## Composing a tool
 
@@ -407,8 +412,8 @@ Do this opportunistically — when you write a new tool that would copy logic fr
 
 ## Checklist before merging a new MCP tool
 
-- [ ] Each non-trivial widget the tool touches has a `.click.puppeteer.ts` driver next to its component.
-- [ ] If the widget has a shortcut surface, it also has a `.shortcut.puppeteer.ts` driver exporting the binding constant and a `trigger…` function with a post-condition `waitForSelector`.
+- [ ] Each non-trivial widget the tool touches has a `drivers/*.click.puppeteer.ts` driver in a `drivers/` subfolder next to its component.
+- [ ] If the widget has a shortcut surface, it also has a `drivers/*.shortcut.puppeteer.ts` driver exporting the binding constant and a `trigger…` function with a post-condition `waitForSelector`.
 - [ ] The tool file contains no `page.evaluate` / DOM traversal and no hard-coded key combos — only driver calls and direct `page.click`/`page.type` on stable selectors owned by the tool itself.
 - [ ] Selectors used by click drivers are `data-testid`, `role`, or `aria-label` — never CSS class names or DOM order.
 - [ ] Drivers do not call `getPage()` or import from `electron/main/*` (other than helpers).

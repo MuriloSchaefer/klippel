@@ -11,6 +11,11 @@
         "CDP_PORT": "9222"
       }
     },
+    "mui-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@mui/mcp@latest"]
+    },
     "electron-devtools": {
       "command": "npx",
       "args": [

@@ -1,8 +1,6 @@
+import { pickOptionFromOpenListbox, waitForListboxClosed } from '@helpers/puppeteer/listbox';
 import type { Page } from 'puppeteer-core';
-import {
-  pickOptionFromOpenListbox,
-  waitForListboxClosed,
-} from '../../../../../../electron/main/mcp/helpers/listbox';
+
 
 export const pickMaterialTypeFromFocused = async (page: Page, name: string) => {
   // Autocomplete: open the listbox via ArrowDown, type to filter, then click the

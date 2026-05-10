@@ -1,5 +1,5 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { fillCreateModelForm } from './createModel.puppeteer';
+import { fillCreateModelForm } from '../components/CreateModelIconButton/drivers/createModel.puppeteer';
 
 export const createModelTool = {
   name: 'createModel',

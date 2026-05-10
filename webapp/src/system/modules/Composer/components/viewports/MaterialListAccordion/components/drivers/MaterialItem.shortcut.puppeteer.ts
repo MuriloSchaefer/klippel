@@ -33,14 +33,23 @@ export const focusMaterialItem = async (page: Page, label: string) => {
  * when the list is empty.
  */
 export const triggerFocusMaterialList = async (page: Page) => {
+  // Ctrl+M is a toggle: if a material row is already focused inside an
+  // expanded accordion it collapses instead of focusing. As a test driver we
+  // always want the "focus" branch, so blur any focused row first.
+  await page.evaluate(() => {
+    const a = document.activeElement as HTMLElement | null;
+    if (a?.matches('[data-testid="material-item"]')) a.blur();
+  });
   await page.keyboard.down('Control');
   await page.keyboard.press('m');
   await page.keyboard.up('Control');
   await page.waitForFunction(() => {
-    const active = document.activeElement;
+    const active = document.activeElement as HTMLElement | null;
     if (!active) return false;
     if (active.matches('[data-testid="material-item"]')) return true;
-    return active.id === 'composer-add-material';
+    if (active.id === 'composer-add-material') return true;
+    // Empty list fallback focuses the accordion content panel.
+    return active.matches('[data-accordion-content="Materiais"]');
   }, { timeout: 3_000 });
 };
 

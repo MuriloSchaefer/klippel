@@ -25,6 +25,7 @@
     "paths": {
       "@kernel/*": ["kernel/*"],
       "@system/*": ["system/*"],
+      "@helpers/*": ["helpers/*"],
       "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"]
     }
   },

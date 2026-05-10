@@ -39,7 +39,7 @@ const ShortcutProvider: React.FC<ShortcutProviderProps> = ({
     
     // Pop context from the stack when component unmounts
     return () => {
-      dispatch(popContext());
+      dispatch(popContext(contextId));
     };
   }, [contextId, dispatch]);
   

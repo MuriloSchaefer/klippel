@@ -1,8 +1,6 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import {
-  getFocusedMaterialLabel,
-  triggerEditMaterialFromFocused,
-} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
+import { getFocusedMaterialLabel, triggerEditMaterialFromFocused } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.shortcut.puppeteer';
+
 
 export const editFocusedMaterialTool = {
   name: 'editFocusedMaterial',

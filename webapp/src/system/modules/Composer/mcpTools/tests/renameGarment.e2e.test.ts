@@ -3,7 +3,7 @@
  * Skips if CDP is unreachable.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
-import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
+import { cleanupWorkspace, resetWorkspace } from '../../../../../helpers/puppeteer/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -11,18 +11,18 @@ const CDP_URL = `http://localhost:${CDP_PORT}`;
 let browser: Browser | null = null;
 let page: Page | null = null;
 
-jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
+jest.mock('../../../../../../electron/main/mcp/puppeteer', () => ({
   getPage: () => {
     if (!page) throw new Error(`Klippel dev app not reachable at ${CDP_URL}.`);
     return page;
   },
 }));
 
-import { renameGarmentTool } from './renameGarment';
-import { renameGarmentShortcutTool } from './renameGarmentShortcut';
-import { createModelTool } from './createModel';
-import { openModelTool } from './openModel';
-import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
+import { renameGarmentTool } from '../renameGarment';
+import { renameGarmentShortcutTool } from '../renameGarmentShortcut';
+import { createModelTool } from '../createModel';
+import { openModelTool } from '../openModel';
+import { switchRibbonTabTool } from '../../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
@@ -31,7 +31,7 @@ beforeAll(async () => {
   const pages = await browser.pages();
   page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
   if (!page) throw new Error('No renderer page found in Electron');
-  await resetWorkspace(page, 'e2e-renameGarment', 'empty');
+  await resetWorkspace(page, 'e2e-renameGarment');
 
   await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
   await switchRibbonTabTool.execute({ label: 'Compositor' });
@@ -40,10 +40,10 @@ beforeAll(async () => {
   const id = `e2e-${uniqueSuffix()}`;
   const name = `E2E Rename ${id}`;
   await createModelTool.execute({ name, id });
-  await page.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"] #name'),
-    { timeout: 10_000 },
-  );
+  await page.waitForSelector('[role="pointer-panel-content"] #name', {
+    hidden: true,
+    timeout: 10_000,
+  });
   await openModelTool.execute({ modelName: name });
 }, 45_000);
 

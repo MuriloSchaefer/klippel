@@ -1,9 +1,8 @@
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import {
-  getFocusedMaterialLabel,
-  triggerDeleteMaterialFromFocused,
-} from '../components/viewports/MaterialListAccordion/components/MaterialItem.shortcut.puppeteer';
-import { waitForMaterialItemRemoved } from '../components/viewports/MaterialListAccordion/components/MaterialItem.click.puppeteer';
+import { waitForMaterialItemRemoved } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.click.puppeteer';
+import { getFocusedMaterialLabel, triggerDeleteMaterialFromFocused } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.shortcut.puppeteer';
+
+
 
 export const deleteFocusedMaterialTool = {
   name: 'deleteFocusedMaterial',

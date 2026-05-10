@@ -1,11 +1,7 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import {
-  triggerOpenGarmentDetails,
-  triggerRenameGarment,
-  typeGarmentNameFromFocused,
-} from '../components/viewports/ModelViewport/DetailPanel/GarmentDetails.shortcut.puppeteer';
+import { triggerOpenGarmentDetails, triggerRenameGarment, typeGarmentNameFromFocused } from '../components/viewports/ModelViewport/DetailPanel/drivers/GarmentDetails.shortcut.puppeteer';
 
 const RENAME_DEBOUNCE_MS = 1100;
 

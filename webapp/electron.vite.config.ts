@@ -4,6 +4,14 @@ import { resolve } from "node:path";
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin(), swcPlugin()],
+    resolve: {
+      alias: {
+        "@": resolve(__dirname, "./src"),
+        "@kernel": resolve(__dirname, "./src/kernel"),
+        "@system": resolve(__dirname, "./src/system"),
+        "@helpers": resolve(__dirname, "./src/helpers"),
+      },
+    },
     build: {
       outDir: "dist/electron/main",
       rollupOptions: {
@@ -31,6 +39,7 @@ export default defineConfig({
         "@": resolve(__dirname, "./src"),
         "@kernel": resolve(__dirname, "./src/kernel"),
         "@system": resolve(__dirname, "./src/system"),
+        "@helpers": resolve(__dirname, "./src/helpers"),
       },
     },
     build: {

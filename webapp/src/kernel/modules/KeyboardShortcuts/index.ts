@@ -3,6 +3,7 @@ import { MODULE_NAME, MODULE_VERSION } from './constants';
 import { startModule, postBootInitialization } from './kernelCalls';
 import KeyboardListener from './components/KeyboardListener';
 import ShortcutProvider from './components/ShortcutProvider';
+import FocusShortcutProvider from './components/FocusShortcutProvider';
 import KeyboardShortcutsTrayIcon from './components/KeyboardShortcutsTrayIcon';
 import ShortcutHint from './components/ShortcutHint';
 import useKeyboardShortcutsManager from './managers/keyboardManager';
@@ -22,6 +23,7 @@ export interface IKeyboardShortcutsModule extends IModule {
   components: {
     KeyboardListener: typeof KeyboardListener;
     ShortcutProvider: typeof ShortcutProvider;
+    FocusShortcutProvider: typeof FocusShortcutProvider;
     KeyboardShortcutsTrayIcon: typeof KeyboardShortcutsTrayIcon;
     ShortcutHint: typeof ShortcutHint;
   };
@@ -68,6 +70,7 @@ const module: IKeyboardShortcutsModule = {
   components: {
     KeyboardListener,
     ShortcutProvider,
+    FocusShortcutProvider,
     KeyboardShortcutsTrayIcon,
     ShortcutHint,
   },

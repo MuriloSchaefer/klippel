@@ -10,6 +10,8 @@ import {
   MODULE_NAME,
   CONFIRM_MODEL_SELECTION_SHORTCUT_ID,
   MODEL_SELECTION_MODAL_CONTEXT_ID,
+  MATERIAL_LIST_CONTEXT_ID,
+  GRADUATION_LIST_CONTEXT_ID,
 } from "./constants";
 import slice from "./store/slice";
 import ModelViewport from "./components/viewports/ModelViewport";
@@ -133,8 +135,10 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
     {
       id: `${MODULE_NAME}/ModelViewport/addMaterial`,
       key: 'a',
-      contextId: `${MODULE_NAME}/ModelViewport`,
-      action: () => document.getElementById("composer-add-material")?.click(),
+      contextId: MATERIAL_LIST_CONTEXT_ID,
+      action: () => {
+        document.getElementById("composer-add-material")?.click();
+      },
       description: 'Add material',
       enabled: true,
     },
@@ -159,9 +163,8 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
           '[role="accordion-Materiais"] [data-testid="material-item"]'
         );
 
-        // Toggle: if already expanded AND a row inside is focused, collapse.
+        // Toggle: if already expanded AND a row inside is focused, do nothing.
         if (wasExpanded && rowFocusedInside) {
-          summary.click();
           return;
         }
 
@@ -170,6 +173,10 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
         const findFirstRow = () =>
           accordion.querySelector(
             '[data-testid="material-item"]'
+          ) as HTMLElement | null;
+        const findContent = () =>
+          accordion.querySelector(
+            '[data-accordion-content="Materiais"]'
           ) as HTMLElement | null;
 
         // Retry focusing until activeElement actually becomes the row (clicks
@@ -182,11 +189,15 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
             first.focus();
             if (document.activeElement === first) return;
           } else {
-            // Subtree not yet rendered — wait for the transition.
+            const content = findContent();
+            if (content) {
+              content.focus();
+              if (document.activeElement === content) return;
+            }
           }
           if (Date.now() - start < 1500) {
             setTimeout(attempt, 50);
-          } 
+          }
         };
         // First attempt after the click's synchronous focus shifts settle.
         setTimeout(attempt, 0);
@@ -197,7 +208,7 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
     {
       id: `${MODULE_NAME}/MaterialItem/focusNext`,
       key: 'ArrowDown',
-      contextId: `${MODULE_NAME}/ModelViewport`,
+      contextId: MATERIAL_LIST_CONTEXT_ID,
       action: () => {
         const current = document.activeElement?.closest('[data-testid="material-item"]');
         if (!current) return;
@@ -212,7 +223,7 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
     {
       id: `${MODULE_NAME}/MaterialItem/focusPrev`,
       key: 'ArrowUp',
-      contextId: `${MODULE_NAME}/ModelViewport`,
+      contextId: MATERIAL_LIST_CONTEXT_ID,
       action: () => {
         const current = document.activeElement?.closest('[data-testid="material-item"]');
         if (!current) return;
@@ -227,14 +238,20 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
     {
       id: `${MODULE_NAME}/MaterialItem/editMaterial`,
       key: 'e',
-      contextId: `${MODULE_NAME}/ModelViewport`,
+      contextId: MATERIAL_LIST_CONTEXT_ID,
       action: () => {
         const row = document.activeElement?.closest('[data-testid="material-item"]');
-        if (row) {
-          const btn = row.querySelector('[data-testid="material-item-edit"]') as HTMLButtonElement | null;
-          btn?.click();
-          return;
-        }
+        const btn = row?.querySelector('[data-testid="material-item-edit"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Edit focused material',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ModelViewport/renameGarment`,
+      key: 'e',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
         const store = storeManager.functions.getStore();
         if (!store) return;
         const variationId = getActiveVariationId(store);
@@ -245,7 +262,7 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
           focusGarmentNameInput();
         }, 50);
       },
-      description: 'Edit focused material, or rename the garment',
+      description: 'Rename the garment',
       enabled: true,
     },
     {
@@ -266,13 +283,187 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
     {
       id: `${MODULE_NAME}/MaterialItem/deleteMaterial`,
       key: 'd',
-      contextId: `${MODULE_NAME}/ModelViewport`,
+      contextId: MATERIAL_LIST_CONTEXT_ID,
       action: () => {
         const row = document.activeElement?.closest('[data-testid="material-item"]');
         const btn = row?.querySelector('[data-testid="material-item-delete"]') as HTMLButtonElement | null;
         btn?.click();
       },
       description: 'Remove focused material',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/GraduationList/focus`,
+      key: 'Ctrl+Alt+g',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const accordion = document.querySelector(
+          '[role="accordion-Graduações da Peça"]'
+        ) as HTMLElement | null;
+        if (!accordion) return;
+        const summary = accordion.querySelector(
+          '[aria-controls="accordion-Graduações da Peça-content"]'
+        ) as HTMLElement | null;
+        if (!summary) return;
+
+        const isExpanded = () =>
+          summary.getAttribute('aria-expanded') === 'true';
+        const wasExpanded = isExpanded();
+        const rowFocusedInside = !!document.activeElement?.closest(
+          '[role="accordion-Graduações da Peça"] [data-testid="graduation-item"]'
+        );
+
+        if (wasExpanded && rowFocusedInside) {
+          summary.click();
+          return;
+        }
+
+        if (!wasExpanded) summary.click();
+
+        const findFirstRow = () =>
+          accordion.querySelector(
+            '[data-testid="graduation-item"]'
+          ) as HTMLElement | null;
+        const findContent = () =>
+          accordion.querySelector(
+            '[data-accordion-content="Graduações da Peça"]'
+          ) as HTMLElement | null;
+
+        const start = Date.now();
+        const attempt = () => {
+          const first = findFirstRow();
+          if (first) {
+            first.focus();
+            if (document.activeElement === first) return;
+          } else {
+            const content = findContent();
+            if (content) {
+              content.focus();
+              if (document.activeElement === content) return;
+            }
+          }
+          if (Date.now() - start < 1500) {
+            setTimeout(attempt, 50);
+          }
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Toggle / focus graduation list',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ModelViewport/addGraduation`,
+      key: 'a',
+      contextId: GRADUATION_LIST_CONTEXT_ID,
+      action: () => {
+        document.getElementById('composer-add-graduation')?.click();
+      },
+      description: 'Add graduation',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/GraduationItem/focusNext`,
+      key: 'ArrowDown',
+      contextId: GRADUATION_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="graduation-item"]');
+        if (!current) return;
+        const next = current.nextElementSibling as HTMLElement | null;
+        if (next?.matches('[data-testid="graduation-item"]')) {
+          next.focus();
+        }
+      },
+      description: 'Focus next graduation item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/GraduationItem/focusPrev`,
+      key: 'ArrowUp',
+      contextId: GRADUATION_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="graduation-item"]');
+        if (!current) return;
+        const prev = current.previousElementSibling as HTMLElement | null;
+        if (prev?.matches('[data-testid="graduation-item"]')) {
+          prev.focus();
+        }
+      },
+      description: 'Focus previous graduation item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/GraduationItem/editGraduation`,
+      key: 'r',
+      contextId: GRADUATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="graduation-item"]');
+        const btn = row?.querySelector('[data-testid="graduation-item-edit"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Edit (rename) focused graduation',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/GraduationItem/deleteGraduation`,
+      key: 'd',
+      contextId: GRADUATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="graduation-item"]');
+        const btn = row?.querySelector('[data-testid="graduation-item-delete"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Remove focused graduation',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/GraduationItem/moveUp`,
+      key: 'w',
+      contextId: GRADUATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="graduation-item"]') as HTMLElement | null;
+        if (!row) return;
+        const btn = row.querySelector('[data-testid="graduation-item-move-up"]') as HTMLButtonElement | null;
+        if (!btn || btn.disabled) return;
+        btn.click();
+        // Reordering re-renders the list; refocus same row by id.
+        const id = row.id;
+        const start = Date.now();
+        const attempt = () => {
+          const next = document.getElementById(id) as HTMLElement | null;
+          if (next) {
+            next.focus();
+            if (document.activeElement === next) return;
+          }
+          if (Date.now() - start < 500) setTimeout(attempt, 25);
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Move focused graduation up',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/GraduationItem/moveDown`,
+      key: 's',
+      contextId: GRADUATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="graduation-item"]') as HTMLElement | null;
+        if (!row) return;
+        const btn = row.querySelector('[data-testid="graduation-item-move-down"]') as HTMLButtonElement | null;
+        if (!btn || btn.disabled) return;
+        btn.click();
+        const id = row.id;
+        const start = Date.now();
+        const attempt = () => {
+          const next = document.getElementById(id) as HTMLElement | null;
+          if (next) {
+            next.focus();
+            if (document.activeElement === next) return;
+          }
+          if (Date.now() - start < 500) setTimeout(attempt, 25);
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Move focused graduation down',
       enabled: true,
     },
   ])

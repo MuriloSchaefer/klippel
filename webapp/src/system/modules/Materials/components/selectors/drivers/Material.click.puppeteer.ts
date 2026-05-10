@@ -4,7 +4,7 @@ import {
   clickOptionByDataValue,
   pickOptionFromOpenListbox,
   waitForListboxClosed,
-} from '../../../../../../electron/main/mcp/helpers/listbox';
+} from '@helpers/puppeteer/listbox';
 
 export const MATERIAL_PRINCIPAL_TESTID = 'material-selector-principal';
 export const MATERIAL_EXTRA_TESTID = 'material-selector-extra';

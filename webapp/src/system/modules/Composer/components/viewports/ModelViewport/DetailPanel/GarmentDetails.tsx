@@ -1,12 +1,13 @@
 import useModule from "@kernel/hooks/useModule";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import { Box, FormControl, Input, InputLabel } from "@mui/material";
+import { Box, FormControl, Input, InputLabel, Typography } from "@mui/material";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { debounce } from "@kernel/utils";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { useEffect, useMemo, useState } from "react";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
-import { MODULE_NAME } from "../../../../constants";
+import { GRADUATION_LIST_CONTEXT_ID, MODULE_NAME } from "../../../../constants";
 import ElectiveListAccordion from "../../../viewports/ElectiveListAccordion";
 import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
 import VisualizationListAccordion from "../../VisualizationListAccordion";
@@ -22,13 +23,14 @@ export default function GarmentDetails({
   const layoutModule = useModule<ILayoutModule>("Layout");
   const { Accordion } = layoutModule.components;
 
-  const keyboardShortcutsModule = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
-  const { ShortcutHint } = keyboardShortcutsModule.components;
+  const keyboardShortcutsModule =
+    useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutHint, FocusShortcutProvider } = keyboardShortcutsModule.components;
 
   const graphModule = useModule<IGraphModule>("Graph");
   const selectedNode = graphModule.hooks.useGraph(
     variationId,
-    (g) => g?.nodes[selectedPart]
+    (g) => g?.nodes[selectedPart],
   );
   const [detailsForm, setDetailsForm] = useState<{ garmentName: string }>({
     garmentName: selectedNode?.state?.label || "",
@@ -46,7 +48,7 @@ export default function GarmentDetails({
           label: e.target.value,
         });
       }, 1000),
-    [selectedNode?.state?.id, variationId]
+    [selectedNode?.state?.id, variationId],
   );
 
   if (!selectedNode) return <>Nodo não encontrado</>;
@@ -55,15 +57,13 @@ export default function GarmentDetails({
     <Box>
       <Accordion
         name="Detalhes da Peça"
-        icon={
-          <ShortcutHint
-            shortcutId={`${MODULE_NAME}/ModelViewport/openGarmentDetails`}
-            placement="top-left"
-          >
-            <InfoSharpIcon />
-          </ShortcutHint>
+        icon={<InfoSharpIcon />}
+        shortcutHint={`${MODULE_NAME}/ModelViewport/openGarmentDetails`}
+        summary={
+          <Typography sx={{ width: "100%" }}>
+            Informações básicas da peça
+          </Typography>
         }
-        summary="Informações básicas da peça"
         defaultExpanded
       >
         <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
@@ -73,10 +73,13 @@ export default function GarmentDetails({
             value={detailsForm.garmentName}
             endAdornment={
               <ShortcutHint
-                shortcutId={`${MODULE_NAME}/MaterialItem/editMaterial`}
+                shortcutId={`${MODULE_NAME}/ModelViewport/renameGarment`}
                 placement="bottom-right"
               >
-                <Box component="span" sx={{ width: 16, height: 16, display: "inline-block" }} />
+                <Box
+                  component="span"
+                  sx={{ width: 16, height: 16, display: "inline-block" }}
+                />
               </ShortcutHint>
             }
             onChange={(e) => {
@@ -89,13 +92,23 @@ export default function GarmentDetails({
           />
         </FormControl>
       </Accordion>
-      <Accordion
-        name="Graduações da Peça"
-        icon={undefined}
-        summary="Graduações vinculadas diretamente à peça (ordem configurável)"
-      >
-        <GraduationListAccordion variationId={variationId} garmentId={selectedPart} />
-      </Accordion>
+      <FocusShortcutProvider contextId={GRADUATION_LIST_CONTEXT_ID}>
+        <Accordion
+          name="Graduações da Peça"
+          icon={<OpenInFullIcon />}
+          shortcutHint={`${MODULE_NAME}/GraduationList/focus`}
+          summary={
+            <Typography sx={{ width: "100%" }}>
+              Graduações vinculadas diretamente à peça
+            </Typography>
+          }
+        >
+          <GraduationListAccordion
+            variationId={variationId}
+            garmentId={selectedPart}
+          />
+        </Accordion>
+      </FocusShortcutProvider>
       <Accordion
         name="Visualização"
         icon={undefined}
@@ -123,7 +136,10 @@ export default function GarmentDetails({
         summary="Processos associados à peça (tempo e custo)"
         defaultExpanded
       >
-        <ProcessListAccordion variationId={variationId} parentId={selectedPart} />
+        <ProcessListAccordion
+          variationId={variationId}
+          parentId={selectedPart}
+        />
       </Accordion>
     </Box>
   );

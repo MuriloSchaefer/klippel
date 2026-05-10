@@ -1,24 +1,13 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { clickWhenClickable } from '../../../../../electron/main/mcp/helpers/clickable';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
-import {
-  confirmPointerPanel,
-  openPointerPanel,
-} from '../../../../kernel/modules/Pointer/components/PointerContainer.click.puppeteer';
-import {
-  commitMaterialTypeMulti,
-  openMaterialTypeMultiSelector,
-  openMaterialTypeSelector,
-  pickMaterialType,
-  toggleMaterialTypeOption,
-} from '../../../../system/modules/Materials/components/selectors/MaterialType.click.puppeteer';
-import {
-  pickMaterialById,
-  pickMaterialByPrincipalAndExtra,
-} from '../../../../system/modules/Materials/components/selectors/Material.click.puppeteer';
+import { clickWhenClickable } from '@helpers/puppeteer/clickable';
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
+import { commitMaterialTypeMulti, openMaterialTypeMultiSelector, openMaterialTypeSelector, pickMaterialType, toggleMaterialTypeOption } from '@system/modules/Materials/components/selectors/drivers/MaterialType.click.puppeteer';
+import { pickMaterialById, pickMaterialByPrincipalAndExtra } from '@system/modules/Materials/components/selectors/drivers/Material.click.puppeteer';
+import { confirmPointerPanel } from '@kernel/modules/Pointer/components/drivers/PointerContainer.click.puppeteer';
+
 
 const MATERIAL_FORM_TESTID = 'add-material-form';
 const MATERIAL_LABEL_SELECTOR = `[data-testid="${MATERIAL_FORM_TESTID}"] div[data-testid="add-material-label"] input`;

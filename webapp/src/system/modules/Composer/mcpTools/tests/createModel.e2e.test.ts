@@ -5,7 +5,7 @@
  * verifies the new model is reachable via the open-model modal.
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
-import { cleanupWorkspace, resetWorkspace } from '../../../testUtils/resetWorkspace';
+import { cleanupWorkspace, resetWorkspace } from '../../../../../helpers/puppeteer/resetWorkspace';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -13,23 +13,23 @@ const CDP_URL = `http://localhost:${CDP_PORT}`;
 let browser: Browser | null = null;
 let page: Page | null = null;
 
-jest.mock('../../../../../electron/main/mcp/puppeteer', () => ({
+jest.mock('../../../../../../electron/main/mcp/puppeteer', () => ({
   getPage: () => {
     if (!page) throw new Error(`Klippel dev app not reachable at ${CDP_URL}.`);
     return page;
   },
 }));
 
-import { createModelTool } from './createModel';
-import { switchRibbonTabTool } from '../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
+import { createModelTool } from '../createModel';
+import { switchRibbonTabTool } from '../../../../../kernel/modules/Layout/mcpTools/switchRibbonTab';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
 const waitForFormClosed = async (p: Page) => {
-  await p.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"] #name'),
-    { timeout: 10_000 },
-  );
+  await p.waitForSelector('[role="pointer-panel-content"] #name', {
+    hidden: true,
+    timeout: 10_000,
+  });
 };
 
 const modelExistsInOpenModal = async (p: Page, name: string) => {
@@ -42,10 +42,9 @@ const modelExistsInOpenModal = async (p: Page, name: string) => {
   );
   // Close the modal so subsequent tests start from a clean state.
   await p.keyboard.press('Escape');
-  await p.waitForFunction(
-    () => !document.querySelector('[role="list-options"]'),
-    { timeout: 5_000 },
-  ).catch(() => {});
+  await p
+    .waitForSelector('[role="list-options"]', { hidden: true, timeout: 5_000 })
+    .catch(() => {});
   return found;
 };
 
@@ -55,7 +54,7 @@ describe('createModel (E2E)', () => {
     const pages = await browser.pages();
     page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
     if (!page) throw new Error('No renderer page found in Electron');
-    await resetWorkspace(page, 'e2e-createModel', 'empty');
+    await resetWorkspace(page, 'e2e-createModel');
     await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
     await switchRibbonTabTool.execute({ label: 'Compositor' });
     await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });

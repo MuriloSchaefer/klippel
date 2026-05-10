@@ -104,5 +104,4 @@ export const KEYBOARD_HINT_WRAPPER_CLASS = 'keyboard-hint-wrapper';
  */
 export const keyboardHintWrapperSx: SxProps<Theme> = {
   position: 'relative',
-  display: 'inline-block',
 };

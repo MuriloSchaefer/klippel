@@ -1,6 +1,6 @@
 import type { KeyInput } from 'puppeteer-core';
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { findRibbonTabIndexByLabel } from './switchRibbonTabShortcut.puppeteer';
+import { findRibbonTabIndexByLabel } from './drivers/switchRibbonTabShortcut.puppeteer';
 
 export const switchRibbonTabShortcutTool = {
   name: 'switchRibbonTabShortcut',

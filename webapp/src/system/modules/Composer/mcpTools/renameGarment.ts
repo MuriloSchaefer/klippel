@@ -1,14 +1,10 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
-import { clickGarmentTreeItem } from '../components/viewports/CompositionTree/CompositionTree.click.puppeteer';
-import {
-  ensureGarmentDetailsAccordionExpanded,
-  fillGarmentName,
-  waitForGarmentDetailsPanelVisible,
-} from '../components/viewports/ModelViewport/DetailPanel/GarmentDetails.click.puppeteer';
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
+import { clickGarmentTreeItem } from '../components/viewports/CompositionTree/drivers/CompositionTree.click.puppeteer';
+import { ensureGarmentDetailsAccordionExpanded, fillGarmentName, waitForGarmentDetailsPanelVisible } from '../components/viewports/ModelViewport/DetailPanel/drivers/GarmentDetails.click.puppeteer';
 
 const RENAME_DEBOUNCE_MS = 1100;
 

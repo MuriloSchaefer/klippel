@@ -35,10 +35,14 @@ export const pushContext = createAction(
 );
 
 /**
- * Pop the top context from the context stack
+ * Pop a context from the stack. If `contextId` is provided, removes the
+ * most recent occurrence of that id (top-down search) — useful when
+ * sibling/focus-driven providers may unmount or blur out of LIFO order.
+ * Without an id, pops the top of the stack.
  */
 export const popContext = createAction(
-  '[KeyboardShortcuts:Command] PopContext'
+  '[KeyboardShortcuts:Command] PopContext',
+  (contextId?: string) => ({ payload: { contextId } })
 );
 
 /**

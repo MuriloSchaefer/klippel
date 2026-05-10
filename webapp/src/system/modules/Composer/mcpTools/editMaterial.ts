@@ -1,26 +1,12 @@
 import { z } from 'zod';
 
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
-import { ensureSettingsPanelExpanded } from '../../../../kernel/modules/Layout/components/Panels/SettingsPanel.click.puppeteer';
-import { expandAccordion } from '../../../../kernel/modules/Layout/components/Panels/Accordion.click.puppeteer';
-import {
-  clickEditMaterial,
-  waitForMaterialItem,
-} from '../components/viewports/MaterialListAccordion/components/MaterialItem.click.puppeteer';
-import {
-  EDIT_MATERIAL_FORM_TESTID,
-  EDIT_MATERIAL_MATERIAL_SCOPE,
-  EDIT_MATERIAL_TYPE_SCOPE,
-  saveEditMaterial,
-} from '../components/viewports/MaterialListAccordion/components/EditMaterial.click.puppeteer';
-import {
-  openMaterialTypeSelector,
-  pickMaterialType,
-} from '../../../../system/modules/Materials/components/selectors/MaterialType.click.puppeteer';
-import {
-  pickMaterialById,
-  pickMaterialByPrincipalAndExtra,
-} from '../../../../system/modules/Materials/components/selectors/Material.click.puppeteer';
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
+import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
+import { clickEditMaterial, waitForMaterialItem } from '../components/viewports/MaterialListAccordion/components/drivers/MaterialItem.click.puppeteer';
+import { openMaterialTypeSelector, pickMaterialType } from '@system/modules/Materials/components/selectors/drivers/MaterialType.click.puppeteer';
+import { EDIT_MATERIAL_FORM_TESTID, EDIT_MATERIAL_MATERIAL_SCOPE, EDIT_MATERIAL_TYPE_SCOPE, saveEditMaterial } from '../components/viewports/MaterialListAccordion/components/drivers/EditMaterial.click.puppeteer';
+import { pickMaterialById, pickMaterialByPrincipalAndExtra } from '@system/modules/Materials/components/selectors/drivers/Material.click.puppeteer';
 
 type EditMaterialInput =
   | { label: string; type?: string; material: string; extra?: string; materialId?: never }

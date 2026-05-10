@@ -1,6 +1,6 @@
 ---
 name: mcp-puppeteer-tools
-description: Use when adding, modifying, or testing MCP tools that drive the Klippel UI via Puppeteer — including writing/refactoring `mcpTools/*.ts`, creating `<Component>.click.puppeteer.ts` / `<Component>.shortcut.puppeteer.ts` drivers, registering keyboard shortcuts that ship with `ShortcutHint`, extracting helpers under `electron/main/mcp/helpers/`, and authoring the matching `*.test.ts`. Triggers: "add an MCP tool", "wire up a shortcut", "write a puppeteer driver", "refactor addMaterial", "add a tool test".
+description: Use when adding, modifying, or testing MCP tools that drive the Klippel UI via Puppeteer — including writing/refactoring `mcpTools/*.ts`, creating `drivers/<Component>.click.puppeteer.ts` / `drivers/<Component>.shortcut.puppeteer.ts` drivers, registering keyboard shortcuts that ship with `ShortcutHint`, extracting helpers under `electron/main/mcp/helpers/`, and authoring the matching `tests/*.e2e.test.ts`. Triggers: "add an MCP tool", "wire up a shortcut", "write a puppeteer driver", "refactor addMaterial", "add a tool test".
 ---
 
 # Klippel MCP + Puppeteer tools
@@ -11,7 +11,7 @@ This skill captures the conventions for the MCP server, its Puppeteer drivers, t
 
 - `electron/main/mcp/index.ts` is a bootstrapper. It must not contain per-tool zod schemas or DOM logic.
 - Each module exposes its tools through `mcpTools/index.ts` exporting `registerMcpTools(server)`. The root `McpServer` is constructed in `electron/main/mcp/index.ts` and handed to every module.
-- Tool tests live next to the tools as a per-feature E2E suite: `mcpTools/<feature>.e2e.test.ts`. **One file covers both the click and shortcut variants** of the feature, with one `describe` block per variant. There is no top-level test harness for tools.
+- Tool tests live next to the tools in a `tests/` subfolder as a per-feature E2E suite: `mcpTools/tests/<feature>.e2e.test.ts`. **One file covers both the click and shortcut variants** of the feature, with one `describe` block per variant. There is no top-level test harness for tools.
 - The MCP SDK only allows one `McpServer` per stdio transport, so `registerMcpTools(server)` is the per-module "sub-server" — that function is the boundary.
 
 ## Paired tools: `<action>` + `<action>Shortcut`
@@ -27,13 +27,16 @@ The shortcut variant **must not import any `*.click.puppeteer.ts` driver** — o
 
 ## Co-located Puppeteer drivers
 
-For any non-trivial widget (anything beyond a single `page.click(selector)`), ship two drivers next to its `.tsx`:
+For any non-trivial widget (anything beyond a single `page.click(selector)`), ship two drivers in a `drivers/` subfolder next to its `.tsx`:
 
 ```
 <Component>.tsx
-<Component>.click.puppeteer.ts      ← DOM clicks; owns data-testid / role selectors
-<Component>.shortcut.puppeteer.ts   ← Key combos; owns the binding constant
+drivers/
+  <Component>.click.puppeteer.ts      ← DOM clicks; owns data-testid / role selectors
+  <Component>.shortcut.puppeteer.ts   ← Key combos; owns the binding constant
 ```
+
+Tool-owned drivers (composing widget drivers + tool-level orchestration) live in `mcpTools/drivers/` alongside the tool files.
 
 Driver rules:
 
@@ -75,18 +78,18 @@ Inside a `'<feature> via shortcut (E2E)'` describe block — including its setup
 
 ## Workflow when adding a new MCP tool
 
-1. **Identify the widgets it touches.** For each non-trivial widget, confirm a `*.click.puppeteer.ts` exists; if not, create it co-located with the `.tsx`. Add the matching `*.shortcut.puppeteer.ts` if the widget has a shortcut surface.
+1. **Identify the widgets it touches.** For each non-trivial widget, confirm a `drivers/*.click.puppeteer.ts` exists in the component's `drivers/` subfolder; if not, create it (co-located with the `.tsx` under `drivers/`). Add the matching `drivers/*.shortcut.puppeteer.ts` if the widget has a shortcut surface.
 2. **Promote any reusable helper** from inline code to `electron/main/mcp/helpers/`.
 3. **Create both tool files** under the owning module's `mcpTools/`: `<action>.ts` (click variant, composes click drivers) and `<action>Shortcut.ts` (shortcut variant, composes shortcut drivers + tool-owned `Tab`s).
 4. **Register the shortcut** in the relevant component via `keyboardManager.functions.registerShortcuts` and wrap (or manually pair) the trigger control with `ShortcutHint`.
 5. **Wire the module's `mcpTools/index.ts`** so `registerMcpTools(server)` attaches both tools. Ensure `electron/main/mcp/index.ts` calls the module's registrar (one-line import + call only — no schemas there).
-6. **Write `<feature>.e2e.test.ts`** next to the tools — one suite covers both variants. Connect via CDP and reset workspace once in `beforeAll`; expose two top-level `describe` blocks (`'<feature> via click (E2E)'` and `'<feature> via shortcut (E2E)'`) that mock `getPage`, call `execute`, and assert resulting DOM/store state. Use a single workspace fixture name (e.g. `e2e-<feature>`) shared by both blocks. Skip on CDP unreachable.
+6. **Write `tests/<feature>.e2e.test.ts`** in the module's `mcpTools/tests/` subfolder — one suite covers both variants. Connect via CDP and reset workspace once in `beforeAll`; expose two top-level `describe` blocks (`'<feature> via click (E2E)'` and `'<feature> via shortcut (E2E)'`) that mock `getPage`, call `execute`, and assert resulting DOM/store state. Use a single workspace fixture name (e.g. `e2e-<feature>`) shared by both blocks. Skip on CDP unreachable.
 7. **If the change is non-trivial,** record it via the `create-change-documents` skill in the affected module's `docs/changes/`.
 
 ## Pre-merge checklist
 
-- [ ] Each non-trivial widget has a `*.click.puppeteer.ts` driver next to its component.
-- [ ] If the widget has a shortcut surface, it also has a `*.shortcut.puppeteer.ts` driver exporting the binding constant and a `trigger…` (or `…FromFocused`) function with a post-condition `waitForSelector`.
+- [ ] Each non-trivial widget has a `drivers/*.click.puppeteer.ts` driver in a `drivers/` subfolder next to its component.
+- [ ] If the widget has a shortcut surface, it also has a `drivers/*.shortcut.puppeteer.ts` driver exporting the binding constant and a `trigger…` (or `…FromFocused`) function with a post-condition `waitForSelector`.
 - [ ] Every registered shortcut has a visible `ShortcutHint` on its control.
 - [ ] Tool files contain **no inline browser-evaluated callbacks** — no `page.evaluate`, `evaluateHandle`, `waitForFunction`, `$eval`, or `$$eval` with a function/script — and no DOM traversal and no hard-coded key combos — only driver calls, plus direct `page.click`/`page.type`/`waitForSelector` on selectors owned by the tool itself. (See "Never run inline browser-evaluated callbacks inside tools" below.)
 - [ ] Click-driver selectors are `data-testid`, `role`, or `aria-label` — never CSS class names or DOM order.
@@ -94,7 +97,7 @@ Inside a `'<feature> via shortcut (E2E)'` describe block — including its setup
 - [ ] Shortcut-variant tool is keyboard-only: triggers via `*.shortcut.puppeteer.ts`, types into focused inputs, uses tool-owned `Tab`s. No `*.click.puppeteer.ts` import.
 - [ ] Shortcut drivers' field helpers are `…FromFocused` and never `page.click` to recover focus.
 - [ ] The module's `mcpTools/index.ts` registers both variants on the passed-in server. `electron/main/mcp/index.ts` only imports the module registrar.
-- [ ] `<feature>.e2e.test.ts` exists next to the tools with one `describe` block per variant (click + shortcut), drives each `tool.execute` against the live dev app, shares a single CDP connection and workspace fixture, and skips when CDP is unreachable.
+- [ ] `mcpTools/tests/<feature>.e2e.test.ts` exists in the module's `tests/` subfolder with one `describe` block per variant (click + shortcut), drives each `tool.execute` against the live dev app, shares a single CDP connection and workspace fixture, and skips when CDP is unreachable.
 - [ ] The shortcut `describe` block (and any helper called from it) only invokes shortcut-variant tools for dependent MCP actions — no click-variant `<action>Tool` setup/cleanup, no inline DOM clicks substituting for one.
 
 ## Never run inline browser-evaluated callbacks inside tools

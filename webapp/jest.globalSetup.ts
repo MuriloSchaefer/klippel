@@ -10,6 +10,48 @@ const CDP_VERSION_URL = `http://localhost:${CDP_PORT}/json/version`;
 const CDP_LIST_URL = `http://localhost:${CDP_PORT}/json/list`;
 const STARTUP_TIMEOUT_MS = Number(process.env.KLIPPEL_STARTUP_TIMEOUT_MS ?? 90_000);
 
+type CdpTarget = { type?: string; url?: string };
+
+// Ask the browser-level CDP for its targets via websocket. /json/list hides
+// page targets that already have an attached client (e.g. an external
+// DevTools/VS Code debugger session), but Target.getTargets returns them
+// regardless of attachment state.
+const probeCdpViaWs = (wsUrl: string): Promise<boolean> =>
+  new Promise((resolve) => {
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      try { ws.close(); } catch { /* ignore */ }
+      resolve(ok);
+    };
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch {
+      resolve(false);
+      return;
+    }
+    const timer = setTimeout(() => finish(false), 1500);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ id: 1, method: 'Target.getTargets' }));
+    };
+    ws.onerror = () => { clearTimeout(timer); finish(false); };
+    ws.onmessage = (ev: MessageEvent) => {
+      clearTimeout(timer);
+      try {
+        const msg = JSON.parse(typeof ev.data === 'string' ? ev.data : '');
+        const infos: CdpTarget[] = msg?.result?.targetInfos ?? [];
+        const ok = infos.some(
+          (t) => t.type === 'page' && t.url && t.url !== 'about:blank',
+        );
+        finish(ok);
+      } catch {
+        finish(false);
+      }
+    };
+  });
+
 const httpGet = (url: string): Promise<{ status: number; body: string } | null> =>
   new Promise((resolve) => {
     const req = httpRequest(url, { method: 'GET', timeout: 1000 }, (res: any) => {
@@ -33,18 +75,38 @@ const probeCdp = async (): Promise<boolean> => {
   const version = await httpGet(CDP_VERSION_URL);
   if (!version || version.status !== 200) return false;
   const list = await httpGet(CDP_LIST_URL);
-  if (!list || list.status !== 200) return false;
-  try {
-    const targets = JSON.parse(list.body) as Array<{ type?: string; url?: string }>;
-    return targets.some(
-      (t) => t.type === 'page' && t.url && t.url !== 'about:blank',
-    );
-  } catch {
-    return false;
+  if (list && list.status === 200) {
+    try {
+      const targets = JSON.parse(list.body) as CdpTarget[];
+      if (targets.some((t) => t.type === 'page' && t.url && t.url !== 'about:blank')) {
+        return true;
+      }
+    } catch {
+      // fall through to websocket probe
+    }
   }
+  // /json/list omits targets that already have an attached client. Ask the
+  // browser-level CDP directly so an attached external debugger doesn't make
+  // the probe time out.
+  try {
+    const meta = JSON.parse(version.body) as { webSocketDebuggerUrl?: string };
+    if (meta.webSocketDebuggerUrl) {
+      return await probeCdpViaWs(meta.webSocketDebuggerUrl);
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
 };
 
 export default async function globalSetup() {
+  if (!process.env.ENV_NAME) {
+    throw new Error('ENV_NAME is required (e.g. ENV_NAME=small-app npx jest)');
+  }
+  if (!process.env.BASE_WORKSPACE) {
+    throw new Error('BASE_WORKSPACE is required (e.g. BASE_WORKSPACE=empty npx jest)');
+  }
+
   if (await probeCdp()) {
     (globalThis as any).__KLIPPEL_OWNED_PROCESS__ = false;
     return;
