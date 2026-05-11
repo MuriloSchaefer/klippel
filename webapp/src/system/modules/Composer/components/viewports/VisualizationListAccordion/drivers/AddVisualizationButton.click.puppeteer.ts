@@ -14,14 +14,34 @@ const formInputSelector = (testid: string) =>
   `[data-testid="${ADD_VISUALIZATION_FORM_TESTID}"] [data-testid="${testid}"] input, [data-testid="${ADD_VISUALIZATION_FORM_TESTID}"] [data-testid="${testid}"] textarea`;
 
 export const openAddVisualizationPanel = async (page: Page) => {
-  await page.keyboard.press('Escape').catch(() => {});
-  await page.waitForSelector(
-    `[data-testid="${ADD_VISUALIZATION_TRIGGER_TESTID}"]`,
-  );
-  await page.click(`[data-testid="${ADD_VISUALIZATION_TRIGGER_TESTID}"]`);
-  await page.waitForSelector(
-    `[role="pointer-panel-content"] [data-testid="${ADD_VISUALIZATION_FORM_TESTID}"]`,
-  );
+  const triggerSel = `[data-testid="${ADD_VISUALIZATION_TRIGGER_TESTID}"]`;
+  const formSel = `[role="pointer-panel-content"] [data-testid="${ADD_VISUALIZATION_FORM_TESTID}"]`;
+
+  await page.waitForSelector(triggerSel);
+
+  // Stale pointer panels (or focused inputs) from preceding suites can swallow
+  // the first click. Dismiss anything open, then retry the trigger click until
+  // the panel actually mounts.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page.keyboard.press('Escape').catch(() => {});
+    await page
+      .waitForSelector('[role="pointer-panel-content"]', {
+        hidden: true,
+        timeout: 500,
+      })
+      .catch(() => {});
+    await page.click(triggerSel);
+    try {
+      await page.waitForSelector(formSel, { timeout: 4_000 });
+      return;
+    } catch {
+      // fall through and retry
+    }
+  }
+  // Last attempt with the original (longer) wait so the error message is
+  // unchanged when this is a genuine product bug, not a flake.
+  await page.click(triggerSel);
+  await page.waitForSelector(formSel);
 };
 
 export const typeAddVisualizationName = async (page: Page, name: string) => {

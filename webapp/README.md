@@ -6,6 +6,77 @@ Electron + React + Vite to build a descentrilized application capable of composi
 $ npm i
 $ npm start
 ```
+
+## Running the E2E tests
+
+The end-to-end suite boots a real Electron instance, connects puppeteer to it over CDP (`localhost:9222`), and drives the UI through the same MCP tools the AI uses. Tests live under `src/**/mcpTools/tests/*.e2e.test.ts`.
+
+### 1. Prerequisites
+
+- Dependencies installed (`npm i`).
+- No other Klippel/Chromium instance is already listening on port `9222` (the harness reuses an existing CDP if it finds one — usually you want a fresh boot).
+- If you are running from the **VS Code integrated terminal**, make sure `ELECTRON_RUN_AS_NODE` is **not** set in your shell. VS Code exports it for its extension host and, if it leaks into the test process, the Electron binary will run as plain Node and crash on startup with `Cannot read properties of undefined (reading 'isPackaged')`. The `npm run test:e2e` script unsets it automatically; only worry about this when invoking `jest` directly.
+
+### 2. Pick an environment and a base workspace
+
+Two env vars control where the tests read/write data:
+
+- `ENV_NAME` — the env folder under `$HOME/klippel/envs/`. Use `benchmark` for tests so you don't pollute your real `small-app` / `personal` envs.
+- `BASE_WORKSPACE` — the workspace template that gets copied into a fresh test workspace before each suite. `empty` is a clean slate.
+
+Both default to `benchmark` / `empty` when using the npm script.
+
+### 3. Run the suite
+
+Run every e2e test:
+
+```bash
+$ npm run test:e2e
+```
+
+Run a single file or pattern (everything after `--` is forwarded to jest):
+
+```bash
+$ npm run test:e2e -- src/system/modules/Composer/mcpTools/tests/deleteElective.e2e.test.ts
+$ npm run test:e2e -- -t "deletes an elective"
+```
+
+Override the env / workspace per-run:
+
+```bash
+$ ENV_NAME=my-scratch BASE_WORKSPACE=small-app npm run test:e2e -- <pattern>
+```
+
+Run headless (no visible window — needed for CI or remote shells without a display server). Requires `xvfb-run` on `PATH`:
+
+```bash
+$ npm run test:e2e:headless
+$ npm run test:e2e:headless -- src/system/modules/Composer/mcpTools/tests/deleteElective.e2e.test.ts
+```
+
+### 4. What happens under the hood
+
+1. `jest.globalSetup.ts` probes `http://localhost:9222`. If nothing answers, it spawns `npm run dev` and waits up to 90 s for CDP to come up. With `KLIPPEL_DEV_LOG=1` (set by the script), the dev server output is streamed to the terminal so you can watch the boot.
+2. Each test connects puppeteer to that CDP endpoint, calls `resetWorkspace(page, '<suite-id>')` to switch to a fresh workspace cloned from `BASE_WORKSPACE`, and drives the UI through the MCP tools.
+3. `afterAll` disconnects puppeteer and removes the test workspace.
+
+### 5. Troubleshooting
+
+- **`Klippel did not expose CDP on :9222 within 90000ms`** — the dev server failed to boot. Re-run with `KLIPPEL_DEV_LOG=1` (already set by the npm script) and scroll up for the real error. The most common culprit is `ELECTRON_RUN_AS_NODE=1` leaking from VS Code (see prerequisites).
+- **`No renderer page found in Electron`** — the renderer hasn't finished loading yet. Usually transient; re-run.
+- **Port 9222 already in use** — a previous test run left an Electron instance behind. Either `pkill -f 'electron.*9222'` or let the harness reuse it (it will, if `/json/list` returns a real page target).
+- **Jest hangs at "did not exit one second after the test run has completed"** — harmless. It's the dev process still holding handles; the suite already passed.
+
+### 6. Running tests against a packaged build
+
+To drive the **installed** binary instead of `npm run dev`:
+
+```bash
+$ KLIPPEL_BIN_PATH=/path/to/installed/Klippel npm run test:e2e -- <pattern>
+```
+
+On headless Linux CI, combine the two by setting `KLIPPEL_USE_XVFB=1` alongside `KLIPPEL_BIN_PATH` 
+
 ## Architecture
 
 The project is structured as a micro-kernel system, its kernel consists in every logic that is not business modules, such as: [Booting the system](/webapp/src/kernel/modules/Loader/), [Graph management](/webapp/src/kernel/modules/Graphs), etc.

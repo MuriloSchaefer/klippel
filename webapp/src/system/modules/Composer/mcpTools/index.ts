@@ -39,6 +39,14 @@ import { editVisualizationTool } from './editVisualization';
 import { editVisualizationShortcutTool } from './editVisualizationShortcut';
 import { deleteVisualizationTool } from './deleteVisualization';
 import { deleteVisualizationShortcutTool } from './deleteVisualizationShortcut';
+import { addElectiveTool } from './addElective';
+import { addElectiveShortcutTool } from './addElectiveShortcut';
+import { editElectiveTool } from './editElective';
+import { editElectiveShortcutTool } from './editElectiveShortcut';
+import { deleteElectiveTool } from './deleteElective';
+import { deleteElectiveShortcutTool } from './deleteElectiveShortcut';
+import { focusElectiveListTool } from './focusElectiveList';
+import { cycleElectiveFocusTool } from './cycleElectiveFocus';
 
 const TOOLS = [
   openModelTool,
@@ -80,6 +88,14 @@ const TOOLS = [
   editVisualizationShortcutTool,
   deleteVisualizationTool,
   deleteVisualizationShortcutTool,
+  addElectiveTool,
+  addElectiveShortcutTool,
+  editElectiveTool,
+  editElectiveShortcutTool,
+  deleteElectiveTool,
+  deleteElectiveShortcutTool,
+  focusElectiveListTool,
+  cycleElectiveFocusTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

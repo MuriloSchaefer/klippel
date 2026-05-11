@@ -13,6 +13,7 @@ import {
   MATERIAL_LIST_CONTEXT_ID,
   GRADUATION_LIST_CONTEXT_ID,
   VISUALIZATION_LIST_CONTEXT_ID,
+  ELECTIVE_LIST_CONTEXT_ID,
   SVG_EMPTY_STATE_CONTEXT_ID,
   UPLOAD_SVG_SHORTCUT_ID,
 } from "./constants";
@@ -575,6 +576,139 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
         btn?.click();
       },
       description: 'Remove focused visualization',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ElectiveList/focus`,
+      key: 'Ctrl+Alt+e',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const accordion = document.querySelector(
+          '[role="accordion-Eletivos da Peça"]'
+        ) as HTMLElement | null;
+        if (!accordion) return;
+        const summary = accordion.querySelector(
+          '[aria-controls="accordion-Eletivos da Peça-content"]'
+        ) as HTMLElement | null;
+        if (!summary) return;
+
+        const isExpanded = () =>
+          summary.getAttribute('aria-expanded') === 'true';
+        const wasExpanded = isExpanded();
+        const rowFocusedInside = !!document.activeElement?.closest(
+          '[role="accordion-Eletivos da Peça"] [data-testid="elective-item"]'
+        );
+
+        if (wasExpanded && rowFocusedInside) {
+          summary.click();
+          return;
+        }
+
+        if (!wasExpanded) summary.click();
+
+        const findFirstRow = () =>
+          accordion.querySelector(
+            '[data-testid="elective-item"]'
+          ) as HTMLElement | null;
+        const findAddBtn = () =>
+          accordion.querySelector(
+            '#composer-add-elective'
+          ) as HTMLElement | null;
+        const findContent = () =>
+          accordion.querySelector(
+            '[data-accordion-content="Eletivos da Peça"]'
+          ) as HTMLElement | null;
+
+        const start = Date.now();
+        const attempt = () => {
+          const first = findFirstRow();
+          if (first) {
+            first.focus();
+            if (document.activeElement === first) return;
+          } else {
+            const addBtn = findAddBtn();
+            if (addBtn) {
+              addBtn.focus();
+              if (document.activeElement === addBtn) return;
+            } else {
+              const content = findContent();
+              if (content) {
+                content.focus();
+                if (document.activeElement === content) return;
+              }
+            }
+          }
+          if (Date.now() - start < 1500) {
+            setTimeout(attempt, 50);
+          }
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Toggle / focus elective list',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ElectiveList/addElective`,
+      key: 'a',
+      contextId: ELECTIVE_LIST_CONTEXT_ID,
+      action: () => {
+        document.getElementById('composer-add-elective')?.click();
+      },
+      description: 'Add elective',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ElectiveItem/focusNext`,
+      key: 'ArrowDown',
+      contextId: ELECTIVE_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="elective-item"]');
+        if (!current) return;
+        const next = current.nextElementSibling as HTMLElement | null;
+        if (next?.matches('[data-testid="elective-item"]')) {
+          next.focus();
+        }
+      },
+      description: 'Focus next elective item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ElectiveItem/focusPrev`,
+      key: 'ArrowUp',
+      contextId: ELECTIVE_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="elective-item"]');
+        if (!current) return;
+        const prev = current.previousElementSibling as HTMLElement | null;
+        if (prev?.matches('[data-testid="elective-item"]')) {
+          prev.focus();
+        }
+      },
+      description: 'Focus previous elective item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ElectiveItem/editElective`,
+      key: 'e',
+      contextId: ELECTIVE_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="elective-item"]');
+        const btn = row?.querySelector('[data-testid="elective-item-edit"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Edit focused elective',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ElectiveItem/deleteElective`,
+      key: 'd',
+      contextId: ELECTIVE_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="elective-item"]');
+        const btn = row?.querySelector('[data-testid="elective-item-delete"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Remove focused elective',
       enabled: true,
     },
     {

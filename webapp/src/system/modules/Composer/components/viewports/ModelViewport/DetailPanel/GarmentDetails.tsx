@@ -8,6 +8,7 @@ import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { useEffect, useMemo, useState } from "react";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
 import {
+  ELECTIVE_LIST_CONTEXT_ID,
   GRADUATION_LIST_CONTEXT_ID,
   MODULE_NAME,
   VISUALIZATION_LIST_CONTEXT_ID,
@@ -126,17 +127,20 @@ export default function GarmentDetails({
           />
         </Accordion>
       </FocusShortcutProvider>
-      <Accordion
-        name="Eletivos da Peça"
-        icon={undefined}
-        summary="Cada eletivo representa uma variação opcional dentro da peça"
-        defaultExpanded
-      >
-        <ElectiveListAccordion
-          variationId={variationId}
-          garmentId={selectedPart}
-        />
-      </Accordion>
+      <FocusShortcutProvider contextId={ELECTIVE_LIST_CONTEXT_ID}>
+        <Accordion
+          name="Eletivos da Peça"
+          icon={undefined}
+          shortcutHint={`${MODULE_NAME}/ElectiveList/focus`}
+          summary="Cada eletivo representa uma variação opcional dentro da peça"
+          defaultExpanded
+        >
+          <ElectiveListAccordion
+            variationId={variationId}
+            garmentId={selectedPart}
+          />
+        </Accordion>
+      </FocusShortcutProvider>
       <Accordion
         name="Processos da Peça"
         icon={undefined}

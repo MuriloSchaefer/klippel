@@ -56,7 +56,9 @@
     "package": "electron-vite build && electron-forge package",
     "make": "electron-vite build && electron-forge make",
     "publish": "electron-forge publish",
-    "package:tests": "node scripts/build-test-bundle.mjs"
+    "package:tests": "node scripts/build-test-bundle.mjs",
+    "test:e2e": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 jest",
+    "test:e2e:headless": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 KLIPPEL_USE_XVFB=1 jest"
   },
   "repository": {
     "url": "git@github.com:MuriloSchaefer/klippel.git"
