@@ -18,7 +18,6 @@ import {
 } from "../typings";
 import UnitAmountSelector from "./UnitAmountSelector";
 import { CONVERSION_GRAPH_NAME } from "../constants";
-import { debounce } from "@kernel/utils";
 
 interface CompoundSelectorProps extends Omit<BoxProps, "onChange"> {
   readonly label?: string;
@@ -70,7 +69,6 @@ export default function CompoundSelector({
   );
 
   const [currState, setCurrentState] = useState(value)
-  const debouncedOnChange = useMemo(()=>debounce(onChange, 500), [])
 
   return (
     <Box
@@ -87,7 +85,7 @@ export default function CompoundSelector({
           onChange={(v: UnitValue) => {
             const updatedValue = { ...currState, quotient: v }
             setCurrentState(updatedValue)
-            debouncedOnChange(updatedValue)
+            onChange(updatedValue)
           }
           }
           selectorProps={{ sx: {width: '10px'} }}
@@ -106,7 +104,7 @@ export default function CompoundSelector({
           onChange={(v: UnitValue) => {
             const updatedValue = { ...currState, dividend: v }
             setCurrentState(updatedValue)
-            debouncedOnChange(updatedValue)
+            onChange(updatedValue)
           }}
           sx={{width: 'max-content'}}
         >

@@ -615,6 +615,11 @@ export default function useVariation({ variationId }: { variationId: string }) {
         } as EdgeMap);
         markChanged();
       },
+      removeProcess: (nodeId: string) => {
+        if (!graph.state) return;
+        graph.actions.removeNode(nodeId);
+        markChanged();
+      },
       updateProcess: (nodeId: string, changes: Partial<ProcessNode>) => {
         if (!graph.state) return;
         const curr = graph.state.nodes[nodeId];

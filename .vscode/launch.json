@@ -17,8 +17,9 @@
       "runtimeArgs": ["--sourcemap"],
       "env": {
         "REMOTE_DEBUGGING_PORT": "9222",
-        "ENV_NAME":"small-app",
-        "KLIPPEL_DEV_LOG": "1"
+        "ENV_NAME": "small-app",
+        "KLIPPEL_DEV_LOG": "1",
+        "ELECTRON_RUN_AS_NODE": null
       },
       "args": ["--outDir", "./dist/electron"]
     },

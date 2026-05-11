@@ -11,6 +11,7 @@ import {
   ELECTIVE_LIST_CONTEXT_ID,
   GRADUATION_LIST_CONTEXT_ID,
   MODULE_NAME,
+  PROCESS_LIST_CONTEXT_ID,
   VISUALIZATION_LIST_CONTEXT_ID,
 } from "../../../../constants";
 import ElectiveListAccordion from "../../../viewports/ElectiveListAccordion";
@@ -141,17 +142,20 @@ export default function GarmentDetails({
           />
         </Accordion>
       </FocusShortcutProvider>
-      <Accordion
-        name="Processos da Peça"
-        icon={undefined}
-        summary="Processos associados à peça (tempo e custo)"
-        defaultExpanded
-      >
-        <ProcessListAccordion
-          variationId={variationId}
-          parentId={selectedPart}
-        />
-      </Accordion>
+      <FocusShortcutProvider contextId={PROCESS_LIST_CONTEXT_ID}>
+        <Accordion
+          name="Processos da Peça"
+          icon={undefined}
+          shortcutHint={`${MODULE_NAME}/ProcessList/focus`}
+          summary="Processos associados à peça (tempo e custo)"
+          defaultExpanded
+        >
+          <ProcessListAccordion
+            variationId={variationId}
+            parentId={selectedPart}
+          />
+        </Accordion>
+      </FocusShortcutProvider>
     </Box>
   );
 }

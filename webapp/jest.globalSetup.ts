@@ -151,11 +151,20 @@ export default async function globalSetup() {
     stdio = 'ignore';
   }
 
+  // VS Code's Jest extension runs the test host with ELECTRON_RUN_AS_NODE=1
+  // (it's set for the extension host and inherited by spawned tasks). If that
+  // leaks into the Electron binary we spawn here, `require('electron')` in the
+  // main process returns the binary path instead of the API and the app
+  // crashes on boot at `@electron-toolkit/utils` reading `app.isPackaged`,
+  // which surfaces as a CDP-timeout in this setup. Strip it.
+  const childEnv = { ...process.env };
+  delete childEnv.ELECTRON_RUN_AS_NODE;
+
   const child = spawn(cmd, args, {
     cwd: process.cwd(),
     stdio,
     detached: true,
-    env: { ...process.env },
+    env: childEnv,
   });
   child.unref();
   child.on('error', (err: any) => {
