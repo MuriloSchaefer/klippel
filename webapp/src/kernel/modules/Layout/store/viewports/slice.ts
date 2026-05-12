@@ -14,8 +14,7 @@ import {
 } from "./actions";
 import { PathLike } from "fs";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Layout/viewPortManager/viewports");
 
 export const persistViewportState = (state: ViewportState) => {
@@ -73,6 +72,17 @@ const restoreActiveVPSession = async (
   return vpName;
 };
 
+const buildInitialState = async (): Promise<viewportManagerState> => ({
+  groups: groupsSlice.getInitialState(),
+  activeViewport: await restoreActiveVPSession(),
+  viewports: await restoreSession(),
+});
+
+export const viewportsRehydrated = defineRehydration<viewportManagerState>(
+  `${MODULE_NAME}Viewports/rehydrated`,
+  buildInitialState,
+);
+
 const slice = createSlice<
   viewportManagerState,
   SliceCaseReducers<viewportManagerState>,
@@ -80,11 +90,7 @@ const slice = createSlice<
   SliceSelectors<viewportManagerState>
 >({
   name: `${MODULE_NAME}Viewports`,
-  initialState: {
-    groups: groupsSlice.getInitialState(),
-    activeViewport: await restoreActiveVPSession(),
-    viewports: await restoreSession(),
-  },
+  initialState: await buildInitialState(),
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(addViewport, (state: viewportManagerState, { payload }) => {
@@ -200,6 +206,8 @@ const slice = createSlice<
       };
       return newState;
     });
+
+    builder.addCase(viewportsRehydrated, (_state, { payload }) => payload);
 
     builder.addDefaultCase((state, action) => ({
       ...state,

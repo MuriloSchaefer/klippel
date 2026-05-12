@@ -4,8 +4,7 @@ import { ViewportGroups, ViewportGroupState } from "../state";
 import { createGroup } from "./actions";
 import { PathLike } from "fs";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(`.session/Layout/viewPortManager/.groups`);
 export const persistVPGroupState = (state:ViewportGroupState ) => {
     storage.writeBlob(
@@ -26,6 +25,11 @@ const restoreSession = async (sessionPath: PathLike = ".session/Layout/viewPortM
   return state;
 }
 
+export const groupsRehydrated = defineRehydration<ViewportGroups>(
+  `${MODULE_NAME}ViewportsGroups/rehydrated`,
+  restoreSession,
+);
+
 const slice = createSlice<
   ViewportGroups,
   SliceCaseReducers<ViewportGroups>,
@@ -36,6 +40,7 @@ const slice = createSlice<
   initialState: await restoreSession(),
   reducers: {},
   extraReducers: (builder) => {
+    builder.addCase(groupsRehydrated, (_state, { payload }) => payload as ViewportGroups);
     builder.addCase(createGroup, (state, { payload }) => {
       storage.ensureDir(`.session/Layout/viewPortManager/.groups`);
       return {

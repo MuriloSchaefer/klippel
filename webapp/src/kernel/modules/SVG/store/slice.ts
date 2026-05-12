@@ -23,8 +23,7 @@ import {
 import _ from "lodash";
 import { PathLike } from "fs";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/SVG/svgs");
 
 export const sessionSaver = (store: Store<SVGModuleState>) => () => {
@@ -119,11 +118,17 @@ const restoreSession = async (sessionPath: PathLike = ".session/SVG/svgs/") => {
   return { svgs };
 };
 
+export const svgRehydrated = defineRehydration<SVGModuleState>(
+  `${MODULE_NAME}/rehydrated`,
+  restoreSession,
+);
+
 const slice = createSlice({
   name: MODULE_NAME,
   initialState: await restoreSession(),
   reducers: {},
   extraReducers: (builder) => {
+    builder.addCase(svgRehydrated, (_state, { payload }) => payload);
     builder.addCase(
       loadSVG,
       (state: SVGModuleState, { payload: { path, instanceName } }) => {

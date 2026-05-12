@@ -9,8 +9,7 @@ import {
   saveSession,
 } from "./actions";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Markdown");
 
 export const sessionSaver = (store: Store<MarkdownModuleState>) => () => {

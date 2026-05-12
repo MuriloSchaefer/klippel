@@ -9,8 +9,7 @@ import {
 import { initialState, PanelsState } from "./state";
 import { PathLike } from "fs";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Layout/panels");
 
 export function persistPanelsState(state: PanelsState) {
@@ -50,11 +49,17 @@ const restorePanelsSession = async (
   return { details: detailsContent, settings: settingsContent } as PanelsState;
 };
 
+export const panelsRehydrated = defineRehydration<PanelsState>(
+  `${MODULE_NAME}Panels/rehydrated`,
+  restorePanelsSession,
+);
+
 const slice = createSlice({
   name: MODULE_NAME,
   initialState: await restorePanelsSession(),
   reducers: {},
   extraReducers: (builder) => {
+    builder.addCase(panelsRehydrated, (_state, { payload }) => payload);
     builder.addCase(expandSettings, (state: PanelsState) => ({
       ...state,
       settings: { ...state.settings, state: "expanded" },

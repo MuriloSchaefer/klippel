@@ -10,8 +10,7 @@ import {
 import { PathLike } from "fs";
 import type { PaletteMode } from "@mui/material";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Layout");
 
 export const sessionSaver = (store: Store<LayoutState>) => () => {
@@ -31,21 +30,29 @@ const restoreThemeSession = async (sessionPath: PathLike = ".session/Layout") =>
   return JSON.parse(fileContent) as {theme: PaletteMode};
 }
 
+const buildLayoutInitial = async (): Promise<LayoutState> => ({
+  ...layoutInitialState,
+  ...await restoreThemeSession(),
+  panels: panelsSlice.getInitialState(),
+  viewportManager: viewportManagerSlice.getInitialState(),
+});
+
+export const layoutRehydrated = defineRehydration<LayoutState>(
+  `${MODULE_NAME}/rehydrated`,
+  buildLayoutInitial,
+);
+
 const slice = createSlice({
     name: MODULE_NAME,
-    initialState: {
-      ...layoutInitialState,
-      ...await restoreThemeSession(),
-      panels: panelsSlice.getInitialState(),
-      viewportManager: viewportManagerSlice.getInitialState(),
-    },
+    initialState: await buildLayoutInitial(),
     reducers: {},
     extraReducers: (builder) => {
+      builder.addCase(layoutRehydrated, (_state, { payload }) => payload);
       builder.addCase(
         switchTheme,
         (state: LayoutState, { payload: { theme } }) => {
           return {
-            ...state, 
+            ...state,
             ...persistTheme({theme})
           };
         }

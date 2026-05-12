@@ -3,8 +3,7 @@ import { MODULE_NAME } from "../constants";
 import modelsSlice from "./models/slice";
 import variationsSlice from "./variations/slice";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Composer");
 
 const slice = createSlice({

@@ -14,7 +14,7 @@ import {
   workspacesListed,
 } from "./actions";
 import { persistState } from "./slice";
-import { setCurrentWorkspace } from "./workspaceScope";
+import { runAllRehydrators, setCurrentWorkspace } from "./workspaceScope";
 import { StoreState } from "./state";
 
 export function getWorkspaceFolder(getState: () => { Store: StoreState }) {
@@ -74,6 +74,15 @@ middlewares.startListening({
     const { dispatch } = listenerApi;
 
     setCurrentWorkspace(payload.workspace);
+
+    // Re-read every persisted slice from the new workspace's `.session/` and
+    // dispatch each slice's rehydrate action. This is the soft-reset path
+    // (no page reload): slices swap their state in-place.
+    const results = await runAllRehydrators();
+    for (const { actionType, payload: slicePayload } of results) {
+      dispatch({ type: actionType, payload: slicePayload });
+    }
+
     dispatch(workspaceSelected(payload)); // dispatch event
   },
 });

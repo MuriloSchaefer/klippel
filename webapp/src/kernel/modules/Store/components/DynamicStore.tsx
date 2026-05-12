@@ -28,15 +28,22 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   const store = useMemo(
-    () =>configureStore({
-      reducer: combineReducers<{ [name: string]: Reducer<any, UnknownAction> }>({
-        [slice.name]: slice.reducer,
-      }),
-      middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware({ serializableCheck: false })
-          .concat(dynamicMiddlewares as Middleware)
-          .concat(middlewares.middleware),
-    }),
+    () => {
+      const s = configureStore({
+        reducer: combineReducers<{ [name: string]: Reducer<any, UnknownAction> }>({
+          [slice.name]: slice.reducer,
+        }),
+        middleware: (getDefaultMiddleware) =>
+          getDefaultMiddleware({ serializableCheck: false })
+            .concat(dynamicMiddlewares as Middleware)
+            .concat(middlewares.middleware),
+      });
+      // Expose the store for puppeteer-driven e2e soft-reset (dispatches
+      // selectWorkspace + per-slice rehydrate from the test helper). Harmless
+      // outside tests; the renderer doesn't read it.
+      (globalThis as unknown as { __klippelStore__?: typeof s }).__klippelStore__ = s;
+      return s;
+    },
     []
   );
 

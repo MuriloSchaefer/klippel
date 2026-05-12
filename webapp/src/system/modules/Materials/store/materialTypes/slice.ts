@@ -3,8 +3,7 @@ import { materialTypesLoaded } from "./actions";
 import { MaterialType, MaterialTypesState } from "./state";
 import { PathLike } from "fs";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Materials/materialTypes");
 export function persistMaterialTypes(state: MaterialTypesState){
   Object.entries(state).forEach(([key, value]) => {
@@ -25,6 +24,11 @@ const restoreMaterialTypesSession = async (sessionPath: PathLike = ".session/Mat
   return state as MaterialTypesState;
 }
 
+export const materialTypesRehydrated = defineRehydration<MaterialTypesState>(
+  'materialTypesSlice/rehydrated',
+  restoreMaterialTypesSession,
+);
+
 const slice = createSlice({
     name: 'materialTypesSlice',
     initialState: await restoreMaterialTypesSession(),
@@ -33,6 +37,7 @@ const slice = createSlice({
       builder.addCase(
         materialTypesLoaded,
         (state: MaterialTypesState, { payload }) => ({...state, ...payload}))
+      builder.addCase(materialTypesRehydrated, (_state, { payload }) => payload);
     }
 })
 

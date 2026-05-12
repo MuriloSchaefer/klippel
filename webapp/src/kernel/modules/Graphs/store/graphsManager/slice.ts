@@ -11,8 +11,7 @@ import { createGraph, destroyGraph } from "./actions";
 import instanceSlice from "../graphInstance/slice"
 import { PathLike } from "fs";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Graph/graphs");
 
 const restoreSession = async (sessionPath: PathLike = ".session/Graph/graphs") => {
@@ -28,13 +27,22 @@ const restoreSession = async (sessionPath: PathLike = ".session/Graph/graphs") =
   return {graphs};
 }
 
+const buildInitial = async (): Promise<GraphsManagerState> =>
+  ({ ...graphsManagerInitialState, ...await restoreSession() }) as GraphsManagerState;
+
+export const graphsManagerRehydrated = defineRehydration<GraphsManagerState>(
+  `${MODULE_NAME}/rehydrated`,
+  buildInitial,
+);
+
 const slice = createSlice({
     name: MODULE_NAME,
-    initialState: {...graphsManagerInitialState, ...await restoreSession()},
+    initialState: await buildInitial(),
     reducers: {},
     extraReducers: (builder) => {
+      builder.addCase(graphsManagerRehydrated, (_state, { payload }) => payload);
       builder.addCase(
-        createGraph, 
+        createGraph,
         (state: GraphsManagerState, { payload: { graphId } }) => {
           if (graphId in state.graphs) throw Error()
 

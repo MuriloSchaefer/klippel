@@ -4,8 +4,7 @@ import { initialState, MaterialsModuleState } from "./state";
 import materialTypesSlice from './materialTypes/slice';
 import materialsSlice from './materials/slice';
 import { saveSession } from "./actions";
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/SVG/svgs");
 
 export const sessionSaver = (store: Store<MaterialsModuleState>) => () => {

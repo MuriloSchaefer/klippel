@@ -3,8 +3,7 @@ import { MODULE_NAME } from "../../constants";
 import { addRibbonTab, selectTab} from "./actions";
 import { RibbonMenuState } from "./state";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Layout/ribbonMenu");
 
 

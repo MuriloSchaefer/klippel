@@ -4,8 +4,7 @@ import { MODULE_NAME } from "../../constants";
 import type { PathLike } from "fs-extra";
 import { modelOpened, selectPart, uploadSVG } from "./actions";
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Composer/variations");
 export function persistVariation(state: ModelVariation) {
   storage.writeBlob(
@@ -37,11 +36,17 @@ const restoreModelsSession = async (
   return state as ComposerModuleState["variations"];
 };
 
+export const variationsRehydrated = defineRehydration<ComposerModuleState["variations"]>(
+  `${MODULE_NAME}-variations/rehydrated`,
+  restoreModelsSession,
+);
+
 const slice = createSlice({
   name: `${MODULE_NAME}-variations`,
   initialState: await restoreModelsSession(),
   reducers: {},
   extraReducers: (builder) => {
+    builder.addCase(variationsRehydrated, (_state, { payload }) => payload);
     builder.addCase(modelOpened, (state, { payload: { model } }) => ({
       ...state,
       [model.variationId]: model,

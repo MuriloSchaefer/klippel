@@ -5,8 +5,7 @@ import { modelsListed } from "./actions";
 import type { PathLike } from "fs-extra";
 
 
-import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
-const storage = forWorkspace(await getCurrentWorkspace());
+import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Composer/models");
 export function persistModelState(state: Model) {
   storage.writeBlob(
@@ -34,6 +33,11 @@ const restoreModelsSession = async (
   return state as ComposerModuleState['models'];
 };
 
+export const modelsRehydrated = defineRehydration<ComposerModuleState['models']>(
+  `${MODULE_NAME}-models/rehydrated`,
+  restoreModelsSession,
+);
+
 const slice = createSlice({
   name: `${MODULE_NAME}-models`,
   initialState: await restoreModelsSession(),
@@ -43,6 +47,7 @@ const slice = createSlice({
       ...state,
       ...payload.reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {}),
     }));
+    builder.addCase(modelsRehydrated, (_state, { payload }) => payload);
   },
 });
 
