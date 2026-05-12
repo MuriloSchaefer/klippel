@@ -9,19 +9,13 @@ export default async (): Promise<Config> => {
     setupFiles: ['<rootDir>/jest.setup.ts'],
     globalSetup: '<rootDir>/jest.globalSetup.ts',
     globalTeardown: '<rootDir>/jest.globalTeardown.ts',
-    preset: 'ts-jest',
     cacheDirectory: './.jest/cache',
     coverageDirectory: './.jest/coverage',
     moduleFileExtensions: defaults.moduleFileExtensions,
     transform: {
-        '^.+\\.tsx?$': [
-            'ts-jest',
-            {
-              useESM: true,
-            },
-          ],
+      '^.+\\.(t|j)sx?$': ['@swc/jest'],
     },
-    extensionsToTreatAsEsm: ['.ts'],
+    extensionsToTreatAsEsm: ['.ts', '.tsx'],
     moduleNameMapper: {
         '@kernel(.*)$': '<rootDir>/src/kernel/$1',
         '@system(.*)$': '<rootDir>/src/system/$1',

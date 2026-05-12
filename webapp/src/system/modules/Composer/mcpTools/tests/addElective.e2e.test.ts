@@ -3,6 +3,7 @@
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '../../../../../helpers/puppeteer/resetWorkspace';
+import { closeOpenOverlays } from '../../../../../helpers/puppeteer/closeOverlays';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -29,20 +30,6 @@ import { switchRibbonTabTool } from '../../../../../kernel/modules/Layout/mcpToo
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 const rowSel = (label: string) =>
   `[data-testid="elective-item"][data-elective-label="${label}"]`;
-
-const closeAllOpenContainers = async (p: Page) => {
-  for (let i = 0; i < 5; i++) {
-    const hasOpen =
-      (await p.$('[role="pointer-panel-content"]')) ||
-      (await p.$('ul[role="listbox"]'));
-    if (!hasOpen) return;
-    await p.keyboard.press('Escape');
-    await p
-      .waitForSelector('[role="pointer-panel-content"]', { hidden: true, timeout: 500 })
-      .catch(() => {});
-  }
-};
-
 beforeAll(async () => {
   browser = await puppeteer.connect({ browserURL: CDP_URL, defaultViewport: null });
   const pages = await browser.pages();
@@ -71,7 +58,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  if (page) await closeAllOpenContainers(page);
+  if (page) await closeOpenOverlays(page);
 }, 15_000);
 
 describe('addElective via click (E2E)', () => {

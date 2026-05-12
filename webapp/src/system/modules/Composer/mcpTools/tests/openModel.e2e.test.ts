@@ -4,6 +4,7 @@
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '../../../../../helpers/puppeteer/resetWorkspace';
+import { closeOpenOverlays } from '../../../../../helpers/puppeteer/closeOverlays';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -39,24 +40,6 @@ const closeOpenModelModal = async (p: Page) => {
     .waitForSelector('[role="list-options"]', { hidden: true, timeout: 5_000 })
     .catch(() => {});
 };
-
-const closeAllOpenContainers = async (p: Page) => {
-  // Modal is keepMounted, so [role="pointer-panel"] always exists; rely on
-  // [role="pointer-panel-content"] / list-options as the open signal.
-  for (let i = 0; i < 5; i++) {
-    const hasOpen = (await p.$('[role="pointer-panel-content"]')) ||
-      (await p.$('[role="list-options"]'));
-    if (!hasOpen) return;
-    await p.keyboard.press('Escape');
-    await p
-      .waitForSelector('[role="pointer-panel-content"]', { hidden: true, timeout: 500 })
-      .catch(() => {});
-    await p
-      .waitForSelector('[role="list-options"]', { hidden: true, timeout: 500 })
-      .catch(() => {});
-  }
-};
-
 const expectSelectedTab = async (p: Page, name: string) => {
   // Poll the selected tab's text content; can't be expressed as a single
   // selector since we need substring-match against textContent.
@@ -90,7 +73,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  if (page) await closeAllOpenContainers(page);
+  if (page) await closeOpenOverlays(page);
 }, 15_000);
 
 describe('openModel via click (E2E)', () => {

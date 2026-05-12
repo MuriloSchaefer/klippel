@@ -80,7 +80,7 @@ describe('reorderGraduation via click (E2E)', () => {
     expect(subset).toEqual([labels[0], labels[2], labels[1]]);
 
     for (const l of labels) await deleteGraduationTool.execute({ label: l });
-  }, 90_000);
+  }, 30_000);
 });
 
 describe('reorderGraduation via shortcut (E2E)', () => {
@@ -98,5 +98,5 @@ describe('reorderGraduation via shortcut (E2E)', () => {
     expect(subset).toEqual([labels[1], labels[0], labels[2]]);
 
     for (const l of labels) await deleteGraduationShortcutTool.execute({ label: l });
-  }, 90_000);
+  }, 30_000);
 });

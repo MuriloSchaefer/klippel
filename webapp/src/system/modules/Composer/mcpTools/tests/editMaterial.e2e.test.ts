@@ -4,6 +4,7 @@
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '@helpers/puppeteer/resetWorkspace';
+import { closeOpenOverlays } from '@helpers/puppeteer/closeOverlays';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -41,21 +42,6 @@ const waitForFormClosed = async (p: Page) => {
     timeout: 10_000,
   });
 };
-
-const closeAllOpenContainers = async (p: Page) => {
-  // Modal is keepMounted, so [role="pointer-panel"] always exists; rely on
-  // [role="pointer-panel-content"] / listbox presence as the open signal.
-  for (let i = 0; i < 5; i++) {
-    const hasOpen = (await p.$('[role="pointer-panel-content"]')) ||
-      (await p.$('ul[role="listbox"]'));
-    if (!hasOpen) return;
-    await p.keyboard.press('Escape');
-    await p
-      .waitForSelector('[role="pointer-panel-content"]', { hidden: true, timeout: 500 })
-      .catch(() => {});
-  }
-};
-
 beforeAll(async () => {
   browser = await puppeteer.connect({ browserURL: CDP_URL, defaultViewport: null });
   const pages = await browser.pages();
@@ -80,7 +66,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  if (page) await closeAllOpenContainers(page);
+  if (page) await closeOpenOverlays(page);
 }, 15_000);
 
 describe('editMaterial via click (E2E)', () => {

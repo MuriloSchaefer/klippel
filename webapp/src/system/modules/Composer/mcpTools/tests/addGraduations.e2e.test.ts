@@ -4,6 +4,7 @@
  */
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '../../../../../helpers/puppeteer/resetWorkspace';
+import { closeOpenOverlays } from '../../../../../helpers/puppeteer/closeOverlays';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -31,21 +32,6 @@ const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
 const rowSel = (label: string) =>
   `[data-testid="graduation-item"][data-graduation-label="${label}"]`;
-
-const closeAllOpenContainers = async (p: Page) => {
-  // The Modal is keepMounted, so [role="pointer-panel"] always exists; only
-  // [role="pointer-panel-content"] indicates an actually-open panel.
-  for (let i = 0; i < 5; i++) {
-    const hasOpen = (await p.$('[role="pointer-panel-content"]')) ||
-      (await p.$('ul[role="listbox"]'));
-    if (!hasOpen) return;
-    await p.keyboard.press('Escape');
-    await p
-      .waitForSelector('[role="pointer-panel-content"]', { hidden: true, timeout: 500 })
-      .catch(() => {});
-  }
-};
-
 const deleteIfExists = async (
   label: string,
   tool: { execute: (input: { label: string }) => Promise<unknown> },
@@ -85,7 +71,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  if (page) await closeAllOpenContainers(page);
+  if (page) await closeOpenOverlays(page);
 }, 15_000);
 
 describe('addGraduations via click (E2E)', () => {

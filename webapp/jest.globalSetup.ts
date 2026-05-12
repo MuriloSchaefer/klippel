@@ -108,6 +108,8 @@ export default async function globalSetup() {
   }
 
   if (await probeCdp()) {
+    // eslint-disable-next-line no-console
+    console.log(`[globalSetup] reusing existing Klippel on CDP :${CDP_PORT} (skipped boot)`);
     (globalThis as any).__KLIPPEL_OWNED_PROCESS__ = false;
     return;
   }
