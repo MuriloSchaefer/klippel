@@ -55,6 +55,8 @@ import { deleteProcessTool } from './deleteProcess';
 import { deleteProcessShortcutTool } from './deleteProcessShortcut';
 import { focusProcessListTool } from './focusProcessList';
 import { cycleProcessFocusTool } from './cycleProcessFocus';
+import { linkProcessElectiveTool } from './linkProcessElective';
+import { linkProcessElectiveShortcutTool } from './linkProcessElectiveShortcut';
 
 const TOOLS = [
   openModelTool,
@@ -112,6 +114,8 @@ const TOOLS = [
   deleteProcessShortcutTool,
   focusProcessListTool,
   cycleProcessFocusTool,
+  linkProcessElectiveTool,
+  linkProcessElectiveShortcutTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

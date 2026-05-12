@@ -846,6 +846,18 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
       enabled: true,
     },
     {
+      id: `${MODULE_NAME}/ProcessItem/linkElective`,
+      key: 'w',
+      contextId: PROCESS_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="process-item"]');
+        const btn = row?.querySelector('[data-testid="process-item-link-elective"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Link focused process to elective',
+      enabled: true,
+    },
+    {
       id: UPLOAD_SVG_SHORTCUT_ID,
       key: 'u',
       contextId: SVG_EMPTY_STATE_CONTEXT_ID,

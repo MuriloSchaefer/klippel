@@ -250,7 +250,14 @@ export default function ProcessItem({
             refocusAfterEditRef.current = true;
           }}
         />
-        <ProcessElectiveButton variationId={variationId} processNode={node} />
+        <ProcessElectiveButton
+          variationId={variationId}
+          processNode={node}
+          isFocused={isFocused}
+          onClose={() => {
+            refocusAfterEditRef.current = true;
+          }}
+        />
         <ProcessMaterialUsageButton
           variationId={variationId}
           processNodeId={node.id}

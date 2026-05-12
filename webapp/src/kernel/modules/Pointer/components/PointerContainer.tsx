@@ -82,6 +82,7 @@ const ModalContent = ({
       "input:not([type='hidden']):not([disabled])",
       "textarea:not([disabled])",
       "select:not([disabled])",
+      "[role='combobox']:not([aria-disabled='true'])",
       "[contenteditable='true']",
     ].join(",");
     const first = root.querySelector<HTMLElement>(selector);

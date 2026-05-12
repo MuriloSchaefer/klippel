@@ -118,6 +118,11 @@ export default async function globalSetup() {
   let cmd: string;
   let args: string[];
 
+  // xvfb-run defaults to an 8-bit screen, which Electron's GPU/compositor
+  // can't initialize — Renderer targets get torn down mid-test ("Target
+  // closed"). Force 24-bit at a reasonable resolution.
+  const xvfbPrefix = ['-a', '--server-args=-screen 0 1280x1024x24'];
+
   if (installedBin) {
     // Drive the installed Klippel binary directly. Used by the bundled test
     // runner that ships alongside releases — it spawns its own Electron
@@ -126,7 +131,7 @@ export default async function globalSetup() {
     if (process.platform === 'linux') baseArgs.push('--no-sandbox');
     if (useXvfb) {
       cmd = 'xvfb-run';
-      args = ['-a', installedBin, ...baseArgs];
+      args = [...xvfbPrefix, installedBin, ...baseArgs];
     } else {
       cmd = installedBin;
       args = baseArgs;
@@ -134,7 +139,7 @@ export default async function globalSetup() {
   } else {
     // Dev mode: launch the local repo via `npm run dev`.
     cmd = useXvfb ? 'xvfb-run' : 'npm';
-    args = useXvfb ? ['-a', 'npm', 'run', 'dev'] : ['run', 'dev'];
+    args = useXvfb ? [...xvfbPrefix, 'npm', 'run', 'dev'] : ['run', 'dev'];
   }
 
   // When driving an installed binary (CI / on-device diagnostics) the silent
@@ -159,6 +164,15 @@ export default async function globalSetup() {
   // which surfaces as a CDP-timeout in this setup. Strip it.
   const childEnv = { ...process.env };
   delete childEnv.ELECTRON_RUN_AS_NODE;
+
+  // xvfb-run only sets DISPLAY (X11). On Wayland sessions, Electron picks up
+  // WAYLAND_DISPLAY from the inherited env and renders to the real compositor
+  // instead of Xvfb — the window appears even in "headless" mode. Strip the
+  // Wayland hints so Electron falls back to the Xvfb X server.
+  if (useXvfb) {
+    delete childEnv.WAYLAND_DISPLAY;
+    delete childEnv.XDG_SESSION_TYPE;
+  }
 
   const child = spawn(cmd, args, {
     cwd: process.cwd(),
