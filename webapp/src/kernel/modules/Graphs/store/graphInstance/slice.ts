@@ -21,7 +21,7 @@ import {
 } from "./actions";
 import { saveSession } from "../graphsManager/actions";
 
-const storage = window.electron.storage;
+import { workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 
 export const sessionSaver = (store: Store<GraphsManagerState>) => () => {
   store.dispatch(saveSession());

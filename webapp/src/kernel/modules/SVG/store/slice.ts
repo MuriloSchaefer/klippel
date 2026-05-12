@@ -23,7 +23,8 @@ import {
 import _ from "lodash";
 import { PathLike } from "fs";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/SVG/svgs");
 
 export const sessionSaver = (store: Store<SVGModuleState>) => () => {

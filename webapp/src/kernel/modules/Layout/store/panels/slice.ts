@@ -9,7 +9,8 @@ import {
 import { initialState, PanelsState } from "./state";
 import { PathLike } from "fs";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Layout/panels");
 
 export function persistPanelsState(state: PanelsState) {

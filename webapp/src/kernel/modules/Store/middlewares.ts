@@ -14,6 +14,7 @@ import {
   workspacesListed,
 } from "./actions";
 import { persistState } from "./slice";
+import { setCurrentWorkspace } from "./workspaceScope";
 import { StoreState } from "./state";
 
 export function getWorkspaceFolder(getState: () => { Store: StoreState }) {
@@ -72,6 +73,7 @@ middlewares.startListening({
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
 
+    setCurrentWorkspace(payload.workspace);
     dispatch(workspaceSelected(payload)); // dispatch event
   },
 });

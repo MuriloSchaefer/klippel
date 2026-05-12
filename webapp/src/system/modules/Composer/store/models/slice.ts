@@ -5,7 +5,8 @@ import { modelsListed } from "./actions";
 import type { PathLike } from "fs-extra";
 
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Composer/models");
 export function persistModelState(state: Model) {
   storage.writeBlob(

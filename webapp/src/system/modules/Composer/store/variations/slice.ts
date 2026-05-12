@@ -4,7 +4,8 @@ import { MODULE_NAME } from "../../constants";
 import type { PathLike } from "fs-extra";
 import { modelOpened, selectPart, uploadSVG } from "./actions";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Composer/variations");
 export function persistVariation(state: ModelVariation) {
   storage.writeBlob(

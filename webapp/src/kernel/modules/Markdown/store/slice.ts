@@ -9,7 +9,8 @@ import {
   saveSession,
 } from "./actions";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Markdown");
 
 export const sessionSaver = (store: Store<MarkdownModuleState>) => () => {

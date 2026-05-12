@@ -15,6 +15,10 @@ export const resetWorkspace = async (
   target: string,
   base: string | undefined = process.env.BASE_WORKSPACE,
 ) => {
+  // .session/<Module>/* now lives inside workspaces/<name>/.session/ (change
+  // 2026-05-12-b26755). Wiping the target workspace dir wipes its session too;
+  // copying the base workspace copies its session along. No separate session
+  // teardown needed for non-Store modules.
   const targetDir = join(WORKSPACES_DIR, target);
   if (existsSync(targetDir)) {
     rmSync(targetDir, { recursive: true, force: true });
@@ -29,9 +33,8 @@ export const resetWorkspace = async (
     mkdirSync(targetDir, { recursive: true });
   }
 
-  if (existsSync(SESSION_DIR)) {
-    rmSync(SESSION_DIR, { recursive: true, force: true });
-  }
+  // Store stays at env root — it's the workspace registry, loaded synchronously
+  // before any workspace context exists. Point it at the new workspace.
   mkdirSync(dirname(STORE_STATE_FILE), { recursive: true });
   writeFileSync(
     STORE_STATE_FILE,

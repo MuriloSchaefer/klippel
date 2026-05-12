@@ -3,7 +3,8 @@ import { MODULE_NAME } from "../constants";
 import modelsSlice from "./models/slice";
 import variationsSlice from "./variations/slice";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Composer");
 
 const slice = createSlice({

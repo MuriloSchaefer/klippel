@@ -10,7 +10,8 @@ import {
 import { PathLike } from "fs";
 import type { PaletteMode } from "@mui/material";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Layout");
 
 export const sessionSaver = (store: Store<LayoutState>) => () => {

@@ -3,7 +3,8 @@ import { BudgetsManagerState, BudgetState } from "../state";
 import { createBudget, deleteBudget } from "./actions";
 import { PathLike } from "fs";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Orders/budgets");
 export function persistBudget(state: BudgetState){
   storage.writeBlob(`.session/Orders/budgets/${state.id}.json`, new Blob([JSON.stringify(state)]), {

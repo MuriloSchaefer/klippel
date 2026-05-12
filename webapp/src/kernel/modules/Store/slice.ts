@@ -8,6 +8,7 @@ import {
   selectWorkspace,
   workspacesListed,
 } from "./actions";
+import { setCurrentWorkspace } from "./workspaceScope";
 import type { PathLike } from "fs";
 
 const initialState: StoreState = {
@@ -45,9 +46,12 @@ const restoreStoreSession = async (
   return JSON.parse(fileContent) as StoreState;
 };
 
+const initialStoreState = await restoreStoreSession();
+setCurrentWorkspace(initialStoreState.selectedWorkspace);
+
 const slice = createSlice({
   name: MODULE_NAME,
-  initialState: await restoreStoreSession(),
+  initialState: initialStoreState,
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(pauseSessionAutoSaver, (state) => {

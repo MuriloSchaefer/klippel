@@ -3,7 +3,8 @@ import { materialTypesLoaded } from "./actions";
 import { MaterialType, MaterialTypesState } from "./state";
 import { PathLike } from "fs";
 
-const storage = globalThis.electron.storage;
+import { forWorkspace, getCurrentWorkspace } from "@kernel/modules/Store/workspaceScope";
+const storage = forWorkspace(await getCurrentWorkspace());
 storage.ensureDir(".session/Materials/materialTypes");
 export function persistMaterialTypes(state: MaterialTypesState){
   Object.entries(state).forEach(([key, value]) => {
