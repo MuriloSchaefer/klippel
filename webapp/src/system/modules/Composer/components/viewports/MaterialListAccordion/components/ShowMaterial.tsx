@@ -104,7 +104,7 @@ export default function ShowMaterial({
             sx={{ ml: 0.5 }}
           >
             Custo por unidade:{" "}
-            {
+            <span data-testid="material-cost-info">
               <ErrorBoundary fallbackRender={fallbackRenderLabelOnly}>
                 <MaterialCostInfo
                   variationId={variationId}
@@ -112,7 +112,7 @@ export default function ShowMaterial({
                   material={material}
                 />
               </ErrorBoundary>
-            }
+            </span>
           </Typography>
           <PointerContainer
             component={
@@ -126,13 +126,21 @@ export default function ShowMaterial({
           >
             <Tooltip title="Ver detalhes da computação" arrow>
               <IconButton
+                data-testid="material-item-audit-log"
+                aria-label="open-material-audit-log"
                 size="small"
                 sx={{
                   padding: 0.25,
                   "&:hover": { color: theme.palette.primary.main },
                 }}
               >
-                <FactCheckOutlined sx={{ fontSize: 16 }} />
+                <ShortcutHint
+                  placement="top-center"
+                  shortcutId={`${MODULE_NAME}/MaterialItem/openAuditLog`}
+                  alwaysShow={isFocused}
+                >
+                  <FactCheckOutlined sx={{ fontSize: 16 }} />
+                </ShortcutHint>
               </IconButton>
             </Tooltip>
           </PointerContainer>

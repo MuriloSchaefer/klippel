@@ -261,6 +261,10 @@ export default function ProcessItem({
         <ProcessMaterialUsageButton
           variationId={variationId}
           processNodeId={node.id}
+          isFocused={isFocused}
+          onClose={() => {
+            refocusAfterEditRef.current = true;
+          }}
         />
       </Box>
       <Divider />

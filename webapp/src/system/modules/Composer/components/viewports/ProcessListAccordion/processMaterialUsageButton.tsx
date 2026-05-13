@@ -17,12 +17,14 @@ import {
   Select,
   Stack,
   Switch,
+  Tooltip,
   Typography,
 } from "@mui/material";
 
 import useModule from "@kernel/hooks/useModule";
 import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IPointerModule } from "@kernel/modules/Pointer";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 
 import type { IMaterialsModule } from "@system/modules/Materials";
 import { useCallback, useMemo, useState } from "react";
@@ -32,6 +34,7 @@ import {
   MaterialNode,
 } from "@system/modules/Composer/typings";
 import useVariation from "@system/modules/Composer/hooks/useVariation";
+import { MODULE_NAME } from "@system/modules/Composer/constants";
 import { CompoundValue } from "@system/modules/Converter/typings";
 import CompoundSelector from "@system/modules/Converter/components/CompoundSelector";
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
@@ -39,15 +42,22 @@ import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 export default function ProcessMaterialUsageButton({
   variationId,
   processNodeId,
+  isFocused,
+  onClose,
 }: {
   variationId: string;
   processNodeId: string;
+  isFocused?: boolean;
+  onClose?: () => void;
 }) {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const graphModule = useModule<IGraphModule>("Graph");
+  const keyboardShortcutsModule =
+    useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
+  const { ShortcutHint } = keyboardShortcutsModule.components;
   const { MaterialSelector } = materialsModule.components;
 
   const { useGraph } = graphModule.hooks;
@@ -124,15 +134,19 @@ export default function ProcessMaterialUsageButton({
 
   return (
     <PointerContainer
+      onClose={() => onClose?.()}
       component={
-        <Box>
+        <Box data-testid="link-material-form">
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <FormControl sx={{ minWidth: 200 }}>
                 <InputLabel>Material</InputLabel>
                 <Select
+                  data-testid="link-material-select"
                   size="small"
                   label="Nó"
+                  autoFocus
+                  MenuProps={{ disableAutoFocusItem: true }}
                   value={newForm.materialNodeId ?? ""}
                   onChange={(e) =>
                     setNewForm((curr) => ({
@@ -142,7 +156,11 @@ export default function ProcessMaterialUsageButton({
                   }
                 >
                   {graphMaterials.map((n) => (
-                    <MenuItem key={n.id} value={n.id}>
+                    <MenuItem
+                      key={n.id}
+                      value={n.id}
+                      data-testid={`link-material-option-${n.label}`}
+                    >
                       {n.label}
                     </MenuItem>
                   ))}
@@ -158,7 +176,7 @@ export default function ProcessMaterialUsageButton({
                 </FormControl>
               )}
             </Box>
-            <FormControl>
+            <FormControl data-testid="link-material-amount">
               <CompoundSelector
                 value={newForm.amount}
                 onChange={(v) =>
@@ -169,7 +187,12 @@ export default function ProcessMaterialUsageButton({
                 }
               />
             </FormControl>
-            <Button onClick={handleAddNewRecord}>Adicionar</Button>
+            <Button
+              data-testid="link-material-add"
+              onClick={handleAddNewRecord}
+            >
+              Adicionar
+            </Button>
             <Divider />
             <List>
               {Object.values(graph.state.edges)
@@ -217,6 +240,7 @@ export default function ProcessMaterialUsageButton({
                       </Box>
                       {graduations.length > 0 && (
                         <Accordion
+                          data-testid="link-material-grade-accordion"
                           disableGutters
                           elevation={0}
                           sx={{
@@ -226,6 +250,7 @@ export default function ProcessMaterialUsageButton({
                           }}
                         >
                           <AccordionSummary
+                            data-testid="link-material-grade-accordion-summary"
                             expandIcon={<ExpandMoreSharp />}
                             sx={{ px: 1, minHeight: 32 }}
                           >
@@ -249,6 +274,8 @@ export default function ProcessMaterialUsageButton({
                               return (
                                 <Box
                                   key={g.id}
+                                  data-testid="link-material-grade-row"
+                                  data-graduation-label={g.label}
                                   sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -262,6 +289,7 @@ export default function ProcessMaterialUsageButton({
                                     {g.label}
                                   </Typography>
                                   <FormControlLabel
+                                    data-testid="link-material-grade-switch"
                                     control={
                                       <Switch
                                         size="small"
@@ -288,7 +316,7 @@ export default function ProcessMaterialUsageButton({
                                       isOverride ? "personalizar" : "usar padrão"
                                     }
                                   />
-                                  <FormControl>
+                                  <FormControl data-testid="link-material-grade-consumption">
                                     <CompoundSelector
                                       value={consumption}
                                       onChange={(v) =>
@@ -331,11 +359,31 @@ export default function ProcessMaterialUsageButton({
           </Box>
         </Box>
       }
-      actions={[<ConfirmAndCloseButton handleConfirm={console.log} />]}
+      actions={[
+        <ConfirmAndCloseButton
+          key="confirm"
+          data-testid="link-material-confirm"
+          handleConfirm={() => {}}
+        >
+          Confirmar
+        </ConfirmAndCloseButton>,
+      ]}
     >
-      <IconButton>
-        <TableViewSharp color="secondary" />
-      </IconButton>
+      <Tooltip title="Vincular material ao processo" arrow>
+        <IconButton
+          data-testid="process-item-link-material"
+          aria-label="link-material"
+          size="small"
+        >
+          <ShortcutHint
+            placement="bottom-center"
+            shortcutId={`${MODULE_NAME}/ProcessItem/linkMaterial`}
+            alwaysShow={isFocused}
+          >
+            <TableViewSharp color="secondary" />
+          </ShortcutHint>
+        </IconButton>
+      </Tooltip>
     </PointerContainer>
   );
 }

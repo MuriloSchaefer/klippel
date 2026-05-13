@@ -68,11 +68,13 @@ export default function MaterialCostAuditContent({
   const dividendAbbreviation = cost && units?.[cost.dividend.unit]?.abbreviation;
 
   return (
-    <Box 
-      sx={{ 
-        minWidth: 400, 
-        maxWidth: 600, 
-        maxHeight: '70vh', 
+    <Box
+      data-testid="material-cost-audit"
+      data-material-audit-label={node.label}
+      sx={{
+        minWidth: 400,
+        maxWidth: 600,
+        maxHeight: '70vh',
         overflowY: 'auto',
         userSelect: 'text',
         cursor: 'text',

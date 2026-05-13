@@ -13,7 +13,12 @@ const rowSelector = (label: string) =>
 export const clickProcessLinkElective = async (page: Page, label: string) => {
   const sel = `${rowSelector(label)} [data-testid="${PROCESS_ITEM_LINK_ELECTIVE_TESTID}"]`;
   await page.waitForSelector(sel);
-  await page.click(sel);
+  // MUI Tooltip wraps this IconButton; PointerContainer attaches its open
+  // handler via cloneElement on the Tooltip. A real mouse click delivered on
+  // the inner SVG bubbles through Tooltip's instrumented handlers in a way
+  // that doesn't fire that onClick, but a programmatic HTMLElement.click()
+  // does — same path the keyboard shortcut takes.
+  await page.$eval(sel, (el) => (el as HTMLButtonElement).click());
   await page.waitForSelector(
     `[role="pointer-panel-content"] [data-testid="${LINK_ELECTIVE_FORM_TESTID}"]`,
   );

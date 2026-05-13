@@ -858,6 +858,30 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
       enabled: true,
     },
     {
+      id: `${MODULE_NAME}/ProcessItem/linkMaterial`,
+      key: 'm',
+      contextId: PROCESS_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="process-item"]');
+        const btn = row?.querySelector('[data-testid="process-item-link-material"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Link focused process to material',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/MaterialItem/openAuditLog`,
+      key: 'l',
+      contextId: MATERIAL_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="material-item"]');
+        const btn = row?.querySelector('[data-testid="material-item-audit-log"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Open cost audit for focused material',
+      enabled: true,
+    },
+    {
       id: UPLOAD_SVG_SHORTCUT_ID,
       key: 'u',
       contextId: SVG_EMPTY_STATE_CONTEXT_ID,

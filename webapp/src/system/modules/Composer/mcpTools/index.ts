@@ -57,6 +57,10 @@ import { focusProcessListTool } from './focusProcessList';
 import { cycleProcessFocusTool } from './cycleProcessFocus';
 import { linkProcessElectiveTool } from './linkProcessElective';
 import { linkProcessElectiveShortcutTool } from './linkProcessElectiveShortcut';
+import { linkProcessMaterialTool } from './linkProcessMaterial';
+import { linkProcessMaterialShortcutTool } from './linkProcessMaterialShortcut';
+import { openMaterialAuditLogTool } from './openMaterialAuditLog';
+import { openMaterialAuditLogShortcutTool } from './openMaterialAuditLogShortcut';
 
 const TOOLS = [
   openModelTool,
@@ -116,6 +120,10 @@ const TOOLS = [
   cycleProcessFocusTool,
   linkProcessElectiveTool,
   linkProcessElectiveShortcutTool,
+  linkProcessMaterialTool,
+  linkProcessMaterialShortcutTool,
+  openMaterialAuditLogTool,
+  openMaterialAuditLogShortcutTool,
 ];
 
 export function registerMcpTools(server: McpServer) {
