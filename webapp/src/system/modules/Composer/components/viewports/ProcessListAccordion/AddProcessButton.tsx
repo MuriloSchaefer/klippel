@@ -7,6 +7,7 @@ import { IConverterModule } from "@system/modules/Converter";
 import { CompoundValue } from "@system/modules/Converter/typings";
 import useVariation from "../../../hooks/useVariation";
 import { MODULE_NAME } from "../../../constants";
+import { snapCostTime } from "../../../utils/snapCostTime";
 
 export default function AddProcessButton({
   variationId,
@@ -72,10 +73,19 @@ export default function AddProcessButton({
           <Box data-testid="add-process-cost-time">
             <Typography>Tempo necessário</Typography>
             <CompoundSelector
-              filterDividends={(_u, s) => s?.id === "temporal247"}
-              filterQuotients={(u, _s) => u.id === "unitario18"}
+              filterDividends={(u, s) =>
+                u.id === "unitario18" || s?.id === "temporal247"
+              }
+              filterQuotients={(u, s) =>
+                u.id === "unitario18" || s?.id === "temporal247"
+              }
               value={form.costTime}
-              onChange={(v) => setForm((curr) => ({ ...curr, costTime: v }))}
+              onChange={(v) =>
+                setForm((curr) => ({
+                  ...curr,
+                  costTime: snapCostTime(curr.costTime, v),
+                }))
+              }
             />
           </Box>
           <Box data-testid="add-process-cost-money">

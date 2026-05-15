@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, Menu, Tray } from "electron";
+import { app, shell, BrowserWindow, Menu, Tray, powerMonitor } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 const { updateElectronApp } = require("update-electron-app");
@@ -74,8 +74,10 @@ async function createWindow(): Promise<BrowserWindow> {
 
   ensureDirSync(getAbsPath('workspaces'));
   let workspace = readdirSync(getAbsPath('workspaces'))[0]
-  if (existsSync(getAbsPath('.session/Store/state.json'))){
-    workspace = JSON.parse(readFileSync(getAbsPath('.session/Store/state.json')).toString()).selectedWorkspace
+  const storeStatePath = getAbsPath('.session/Store/state.json');
+  if (existsSync(storeStatePath)) {
+    const raw = readFileSync(storeStatePath).toString().trim();
+    if (raw) workspace = JSON.parse(raw).selectedWorkspace ?? workspace;
   }
   // const helia = await initHeliaNode(workspace)
   const scheduler = initScheduler();
@@ -99,6 +101,19 @@ async function createWindow(): Promise<BrowserWindow> {
 
   mainWindow.on("ready-to-show", () => {
     mainWindow.showInactive();
+  });
+
+  // On Linux, suspend invalidates the GPU compositor surface and the renderer
+  // never re-acquires one on resume, leaving a blank white window. Reload to
+  // re-establish a fresh surface; state is already persisted to .session/.
+  powerMonitor.on("resume", () => {
+    if (mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return;
+    console.log("System resumed — reloading renderer");
+    mainWindow.webContents.reload();
+  });
+  mainWindow.webContents.on("render-process-gone", (_event, details) => {
+    console.error("Renderer gone:", details.reason);
+    if (!mainWindow.isDestroyed()) mainWindow.reload();
   });
   mainWindow.on("resize", () => {
     console.log("resized");
@@ -144,11 +159,11 @@ app.whenReady().then(async () => {
   electronApp.setAppUserModelId("com.electron");
 
   installExtension(REACT_DEVELOPER_TOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
+    .then((ext) => console.log(`Added Extension:  ${ext.name} (${ext.version})`))
     .catch((err) => console.error("An error occurred: ", err));
 
   installExtension(REDUX_DEVTOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
+    .then((ext) => console.log(`Added Extension:  ${ext.name} (${ext.version})`))
     .catch((err) => console.error("An error occurred: ", err));
 
   // Default open or close DevTools by F12 in development

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { type BoxProps } from "@mui/material/Box";
 import Box from "@mui/material/Box";
@@ -68,8 +68,6 @@ export default function CompoundSelector({
     [storedState.state, filterQuotients]
   );
 
-  const [currState, setCurrentState] = useState(value)
-
   return (
     <Box
       component="div"
@@ -81,13 +79,8 @@ export default function CompoundSelector({
         <UnitAmountSelector
           key="quotient"
           id="quotient-selector"
-          value={currState.quotient}
-          onChange={(v: UnitValue) => {
-            const updatedValue = { ...currState, quotient: v }
-            setCurrentState(updatedValue)
-            onChange(updatedValue)
-          }
-          }
+          value={value.quotient}
+          onChange={(v: UnitValue) => onChange({ ...value, quotient: v })}
           selectorProps={{ sx: {width: '10px'} }}
         >
           {filteredQuotients.map(({ id, name, abbreviation }) => (
@@ -100,12 +93,8 @@ export default function CompoundSelector({
         <UnitAmountSelector
           key="dividend"
           id="dividend-selector"
-          value={currState.dividend}
-          onChange={(v: UnitValue) => {
-            const updatedValue = { ...currState, dividend: v }
-            setCurrentState(updatedValue)
-            onChange(updatedValue)
-          }}
+          value={value.dividend}
+          onChange={(v: UnitValue) => onChange({ ...value, dividend: v })}
           sx={{width: 'max-content'}}
         >
           {filteredDividends.map(({ id, name, abbreviation }) => (

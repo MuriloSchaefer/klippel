@@ -257,6 +257,10 @@ export const PointerContainer = ({
     const isKeyboardClick =
       e.detail === 0 || (e.clientX === 0 && e.clientY === 0);
     if (isKeyboardClick && target) {
+      // A keyboard-opened panel anchors at the trigger element, which may be
+      // scrolled out of view — bring it on-screen first so the panel doesn't
+      // open off-screen. `nearest` is a no-op when it's already visible.
+      target.scrollIntoView({ block: "nearest", inline: "nearest" });
       const rect = target.getBoundingClientRect();
       setPosition({ x: rect.right, y: rect.bottom });
     } else {

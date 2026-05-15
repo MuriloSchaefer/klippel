@@ -83,10 +83,49 @@ const setEditCompoundAmount = async (
   await page.keyboard.press('Tab');
 };
 
+const setEditCompoundUnit = async (
+  page: Page,
+  groupTestid: string,
+  position: 'quotient' | 'dividend',
+  unitId: string,
+) => {
+  const boxId = position === 'quotient' ? 'quotient-selector' : 'dividend-selector';
+  const comboSel = `[role="pointer-panel-content"] [data-testid="${EDIT_PROCESS_FORM_TESTID}"] [data-testid="${groupTestid}"] #${boxId} [role="combobox"]`;
+  await page.waitForSelector(comboSel);
+  await page.click(comboSel);
+  const optionSel = `[role="listbox"] [data-value="${unitId}"]`;
+  await page.waitForSelector(optionSel);
+  await page.click(optionSel);
+  await page.waitForSelector('[role="listbox"]', { hidden: true });
+};
+
 export const setEditProcessCostTime = async (
   page: Page,
-  costs: { quotientAmount?: number; dividendAmount?: number },
+  costs: {
+    quotientAmount?: number;
+    dividendAmount?: number;
+    quotientUnit?: string;
+    dividendUnit?: string;
+  },
 ) => {
+  // Units first: changing a unit runs through snapCostTime, which can reset
+  // the amount on the side the user did not touch.
+  if (costs.quotientUnit !== undefined) {
+    await setEditCompoundUnit(
+      page,
+      EDIT_PROCESS_COST_TIME_TESTID,
+      'quotient',
+      costs.quotientUnit,
+    );
+  }
+  if (costs.dividendUnit !== undefined) {
+    await setEditCompoundUnit(
+      page,
+      EDIT_PROCESS_COST_TIME_TESTID,
+      'dividend',
+      costs.dividendUnit,
+    );
+  }
   if (costs.quotientAmount !== undefined) {
     await setEditCompoundAmount(
       page,

@@ -15,6 +15,7 @@ import {
   VISUALIZATION_LIST_CONTEXT_ID,
   ELECTIVE_LIST_CONTEXT_ID,
   PROCESS_LIST_CONTEXT_ID,
+  PROCESS_TIME_LIST_CONTEXT_ID,
   SVG_EMPTY_STATE_CONTEXT_ID,
   UPLOAD_SVG_SHORTCUT_ID,
 } from "./constants";
@@ -892,6 +893,115 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
         btn?.click();
       },
       description: 'Upload SVG to variation',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ProcessTimeList/focus`,
+      key: 'Ctrl+g',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const accordion = document.querySelector(
+          '[role="accordion-Tempo"]'
+        ) as HTMLElement | null;
+        if (!accordion) return;
+        const summary = accordion.querySelector(
+          '[aria-controls="accordion-Tempo-content"]'
+        ) as HTMLElement | null;
+        if (!summary) return;
+
+        const isExpanded = () =>
+          summary.getAttribute('aria-expanded') === 'true';
+        const wasExpanded = isExpanded();
+        const rowFocusedInside = !!document.activeElement?.closest(
+          '[role="accordion-Tempo"] [data-testid="process-time-item"]'
+        );
+
+        if (wasExpanded && rowFocusedInside) {
+          summary.click();
+          return;
+        }
+
+        if (!wasExpanded) summary.click();
+
+        const findFirstRow = () =>
+          accordion.querySelector(
+            '[data-testid="process-time-item"]'
+          ) as HTMLElement | null;
+        const findContent = () =>
+          accordion.querySelector(
+            '[data-accordion-content="Tempo"]'
+          ) as HTMLElement | null;
+
+        const start = Date.now();
+        const attempt = () => {
+          const first = findFirstRow();
+          if (first) {
+            first.focus();
+            if (document.activeElement === first) return;
+          } else {
+            const content = findContent();
+            if (content) {
+              content.focus();
+              if (document.activeElement === content) return;
+            }
+          }
+          if (Date.now() - start < 1500) {
+            setTimeout(attempt, 50);
+          }
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Toggle / focus process time list',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ProcessTimeItem/focusNext`,
+      key: 'ArrowDown',
+      contextId: PROCESS_TIME_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest(
+          '[data-testid="process-time-item"]'
+        );
+        if (!current) return;
+        const next = current.nextElementSibling as HTMLElement | null;
+        if (next?.matches('[data-testid="process-time-item"]')) {
+          next.focus();
+        }
+      },
+      description: 'Focus next process time row',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ProcessTimeItem/focusPrev`,
+      key: 'ArrowUp',
+      contextId: PROCESS_TIME_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest(
+          '[data-testid="process-time-item"]'
+        );
+        if (!current) return;
+        const prev = current.previousElementSibling as HTMLElement | null;
+        if (prev?.matches('[data-testid="process-time-item"]')) {
+          prev.focus();
+        }
+      },
+      description: 'Focus previous process time row',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/ProcessTimeItem/openAudit`,
+      key: 'l',
+      contextId: PROCESS_TIME_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest(
+          '[data-testid="process-time-item"]'
+        );
+        const btn = row?.querySelector(
+          '[data-testid="process-time-audit-log"]'
+        ) as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Open time audit for focused process',
       enabled: true,
     },
     {

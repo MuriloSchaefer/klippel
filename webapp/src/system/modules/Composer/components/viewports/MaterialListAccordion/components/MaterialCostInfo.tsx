@@ -23,6 +23,7 @@ export default function MaterialCostInfo({
   const converterModule = useModule<IConverterModule>("Converter");
   const graphModule = useModule<IGraphModule>("Graph");
   const useUnits = converterModule.hooks.useUnits;
+  const converter = converterModule.hooks.useConverter();
 
   const { cost } = useMaterialCostComputation({ variationId, node, material });
   const graph = graphModule.hooks.useGraph<VariationGraphState>(variationId);
@@ -50,8 +51,6 @@ export default function MaterialCostInfo({
     ) as string[]
   );
 
-  const costAbbreviation =
-    cost && units && units[cost.quotient.unit]?.abbreviation;
   const dividendAbbreviation =
     cost && units && units[cost.dividend.unit]?.abbreviation;
 
@@ -60,15 +59,23 @@ export default function MaterialCostInfo({
   const totalUsage =
     node.computedTotal?.quotient.amount ?? cost.quotient.amount * totalGarments;
 
+  const scaledCost = converterModule.utils.formatScaledResult(
+    converter?.state,
+    cost.quotient
+  );
+  const scaledTotal = converterModule.utils.formatScaledResult(
+    converter?.state,
+    { amount: totalUsage, unit: cost.quotient.unit }
+  );
+
   return (
     <>
-      {cost.quotient.amount.toFixed(2)} {costAbbreviation} /{" "}
-      {dividendAbbreviation}
+      {scaledCost.amount.toFixed(3)} {scaledCost.abbreviation} / {dividendAbbreviation}
       {hasGradeOverrides && "*"}
       {totalGarments > 0 && (
         <>
           {" · Total: "}
-          {totalUsage.toFixed(2)} {costAbbreviation} ({totalGarments}{" "}
+          {scaledTotal.amount.toFixed(3)} {scaledTotal.abbreviation} ({totalGarments}{" "}
           {dividendAbbreviation})
         </>
       )}

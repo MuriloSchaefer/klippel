@@ -18,21 +18,26 @@ const costSchema = z.object({
   dividendAmount: z.number().optional(),
 });
 
+const costTimeSchema = costSchema.extend({
+  quotientUnit: z.string().optional(),
+  dividendUnit: z.string().optional(),
+});
+
 type EditProcessInput = {
   label: string;
   name?: string;
-  costTime?: z.infer<typeof costSchema>;
+  costTime?: z.infer<typeof costTimeSchema>;
   costMoney?: z.infer<typeof costSchema>;
 };
 
 export const editProcessTool = {
   name: 'editProcess',
   description:
-    'Edit an existing process node by label (click flow). Optionally rename and/or change costTime/costMoney amounts.',
+    'Edit an existing process node by label (click flow). Optionally rename and/or change costTime/costMoney amounts. costTime also accepts quotientUnit/dividendUnit to change the compound units.',
   inputSchema: {
     label: z.string().describe('Current label of the process node to edit.'),
     name: z.string().optional(),
-    costTime: costSchema.optional(),
+    costTime: costTimeSchema.optional(),
     costMoney: costSchema.optional(),
   },
   async execute({ label, name, costTime, costMoney }: EditProcessInput) {

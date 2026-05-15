@@ -11,9 +11,21 @@ import {
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { CONVERSION_GRAPH_NAME } from "@system/modules/Converter/constants";
 import { computeMaterialCost } from "../../utils/computeMaterialCost";
-import type { MaterialNode } from "../../typings";
+import { computeProcessTime } from "../../utils/computeProcessTime";
+import { computeGraduationProcessTotals } from "../../utils/computeGraduationProcessTotals";
+import type { MaterialNode, ProcessNode, GraduationNode } from "../../typings";
 
 const DEBOUNCE_MS = 300;
+
+const COMPUTED_WRITE_BACK_KEYS = new Set([
+  "computedCost",
+  "computedTotal",
+  "costAudit",
+  "computedTimePerUnit",
+  "timeAudit",
+  "computedProcessTime",
+  "processTimeAudit",
+]);
 
 const computationMiddlewares = createListenerMiddleware();
 
@@ -27,13 +39,7 @@ computationMiddlewares.startListening({
     // Skip write-backs from this same listener to break the cycle
     if (nodeUpdated.match(action)) {
       const keys = Object.keys(action.payload.changes ?? {});
-      if (
-        keys.length > 0 &&
-        keys.every(
-          (k) => k === "computedCost" || k === "computedTotal" || k === "costAudit"
-        )
-      )
-        return;
+      if (keys.length > 0 && keys.every((k) => COMPUTED_WRITE_BACK_KEYS.has(k))) return;
     }
 
     listenerApi.cancelActiveListeners();
@@ -65,6 +71,64 @@ computationMiddlewares.startListening({
           graphId,
           nodeId: materialNode.id,
           changes: { computedCost: cost, computedTotal: total, costAudit: audit },
+        })
+      );
+    }
+
+    const processNodes = Object.values(graphState.nodes ?? {}).filter(
+      (n): n is ProcessNode => (n as any).type === "PROCESS"
+    );
+
+    const processTimeResults: { [processNodeId: string]: ProcessNode["computedTimePerUnit"] } = {};
+    for (const processNode of processNodes) {
+      const { time, audit } = computeProcessTime({
+        processNodeId: processNode.id,
+        graphState,
+        conversionGraphState,
+      });
+      processTimeResults[processNode.id] = time;
+      listenerApi.dispatch(
+        updateNode({
+          graphId,
+          nodeId: processNode.id,
+          changes: { computedTimePerUnit: time, timeAudit: audit },
+        })
+      );
+    }
+
+    // Build a graphState snapshot with the fresh per-process results so
+    // graduation totals see the just-computed values without waiting for the
+    // dispatched updates to settle.
+    const graphStateForGraduations = {
+      ...graphState,
+      nodes: Object.fromEntries(
+        Object.entries(graphState.nodes ?? {}).map(([id, node]) => {
+          if ((node as any).type === "PROCESS") {
+            return [id, { ...(node as ProcessNode), computedTimePerUnit: processTimeResults[id] }];
+          }
+          return [id, node];
+        })
+      ),
+    };
+
+    const graduationResults = computeGraduationProcessTotals({
+      graphState: graphStateForGraduations as typeof graphState,
+    });
+
+    const graduationNodes = Object.values(graphState.nodes ?? {}).filter(
+      (n): n is GraduationNode => (n as any).type === "GRADUATION"
+    );
+    for (const g of graduationNodes) {
+      const r = graduationResults[g.id];
+      if (!r) continue;
+      listenerApi.dispatch(
+        updateNode({
+          graphId,
+          nodeId: g.id,
+          changes: {
+            computedProcessTime: r.computedProcessTime,
+            processTimeAudit: r.processTimeAudit,
+          },
         })
       );
     }

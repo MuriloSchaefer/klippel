@@ -10,6 +10,8 @@ import CompoundUnit from './components/CompondUnit';
 import CoverterGraphViewport from "./components/Builder/ConverterGraphViewport";
 import useConverter from "./hooks/useConverter";
 import { convert } from "./utils/convert";
+import { pickDisplayUnit } from "./utils/pickDisplayUnit";
+import { formatScaledResult } from "./utils/formatScaledResult";
 
 export interface IConverterModule extends IModule {
     components: {
@@ -34,6 +36,8 @@ export interface IConverterModule extends IModule {
     },
     utils: {
         convert: typeof convert;
+        pickDisplayUnit: typeof pickDisplayUnit;
+        formatScaledResult: typeof formatScaledResult;
     },
 }
 const module: IConverterModule = {
@@ -55,7 +59,7 @@ const module: IConverterModule = {
         },
     },
     hooks: {useScales, useUnits, useConverter},
-    utils: { convert },
+    utils: { convert, pickDisplayUnit, formatScaledResult },
     constants: {},
     kernelCalls: {
         startModule: startModule,

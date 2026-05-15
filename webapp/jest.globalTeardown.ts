@@ -1,5 +1,6 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 import { request as httpRequest } from 'node:http';
+import { execFileSync } from 'node:child_process';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 
@@ -45,6 +46,31 @@ const killGroup = (pid: number, signal: NodeJS.Signals): boolean => {
   }
 };
 
+// Last-resort fallback: whatever is still bound to the CDP port gets killed by
+// PID. The dev-mode process tree (npm → electron-vite → electron + its GPU and
+// renderer subprocesses, optionally under xvfb-run) can outlive a process-group
+// SIGKILL when a child re-parents or escapes the group — leaving the app alive
+// on :9222, which the next run's globalSetup then silently reuses in a dirty
+// state. Clearing the port by listener PID closes that gap.
+const killWhateverHoldsPort = (): void => {
+  let pids: number[] = [];
+  try {
+    const out = execFileSync('lsof', ['-ti', `tcp:${CDP_PORT}`], {
+      encoding: 'utf8',
+    });
+    pids = out
+      .split('\n')
+      .map((l) => Number(l.trim()))
+      .filter((n) => Number.isInteger(n) && n > 0);
+  } catch {
+    // lsof exits non-zero when nothing holds the port, or may be absent.
+    return;
+  }
+  for (const pid of pids) {
+    try { process.kill(pid, 'SIGKILL'); } catch { /* already gone */ }
+  }
+};
+
 export default async function globalTeardown() {
   if (!(globalThis as any).__KLIPPEL_OWNED_PROCESS__) return;
   const pid = (globalThis as any).__KLIPPEL_DEV_PID__ as number | undefined;
@@ -55,17 +81,33 @@ export default async function globalTeardown() {
   // after SIGTERM on the process group.
   await Promise.race([closeViaCdp(), sleep(5000)]);
 
-  if (!pid) return;
-
   // Even after Browser.close, the dev wrapper (npm + electron-vite watcher)
   // keeps running — tear down the whole group.
-  killGroup(pid, 'SIGTERM');
+  if (pid) {
+    killGroup(pid, 'SIGTERM');
 
-  const deadline = Date.now() + 5000;
-  while (Date.now() < deadline) {
-    if (!(await cdpUp())) break;
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      if (!(await cdpUp())) break;
+      await sleep(250);
+    }
+
+    killGroup(pid, 'SIGKILL');
+  }
+
+  // Verify the port is actually free; if the group-kill missed something,
+  // force-clear it by listener PID so the next run boots a clean instance.
+  const verifyDeadline = Date.now() + 5000;
+  while (Date.now() < verifyDeadline) {
+    if (!(await cdpUp())) return;
+    killWhateverHoldsPort();
     await sleep(250);
   }
 
-  killGroup(pid, 'SIGKILL');
+  if (await cdpUp()) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[globalTeardown] Klippel still reachable on CDP :${CDP_PORT} after teardown — next run may reuse a dirty instance.`,
+    );
+  }
 }

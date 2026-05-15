@@ -3,7 +3,7 @@ import MaterialListAccordion from "../MaterialListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import { MATERIAL_LIST_CONTEXT_ID, MODULE_NAME } from "../../../constants";
+import { MATERIAL_LIST_CONTEXT_ID, MODULE_NAME, PROCESS_TIME_LIST_CONTEXT_ID } from "../../../constants";
 import SaveSharpIcon from "@mui/icons-material/SaveSharp";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import CompositionTree from "../CompositionTree/CompositionTree";
@@ -14,7 +14,9 @@ import { Box, Button, ButtonGroup } from "@mui/material";
 import DetailPanel from "./DetailPanel";
 import WidgetsSharpIcon from "@mui/icons-material/WidgetsSharp";
 import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
+import PaidSharpIcon from "@mui/icons-material/PaidSharp";
 import ProcessTimeAccordion from "../ProcessTimeAccordion";
+import ProcessCostAccordion from "../ProcessCostAccordion";
 import { ISVGModule } from "@kernel/modules/SVG";
 import { ErrorBoundary } from "react-error-boundary";
 import { fallbackRender } from "@kernel/App";
@@ -85,12 +87,22 @@ function ModelViewport() {
                 <MaterialListAccordion variationId={activeVP.extra.variationId} />
               </Accordion>
             </FocusShortcutProvider>
+          <FocusShortcutProvider contextId={PROCESS_TIME_LIST_CONTEXT_ID}>
+            <Accordion
+              shortcutHint={`${MODULE_NAME}/ProcessTimeList/focus`}
+              name="Tempo"
+              icon={<AccessTimeSharpIcon />}
+              summary="Resumo de tempo por processo"
+            >
+              <ProcessTimeAccordion variationId={activeVP.extra.variationId} />
+            </Accordion>
+          </FocusShortcutProvider>
           <Accordion
-            name="Tempo"
-            icon={<AccessTimeSharpIcon />}
-            summary="Resumo de tempo por processo"
+            name="Custo"
+            icon={<PaidSharpIcon />}
+            summary="Resumo de custo por processo"
           >
-            <ProcessTimeAccordion variationId={activeVP.extra.variationId} />
+            <ProcessCostAccordion variationId={activeVP.extra.variationId} />
           </Accordion>
         </SettingsPanel>
 

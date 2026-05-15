@@ -91,6 +91,43 @@ export type CostAudit = {
   steps: ProcessStepAudit[];
 };
 
+export type PlannedConversionStep = {
+  fromUnit: string;
+  toUnit: string;
+  expression: string;
+};
+
+export type ProcessTimeAudit = {
+  computedAt: string;
+  processLabel: string;
+  rawCostTime: CompoundValue | undefined;
+  attributeNormalisations: AttributeNormalisationAudit[];
+  initialContext?: { [name: string]: number };
+  plannedSteps?: PlannedConversionStep[];
+  conversionSteps: ConversionStepAudit[];
+  fallback?: {
+    reason: string;
+    rawDividendAmount: number;
+    rawQuotientAmount: number;
+    resultMinutesPerUnit: number;
+  };
+  error?: string;
+  result?: { amount: number; unit: string };
+};
+
+export type GraduationProcessTimeAudit = {
+  computedAt: string;
+  graduationLabel: string;
+  graduationAmount: number;
+  perProcessContributions: {
+    processId: string;
+    processLabel: string;
+    minutesPerUnit: number;
+  }[];
+  totalMinutesPerUnit: number;
+  result: { amount: number; unit: string };
+};
+
 export type MaterialNode = Node & {
     type: "MATERIAL";
     label: string;
@@ -116,6 +153,8 @@ export type GraduationNode = Node & {
     graduationId: string; // small hash id
     order?: number; // ordering index within garment
     amount?: number; // number of garments for this graduation
+    computedProcessTime?: { amount: number; unit: string };
+    processTimeAudit?: GraduationProcessTimeAudit;
 }
 
 export type ProcessNode = Node & {
@@ -125,6 +164,8 @@ export type ProcessNode = Node & {
     costMoney?: CompoundValue; // monetary cost as CompoundValue (use Converter CompoundValue)
     costTime?: CompoundValue; // compound time value (quotient/dividend from Converter)
     electiveNodeId?: string; // optional reference to an elective node - if set, process only applies when elective.value is true
+    computedTimePerUnit?: { amount: number; unit: string };
+    timeAudit?: ProcessTimeAudit;
 }
 
 export type VisualizationDom = {

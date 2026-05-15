@@ -1,6 +1,5 @@
 import { compile } from "jse-eval";
 import { isNumber } from "lodash";
-import dfs from "@kernel/modules/Graphs/searchAlgs/dfs";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
 import type {
   CompoundValue,
@@ -39,13 +38,17 @@ export function traceConversion({
   steps: ConversionStep[];
   finalValue: number;
   attributeConversions: AttributeConversion[];
+  initialContext?: { [name: string]: number };
+  plannedSteps?: { from: string; to: string; expression: string }[];
   error?: never;
 } | {
   error: string;
   normalizedFrom?: CompoundValue;
-  steps?: never;
+  initialContext?: { [name: string]: number };
+  attributeConversions?: AttributeConversion[];
+  plannedSteps?: { from: string; to: string; expression: string }[];
+  steps?: ConversionStep[];
   finalValue?: never;
-  attributeConversions?: never;
 } {
   if (!conversionGraph) {
     return { error: "Grafo de conversão não disponível" };
@@ -110,82 +113,82 @@ export function traceConversion({
     return { baseUnitId, conversionFactor: factor };
   };
 
-  // Normalize 'from' compound value to use base units
-  let normalizedFrom = { ...from };
-  const fromQuotientBase = getBaseUnit(from.quotient.unit);
-  const fromDividendBase = getBaseUnit(from.dividend.unit);
+  const findCompound = (quotientUnit: string, dividendUnit: string) =>
+    Object.values(conversionGraph.nodes ?? {}).find(
+      (n: any) =>
+        n.type === "COMPOUND_UNIT" &&
+        n.dividendUnitId === dividendUnit &&
+        n.quotientUnitId === quotientUnit
+    ) as any;
 
-  // Check for errors in base unit lookup
-  if ('error' in fromQuotientBase) {
-    return {
-      error: `Erro ao normalizar unidade do quociente (${from.quotient.unit}): ${fromQuotientBase.error}`
-    };
-  }
-  if ('error' in fromDividendBase) {
-    return {
-      error: `Erro ao normalizar unidade do dividendo (${from.dividend.unit}): ${fromDividendBase.error}`
-    };
-  }
-
-  // Track conversions applied to attributes
+  // Try the un-normalized form first: if a compound node already matches the
+  // user's units exactly, skip base-unit normalization. This avoids spurious
+  // detours (e.g. min/un getting rewritten to seg/un and failing to look up).
   const attributeConversions: AttributeConversion[] = [];
+  let normalizedFrom: CompoundValue = { ...from };
+  let fromNode = findCompound(from.quotient.unit, from.dividend.unit);
 
-  if (fromQuotientBase.baseUnitId !== from.quotient.unit) {
-    normalizedFrom.quotient = {
-      amount: from.quotient.amount * fromQuotientBase.conversionFactor,
-      unit: fromQuotientBase.baseUnitId,
-    };
-    // Record normalization as a conversion
-    attributeConversions.push({
-      name: 'consumoQuociente (normalizado)',
-      originalValue: from.quotient.amount,
-      originalUnit: from.quotient.unit,
-      convertedValue: normalizedFrom.quotient.amount,
-      convertedUnit: fromQuotientBase.baseUnitId,
-    });
+  if (!fromNode) {
+    const fromQuotientBase = getBaseUnit(from.quotient.unit);
+    const fromDividendBase = getBaseUnit(from.dividend.unit);
+
+    if ('error' in fromQuotientBase) {
+      return {
+        error: `Erro ao normalizar unidade do quociente (${from.quotient.unit}): ${fromQuotientBase.error}`
+      };
+    }
+    if ('error' in fromDividendBase) {
+      return {
+        error: `Erro ao normalizar unidade do dividendo (${from.dividend.unit}): ${fromDividendBase.error}`
+      };
+    }
+
+    if (fromQuotientBase.baseUnitId !== from.quotient.unit) {
+      normalizedFrom.quotient = {
+        amount: from.quotient.amount * fromQuotientBase.conversionFactor,
+        unit: fromQuotientBase.baseUnitId,
+      };
+      attributeConversions.push({
+        name: 'consumoQuociente (normalizado)',
+        originalValue: from.quotient.amount,
+        originalUnit: from.quotient.unit,
+        convertedValue: normalizedFrom.quotient.amount,
+        convertedUnit: fromQuotientBase.baseUnitId,
+      });
+    }
+
+    if (fromDividendBase.baseUnitId !== from.dividend.unit) {
+      normalizedFrom.dividend = {
+        amount: from.dividend.amount * fromDividendBase.conversionFactor,
+        unit: fromDividendBase.baseUnitId,
+      };
+      attributeConversions.push({
+        name: 'consumoDividendo (normalizado)',
+        originalValue: from.dividend.amount,
+        originalUnit: from.dividend.unit,
+        convertedValue: normalizedFrom.dividend.amount,
+        convertedUnit: fromDividendBase.baseUnitId,
+      });
+    }
+
+    fromNode = findCompound(normalizedFrom.quotient.unit, normalizedFrom.dividend.unit);
   }
 
-  if (fromDividendBase.baseUnitId !== from.dividend.unit) {
-    normalizedFrom.dividend = {
-      amount: from.dividend.amount * fromDividendBase.conversionFactor,
-      unit: fromDividendBase.baseUnitId,
-    };
-    // Record normalization as a conversion
-    attributeConversions.push({
-      name: 'consumoDividendo (normalizado)',
-      originalValue: from.dividend.amount,
-      originalUnit: from.dividend.unit,
-      convertedValue: normalizedFrom.dividend.amount,
-      convertedUnit: fromDividendBase.baseUnitId,
-    });
-  }
-
-  // Find from and to nodes using normalized units
-  const fromNode = Object.values(conversionGraph.nodes ?? {}).find(
-    (n: any) =>
-      n.type === "COMPOUND_UNIT" &&
-      n.dividendUnitId === normalizedFrom.dividend.unit &&
-      n.quotientUnitId === normalizedFrom.quotient.unit
-  ) as any;
-
-  const toNode = Object.values(conversionGraph.nodes ?? {}).find(
-    (n: any) =>
-      n.type === "COMPOUND_UNIT" &&
-      n.dividendUnitId === to.dividend &&
-      n.quotientUnitId === to.quotient
-  ) as any;
+  const toNode = findCompound(to.quotient, to.dividend);
 
   if (!fromNode) {
     return {
       error: `Unidade composta não encontrada no grafo: ${normalizedFrom.quotient.unit}/${normalizedFrom.dividend.unit}`,
-      normalizedFrom
+      normalizedFrom,
+      attributeConversions,
     };
   }
 
   if (!toNode) {
     return {
       error: `Unidade composta de destino não encontrada no grafo: ${to.quotient}/${to.dividend}`,
-      normalizedFrom
+      normalizedFrom,
+      attributeConversions,
     };
   }
 
@@ -303,45 +306,59 @@ export function traceConversion({
     {} as { [name: string]: number }
   );
 
-  // Find conversion path using DFS
-  const { path } = dfs(
-    conversionGraph,
-    fromNode.id,
-    (node: any, g: any, currFindings: any, visitedNodes: any, lastNode: any) => {
-      if (node.id === fromNode.id) return true;
-      const transformation = Object.values(g.edges).find(
+  // A CONVERTS_TO edge is only traversable when every variable its expression
+  // needs (besides the running quantity vars) is available in the context.
+  const edgeIsTraversable = (transformation: any): boolean => {
+    const expression =
+      transformation.conversionType === "factor"
+        ? `quantidade * ${transformation.factor}`
+        : transformation.expression;
+    const identifiers = [...expression.matchAll(/[a-zA-Z]\w*/g)]
+      .map(([v]: RegExpMatchArray) => v)
+      .filter(
+        (v: string) =>
+          !["quantidade", "quantidadeQuociente", "quantidadeDividendo"].includes(v)
+      );
+    return identifiers.every((id: string) =>
+      Object.keys(variablesAvailable).includes(id)
+    );
+  };
+
+  // Find the *shortest* conversion path with BFS. DFS could return a longer
+  // detour even when a direct edge exists (e.g. un/h → un/min → min/un instead
+  // of un/h → min/un), which both wastes steps and exposes chained-step bugs.
+  let path: string[] | undefined;
+  {
+    const queue: string[] = [fromNode.id];
+    const parent: { [child: string]: string } = {};
+    const visited = new Set<string>([fromNode.id]);
+    while (queue.length) {
+      const current = queue.shift() as string;
+      if (current === toNode.id) break;
+      const outgoing = Object.values(conversionGraph.edges).filter(
         (e: any) =>
-          e.sourceId === visitedNodes.at(-2)?.id &&
-          e.targetId === lastNode &&
-          e.type === "CONVERTS_TO"
-      ) as any;
-      if (!transformation) return false;
-
-      const expression =
-        transformation.conversionType === "factor"
-          ? `quantidade * ${transformation.factor}`
-          : transformation.expression;
-
-      const identifiers = [...expression.matchAll(/[a-zA-Z]\w*/g)]
-        .map(([v]) => v)
-        .filter(
-          (v) =>
-            !["quantidade", "quantidadeQuociente", "quantidadeDividendo"].includes(v)
-        );
-
-      return identifiers.every((id) => Object.keys(variablesAvailable).includes(id));
-    },
-    (node: any) => !toNode || node.id === toNode.id,
-    (node: any, graph: any) => {
-      return Object.values(graph.edges)
-        .filter(
-          (e: any) =>
-            graph.adjacencyList[node.id].outputs.includes(e.id) &&
-            e.type === "CONVERTS_TO"
-        )
-        .map((e: any) => e.id);
+          e.type === "CONVERTS_TO" &&
+          e.sourceId === current &&
+          conversionGraph.adjacencyList[current]?.outputs.includes(e.id)
+      );
+      for (const edge of outgoing as any[]) {
+        if (visited.has(edge.targetId)) continue;
+        if (!edgeIsTraversable(edge)) continue;
+        visited.add(edge.targetId);
+        parent[edge.targetId] = current;
+        queue.push(edge.targetId);
+      }
     }
-  );
+    if (visited.has(toNode.id)) {
+      const reconstructed: string[] = [];
+      let node: string | undefined = toNode.id;
+      while (node) {
+        reconstructed.push(node);
+        node = parent[node];
+      }
+      path = reconstructed.reverse();
+    }
+  }
 
   if (!path || path.at(-1) !== toNode.id) {
     const missingVars = Object.values(conversionGraph.edges)
@@ -362,7 +379,33 @@ export function traceConversion({
       ? `Não foi possível encontrar caminho de conversão de ${normalizedFrom.quotient.unit}/${normalizedFrom.dividend.unit} para ${to.quotient}/${to.dividend}. Variáveis ausentes: ${missingVars.join(', ')}`
       : `Não foi possível encontrar caminho de conversão de ${normalizedFrom.quotient.unit}/${normalizedFrom.dividend.unit} para ${to.quotient}/${to.dividend}. Verifique se há uma rota de conversão disponível no grafo.`;
 
-    return { error: errorMsg, normalizedFrom };
+    return {
+      error: errorMsg,
+      normalizedFrom,
+      attributeConversions,
+      initialContext: variablesAvailable,
+    };
+  }
+
+  // Build planned step list (with raw expressions) before executing — so even
+  // if execution fails mid-walk, callers know what the converter intended to
+  // run.
+  const plannedSteps: { from: string; to: string; expression: string }[] = [];
+  for (let i = 0; i < path.length - 1; i++) {
+    const origin = path[i];
+    const destination = path[i + 1];
+    const transformation = Object.values(conversionGraph.edges).find(
+      (e: any) =>
+        e.sourceId === origin &&
+        e.targetId === destination &&
+        e.type === "CONVERTS_TO"
+    ) as any;
+    if (!transformation) continue;
+    const expression =
+      transformation.conversionType === "factor"
+        ? `quantidade * ${transformation.factor}`
+        : transformation.expression;
+    plannedSteps.push({ from: origin, to: destination, expression });
   }
 
   // Walk through path and record each step
@@ -406,12 +449,30 @@ export function traceConversion({
       {}
     );
 
-    // Add current value to context
+    // Add current value to context. quantidadeQuociente/quantidadeDividendo
+    // describe the *original input compound*, so they are only meaningful for
+    // the first step. Every chained step after that operates purely on the
+    // running scalar `quantidade` — seeding the compound components again
+    // would feed stale original values into the expression.
     context["quantidade"] = currentValue;
-    context["quantidadeQuociente"] = normalizedFrom.quotient.amount;
-    context["quantidadeDividendo"] = normalizedFrom.dividend.amount;
+    if (i === 0) {
+      context["quantidadeQuociente"] = normalizedFrom.quotient.amount;
+      context["quantidadeDividendo"] = normalizedFrom.dividend.amount;
+    }
 
-    const result = fn(context) as number;
+    let result: number;
+    try {
+      result = fn(context) as number;
+    } catch (e) {
+      return {
+        error: `Falha ao avaliar passo ${i + 1} (${origin} → ${destination}) com expressão "${expression}": ${e instanceof Error ? e.message : String(e)}`,
+        normalizedFrom,
+        attributeConversions,
+        initialContext: variablesAvailable,
+        plannedSteps,
+        steps,
+      };
+    }
 
     steps.push({
       from: origin,
@@ -424,5 +485,11 @@ export function traceConversion({
     currentValue = result;
   }
 
-  return { steps, finalValue: currentValue, attributeConversions };
+  return {
+    steps,
+    finalValue: currentValue,
+    attributeConversions,
+    initialContext: variablesAvailable,
+    plannedSteps,
+  };
 }

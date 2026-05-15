@@ -43,6 +43,7 @@ const restoreStoreSession = async (
     `${sessionPath}/state.json`,
     { encoding: "utf-8" }
   );
+  if (!fileContent?.trim()) return initialState;
   return JSON.parse(fileContent) as StoreState;
 };
 

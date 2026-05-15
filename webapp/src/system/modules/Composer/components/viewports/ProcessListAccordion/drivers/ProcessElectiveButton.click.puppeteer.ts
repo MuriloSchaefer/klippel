@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 import type { Page } from 'puppeteer-core';
 import { PROCESS_ITEM_TESTID } from './ProcessItem.click.puppeteer';
+import { dragPointerPanelIntoView } from '@kernel/modules/Pointer/components/drivers/PointerContainer.click.puppeteer';
 
 export const PROCESS_ITEM_LINK_ELECTIVE_TESTID = 'process-item-link-elective';
 export const LINK_ELECTIVE_FORM_TESTID = 'link-elective-form';
@@ -22,6 +23,9 @@ export const clickProcessLinkElective = async (page: Page, label: string) => {
   await page.waitForSelector(
     `[role="pointer-panel-content"] [data-testid="${LINK_ELECTIVE_FORM_TESTID}"]`,
   );
+  // The panel is anchored at the row, which can sit near the viewport edge —
+  // drag it fully on-screen so the select/confirm controls are clickable.
+  await dragPointerPanelIntoView(page);
 };
 
 export const selectLinkElectiveOption = async (
