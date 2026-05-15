@@ -59,7 +59,7 @@ for (const rel of electronFiles) {
 }
 
 // 3. Copy jest config + tsconfig.
-for (const f of ['jest.config.ts', 'jest.setup.ts', 'jest.globalSetup.ts', 'jest.globalTeardown.ts', 'tsconfig.json']) {
+for (const f of ['jest.config.ts', 'jest.setup.ts', 'jest.globalSetup.ts', 'jest.globalTeardown.ts', 'jest.screenshotEnv.cjs', 'tsconfig.json']) {
   cpSync(join(webappRoot, f), join(outDir, f));
 }
 
@@ -92,6 +92,7 @@ const slimPkg = {
     '@jest/globals': must('@jest/globals'),
     'babel-jest': must('babel-jest'),
     'module-alias': must('module-alias'),
+    '@swc/jest': must('@swc/jest'),
   },
 };
 

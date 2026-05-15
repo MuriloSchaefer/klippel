@@ -1,6 +1,106 @@
 # Webapp
 Electron + React + Vite to build a descentrilized application capable of composing garment cloths. The system laverage the local computing power to perform its operations the storage is locally in the disks spread on files within the filesystem, something similar to what the linux kernel does.
 
+## Install the latest release
+
+Pre-built installers for every release are published on the project's GitHub
+Releases page:
+
+**https://github.com/MuriloSchaefer/klippel/releases/latest**
+
+Pick the asset that matches your OS, download it, and follow the steps below.
+
+### Windows
+
+1. Download `Klippel-<version> Setup.exe` (the Squirrel installer) from the
+   release page.
+2. Double-click the downloaded file. Windows SmartScreen may show a
+   "Windows protected your PC" dialog because the build is not
+   code-signed — click **More info** → **Run anyway**.
+3. The installer runs silently and launches Klippel automatically when
+   it finishes. A shortcut is added to the Start Menu under `Klippel`.
+4. To update later, just run the installer for the newer release; it
+   replaces the previous version in place.
+
+### macOS
+
+1. Download the `Klippel-darwin-<arch>-<version>.zip` asset that matches
+   your CPU (`arm64` for Apple Silicon, `x64` for Intel Macs).
+2. Double-click the `.zip` in Finder to extract `Klippel.app`.
+3. Drag `Klippel.app` into your `/Applications` folder.
+4. The first time you launch, macOS Gatekeeper will refuse to open the
+   app because it is not notarized. Open **System Settings → Privacy &
+   Security**, scroll to the message about Klippel being blocked, and
+   click **Open Anyway**. Confirm in the follow-up dialog.
+5. Subsequent launches work normally from Launchpad or Spotlight.
+
+### Linux — Debian / Ubuntu (`.deb`)
+
+1. Download the `klippel_<version>_amd64.deb` asset.
+2. Install it with apt (recommended, resolves system deps automatically):
+
+   ```bash
+   $ sudo apt install ./klippel_<version>_amd64.deb
+   ```
+
+   Or with dpkg directly:
+
+   ```bash
+   $ sudo dpkg -i klippel_<version>_amd64.deb
+   $ sudo apt -f install   # only if dpkg reports missing deps
+   ```
+3. Launch from your application menu, or run `klippel` from a terminal.
+
+### Linux — Arch / Manjaro / EndeavourOS
+
+There is no native `pacman` package yet. Two options:
+
+**Option A — convert the `.deb` with `debtap` (recommended):**
+
+1. Install `debtap` from the AUR (one-time setup):
+
+   ```bash
+   $ yay -S debtap          # or: paru -S debtap
+   $ sudo debtap -u         # update the conversion DB
+   ```
+2. Download the `klippel_<version>_amd64.deb` asset.
+3. Convert and install:
+
+   ```bash
+   $ debtap klippel_<version>_amd64.deb
+   $ sudo pacman -U klippel-<version>-1-x86_64.pkg.tar.zst
+   ```
+
+**Option B — extract the `.deb` manually (no AUR helper needed):**
+
+```bash
+$ mkdir klippel && cd klippel
+$ ar x ../klippel_<version>_amd64.deb
+$ sudo tar -xf data.tar.xz -C /
+```
+
+The binary lands at `/opt/Klippel/klippel` and a `.desktop` entry is
+installed under `/usr/share/applications/`. Launch from your app menu
+or run `klippel` from a terminal.
+
+### Linux — Fedora / RHEL / openSUSE (`.rpm`)
+
+1. Download the `klippel-<version>.x86_64.rpm` asset.
+2. Install it:
+
+   ```bash
+   $ sudo dnf install ./klippel-<version>.x86_64.rpm
+   # or, on older systems:
+   $ sudo rpm -i klippel-<version>.x86_64.rpm
+   ```
+3. Launch from your application menu, or run `klippel` from a terminal.
+
+### Verifying the install
+
+After launch, the title bar should read **Klippel** and the version
+shown in **Help → About** (or the bottom-right corner of the status bar)
+should match the release you downloaded.
+
 ## Running the app
 ```bash
 $ npm i
