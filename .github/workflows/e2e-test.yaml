@@ -339,7 +339,7 @@ jobs:
         if: steps.find-installer.outputs.installer_path != ''
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Download MCP tests bundle
         id: download-tests
