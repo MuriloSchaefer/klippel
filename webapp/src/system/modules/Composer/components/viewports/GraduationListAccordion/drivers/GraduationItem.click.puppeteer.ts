@@ -26,13 +26,8 @@ export const waitForGraduationItem = async (page: Page, label: string) => {
 export const waitForGraduationItemRemoved = async (
   page: Page,
   label: string,
-  timeout = 5_000,
 ) => {
-  await page.waitForFunction(
-    (sel: string) => !document.querySelector(sel),
-    { timeout },
-    rowSelector(label),
-  );
+  await page.waitForSelector(rowSelector(label), { hidden: true });
 };
 
 const clickActionInRow = async (
@@ -78,8 +73,7 @@ export const typeEditAmount = async (page: Page, label: string, amount: number) 
 };
 
 export const waitForEditGraduationFormClosed = async (page: Page) => {
-  await page.waitForFunction(
-    () => !document.querySelector('[data-testid="edit-graduation-form"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[data-testid="edit-graduation-form"]', {
+    hidden: true,
+  });
 };

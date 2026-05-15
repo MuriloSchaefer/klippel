@@ -12,24 +12,12 @@ export const triggerOpenGarmentDetails = async (page: Page) => {
   await page.keyboard.press(OPEN_GARMENT_DETAILS_SHORTCUT.key);
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');
-  await page.waitForFunction(
-    () => {
-      const panel = document.querySelector('[role="details-panel"]') as HTMLElement | null;
-      if (!panel) return false;
-      const display = window.getComputedStyle(panel).display;
-      return display !== 'none';
-    },
-    { timeout: 5000 },
-  );
+  await page.waitForSelector('[role="details-panel"]', { visible: true });
 };
 
 export const triggerRenameGarment = async (page: Page) => {
   await page.keyboard.press(RENAME_GARMENT_SHORTCUT_KEY);
-  await page.waitForFunction(
-    (id: string) => document.activeElement?.id === id,
-    { timeout: 5000 },
-    GARMENT_NAME_INPUT_ID,
-  );
+  await page.waitForSelector(`#${GARMENT_NAME_INPUT_ID}:focus`);
 };
 
 export const typeGarmentNameFromFocused = async (page: Page, value: string) => {

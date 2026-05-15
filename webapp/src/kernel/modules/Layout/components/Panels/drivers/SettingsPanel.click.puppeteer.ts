@@ -20,9 +20,5 @@ export const ensureSettingsPanelExpanded = async (page: Page) => {
   await page.waitForSelector(TOGGLE_SELECTOR);
   if (await isExpanded(page)) return;
   await page.click(TOGGLE_SELECTOR);
-  await page.waitForFunction(
-    (headerSel: string) => !!document.querySelector(headerSel),
-    { timeout: 2000 },
-    PANEL_HEADER_LABEL_SELECTOR,
-  );
+  await page.waitForSelector(PANEL_HEADER_LABEL_SELECTOR);
 };

@@ -88,6 +88,9 @@ const ModelSelectionModal = ({
   const [search, setSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const acceptInputRef = useRef(false);
+  // Mirror of acceptInputRef as state, so the input can expose its readiness
+  // via `data-accepts-input` for tests / drivers to wait on.
+  const [acceptsInput, setAcceptsInput] = useState(false);
 
   const selectOption = useCallback((model: Model)=>{
     if (model.svg){
@@ -121,6 +124,7 @@ const ModelSelectionModal = ({
       searchInputRef.current?.focus();
       setSearch("");
       acceptInputRef.current = true;
+      setAcceptsInput(true);
     }, 50);
     return () => window.clearTimeout(id);
   }, []);
@@ -199,6 +203,7 @@ const ModelSelectionModal = ({
               if (!acceptInputRef.current) return;
               setSearch(e.target.value);
             }}
+            inputProps={{ 'data-accepts-input': acceptsInput ? 'true' : 'false' }}
             autoFocus
           />
           {/* <Input endAdornment={<SearchSharp />}/> */}

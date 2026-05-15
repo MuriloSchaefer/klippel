@@ -34,11 +34,7 @@ export const focusProcessItem = async (page: Page, label: string) => {
   const sel = rowSelector(label);
   await page.waitForSelector(sel);
   await page.focus(sel);
-  await page.waitForFunction(
-    (s: string) => document.activeElement?.matches(s) ?? false,
-    {},
-    sel,
-  );
+  await page.waitForSelector(`${sel}:focus`);
 };
 
 export const triggerFocusProcessList = async (page: Page) => {
@@ -51,15 +47,8 @@ export const triggerFocusProcessList = async (page: Page) => {
   await page.keyboard.press('r');
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');
-  await page.waitForFunction(
-    () => {
-      const active = document.activeElement as HTMLElement | null;
-      if (!active) return false;
-      if (active.matches('[data-testid="process-item"]')) return true;
-      if (active.id === 'composer-add-process') return true;
-      return active.matches('[data-accordion-content="Processos da Peça"]');
-    },
-    { timeout: 3_000 },
+  await page.waitForSelector(
+    '[data-testid="process-item"]:focus, #composer-add-process:focus, [data-accordion-content="Processos da Peça"]:focus',
   );
 };
 

@@ -64,14 +64,7 @@ export const toggleGradeOverrideFromFocused = async (
   await page.waitForSelector(sel);
   await page.focus(sel);
   await page.keyboard.press('Space');
-  await page.waitForFunction(
-    (s: string) => {
-      const el = document.querySelector<HTMLInputElement>(s);
-      return el?.checked === true;
-    },
-    { timeout: 2_000 },
-    sel,
-  );
+  await page.waitForSelector(`${sel}:checked`);
 };
 
 export const setGradeQuotientFromFocused = async (

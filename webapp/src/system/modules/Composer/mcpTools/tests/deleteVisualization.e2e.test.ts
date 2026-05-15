@@ -7,6 +7,7 @@
 import * as path from 'path';
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '@helpers/puppeteer/resetWorkspace';
+import { resetUIState } from '@helpers/puppeteer/closeOverlays';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -81,6 +82,10 @@ afterAll(async () => {
   if (browser) await browser.disconnect();
   cleanupWorkspace('e2e-deleteVisualization');
 });
+
+beforeEach(async () => {
+  if (page) await resetUIState(page);
+}, 10_000);
 
 describe('deleteVisualization via click (E2E)', () => {
   it('deletes the visualization and the row disappears', async () => {

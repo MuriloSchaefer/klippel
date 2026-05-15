@@ -125,18 +125,15 @@ describe('uploadVariationSVG across multiple model tabs (E2E)', () => {
   // <svg id="svg-editor"> can exist before injection completes, so child
   // count alone is the reliable signal that the file actually rendered.
   const waitForFixtureRendered = async (p: Page) => {
-    await p.waitForFunction(
-      () => {
-        const editor = document.querySelector('#svg-editor');
-        if (!editor) return false;
-        return (
-          editor.querySelectorAll('circle').length >= 3 &&
-          editor.querySelectorAll('path').length >= 2 &&
-          editor.querySelectorAll('rect').length >= 1
-        );
-      },
-      { timeout: 10_000 },
-    );
+    await p.waitForFunction(() => {
+      const editor = document.querySelector('#svg-editor');
+      if (!editor) return false;
+      return (
+        editor.querySelectorAll('circle').length >= 3 &&
+        editor.querySelectorAll('path').length >= 2 &&
+        editor.querySelectorAll('rect').length >= 1
+      );
+    });
   };
 
   // Toggle graph -> svg to force the active viewport's SVGView to unmount and

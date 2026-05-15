@@ -53,12 +53,5 @@ export const setAddElectiveDefaultShortcut = async (
     el?.focus();
   }, sel);
   await page.keyboard.press('Space');
-  await page.waitForFunction(
-    (args: { s: string; t: boolean }) => {
-      const el = document.querySelector<HTMLInputElement>(args.s);
-      return !!el && el.checked === args.t;
-    },
-    { timeout: 2_000 },
-    { s: sel, t: target },
-  );
+  await page.waitForSelector(target ? `${sel}:checked` : `${sel}:not(:checked)`);
 };

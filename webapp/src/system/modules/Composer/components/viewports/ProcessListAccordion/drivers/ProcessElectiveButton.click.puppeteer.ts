@@ -45,19 +45,8 @@ export const waitForProcessLinkedTo = async (
   page: Page,
   processLabel: string,
   electiveLabel: string,
-  timeout = 5_000,
 ) => {
-  await page.waitForFunction(
-    (args: { row: string; expected: string }) => {
-      const row = document.querySelector(args.row);
-      if (!row) return false;
-      const chips = row.querySelectorAll('.MuiChip-label');
-      for (const chip of Array.from(chips)) {
-        if ((chip.textContent ?? '').trim() === args.expected) return true;
-      }
-      return false;
-    },
-    { timeout },
-    { row: rowSelector(processLabel), expected: electiveLabel },
+  await page.waitForSelector(
+    `${rowSelector(processLabel)} [data-testid="process-item-elective-chip"][data-elective-label="${electiveLabel}"]`,
   );
 };

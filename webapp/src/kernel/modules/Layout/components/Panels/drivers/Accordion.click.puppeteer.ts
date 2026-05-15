@@ -12,11 +12,7 @@ export const expandAccordion = async (page: Page, name: string) => {
   const expanded = await page.$eval(summary, (el) => el.getAttribute('aria-expanded') === 'true');
   if (expanded) return;
   await page.click(summary);
-  await page.waitForFunction(
-    (sel: string) => document.querySelector(sel)?.getAttribute('aria-expanded') === 'true',
-    { timeout: 2000 },
-    summary,
-  );
+  await page.waitForSelector(`${summary}[aria-expanded="true"]`);
 };
 
 export const collapseAccordion = async (page: Page, name: string) => {
@@ -25,9 +21,5 @@ export const collapseAccordion = async (page: Page, name: string) => {
   const expanded = await page.$eval(summary, (el) => el.getAttribute('aria-expanded') === 'true');
   if (!expanded) return;
   await page.click(summary);
-  await page.waitForFunction(
-    (sel: string) => document.querySelector(sel)?.getAttribute('aria-expanded') !== 'true',
-    { timeout: 2000 },
-    summary,
-  );
+  await page.waitForSelector(`${summary}:not([aria-expanded="true"])`);
 };

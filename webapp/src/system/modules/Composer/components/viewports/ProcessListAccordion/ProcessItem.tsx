@@ -124,6 +124,8 @@ export default function ProcessItem({
           <Typography sx={{ fontWeight: "bold" }}>{node.label}</Typography>
           {linkedElective && (
             <Chip
+              data-testid="process-item-elective-chip"
+              data-elective-label={linkedElective.label}
               label={linkedElective.label}
               size="small"
               color={linkedElective.value ? "success" : "default"}

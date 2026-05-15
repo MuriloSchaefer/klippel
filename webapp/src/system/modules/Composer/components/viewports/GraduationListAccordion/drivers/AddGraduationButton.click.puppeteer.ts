@@ -32,20 +32,7 @@ export const typeNamesAndConfirm = async (page: Page, names: string) => {
   await page.keyboard.type(names);
 
   const confirmSelector = `[data-testid="${ADD_GRADUATION_CONFIRM_TESTID}"]`;
-  await page.waitForSelector(confirmSelector);
-  // Wait for the confirm button to be enabled (the form disables it while
-  // names is empty); avoids racing the controlled-input state update.
-  await page.waitForFunction(
-    (sel: string) => {
-      const btn = document.querySelector(sel) as HTMLButtonElement | null;
-      return !!btn && !btn.disabled;
-    },
-    { timeout: 3_000 },
-    confirmSelector,
-  );
+  await page.waitForSelector(`${confirmSelector}:not([disabled])`);
   await page.click(confirmSelector);
-  await page.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[role="pointer-panel-content"]', { hidden: true });
 };

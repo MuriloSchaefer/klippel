@@ -78,6 +78,9 @@ export default function ProcessTimeAccordion({
               data-testid="process-time-item"
               data-process-id={p.id}
               data-process-label={p.label}
+              data-process-time-status={
+                minutesPerUnit !== undefined ? "computed" : "pending"
+              }
               tabIndex={0}
               sx={{
                 display: "flex",

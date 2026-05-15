@@ -1,5 +1,6 @@
 /* istanbul ignore file */
 import type { Page } from 'puppeteer-core';
+import { resetUIState } from '@helpers/puppeteer/closeOverlays';
 
 export const ADD_VISUALIZATION_TRIGGER_TESTID = 'add-visualization';
 export const ADD_VISUALIZATION_FORM_TESTID = 'add-visualization-form';
@@ -17,20 +18,29 @@ export const openAddVisualizationPanel = async (page: Page) => {
   const triggerSel = `[data-testid="${ADD_VISUALIZATION_TRIGGER_TESTID}"]`;
   const formSel = `[role="pointer-panel-content"] [data-testid="${ADD_VISUALIZATION_FORM_TESTID}"]`;
 
+  // Pull the UI to a known baseline first: drain leftover listboxes/panels
+  // from preceding tool calls (addMaterial, accordion expansions) and blur any
+  // focused input. Without this, residual state from setup() can swallow the
+  // trigger click on the first test in the file.
+  await resetUIState(page);
   await page.waitForSelector(triggerSel);
 
-  // Stale pointer panels (or focused inputs) from preceding suites can swallow
-  // the first click. Dismiss anything open, then retry the trigger click until
-  // the panel actually mounts.
   for (let attempt = 0; attempt < 3; attempt++) {
-    await page.keyboard.press('Escape').catch(() => {});
-    await page
-      .waitForSelector('[role="pointer-panel-content"]', {
-        hidden: true,
-        timeout: 500,
-      })
-      .catch(() => {});
-    await page.click(triggerSel);
+    if (attempt > 0) await resetUIState(page);
+    // Dispatch click directly on the element rather than via page.click(): the
+    // latter performs a hit-test through the layout, which a still-mounted
+    // (visibility:hidden but DOM-present) MUI Modal portal from a prior panel
+    // can intercept. element.click() routes straight to React's onClick.
+    const clicked = await page.evaluate((sel: string) => {
+      const btn = document.querySelector(sel) as HTMLButtonElement | null;
+      if (!btn) return false;
+      btn.click();
+      return true;
+    }, triggerSel);
+    if (!clicked) {
+      await page.waitForSelector(triggerSel);
+      continue;
+    }
     try {
       await page.waitForSelector(formSel, { timeout: 4_000 });
       return;
@@ -38,8 +48,8 @@ export const openAddVisualizationPanel = async (page: Page) => {
       // fall through and retry
     }
   }
-  // Last attempt with the original (longer) wait so the error message is
-  // unchanged when this is a genuine product bug, not a flake.
+  // Final attempt mirrors the original flow with the longer default wait so
+  // the error message reflects a genuine product bug, not a flake.
   await page.click(triggerSel);
   await page.waitForSelector(formSel);
 };

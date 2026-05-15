@@ -8,17 +8,11 @@ export const confirmPointerPanelShortcut = async (page: Page) => {
   await page.keyboard.down(CONFIRM_POINTER_PANEL_SHORTCUT.modifier);
   await page.keyboard.press(CONFIRM_POINTER_PANEL_SHORTCUT.key);
   await page.keyboard.up(CONFIRM_POINTER_PANEL_SHORTCUT.modifier);
-  await page.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"]'),
-    { timeout: 2000 },
-  );
+  await page.waitForSelector('[role="pointer-panel-content"]', { hidden: true });
 };
 
 export const closePointerPanelShortcut = async (page: Page) => {
   await page.bringToFront();
   await page.keyboard.press(CLOSE_POINTER_PANEL_SHORTCUT);
-  await page.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"]'),
-    { timeout: 2000 },
-  );
+  await page.waitForSelector('[role="pointer-panel-content"]', { hidden: true });
 };

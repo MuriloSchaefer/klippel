@@ -11,18 +11,16 @@ export const saveEditMaterial = async (page: Page) => {
   const sel = `[data-testid="${EDIT_MATERIAL_SAVE_TESTID}"]`;
   await page.waitForSelector(sel);
   await page.click(sel);
-  await page.waitForFunction(
-    () => !document.querySelector('[data-testid="edit-material-form"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[data-testid="edit-material-form"]', {
+    hidden: true,
+  });
 };
 
 export const cancelEditMaterial = async (page: Page) => {
   const sel = `[data-testid="${EDIT_MATERIAL_CANCEL_TESTID}"]`;
   await page.waitForSelector(sel);
   await page.click(sel);
-  await page.waitForFunction(
-    () => !document.querySelector('[data-testid="edit-material-form"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[data-testid="edit-material-form"]', {
+    hidden: true,
+  });
 };

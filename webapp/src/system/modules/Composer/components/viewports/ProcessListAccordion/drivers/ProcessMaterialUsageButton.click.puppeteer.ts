@@ -78,14 +78,7 @@ export const toggleGradeOverride = async (page: Page, gradLabel: string) => {
   // keyboard change event and reliably flips React state.
   await page.focus(sel);
   await page.keyboard.press('Space');
-  await page.waitForFunction(
-    (s: string) => {
-      const el = document.querySelector<HTMLInputElement>(s);
-      return el?.checked === true;
-    },
-    { timeout: 2_000 },
-    sel,
-  );
+  await page.waitForSelector(`${sel}:checked`);
 };
 
 

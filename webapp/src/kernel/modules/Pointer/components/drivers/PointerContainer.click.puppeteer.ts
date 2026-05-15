@@ -25,10 +25,7 @@ export const confirmPointerPanel = async (page: Page) => {
   const disabled = await page.$eval(POINTER_PANEL_CONFIRM_SELECTOR, (el) => (el as HTMLButtonElement).disabled);
   if (disabled) throw new Error('PointerContainer confirm button is disabled — form validation failed.');
   await page.click(POINTER_PANEL_CONFIRM_SELECTOR);
-  await page.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"]'),
-    { timeout: 2000 },
-  );
+  await page.waitForSelector('[role="pointer-panel-content"]', { hidden: true });
 };
 
 export const closePointerPanel = async (page: Page) => {

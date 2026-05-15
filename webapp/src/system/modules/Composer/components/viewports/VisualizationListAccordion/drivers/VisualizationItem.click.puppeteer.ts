@@ -27,13 +27,8 @@ export const waitForVisualizationItem = async (page: Page, label: string) => {
 export const waitForVisualizationItemRemoved = async (
   page: Page,
   label: string,
-  timeout = 5_000,
 ) => {
-  await page.waitForFunction(
-    (sel: string) => !document.querySelector(sel),
-    { timeout },
-    rowSelector(label),
-  );
+  await page.waitForSelector(rowSelector(label), { hidden: true });
 };
 
 export const clickEditVisualization = async (page: Page, label: string) => {

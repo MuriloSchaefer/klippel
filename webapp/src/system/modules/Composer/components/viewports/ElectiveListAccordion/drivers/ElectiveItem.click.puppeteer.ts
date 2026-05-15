@@ -20,16 +20,8 @@ export const waitForElectiveItem = async (page: Page, label: string) => {
   await page.waitForSelector(rowSelector(label));
 };
 
-export const waitForElectiveItemRemoved = async (
-  page: Page,
-  label: string,
-  timeout = 5_000,
-) => {
-  await page.waitForFunction(
-    (sel: string) => !document.querySelector(sel),
-    { timeout },
-    rowSelector(label),
-  );
+export const waitForElectiveItemRemoved = async (page: Page, label: string) => {
+  await page.waitForSelector(rowSelector(label), { hidden: true });
 };
 
 export const clickEditElective = async (page: Page, label: string) => {

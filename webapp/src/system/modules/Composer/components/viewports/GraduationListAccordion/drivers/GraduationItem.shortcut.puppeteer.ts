@@ -20,11 +20,7 @@ export const focusGraduationItem = async (page: Page, label: string) => {
   const sel = rowSelector(label);
   await page.waitForSelector(sel);
   await page.focus(sel);
-  await page.waitForFunction(
-    (s: string) => document.activeElement?.matches(s) ?? false,
-    {},
-    sel,
-  );
+  await page.waitForSelector(`${sel}:focus`);
 };
 
 export const triggerFocusGraduationList = async (page: Page) => {
@@ -33,14 +29,9 @@ export const triggerFocusGraduationList = async (page: Page) => {
   await page.keyboard.press('g');
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');
-  await page.waitForFunction(() => {
-    const active = document.activeElement as HTMLElement | null;
-    if (!active) return false;
-    if (active.matches('[data-testid="graduation-item"]')) return true;
-    if (active.id === 'composer-add-graduation') return true;
-    // Empty list fallback focuses the accordion content panel.
-    return active.matches('[data-accordion-content="Graduações da Peça"]');
-  }, { timeout: 3_000 });
+  await page.waitForSelector(
+    '[data-testid="graduation-item"]:focus, #composer-add-graduation:focus, [data-accordion-content="Graduações da Peça"]:focus',
+  );
 };
 
 export const triggerFocusNextGraduation = async (page: Page) => {
@@ -121,8 +112,7 @@ export const typeEditAmountFromFocused = async (page: Page, amount: number) => {
 
 export const commitEditGraduationFromFocused = async (page: Page) => {
   await page.keyboard.press('Enter');
-  await page.waitForFunction(
-    () => !document.querySelector('[data-testid="edit-graduation-form"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[data-testid="edit-graduation-form"]', {
+    hidden: true,
+  });
 };

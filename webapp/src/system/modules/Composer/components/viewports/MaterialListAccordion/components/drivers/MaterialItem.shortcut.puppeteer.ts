@@ -20,11 +20,7 @@ export const focusMaterialItem = async (page: Page, label: string) => {
   const sel = rowSelector(label);
   await page.waitForSelector(sel);
   await page.focus(sel);
-  await page.waitForFunction(
-    (s: string) => document.activeElement?.matches(s) ?? false,
-    {},
-    sel,
-  );
+  await page.waitForSelector(`${sel}:focus`);
 };
 
 /**
@@ -43,14 +39,9 @@ export const triggerFocusMaterialList = async (page: Page) => {
   await page.keyboard.down('Control');
   await page.keyboard.press('m');
   await page.keyboard.up('Control');
-  await page.waitForFunction(() => {
-    const active = document.activeElement as HTMLElement | null;
-    if (!active) return false;
-    if (active.matches('[data-testid="material-item"]')) return true;
-    if (active.id === 'composer-add-material') return true;
-    // Empty list fallback focuses the accordion content panel.
-    return active.matches('[data-accordion-content="Materiais"]');
-  }, { timeout: 3_000 });
+  await page.waitForSelector(
+    '[data-testid="material-item"]:focus, #composer-add-material:focus, [data-accordion-content="Materiais"]:focus',
+  );
 };
 
 /** Press ArrowDown to move focus to the next material row. */
@@ -138,10 +129,8 @@ export const focusMaterialByLabelMatch = async (
     return target.getAttribute('data-material-label');
   }, needle);
   if (!matched) return null;
-  await page.waitForFunction(
-    (l: string) => document.activeElement?.getAttribute('data-material-label') === l,
-    { timeout: 2_000 },
-    matched,
+  await page.waitForSelector(
+    `[data-testid="material-item"][data-material-label="${matched}"]:focus`,
   );
   return matched;
 };

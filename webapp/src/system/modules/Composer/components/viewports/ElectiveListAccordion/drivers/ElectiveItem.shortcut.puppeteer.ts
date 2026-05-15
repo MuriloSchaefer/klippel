@@ -33,11 +33,7 @@ export const focusElectiveItem = async (page: Page, label: string) => {
   const sel = rowSelector(label);
   await page.waitForSelector(sel);
   await page.focus(sel);
-  await page.waitForFunction(
-    (s: string) => document.activeElement?.matches(s) ?? false,
-    {},
-    sel,
-  );
+  await page.waitForSelector(`${sel}:focus`);
 };
 
 export const triggerFocusElectiveList = async (page: Page) => {
@@ -50,15 +46,8 @@ export const triggerFocusElectiveList = async (page: Page) => {
   await page.keyboard.press('e');
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');
-  await page.waitForFunction(
-    () => {
-      const active = document.activeElement as HTMLElement | null;
-      if (!active) return false;
-      if (active.matches('[data-testid="elective-item"]')) return true;
-      if (active.id === 'composer-add-elective') return true;
-      return active.matches('[data-accordion-content="Eletivos da Peça"]');
-    },
-    { timeout: 3_000 },
+  await page.waitForSelector(
+    '[data-testid="elective-item"]:focus, #composer-add-elective:focus, [data-accordion-content="Eletivos da Peça"]:focus',
   );
 };
 
@@ -109,14 +98,7 @@ export const setEditElectiveDefaultShortcut = async (
     el?.focus();
   }, sel);
   await page.keyboard.press('Space');
-  await page.waitForFunction(
-    (args: { s: string; t: boolean }) => {
-      const el = document.querySelector<HTMLInputElement>(args.s);
-      return !!el && el.checked === args.t;
-    },
-    { timeout: 2_000 },
-    { s: sel, t: target },
-  );
+  await page.waitForSelector(target ? `${sel}:checked` : `${sel}:not(:checked)`);
 };
 
 export const getFocusedElectiveLabel = async (

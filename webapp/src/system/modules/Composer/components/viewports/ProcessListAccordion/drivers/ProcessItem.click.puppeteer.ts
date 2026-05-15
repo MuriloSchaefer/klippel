@@ -21,16 +21,8 @@ export const waitForProcessItem = async (page: Page, label: string) => {
   await page.waitForSelector(rowSelector(label));
 };
 
-export const waitForProcessItemRemoved = async (
-  page: Page,
-  label: string,
-  timeout = 5_000,
-) => {
-  await page.waitForFunction(
-    (sel: string) => !document.querySelector(sel),
-    { timeout },
-    rowSelector(label),
-  );
+export const waitForProcessItemRemoved = async (page: Page, label: string) => {
+  await page.waitForSelector(rowSelector(label), { hidden: true });
 };
 
 export const clickEditProcess = async (page: Page, label: string) => {

@@ -22,11 +22,7 @@ export const focusVisualizationItem = async (page: Page, label: string) => {
   const sel = rowSelector(label);
   await page.waitForSelector(sel);
   await page.focus(sel);
-  await page.waitForFunction(
-    (s: string) => document.activeElement?.matches(s) ?? false,
-    {},
-    sel,
-  );
+  await page.waitForSelector(`${sel}:focus`);
 };
 
 export const triggerFocusVisualizationList = async (page: Page) => {
@@ -39,15 +35,8 @@ export const triggerFocusVisualizationList = async (page: Page) => {
   await page.keyboard.press('v');
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');
-  await page.waitForFunction(
-    () => {
-      const active = document.activeElement as HTMLElement | null;
-      if (!active) return false;
-      if (active.matches('[data-testid="visualization-item"]')) return true;
-      if (active.id === 'composer-add-visualization') return true;
-      return active.matches('[data-accordion-content="Visualização"]');
-    },
-    { timeout: 3_000 },
+  await page.waitForSelector(
+    '[data-testid="visualization-item"]:focus, #composer-add-visualization:focus, [data-accordion-content="Visualização"]:focus',
   );
 };
 

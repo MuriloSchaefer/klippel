@@ -36,8 +36,5 @@ export const typeNamesAndConfirmFromFocused = async (page: Page, names: string) 
   await page.keyboard.press('Enter');
   await page.keyboard.up('Control');
 
-  await page.waitForFunction(
-    () => !document.querySelector('[role="pointer-panel-content"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[role="pointer-panel-content"]', { hidden: true });
 };

@@ -8,10 +8,9 @@ export const confirmEditMaterialFromFocused = async (page: Page) => {
   await page.waitForSelector('[data-testid="edit-material-save"]');
   await page.focus('[data-testid="edit-material-save"]');
   await page.keyboard.press('Enter');
-  await page.waitForFunction(
-    () => !document.querySelector('[data-testid="edit-material-form"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[data-testid="edit-material-form"]', {
+    hidden: true,
+  });
 };
 
 /**
@@ -19,8 +18,7 @@ export const confirmEditMaterialFromFocused = async (page: Page) => {
  */
 export const cancelEditMaterialFromFocused = async (page: Page) => {
   await page.keyboard.press('Enter');
-  await page.waitForFunction(
-    () => !document.querySelector('[data-testid="edit-material-form"]'),
-    { timeout: 5_000 },
-  );
+  await page.waitForSelector('[data-testid="edit-material-form"]', {
+    hidden: true,
+  });
 };

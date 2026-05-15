@@ -14,50 +14,53 @@ export const FOCUS_NEXT_PROCESS_TIME_SHORTCUT = 'ArrowDown' as const;
 export const FOCUS_PREV_PROCESS_TIME_SHORTCUT = 'ArrowUp' as const;
 export const OPEN_PROCESS_TIME_AUDIT_SHORTCUT = 'l' as const;
 
+const ITEM_SEL = `[data-testid="${PROCESS_TIME_ITEM_TESTID}"]`;
+const FOCUSED_ITEM_SEL = `${ITEM_SEL}:focus`;
+const FOCUSED_ACCORDION_CONTENT_SEL = '[data-accordion-content="Tempo"]:focus';
+
 const rowSelector = (label: string) =>
-  `[data-testid="${PROCESS_TIME_ITEM_TESTID}"][data-process-label="${label}"]`;
+  `${ITEM_SEL}[data-process-label="${label}"]`;
+const focusedRowSelector = (label: string) =>
+  `${rowSelector(label)}:focus`;
+
+const readFocusedRowLabel = async (page: Page): Promise<string | null> => {
+  const handle = await page.$(FOCUSED_ITEM_SEL);
+  if (!handle) return null;
+  const label = await handle.evaluate((el) =>
+    el.getAttribute('data-process-label'),
+  );
+  await handle.dispose();
+  return label;
+};
 
 export const triggerFocusProcessTimeList = async (page: Page) => {
-  await page.evaluate(() => {
-    const a = document.activeElement as HTMLElement | null;
-    if (a?.matches('[data-testid="process-time-item"]')) a.blur();
-  });
+  const focused = await page.$(FOCUSED_ITEM_SEL);
+  if (focused) {
+    await focused.evaluate((el) => (el as HTMLElement).blur());
+    await focused.dispose();
+  }
   await page.keyboard.down('Control');
   await page.keyboard.press('g');
   await page.keyboard.up('Control');
-  await page.waitForFunction(
-    () => {
-      const active = document.activeElement as HTMLElement | null;
-      if (!active) return false;
-      if (active.matches('[data-testid="process-time-item"]')) return true;
-      return active.matches('[data-accordion-content="Tempo"]');
-    },
-    { timeout: 3_000 },
+  await page.waitForSelector(
+    `${FOCUSED_ITEM_SEL}, ${FOCUSED_ACCORDION_CONTENT_SEL}`,
   );
 };
 
-const readFocusedRowLabel = (page: Page) =>
-  page.evaluate(() => {
-    const a = document.activeElement as HTMLElement | null;
-    if (!a?.matches('[data-testid="process-time-item"]')) return null;
-    return a.getAttribute('data-process-label');
-  });
-
-// The ArrowDown/ArrowUp handler moves DOM focus synchronously on keydown, but
-// `keyboard.press` resolving does not guarantee the renderer has applied it
-// before the next read. Capture the focused row, press, then wait until focus
-// actually lands on a *different* row so callers never read a stale label.
+// Capture the focused row, press the arrow, then wait for focus to land on a
+// *different* row. The arrow shortcut is scoped to PROCESS_TIME_LIST_CONTEXT_ID
+// and only fires while focus is inside the accordion subtree; if focus has
+// drifted off, refocus the first row before pressing.
 const triggerFocusMove = async (page: Page, key: string) => {
-  const before = await readFocusedRowLabel(page);
+  let before = await readFocusedRowLabel(page);
+  if (before === null) {
+    await page.focus(ITEM_SEL);
+    await page.waitForSelector(FOCUSED_ITEM_SEL);
+    before = await readFocusedRowLabel(page);
+  }
   await page.keyboard.press(key as Parameters<Page['keyboard']['press']>[0]);
-  await page.waitForFunction(
-    (prev: string | null) => {
-      const a = document.activeElement as HTMLElement | null;
-      if (!a?.matches('[data-testid="process-time-item"]')) return false;
-      return a.getAttribute('data-process-label') !== prev;
-    },
-    { timeout: 3_000 },
-    before,
+  await page.waitForSelector(
+    `${FOCUSED_ITEM_SEL}:not([data-process-label="${before}"])`,
   );
 };
 
@@ -83,11 +86,7 @@ export const focusProcessTimeItem = async (page: Page, label: string) => {
   const sel = rowSelector(label);
   await page.waitForSelector(sel);
   await page.focus(sel);
-  await page.waitForFunction(
-    (s: string) => document.activeElement?.matches(s) ?? false,
-    {},
-    sel,
-  );
+  await page.waitForSelector(focusedRowSelector(label));
 };
 
 export type FocusedProcessTimeTarget =
@@ -99,28 +98,26 @@ export type FocusedProcessTimeTarget =
 export const getFocusedProcessTimeTarget = async (
   page: Page,
 ): Promise<FocusedProcessTimeTarget> => {
-  return page.evaluate(() => {
-    const a = document.activeElement as HTMLElement | null;
-    if (!a) return null;
-    if (a.matches('[data-testid="process-time-item"]')) {
-      return {
-        type: 'process-time-item' as const,
-        label: a.getAttribute('data-process-label'),
-      };
-    }
-    if (a.matches('[data-accordion-content="Tempo"]')) {
-      return { type: 'accordion-content' as const };
-    }
-    return { type: 'unknown' as const, tag: a.tagName.toLowerCase() };
-  });
+  const itemHandle = await page.$(FOCUSED_ITEM_SEL);
+  if (itemHandle) {
+    const label = await itemHandle.evaluate((el) =>
+      el.getAttribute('data-process-label'),
+    );
+    await itemHandle.dispose();
+    return { type: 'process-time-item', label };
+  }
+  const contentHandle = await page.$(FOCUSED_ACCORDION_CONTENT_SEL);
+  if (contentHandle) {
+    await contentHandle.dispose();
+    return { type: 'accordion-content' };
+  }
+  const anyFocus = await page.$(':focus');
+  if (!anyFocus) return null;
+  const tag = await anyFocus.evaluate((el) => el.tagName.toLowerCase());
+  await anyFocus.dispose();
+  return { type: 'unknown', tag };
 };
 
-export const getFocusedProcessTimeLabel = async (
+export const getFocusedProcessTimeLabel = (
   page: Page,
-): Promise<string | null> => {
-  return page.evaluate(() => {
-    const a = document.activeElement as HTMLElement | null;
-    if (!a?.matches('[data-testid="process-time-item"]')) return null;
-    return a.getAttribute('data-process-label');
-  });
-};
+): Promise<string | null> => readFocusedRowLabel(page);

@@ -11,21 +11,11 @@ export const ensureGarmentDetailsAccordionExpanded = async (page: Page) => {
   const expanded = await page.$eval(summarySelector, (el) => el.getAttribute('aria-expanded') === 'true');
   if (expanded) return;
   await page.click(summarySelector);
-  await page.waitForFunction(
-    (sel: string) => document.querySelector(sel)?.getAttribute('aria-expanded') === 'true',
-    { timeout: 2000 },
-    summarySelector,
-  );
+  await page.waitForSelector(`${summarySelector}[aria-expanded="true"]`);
 };
 
-export const waitForGarmentDetailsPanelVisible = async (page: Page, timeoutMs = 5000) => {
-  await page.waitForFunction(
-    () => {
-      const panel = document.querySelector('[role="details-panel"]') as HTMLElement | null;
-      return !!panel && window.getComputedStyle(panel).display !== 'none';
-    },
-    { timeout: timeoutMs },
-  );
+export const waitForGarmentDetailsPanelVisible = async (page: Page) => {
+  await page.waitForSelector('[role="details-panel"]', { visible: true });
 };
 
 export const fillGarmentName = async (page: Page, value: string) => {
