@@ -135,7 +135,7 @@ export default function ProcessItem({
         </Box>
         <Box sx={{ display: "flex", gap: 2 }}>
           <Box sx={{ display: "flex", gap: 1 }}>
-            <AttachMoneySharp />
+            <AccessTimeSharp />
             <Typography>
               {node.costTime?.quotient.amount}{" "}
               {units![node.costTime!.quotient.unit].abbreviation} /
@@ -144,7 +144,7 @@ export default function ProcessItem({
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 1 }}>
-            <AccessTimeSharp />
+            <AttachMoneySharp />
             <Typography>
               {node.costMoney?.quotient.amount}{" "}
               {units![node.costMoney!.quotient.unit].abbreviation} /

@@ -23,6 +23,9 @@ export interface MaterialState{
     },
     composition?: CompositionMap,
     stock: UnitValue;
+    prices: {
+        [date: string]: number
+    }
 }
 export interface MaterialsState {
     [id: number]: MaterialState
