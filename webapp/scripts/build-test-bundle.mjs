@@ -33,7 +33,7 @@ mkdirSync(outDir, { recursive: true });
 // 1. Copy test files + their puppeteer driver siblings, preserving src/ layout.
 //    We copy the broader src/ subset so test imports still resolve.
 const filesToCopy = await glob(
-  ['src/**/*.test.ts', 'src/**/*.puppeteer.ts', 'src/**/*.ts', 'src/**/*.tsx'],
+  ['src/**/*.test.ts', 'src/**/*.puppeteer.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/fixtures/**/*'],
   { cwd: webappRoot, absolute: false, nodir: true },
 );
 
