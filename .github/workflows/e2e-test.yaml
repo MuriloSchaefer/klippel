@@ -389,7 +389,8 @@ jobs:
           # Klippel reads ~/klippel/envs/$ENV_NAME/workspaces; older builds
           # crash if ENV_NAME is unset or the dir is missing. Pre-create both.
           export ENV_NAME=default
-          mkdir -p "$HOME/klippel/envs/$ENV_NAME/workspaces"
+          export BASE_WORKSPACE=empty
+          mkdir -p "$HOME/klippel/envs/$ENV_NAME/workspaces/$BASE_WORKSPACE"
 
           # Launch the installed app ourselves so we control logging.
           # globalSetup will see CDP already up and attach instead of spawning.
@@ -472,7 +473,8 @@ jobs:
           fi
 
           export ENV_NAME=default
-          mkdir -p "$HOME/klippel/envs/$ENV_NAME/workspaces"
+          export BASE_WORKSPACE=empty
+          mkdir -p "$HOME/klippel/envs/$ENV_NAME/workspaces/$BASE_WORKSPACE"
 
           echo "Launching $BINARY with CDP on :9222 (ENV_NAME=$ENV_NAME)"
           "$BINARY" --remote-debugging-port=9222 > /tmp/klippel-mcp.log 2>&1 &
@@ -526,7 +528,8 @@ jobs:
         shell: cmd
         run: |
           set ENV_NAME=default
-          mkdir "%USERPROFILE%\klippel\envs\default\workspaces" 2>nul
+          set BASE_WORKSPACE=empty
+          mkdir "%USERPROFILE%\klippel\envs\default\workspaces\empty" 2>nul
           call test-bundle\run-tests.cmd "%KLIPPEL_EXE%"
 
       - name: Record step results
