@@ -271,7 +271,7 @@ const ModelSelectionModal = ({
                 border: '1px solid rgba(0,0,0,0.5)',
               }}
             >
-              <MarkdownReader path={selectedOption.description} />
+              <MarkdownReader content={selectedOption.description} />
             </Box>
           )}
         </Box>

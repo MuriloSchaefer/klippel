@@ -1,10 +1,12 @@
 import { contextBridge } from "electron";
 import storage from "./storage";
+import jazz from "./jazz";
 
 // Custom APIs for renderer
 // interface for communicating between renderer and main process.
 export const api = {
   storage,
+  jazz,
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

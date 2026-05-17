@@ -7,24 +7,26 @@ import {
   saveSession,
   sessionSaved,
 } from "./actions";
-import { StoreState } from "@kernel/modules/Store/state";
-import { getWorkspaceFolder } from "@kernel/modules/Store/middlewares";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
-import { persistModelState } from "./slice";
 import { uniqueId } from "lodash";
 import { ComposerModuleState, Model } from "../../typings";
+import { persistModelState } from "./slice";
 
-const storage = globalThis.electron.storage;
+const jazz = globalThis.electron.jazz;
 const middlewares = createListenerMiddleware();
 
+/**
+ * saveSession flushes the rendered model list to `.session/Composer/models`
+ * as a fast-load cache. The Jazz CoValue tree in `jazz.sqlite` is the source
+ * of truth for model content; this cache lets the slice rehydrate the list
+ * before the first `jazz.listModels()` round-trip resolves.
+ */
 middlewares.startListening({
   actionCreator: saveSession,
   effect: async (_, listenerApi) => {
     const { dispatch, getState } = listenerApi;
-
     const { Composer: state } = getState() as { Composer: ComposerModuleState };
     Object.values(state.models).forEach(persistModelState);
-
     dispatch(sessionSaved());
   },
 });
@@ -32,22 +34,9 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: createModel,
   effect: async ({ payload }, listenerApi) => {
-    const { dispatch, getState } = listenerApi;
-
-    const workspace = getWorkspaceFolder(
-      getState as () => { Store: StoreState }
-    );
-    storage.ensureDir(`${workspace}/Models/${payload.id}`);
+    const { dispatch } = listenerApi;
 
     const instanceId = uniqueId(payload.id + "-");
-    const model: Model = {
-      id: payload.id,
-      name: payload.name,
-      svg: undefined,
-      graph: "./graph.json",
-      description: "./description.md",
-    };
-
     const graph: GraphState = {
       id: instanceId,
       nodes: {
@@ -55,7 +44,7 @@ middlewares.startListening({
           id: "garment",
           type: "GARMENT",
           position: { x: 0, y: 0 },
-          label: model.name,
+          label: payload.name,
         },
       },
       edges: {},
@@ -68,24 +57,30 @@ middlewares.startListening({
       searchResults: {},
     };
 
-    await storage.writeBlob(
-      `${workspace}/Models/${payload.id}/graph.json`,
-      new Blob([JSON.stringify(graph)]),
-      { encoding: "utf-8" }
-    );
-    await storage.writeBlob(
-      `${workspace}/Models/${payload.id}/model.json`,
-      new Blob([JSON.stringify(model)]),
-      { encoding: "utf-8" }
-    );
-    await storage.writeBlob(
-      `${workspace}/Models/${payload.id}/description.md`,
-      new Blob([""]),
-      { encoding: "utf-8" }
-    );
+    try {
+      await jazz.createModel({
+        id: payload.id,
+        name: payload.name,
+        graphJson: JSON.stringify(graph),
+        description: "",
+      });
+    } catch (err) {
+      console.error("[Composer/createModel] Jazz create failed", err);
+      return;
+    }
+
+    const model: Model = {
+      id: payload.id,
+      name: payload.name,
+      svg: undefined,
+      graph: "", // legacy field — paths are no longer used; CoValue is the source of truth
+      description: "",
+    };
 
     dispatch(
-      modelCreated({ model: { ...model, variationId: instanceId, instanceId, selectedPart: 'garment' } })
+      modelCreated({
+        model: { ...model, variationId: instanceId, instanceId, selectedPart: "garment" },
+      }),
     );
     dispatch(listModels());
   },
@@ -94,35 +89,24 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: listModels,
   effect: async (_, listenerApi) => {
-    const { dispatch, getState } = listenerApi;
-
-    const workspace = getWorkspaceFolder(
-      getState as () => { Store: StoreState }
-    );
-    const rootFolder = `${workspace}/Models`;
-    const entries = await storage.searchDir<string[]>(
-      rootFolder,
-      ["**/model.json"],
-      {}
-    );
-
-    const models = await Promise.all(
-      entries.map(async (filePath) => {
-        const folder = filePath.split("/").slice(0, -1).join("/");
-        const state = JSON.parse(
-          await storage.readFile(`${rootFolder}/${filePath}`, {
-            encoding: "utf-8",
-          })
-        );
-        return {
-          ...state,
-          description: `${rootFolder}/${folder}/${state.description}`,
-          graph: `${rootFolder}/${folder}/${state.graph}`,
-          svg: state.svg ? `${rootFolder}/${folder}/${state.svg}` : undefined,
-        };
-      })
-    );
-
+    const { dispatch } = listenerApi;
+    let summaries;
+    try {
+      summaries = await jazz.listModels();
+    } catch (err) {
+      console.error("[Composer/listModels] Jazz list failed", err);
+      dispatch(modelsListed([]));
+      return;
+    }
+    const models: Model[] = summaries.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      // BinaryCoStream payload lands in 2b-C; until then there's no path-like
+      // value the existing SVG loader can consume.
+      svg: undefined,
+      graph: "",
+    }));
     dispatch(modelsListed(models));
   },
 });

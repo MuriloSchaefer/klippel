@@ -26,3 +26,13 @@ export const uploadSVG = createAction<{ variationId: string, svgContent: string}
 export const svgUploaded = createAction<{ variationId: string, svgContent: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] SVG uploaded`
 );
+
+export const saveModel = createAction<{ variationId: string, message: string, viewportName?: string }>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Save model`
+);
+export const modelSaved = createAction<{ variationId: string, modelId: string, message: string }>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Model saved`
+);
+export const modelSaveFailed = createAction<{ variationId: string, modelId: string, error: string }>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Model save failed`
+);

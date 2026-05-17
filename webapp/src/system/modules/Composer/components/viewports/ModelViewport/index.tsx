@@ -4,8 +4,8 @@ import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { MATERIAL_LIST_CONTEXT_ID, MODULE_NAME, PROCESS_TIME_LIST_CONTEXT_ID } from "../../../constants";
-import SaveSharpIcon from "@mui/icons-material/SaveSharp";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
+import SaveModelButton from "./SaveModelButton";
 import CompositionTree from "../CompositionTree/CompositionTree";
 import useVariation from "../../../hooks/useVariation";
 import SVGView from "./SVGView";
@@ -62,11 +62,7 @@ function ModelViewport() {
         }}
       >
         <ViewportNotificationsTray>
-          <SaveSharpIcon
-            fontSize="small"
-            onClick={() => console.log("save model")}
-            sx={{ ":hover": { cursor: "pointer", color: "primary.main" } }}
-          />
+          <SaveModelButton variationId={activeVP.extra.variationId as string} />
         </ViewportNotificationsTray>
 
         <SettingsPanel>

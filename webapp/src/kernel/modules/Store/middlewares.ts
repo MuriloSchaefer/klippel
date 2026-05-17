@@ -26,6 +26,7 @@ export function getWorkspaceFolder(getState: () => { Store: StoreState }) {
 }
 
 const storage = globalThis.electron.storage;
+const jazz = globalThis.electron.jazz;
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
   actionCreator: saveSession,
@@ -75,6 +76,16 @@ middlewares.startListening({
 
     setCurrentWorkspace(payload.workspace);
 
+    // Open the workspace's Jazz node before fan-out so Composer rehydrators
+    // see a live `activeWorkspace` when they fire model IPC calls.
+    // `ensureWorkspace` handles open-existing / fresh-bootstrap / stale-entry
+    // cases in one round-trip.
+    try {
+      await jazz.ensureWorkspace(payload.workspace);
+    } catch (err) {
+      console.error("[Store/selectWorkspace] Jazz ensure failed", err);
+    }
+
     // Re-read every persisted slice from the new workspace's `.session/` and
     // dispatch each slice's rehydrate action. This is the soft-reset path
     // (no page reload): slices swap their state in-place.
@@ -91,9 +102,19 @@ middlewares.startListening({
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
 
-    storage.ensureDir(`./workspaces/${payload.name}`)
-    dispatch(listWorkspaces())
-    dispatch(workspaceCreated(payload)); // dispatch event
+    let coId: string | undefined;
+    try {
+      const entry = await jazz.createWorkspace(payload.name);
+      coId = entry.coId;
+    } catch (err) {
+      console.error("[Store] Jazz workspace creation failed", err);
+      // Fall back to plain folder so the user is not blocked while we iterate
+      // on the Jazz path. Old workspaces remain file-only.
+      storage.ensureDir(`./workspaces/${payload.name}`);
+    }
+
+    dispatch(listWorkspaces());
+    dispatch(workspaceCreated({ name: payload.name, coId }));
   },
 });
 

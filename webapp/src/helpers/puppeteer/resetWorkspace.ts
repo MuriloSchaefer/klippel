@@ -1,5 +1,12 @@
 /* istanbul ignore file */
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { Page } from 'puppeteer-core';
@@ -9,6 +16,53 @@ const HOME = join(homedir(), 'klippel', 'envs', ENV_NAME);
 const WORKSPACES_DIR = join(HOME, 'workspaces');
 const SESSION_DIR = join(HOME, '.session');
 const STORE_STATE_FILE = join(SESSION_DIR, 'Store', 'state.json');
+const JAZZ_INDEX_FILE = join(HOME, 'workspaces.index.json');
+
+/**
+ * Remove any entry for `name` from `workspaces.index.json` so a freshly-reset
+ * workspace is not mistaken for a pre-existing Jazz workspace. The renderer's
+ * `selectWorkspace` middleware short-circuits the Jazz attach when the index
+ * has no entry, and `jazz.createWorkspace` errors when the name is present —
+ * so we want the index in a clean state before the page reload.
+ */
+const dropJazzIndexEntry = (name: string) => {
+  if (!existsSync(JAZZ_INDEX_FILE)) return;
+  try {
+    const raw = readFileSync(JAZZ_INDEX_FILE, { encoding: 'utf-8' }).trim();
+    if (!raw) return;
+    const entries = JSON.parse(raw) as Array<{ name: string }>;
+    if (!Array.isArray(entries)) return;
+    const filtered = entries.filter((e) => e?.name !== name);
+    if (filtered.length === entries.length) return;
+    writeFileSync(JAZZ_INDEX_FILE, JSON.stringify(filtered, null, 2));
+  } catch {
+    // best-effort
+  }
+};
+
+/**
+ * After the renderer has reloaded onto the freshly-reset workspace, hand it
+ * a registered Jazz workspace so domain IPC (`jazz-create-model`, etc.)
+ * resolves against a real `activeWorkspace`. Uses the idempotent
+ * `ensureWorkspace` IPC so we don't race the boot-path `ensureWorkspace`
+ * fired from `Store/kernelcalls.ts`. Skips silently when the helper is run
+ * against a build that hasn't yet exposed `window.electron.jazz`.
+ */
+const bootstrapJazzForWorkspace = async (page: Page, name: string) => {
+  await page.evaluate(async (workspace: string) => {
+    const jazz = (
+      globalThis as unknown as {
+        electron?: { jazz?: { ensureWorkspace?: (n: string) => Promise<unknown> } };
+      }
+    ).electron?.jazz;
+    if (!jazz?.ensureWorkspace) return;
+    try {
+      await jazz.ensureWorkspace(workspace);
+    } catch (err) {
+      console.error('[resetWorkspace] jazz.ensureWorkspace failed', err);
+    }
+  }, name);
+};
 
 export const resetWorkspace = async (
   page: Page,
@@ -23,12 +77,17 @@ export const resetWorkspace = async (
   if (existsSync(targetDir)) {
     rmSync(targetDir, { recursive: true, force: true });
   }
+  dropJazzIndexEntry(target);
   if (base) {
     const baseDir = join(WORKSPACES_DIR, base);
-    if (!existsSync(baseDir)) {
-      throw new Error(`Base workspace "${base}" not found at ${baseDir}`);
+    if (existsSync(baseDir)) {
+      cpSync(baseDir, targetDir, { recursive: true });
+    } else {
+      // Base workspace doesn't exist in this env — fall back to a blank
+      // workspace. Useful in fresh dev envs where `BASE_WORKSPACE=empty` is
+      // set by the npm script but the env hasn't been seeded yet.
+      mkdirSync(targetDir, { recursive: true });
     }
-    cpSync(baseDir, targetDir, { recursive: true });
   } else {
     mkdirSync(targetDir, { recursive: true });
   }
@@ -43,6 +102,7 @@ export const resetWorkspace = async (
 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#ribbon-menu-tabs', { timeout: 30_000 });
+  await bootstrapJazzForWorkspace(page, target);
 };
 
 export const cleanupWorkspace = (target: string) => {
@@ -67,12 +127,14 @@ export const softResetWorkspace = async (
   if (existsSync(targetDir)) {
     rmSync(targetDir, { recursive: true, force: true });
   }
+  dropJazzIndexEntry(target);
   if (base) {
     const baseDir = join(WORKSPACES_DIR, base);
-    if (!existsSync(baseDir)) {
-      throw new Error(`Base workspace "${base}" not found at ${baseDir}`);
+    if (existsSync(baseDir)) {
+      cpSync(baseDir, targetDir, { recursive: true });
+    } else {
+      mkdirSync(targetDir, { recursive: true });
     }
-    cpSync(baseDir, targetDir, { recursive: true });
   } else {
     mkdirSync(targetDir, { recursive: true });
   }
@@ -106,4 +168,5 @@ export const softResetWorkspace = async (
   // The rehydrators run async inside the listener; give the listener a tick
   // to complete dispatching slice rehydrate actions before tests inspect UI.
   await page.waitForSelector('#ribbon-menu-tabs', { timeout: 10_000 });
+  await bootstrapJazzForWorkspace(page, target);
 };

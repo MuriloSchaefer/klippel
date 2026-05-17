@@ -23,6 +23,40 @@ export type ComposerModuleState = {
     variations: { [key: string]: ModelVariation }
 }
 
+// ---------------------------------------------------------------------------
+// Jazz wire types — DTOs that cross IPC between renderer and main process.
+// Kept in Composer so the kernel's main-process layer
+// (`electron/main/jazz.ts`) and preload bridge stay free of Composer-internal
+// shape definitions.
+// ---------------------------------------------------------------------------
+
+export type ModelSummary = {
+    id: string;
+    coId: string;
+    name: string;
+    description: string;
+    hasSvg: boolean;
+    updatedAt: number;
+}
+
+export type EditLeaseSnapshot = {
+    holderAccountId: string;
+    acquiredAt: number;
+    expiresAt: number;
+}
+
+export type LoadedModel = ModelSummary & {
+    graphJson: string;
+    editLease?: EditLeaseSnapshot;
+}
+
+export type CreateModelInput = {
+    id: string;
+    name: string;
+    graphJson: string;
+    description?: string;
+}
+
 // nodes definitions
 export type GarmentNode = Node & {
     type: "GARMENT";

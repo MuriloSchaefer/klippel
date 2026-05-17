@@ -7,6 +7,9 @@ import {
   saveSession,
   selectWorkspace,
   workspacesListed,
+  accountIdResolved,
+  syncStatusChanged,
+  workspaceCreated,
 } from "./actions";
 import { setCurrentWorkspace } from "./workspaceScope";
 import type { PathLike } from "fs";
@@ -14,7 +17,10 @@ import type { PathLike } from "fs";
 const initialState: StoreState = {
   sessionAutoSaveInterval: undefined,
   selectedWorkspace: 'pessoal',
-  workspaces: ['pessoal']
+  workspaces: ['pessoal'],
+  workspaceCoIds: {},
+  accountId: undefined,
+  syncStatus: 'offline',
 };
 
 const storage = globalThis.electron.storage;
@@ -84,8 +90,29 @@ const slice = createSlice({
         selectedWorkspace: payload.workspace,
       })
     );
-
-    
+    builder.addCase(
+      accountIdResolved,
+      (state, { payload }) => ({
+        ...state,
+        accountId: payload.accountId ?? undefined,
+      })
+    );
+    builder.addCase(
+      syncStatusChanged,
+      (state, { payload }) => ({
+        ...state,
+        syncStatus: payload.status,
+      })
+    );
+    builder.addCase(
+      workspaceCreated,
+      (state, { payload }) => ({
+        ...state,
+        workspaceCoIds: payload.coId
+          ? { ...state.workspaceCoIds, [payload.name]: payload.coId }
+          : state.workspaceCoIds,
+      })
+    );
   },
 });
 

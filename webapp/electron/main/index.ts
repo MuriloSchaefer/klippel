@@ -10,6 +10,8 @@ import installExtension, {
 import { getAbsPath, initStorageHooks } from "./storage";
 import { startMcpServer } from "./mcp";
 import initScheduler from "./scheduler";
+import { initJazzHooks } from "./jazz-hooks";
+import { closeActiveWorkspace } from "./jazz";
 import { existsSync, ensureDirSync, outputFile, readdirSync, readFileSync } from "fs-extra";
 import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
 import { debounce } from "./utils";
@@ -96,6 +98,7 @@ async function createWindow(): Promise<BrowserWindow> {
     },
   });
   initStorageHooks(scheduler, mainWindow);
+  initJazzHooks();
   // const eo = await initOllama()
   // console.log(eo)
 
@@ -132,8 +135,9 @@ async function createWindow(): Promise<BrowserWindow> {
     if (!mainWindow.isDestroyed()) mainWindow.hide();
   }
   mainWindow.on("close",onClose);
-  app.on('before-quit', () => {
+  app.on('before-quit', async () => {
     mainWindow.removeListener('close', onClose)
+    await closeActiveWorkspace();
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

@@ -40,8 +40,14 @@ export const workspacesListed = createAction<{workspaces: string[]}>(
 export const workspaceSelected = createAction<{workspace: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace selected`
 );
-export const workspaceCreated = createAction<{name: string}>(
+export const workspaceCreated = createAction<{name: string; coId?: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace created`
+);
+export const accountIdResolved = createAction<{accountId: string | null}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Account id resolved`
+);
+export const syncStatusChanged = createAction<{status: 'offline' | 'syncing' | 'synced'}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Sync status changed`
 );
 
 

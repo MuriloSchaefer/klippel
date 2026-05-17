@@ -7,6 +7,13 @@ import type { PathLike } from "fs-extra";
 
 import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Composer/models");
+/**
+ * `.session/Composer/models/<id>.json` is a per-workspace, filesystem-backed
+ * cache of the model list. The Jazz CoValue tree (`jazz.sqlite`) is the
+ * source of truth for model content; the session file is a fast-load cache
+ * the slice rehydrates from so the renderer has the list before the first
+ * `jazz.listModels()` round-trip completes.
+ */
 export function persistModelState(state: Model) {
   storage.writeBlob(
     `.session/Composer/models/${state.id}.json`,

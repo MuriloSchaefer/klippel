@@ -131,6 +131,14 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
       enabled: true,
     },
     {
+      id: `${MODULE_NAME}/ModelViewport/saveModel`,
+      key: 'Ctrl+s',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => document.getElementById("composer-save-model")?.click(),
+      description: 'Save model',
+      enabled: true,
+    },
+    {
       id: `${MODULE_NAME}/ModelViewport/viewAsSVG`,
       key: '2',
       contextId: `${MODULE_NAME}/ModelViewport`,

@@ -15,27 +15,27 @@ For the higher-level module architecture see [overview.md](./overview.md).
 
 All nodes conform to `Node` from [`Graphs/interfaces/Node.ts`](../../../../kernel/modules/Graphs/interfaces/Node.ts) (`{id, type, label?, position}`). Heavy data lives in a per-node JSON file referenced by id; the graph file only carries the index + edges so it stays small.
 
-| Node type | Folder | `id` shape | Payload |
-|---|---|---|---|
-| `material` | `materials/{materialType}/{id}.json` | user-supplied slug, unique per workspace | `{ attributes, composition?, caracteristics?, stock, externalId?, externalURL?, images?, description?, schemaVersion }` |
-| `materialType@version` | `material-types/{name}/{version}.json` | `{name}@{version}` (e.g. `malha@0.0.1`) | `MaterialTypeSchema` from [`materialTypes/state.ts`](../../store/materialTypes/state.ts). **A new version is a new node.** Existing version files are immutable. |
-| `industry` | `industries/{id}.json` | slug | `{ name, country?, contact?, ... }` |
-| `seller` | `sellers/{id}.json` | slug | `{ name, contact?, priceList? }` |
-| `attribute-value` *(future)* | — | — | Reserved for shared-value nodes (e.g. shared color palette). Not built now. |
+| Node type                        | Folder                                   | `id` shape                                | Payload                                                                                                                                                                 |
+| -------------------------------- | ---------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `material`                     | `materials/{materialType}/{id}.json`   | user-supplied slug, unique per workspace    | `{ attributes, composition?, caracteristics?, stock, externalId?, externalURL?, images?, description?, schemaVersion }`                                               |
+| `materialType@version`         | `material-types/{name}/{version}.json` | `{name}@{version}` (e.g. `malha@0.0.1`) | `MaterialTypeSchema` from [`materialTypes/state.ts`](../../store/materialTypes/state.ts). **A new version is a new node.** Existing version files are immutable. |
+| `industry`                     | `industries/{id}.json`                 | slug                                        | `{ name, country?, contact?, ... }`                                                                                                                                   |
+| `seller`                       | `sellers/{id}.json`                    | slug                                        | `{ name, contact?, priceList? }`                                                                                                                                      |
+| `attribute-value` *(future)* | —                                       | —                                          | Reserved for shared-value nodes (e.g. shared color palette). Not built now.                                                                                             |
 
 ## Edge taxonomy
 
 All edges conform to `Edge` from [`Graphs/interfaces/Edge.ts`](../../../../kernel/modules/Graphs/interfaces/Edge.ts) (`{id, type, sourceId, targetId}`) and live in a single `materials/graph.json`.
 
-| Edge type | source → target | Cardinality | Meaning |
-|---|---|---|---|
-| `conformsTo` | material → materialType@version | 1:1 | Which schema version the material was authored under. |
-| `manufacturedBy` | material → industry | 1:1 | Replaces the `industry: string` field. |
-| `suppliedBy` | material → seller | 1:N | Replaces the `suppliers: string[]` field. |
-| `succeedsVersion` | materialType@v(n+1) → materialType@v(n) | 1:1 | Lineage between schema versions; lets the form find the latest. |
-| `migrationOf` *(future)* | material → material | 1:1 | When a material is re-authored against a newer type version. |
+| Edge type                    | source → target                         | Cardinality | Meaning                                                         |
+| ---------------------------- | ---------------------------------------- | ----------- | --------------------------------------------------------------- |
+| `conformsTo`               | material → materialType@version         | 1:1         | Which schema version the material was authored under.           |
+| `manufacturedBy`           | material → industry                     | 1:1         | Replaces the `industry: string` field.                        |
+| `suppliedBy`               | material → seller                       | 1:N         | Replaces the `suppliers: string[]` field.                     |
+| `succeedsVersion`          | materialType@v(n+1) → materialType@v(n) | 1:1         | Lineage between schema versions; lets the form find the latest. |
+| `migrationOf` *(future)* | material → material                     | 1:1         | When a material is re-authored against a newer type version.    |
 
-## Relationship diagram
+## Relationship diagramUse mermaid
 
 ```mermaid
 graph LR
@@ -46,7 +46,7 @@ graph LR
         T2 -- succeedsVersion --> T1
     end
 
-    subgraph orgs["industries/ &amp; sellers/"]
+    subgraph orgs["industries/ & sellers/"]
         I1["industry: MundialTextil"]
         S1["seller: MundialTextil"]
         S2["seller: Sajama"]
