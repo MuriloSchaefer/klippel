@@ -53,9 +53,16 @@ export const useSVGEditor = ({
 
   const theme = useTheme();
 
-  const svgState = useAppSelector(selectSVGState(svgPath))?.instances[
-    instanceName
-  ];
+  // Zoom/pan updates fire on every wheel/drag (debounced). The editor only
+  // needs to react to content/proxy changes — d3 owns the live transform.
+  const svgState = useAppSelector(
+    (state) => selectSVGState(svgPath)(state)?.instances[instanceName],
+    (a, b) => {
+      if (a === b) return true;
+      if (!a || !b) return false;
+      return a.content === b.content && a.proxies === b.proxies;
+    },
+  );
   const dispatch = useAppDispatch();
 
   const parsedSVG = useMemo(() => {

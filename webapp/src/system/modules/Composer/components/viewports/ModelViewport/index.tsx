@@ -6,8 +6,10 @@ import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { MATERIAL_LIST_CONTEXT_ID, MODULE_NAME, PROCESS_TIME_LIST_CONTEXT_ID } from "../../../constants";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import SaveModelButton from "./SaveModelButton";
+import LeaseBanner from "./LeaseBanner";
 import CompositionTree from "../CompositionTree/CompositionTree";
 import useVariation from "../../../hooks/useVariation";
+import useEditLease from "../../../hooks/useEditLease";
 import SVGView from "./SVGView";
 import GraphView from "./GraphView";
 import { Box, Button, ButtonGroup } from "@mui/material";
@@ -37,6 +39,7 @@ function ModelViewport() {
   const vpManager = useViewportManager();
 
   const variation = useVariation({ variationId: activeVP.extra.variationId });
+  const leaseStatus = useEditLease(variation.state?.id);
 
   const view = useMemo(() => {
     switch (activeVP.extra.view) {
@@ -62,8 +65,12 @@ function ModelViewport() {
         }}
       >
         <ViewportNotificationsTray>
-          <SaveModelButton variationId={activeVP.extra.variationId as string} />
+          <SaveModelButton
+            variationId={activeVP.extra.variationId as string}
+            disabled={leaseStatus.kind === "held_by_other"}
+          />
         </ViewportNotificationsTray>
+        <LeaseBanner status={leaseStatus} />
 
         <SettingsPanel>
           <Accordion

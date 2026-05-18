@@ -32,38 +32,42 @@ export const sessionSaver = (store: Store<SVGModuleState>) => () => {
 
 export async function persistState({ content, instances, ...state }: SVGState) {
   const rootFolder = `.session/SVG/svgs/${state.path.replaceAll("/", "-")}`;
-  storage.ensureDir(rootFolder);
+  await storage.ensureDir(rootFolder);
+  const writes: Promise<unknown>[] = [];
   if (content) {
-    storage.writeBlob(`${rootFolder}/content.svg`, new Blob([content]));
+    writes.push(storage.writeBlob(`${rootFolder}/content.svg`, new Blob([content])));
   }
-  storage.writeBlob(
-    `${rootFolder}/state.json`,
-    new Blob([JSON.stringify(state)]),
-    {
-      encoding: "utf-8",
-    }
+  writes.push(
+    storage.writeBlob(
+      `${rootFolder}/state.json`,
+      new Blob([JSON.stringify(state)]),
+      { encoding: "utf-8" },
+    ),
   );
 
-  const instancesPath = `${rootFolder}/instances`
-  storage.ensureDir(instancesPath);
+  const instancesPath = `${rootFolder}/instances`;
+  await storage.ensureDir(instancesPath);
   const filesToKeep: string[] = [];
   Object.entries(instances).forEach(([name, { content, ...state }]) => {
     const statePath = `${instancesPath}/${name}.json`;
     filesToKeep.push(`${name}.json`);
-    storage.writeBlob(statePath, new Blob([JSON.stringify(state)]), {});
+    writes.push(storage.writeBlob(statePath, new Blob([JSON.stringify(state)]), {}));
     if (content) {
       const svgPath = `${instancesPath}/${name}.svg`;
       filesToKeep.push(`${name}.svg`);
-      storage.writeBlob(svgPath, new Blob([content]));
+      writes.push(storage.writeBlob(svgPath, new Blob([content])));
     }
   });
+  await Promise.all(writes);
 
   const toDelete = await storage.searchDir<string[]>(
     instancesPath,
     ["*.{json,svg}"],
     { ignore: filesToKeep }
   );
-  toDelete.map(f => `${instancesPath}/${f}`).forEach(storage.deleteFile);
+  await Promise.all(
+    toDelete.map(f => storage.deleteFile(`${instancesPath}/${f}`)),
+  );
   return { content, instances, ...state };
 }
 

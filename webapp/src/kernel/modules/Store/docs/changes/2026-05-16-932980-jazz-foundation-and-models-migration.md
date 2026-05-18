@@ -2,7 +2,7 @@
 id: 2026-05-16-932980
 name: Jazz-backed workspace foundation + Models CoValue layer
 description: Per-workspace SQLite-backed Jazz node, workspace + model + edit-lease CoSchemas, and the renderer↔main IPC surface that backs Composer's model storage.
-status: partially implemented
+status: implemented
 modules: [Store, Composer]
 ---
 
@@ -38,20 +38,22 @@ See [the matching Composer doc](../../../../system/modules/Composer/docs/changes
 
 ## Status notes
 
-**Partially implemented.**
+**Implemented through Phase 2c.**
 
-Done (Phase 1 + 2a + 2b):
+Done (Phase 1 + 2a + 2b + 2c):
 - SQLite-backed Jazz node + per-workspace lockfile.
 - Account bootstrap + credential persistence (`.account-creds.json`).
 - Workspace + model + lease + SVG IPC surface.
 - BinaryCoStream-backed SVG upload/download (`uploadModelSvg` / `loadModelSvg`).
-- E2E coverage for Phase 1.
-
-Pending (Phase 2c):
-- Lease auto-renewal on editor focus (currently the lease is acquired per save and lives 60s).
-- Read-only banner on the non-holder when another peer holds the lease.
-- SVG sanitization through DOMPurify before mounting (plan's "content trust" section).
-- E2E coverage for Phase 2 (`tests/models-jazz.e2e.test.ts`).
+- Lease auto-renew (on focus + 30s timer) and release (unmount + 90s idle)
+  driven by the renderer's `useEditLease` hook.
+- Read-only `LeaseBanner` in `ModelViewport` when another peer holds the lease.
+- DOMPurify-based SVG sanitization in
+  `kernel/modules/SVG/utils/sanitizeSvg.ts`, invoked from the SVG slice's
+  `loadSVG` middleware and Composer's `uploadSVG` middleware so the
+  scrubbed bytes are what hit the BinaryCoStream.
+- E2E coverage for Phase 1 (`Store/tests/jazzFoundation.e2e.test.ts`) and
+  Phase 2 (`Composer/tests/models-jazz.e2e.test.ts`).
 
 Not in scope yet (later phases):
 - Cedar PDP + receive-validator + re-key on demote (Phases 5–7).

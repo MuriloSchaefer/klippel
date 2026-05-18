@@ -23,9 +23,13 @@ const COMPUTED_WRITE_BACK_KEYS = new Set([
   "costAudit",
   "computedTimePerUnit",
   "timeAudit",
+  "computedTimeFromCostTimeHash",
   "computedProcessTime",
   "processTimeAudit",
 ]);
+
+const costTimeHash = (c: ProcessNode["costTime"]): string =>
+  c ? JSON.stringify(c) : "";
 
 const computationMiddlewares = createListenerMiddleware();
 
@@ -91,7 +95,11 @@ computationMiddlewares.startListening({
         updateNode({
           graphId,
           nodeId: processNode.id,
-          changes: { computedTimePerUnit: time, timeAudit: audit },
+          changes: {
+            computedTimePerUnit: time,
+            timeAudit: audit,
+            computedTimeFromCostTimeHash: costTimeHash(processNode.costTime),
+          },
         })
       );
     }

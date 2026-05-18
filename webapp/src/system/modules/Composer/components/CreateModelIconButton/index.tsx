@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, forwardRef } from "react";
+import { useCallback, useState, forwardRef } from "react";
 
 import IconButton from "@mui/material/IconButton";
 import NoteAddSharpIcon from "@mui/icons-material/NoteAddSharp";
@@ -33,9 +33,13 @@ export const CreateModelIconButton = forwardRef<HTMLButtonElement>(
     const handleModelCreation = useCallback(() => {
       if (!name || !hashId) return;
       modelsManager.createModel({ name: name, id: hashId });
+      // PointerContainer keeps the form portal mounted between opens, so the
+      // useState initializer doesn't re-run. Reset both fields after submit
+      // so the next open gets a fresh random id and an empty name instead of
+      // reusing the just-created model's id.
+      setHashId(randomString(10));
+      setName(undefined);
     }, [name, hashId]);
-
-    useEffect(() => () => setHashId(randomString(10)), []);
 
     return (
       <PointerContainer

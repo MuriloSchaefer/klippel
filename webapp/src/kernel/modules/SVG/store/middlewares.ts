@@ -18,6 +18,7 @@ import {
 } from "./actions";
 import { SVGModuleState } from "./state";
 import { persistState } from "./slice";
+import { sanitizeSvg } from "../utils/sanitizeSvg";
 
 const middlewares = createListenerMiddleware();
 const storage = globalThis.electron.storage
@@ -26,11 +27,11 @@ middlewares.startListening({
   actionCreator: saveSession,
   effect: async (payload, listenerApi) => {
       const { dispatch, getState } = listenerApi;
-      
-      const {SVG: state} = getState() as { SVG: SVGModuleState }
-      Object.values(state.svgs).forEach(persistState)
 
-      dispatch(sessionSaved()); 
+      const {SVG: state} = getState() as { SVG: SVGModuleState }
+      await Promise.all(Object.values(state.svgs).map(persistState))
+
+      dispatch(sessionSaved());
   }
 })
 
@@ -39,13 +40,13 @@ middlewares.startListening({
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
     if (payload.content) {
-      dispatch(SVGFetched({ path: payload.path, content: payload.content })); 
+      dispatch(SVGFetched({ path: payload.path, content: sanitizeSvg(payload.content) }));
       return;
     }
 
-    dispatch(fetchSVG({ path: payload.path })); 
+    dispatch(fetchSVG({ path: payload.path }));
     const raw = await storage.readFile<string>(payload.path, {encoding: 'utf-8'})
-    dispatch(SVGFetched({ path: payload.path, content: raw })); 
+    dispatch(SVGFetched({ path: payload.path, content: sanitizeSvg(raw) }));
   },
 });
 

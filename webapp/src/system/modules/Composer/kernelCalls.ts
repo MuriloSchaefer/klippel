@@ -967,14 +967,22 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
       key: 'ArrowDown',
       contextId: PROCESS_TIME_LIST_CONTEXT_ID,
       action: () => {
+        // Query the full list and navigate by index instead of relying on
+        // nextElementSibling: MUI components inside a row (Tooltip,
+        // PointerContainer, Chip) can render portal nodes that become DOM
+        // siblings of the ListItem, breaking sibling-based navigation.
         const current = document.activeElement?.closest(
           '[data-testid="process-time-item"]'
         );
         if (!current) return;
-        const next = current.nextElementSibling as HTMLElement | null;
-        if (next?.matches('[data-testid="process-time-item"]')) {
-          next.focus();
-        }
+        const items = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '[data-testid="process-time-item"]'
+          )
+        );
+        const idx = items.indexOf(current as HTMLElement);
+        if (idx < 0 || idx >= items.length - 1) return;
+        items[idx + 1].focus();
       },
       description: 'Focus next process time row',
       enabled: true,
@@ -988,10 +996,14 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
           '[data-testid="process-time-item"]'
         );
         if (!current) return;
-        const prev = current.previousElementSibling as HTMLElement | null;
-        if (prev?.matches('[data-testid="process-time-item"]')) {
-          prev.focus();
-        }
+        const items = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '[data-testid="process-time-item"]'
+          )
+        );
+        const idx = items.indexOf(current as HTMLElement);
+        if (idx <= 0) return;
+        items[idx - 1].focus();
       },
       description: 'Focus previous process time row',
       enabled: true,

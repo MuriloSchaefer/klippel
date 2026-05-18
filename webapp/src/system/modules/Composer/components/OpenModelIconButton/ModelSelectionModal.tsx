@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
@@ -211,7 +210,7 @@ const ModelSelectionModal = ({
             const isSelected = selectedOption?.name === m.name;
             return (
               <ListItem
-                key={_.uniqueId()}
+                key={m.id ?? m.name}
                 disableGutters
                 aria-selected={isSelected}
                 sx={{

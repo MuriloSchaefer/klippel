@@ -2,7 +2,7 @@
 id: 2026-05-16-932980
 name: Models cutover to Jazz CoValues + explicit save flow
 description: Composer's model storage moves from per-file JSON to Jazz ModelCoMap; viewport save button becomes an explicit commit with a required message.
-status: partially implemented
+status: implemented
 modules: [Store, Composer]
 ---
 
@@ -82,20 +82,41 @@ Two UX decisions shape this cutover:
 
 ## Status notes
 
-**Partially implemented.**
+**Implemented through Phase 2c.**
 
-Done in this slice (2b):
+Done in slice 2b:
 - All five middleware cutovers (createModel, listModels, saveSession, openModel, uploadSVG).
 - `SaveModelButton` + `Ctrl+S` shortcut.
 - `saveModel` / `modelSaved` / `modelSaveFailed` actions.
 - BinaryCoStream-backed SVG upload/download.
 
-Pending (Phase 2c):
-- Lease auto-renew on editor focus and release on close/idle (currently lease is best-effort acquired per save, never explicitly released; expires at 60s).
-- Read-only banner shown to the non-holder when another peer holds the lease (`useEditLease` hook + banner component).
-- DOMPurify sanitization for SVG bytes before mounting (security hardening from the plan's "content trust" section).
-- Composer e2e test that exercises the save → reopen → verify flow (`tests/models-jazz.e2e.test.ts` in the plan).
+Done in Phase 2c:
+- `hooks/useEditLease.ts` — acquires the lease on editor mount, renews on
+  window focus + on a 30s timer, releases on unmount and after 90s of idle
+  input. Polls every 15s when not held so the banner reflects another
+  peer's hold.
+- `components/viewports/ModelViewport/LeaseBanner.tsx` — surfaces a filled
+  warning Alert with the holder's account id and a live expires-in counter
+  when `useEditLease` reports `held_by_other`.
+- `SaveModelButton` gains a `disabled` prop wired to lease status; the
+  confirm button declines and the icon dims when another peer holds the
+  lease. (The main-process check on `updateModelGraph` remains the
+  authoritative guard.)
+- `kernel/modules/SVG/utils/sanitizeSvg.ts` — DOMPurify with the SVG +
+  svgFilters profile, additionally forbidding `<script>`, `<foreignObject>`
+  and `onload`/`onclick`/`onerror`/`onmouseover` attributes. Invoked from
+  the SVG slice's `loadSVG` middleware (single chokepoint upstream of the
+  reducer) and from Composer's `uploadSVG` middleware so the sanitized
+  bytes are what end up in the BinaryCoStream — other peers never see the
+  original markup.
+- `tests/models-jazz.e2e.test.ts` exercises createModel → updateModelGraph
+  → close → reopen → loadModel, lease acquire/renew/release, and the
+  DOMPurify configuration end-to-end on the SVG upload path.
+
+Pending (later phases):
 - Persisting the commit message as a `CommitCoMap` next to the model (plan-Phase-9 audit).
+- Two-instance lease-violation e2e (requires a second Electron node;
+  deferred to plan-Phase-6 cryptographic enforcement).
 
 Verified manually end-to-end:
 - Create workspace via DevTools → workspace's `ModelsMap` is initialized.

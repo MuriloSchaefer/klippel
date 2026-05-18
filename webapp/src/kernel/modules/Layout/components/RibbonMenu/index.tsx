@@ -1,4 +1,5 @@
 import React, { createElement, useCallback, useMemo, useEffect, useRef } from "react";
+import { shallowEqual } from "react-redux";
 
 import type { BoxProps } from "@mui/material/Box";
 import Box from '@mui/material/Box';
@@ -7,6 +8,7 @@ import Tabs from '@mui/material/Tabs';
 import { TabPanel, TabContext } from "@mui/lab";
 import Chip from '@mui/material/Chip';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
+import type { SxProps, Theme } from "@mui/material/styles";
 
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
@@ -21,6 +23,93 @@ import { MODULE_NAME, SECTIONS_REGISTRY_NAME } from "../../constants";
 interface RibbonMenuProps extends BoxProps {
   systemTray?: React.ReactNode;
 }
+
+/**
+ * Hints overlay — only mounted when `showHints` is true. Subscribes to the
+ * subset of `pressedKeys` that matters for the visible Alt+N shortcuts with
+ * `shallowEqual`, so pressing unrelated keys is a no-op for this subtree (and
+ * the parent RibbonMenu is not subscribed to pressedKeys at all).
+ */
+interface RibbonHintsOverlayProps {
+  tabNames: string[];
+  tabRefs: React.MutableRefObject<Record<string, HTMLElement | null>>;
+  keyboardHintContainerSx: SxProps<Theme>;
+  keyboardHintKeySx: SxProps<Theme>;
+  keyboardHintKeyPressedSx: SxProps<Theme>;
+  keyboardHintSeparatorSx: SxProps<Theme>;
+}
+
+const RibbonHintsOverlay: React.FC<RibbonHintsOverlayProps> = ({
+  tabNames,
+  tabRefs,
+  keyboardHintContainerSx,
+  keyboardHintKeySx,
+  keyboardHintKeyPressedSx,
+  keyboardHintSeparatorSx,
+}) => {
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
+
+  // One boolean per relevant key part: [altPressed, '1' pressed, '2' pressed, ...].
+  // shallowEqual prevents re-renders when other keys toggle.
+  const relevantParts = useMemo(
+    () => ['Alt', ...tabNames.map((_, i) => String(i + 1))],
+    [tabNames],
+  );
+  const pressedState = useAppSelector(
+    (state) => {
+      const pressed = selectPressedKeys(state);
+      return relevantParts.map((part) => pressed.includes(part));
+    },
+    shallowEqual,
+  );
+  const altPressed = pressedState[0];
+
+  return (
+    <>
+      {tabNames.map((name, index) => {
+        const tabEl = tabRefs.current[name];
+        if (!tabEl) return null;
+        const numberPressed = pressedState[index + 1];
+        const isPressed = altPressed || numberPressed;
+        return (
+          <Box
+            key={`hint-${name}`}
+            sx={{
+              position: 'absolute',
+              ...keyboardHintContainerSx,
+              pointerEvents: 'none',
+              zIndex: 10,
+            }}
+            style={{
+              left: `${tabEl.offsetLeft + 4}px`,
+              top: `${tabEl.offsetTop + tabEl.offsetHeight - 26}px`,
+            }}
+          >
+            <KeyboardIcon
+              sx={{
+                fontSize: '14px',
+                color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.5)',
+                transition: 'color 0.1s ease-in-out',
+              }}
+            />
+            <Chip
+              label="Alt"
+              size="small"
+              sx={altPressed ? keyboardHintKeyPressedSx : keyboardHintKeySx}
+            />
+            <Box component="span" sx={keyboardHintSeparatorSx}>+</Box>
+            <Chip
+              label={String(index + 1)}
+              size="small"
+              sx={numberPressed ? keyboardHintKeyPressedSx : keyboardHintKeySx}
+            />
+          </Box>
+        );
+      })}
+    </>
+  );
+};
 
 const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
   const storeModule = useModule<Store>("Store");
@@ -44,8 +133,7 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
   const tabs = useAppSelector(selectTabs);
   const activeTab = useAppSelector(selectActiveTab);
   const showHints = useAppSelector(selectShowHints);
-  const pressedKeys = useAppSelector(selectPressedKeys);
-  
+
   // Refs to track tab elements for hint positioning
   const tabRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -86,57 +174,16 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
               />
             ))}
           </Tabs>
-          {/* Render keyboard hints as overlays */}
-          {showHints && Object.entries(tabs).map(([name, tab], index) => {
-            const shortcutKey = `Alt+${index + 1}`;
-            const keyParts = shortcutKey.split('+');
-            const isPressed = keyParts.some(part => pressedKeys.includes(part));
-            const tabEl = tabRefs.current[name];
-            
-            if (!tabEl) return null;
-            
-            return (
-              <Box
-                key={`hint-${name}`}
-                sx={{
-                  position: 'absolute',
-                  ...keyboardHintContainerSx,
-                  pointerEvents: 'none',
-                  zIndex: 10,
-                }}
-                style={{
-                  left: `${tabEl.offsetLeft + 4}px`,
-                  top: `${tabEl.offsetTop + tabEl.offsetHeight - 26}px`,
-                }}
-              >
-                <KeyboardIcon
-                  sx={{
-                    fontSize: '14px',
-                    color: isPressed ? 'secondary.main' : 'rgba(255, 255, 255, 0.5)',
-                    transition: 'color 0.1s ease-in-out',
-                  }}
-                />
-                {keyParts.map((part, i) => (
-                  <React.Fragment key={i}>
-                    {i > 0 && (
-                      <Box component="span" sx={keyboardHintSeparatorSx}>
-                        +
-                      </Box>
-                    )}
-                    <Chip
-                      label={part}
-                      size="small"
-                      sx={
-                        pressedKeys.includes(part)
-                          ? keyboardHintKeyPressedSx
-                          : keyboardHintKeySx
-                      }
-                    />
-                  </React.Fragment>
-                ))}
-              </Box>
-            );
-          })}
+          {showHints && (
+            <RibbonHintsOverlay
+              tabNames={Object.keys(tabs)}
+              tabRefs={tabRefs}
+              keyboardHintContainerSx={keyboardHintContainerSx}
+              keyboardHintKeySx={keyboardHintKeySx}
+              keyboardHintKeyPressedSx={keyboardHintKeyPressedSx}
+              keyboardHintSeparatorSx={keyboardHintSeparatorSx}
+            />
+          )}
           </ShortcutProvider>
         </Box>
         <Box

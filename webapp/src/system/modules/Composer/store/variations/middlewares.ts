@@ -8,8 +8,12 @@ import { ComposerModuleState } from "@system/modules/Composer/typings";
 import { modelOpened, openModel, partSelected, selectPart, uploadSVG, svgUploaded, saveModel, modelSaved, modelSaveFailed  } from "./actions";
 import { persistVariation } from "./slice";
 import { loadSVG } from "@kernel/modules/SVG/store/actions";
+import { sanitizeSvg } from "@kernel/modules/SVG/utils/sanitizeSvg";
+import { selectSVGState } from "@kernel/modules/SVG/store/selectors";
+import type { SVGModuleState } from "@kernel/modules/SVG/store/state";
 import { openDetails } from "@kernel/modules/Layout/store/panels/actions";
 import { setViewportHasChanged } from "@kernel/modules/Layout/store/viewports/actions";
+import { selectActiveViewport } from "@kernel/modules/Layout/store/viewports/selectors";
 
 const jazz = globalThis.electron.jazz;
 const middlewares = createListenerMiddleware();
@@ -20,7 +24,7 @@ middlewares.startListening({
     const { dispatch, getState } = listenerApi;
 
     const { Composer: state } = getState() as { Composer: ComposerModuleState };
-    Object.values(state.variations).forEach(persistVariation);
+    await Promise.all(Object.values(state.variations).map(persistVariation));
 
     dispatch(sessionSaved());
   },
@@ -104,17 +108,20 @@ middlewares.startListening({
       console.warn(`Variation with id ${variationId} not found`);
       return;
     }
-    // Mount in the SVG slice first so the editor shows the new SVG immediately;
-    // the Jazz upload below is the persistence step.
-    dispatch(loadSVG({ content: svgContent, path: `${variationId}.svg`, instanceName: variationId }));
+    // Sanitize once at this boundary so the session and any later Jazz upload
+    // both store the scrubbed bytes.
+    const safe = sanitizeSvg(svgContent);
+    dispatch(loadSVG({ content: safe, path: `${variationId}.svg`, instanceName: variationId }));
 
-    try {
-      await jazz.uploadModelSvg(variation.id, svgContent);
-    } catch (err) {
-      console.error(`[uploadSVG] Jazz upload failed for ${variation.id}`, err);
+    // Mark the active viewport dirty so the Save button reflects the pending
+    // SVG. Both session and Jazz persistence are deferred — session waits for
+    // the next saveSession dispatch, Jazz waits for the explicit Save button.
+    const activeViewport = selectActiveViewport(getState() as any);
+    if (activeViewport) {
+      dispatch(setViewportHasChanged({ name: activeViewport, hasChanged: true }));
     }
 
-    dispatch(svgUploaded({ variationId, svgContent }));
+    dispatch(svgUploaded({ variationId, svgContent: safe }));
   },
 });
 
@@ -126,6 +133,7 @@ middlewares.startListening({
     const state = getState() as {
       Composer: ComposerModuleState;
       Graph: GraphsManagerState;
+      SVG: SVGModuleState;
     };
     const variation = state.Composer.variations[variationId];
     if (!variation) {
@@ -161,6 +169,18 @@ middlewares.startListening({
         console.debug("[saveModel] acquireLease threw", err);
       }
       await jazz.updateModelGraph(variation.id, graphJson);
+
+      // Push the session SVG to Jazz only when there are unsaved upload
+      // bytes — uploads are session-local until the user explicitly saves.
+      if (variation.svgDirty) {
+        const svgPath = `${variationId}.svg`;
+        const svgContent = selectSVGState(svgPath)(state)
+          ?.instances[variationId]?.content;
+        if (svgContent) {
+          await jazz.uploadModelSvg(variation.id, svgContent);
+        }
+      }
+
       // commit message is not yet persisted as a CoValue — see Phase 9 audit.
       // For now we just echo it in the event for downstream listeners.
       if (viewportName) {

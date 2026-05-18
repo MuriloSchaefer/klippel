@@ -2,12 +2,12 @@ import { createSlice } from "@reduxjs/toolkit";
 import { ComposerModuleState, ModelVariation } from "../../typings";
 import { MODULE_NAME } from "../../constants";
 import type { PathLike } from "fs-extra";
-import { modelOpened, selectPart, uploadSVG } from "./actions";
+import { modelOpened, modelSaved, selectPart, uploadSVG } from "./actions";
 
 import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
 storage.ensureDir(".session/Composer/variations");
-export function persistVariation(state: ModelVariation) {
-  storage.writeBlob(
+export async function persistVariation(state: ModelVariation) {
+  await storage.writeBlob(
     `.session/Composer/variations/${state.variationId}.json`,
     new Blob([JSON.stringify(state)]),
     {
@@ -65,8 +65,21 @@ const slice = createSlice({
       [variationId]: {
         ...state[variationId],
         svg: `${variationId}.svg`,
+        svgDirty: true,
       },
     }));
+
+    builder.addCase(modelSaved, (state, { payload: { variationId } }) => {
+      const variation = state[variationId];
+      if (!variation) return state;
+      return {
+        ...state,
+        [variationId]: {
+          ...variation,
+          svgDirty: false,
+        },
+      };
+    });
   },
 });
 

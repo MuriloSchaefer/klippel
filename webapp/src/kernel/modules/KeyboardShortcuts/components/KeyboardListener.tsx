@@ -64,6 +64,12 @@ const preventPropagation = (event: KeyboardEvent) =>{
     ) {
       event.preventDefault();
     }
+    // Plain Alt press would activate Chromium/Electron's native menu accelerator
+    // on keyup, which steals focus from the renderer — after that, no key events
+    // reach the window. Suppress the default to keep focus here.
+    if (event.key === 'Alt' && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+    }
 }
 
 const MODIFIER_ONLY_KEYS = new Set([
@@ -150,6 +156,12 @@ const KeyboardListener: React.FC = () => {
   }, [pressedKeys])
 
   const handleKeyUp = useCallback((event: KeyboardEvent)=>{
+    // Mirror the keydown guard: plain Alt keyup is the trigger for the native
+    // menu accelerator in Chromium/Electron. Suppress it to keep focus in the
+    // renderer.
+    if (event.key === 'Alt' && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+    }
     // Check if right Alt was released and it was pressed alone - toggle hints
     if (event.key === 'AltGraph' && pressedKeys.length === 1 && pressedKeys[0] === 'AltGraph') {
       dispatch(toggleShowHints());
@@ -173,19 +185,21 @@ const KeyboardListener: React.FC = () => {
     ){
       return
     }
-    // Clear pressed keys when any key is released
-    // This prevents stuck keys and resets the visual feedback
-    // Use requestAnimationFrame to batch this with any pending renders
-    requestAnimationFrame(() => {
-      dispatch(keyPressed(remainingKeys.join('+'), remainingKeys, {
-        ctrlKey: event.ctrlKey,
-        altKey: event.altKey,
-        shiftKey: event.shiftKey,
-        metaKey: event.metaKey,
-        key: event.key,
-        code: event.code,
-      }, 'up'));
-    });
+    // Clear pressed keys when any key is released. Dispatch synchronously:
+    // wrapping this in requestAnimationFrame defers the pressedKeys update to
+    // the next browser frame, but the keydown handler's dedupe check reads
+    // pressedKeys synchronously. Two rapid keydown→keyup→keydown cycles
+    // (e.g. count>1 ArrowUp navigation in tests) can land the second keydown
+    // before the rAF fires, in which case the dedupe sees the still-pressed
+    // key and silently drops the second keypress.
+    dispatch(keyPressed(remainingKeys.join('+'), remainingKeys, {
+      ctrlKey: event.ctrlKey,
+      altKey: event.altKey,
+      shiftKey: event.shiftKey,
+      metaKey: event.metaKey,
+      key: event.key,
+      code: event.code,
+    }, 'up'));
 
   }, [pressedKeys])
   

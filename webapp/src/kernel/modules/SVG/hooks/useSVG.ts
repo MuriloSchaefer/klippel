@@ -15,6 +15,16 @@ import type { SVGInstance } from "../store/state";
 import { selectSVGState } from "../store/selectors";
 import { ZoomTransform } from "d3";
 
+// Zoom/pan persistence runs on every wheel/drag event (debounced). We don't
+// want those writes to re-render the React tree — d3 mutates the SVG DOM
+// directly, and the persisted values are only read again to seed the initial
+// transform when the viewport (re)mounts or the content/proxies change.
+const svgInstanceEqual = (a?: SVGInstance, b?: SVGInstance): boolean => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.content === b.content && a.proxies === b.proxies;
+};
+
 interface SVG {
   state: {
     instance: SVGInstance;
@@ -36,8 +46,10 @@ const useSVG = (path: string, instanceName: string): SVG | undefined => {
   const useAppSelector = storeModule.hooks.useAppSelector;
 
   const state = useAppSelector(
-    (state) => selectSVGState(path)(state)?.instances[instanceName]
-  );
+    (state): SVGInstance | undefined =>
+      selectSVGState(path)(state)?.instances[instanceName],
+    svgInstanceEqual as (a: unknown, b: unknown) => boolean,
+  ) as SVGInstance | undefined;
 
   const parsedSVG = useMemo(() => {
     if (!state?.content) return undefined;

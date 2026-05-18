@@ -8,7 +8,7 @@ export default function SVGView({
 }: Readonly<{ variationId: string }>) {
   const variation = useVariation({ variationId });
 
-  if (!variation.state.svg) {
+  if (!variation.state?.svg) {
     return <SVGEmptyState variationId={variationId} />;
   }
 

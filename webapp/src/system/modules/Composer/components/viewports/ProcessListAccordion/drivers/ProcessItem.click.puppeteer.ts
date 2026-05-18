@@ -57,22 +57,41 @@ const setEditCompoundAmount = async (
   position: 'quotient' | 'dividend',
   amount: number,
 ) => {
-  const idx = position === 'quotient' ? 0 : 1;
-  const sel = `[role="pointer-panel-content"] [data-testid="${EDIT_PROCESS_FORM_TESTID}"] [data-testid="${groupTestid}"] input[type="number"]`;
+  // Scope by the UnitAmountSelector wrapper id so we target one specific
+  // input instead of indexing into a list — the input we want never moves
+  // between renders, even if MUI re-mounts the surrounding tree.
+  const boxId = position === 'quotient' ? 'quotient-selector' : 'dividend-selector';
+  const sel = `[role="pointer-panel-content"] [data-testid="${EDIT_PROCESS_FORM_TESTID}"] [data-testid="${groupTestid}"] #${boxId} input[type="number"]`;
   await page.waitForSelector(sel);
-  await page.evaluate(
-    (args: { s: string; i: number }) => {
-      const inputs = document.querySelectorAll<HTMLInputElement>(args.s);
-      const input = inputs[args.i];
-      if (!input) return;
-      input.focus();
-      input.select();
-    },
-    { s: sel, i: idx },
-  );
-  await page.keyboard.press('Delete');
+  const handle = await page.$(sel);
+  if (!handle) throw new Error(`No input found for ${groupTestid}/${position}`);
+  // ElementHandle.focus dispatches CDP focus, which is what page.keyboard
+  // events route to — DOM-only input.focus() can race the CDP focus tracker.
+  await handle.focus();
+  await page.waitForSelector(`${sel}:focus`);
+  await page.keyboard.down('Control');
+  await page.keyboard.press('a');
+  await page.keyboard.up('Control');
+  await page.keyboard.press('Backspace');
   await page.keyboard.type(String(amount));
-  await page.keyboard.press('Tab');
+  // Wait for React's controlled input to reflect the typed value before we
+  // move on. Without this, a subsequent confirm-click can read state that
+  // hasn't committed the last onChange yet. The HTML `value` attribute is
+  // not reliably reflected on type=number, so we check the IDL property.
+  await page.waitForFunction(
+    (s: string, want: string) => {
+      const input = document.querySelector<HTMLInputElement>(s);
+      return !!input && input.value === want;
+    },
+    {},
+    sel,
+    String(amount),
+  );
+  // Blur via the input itself instead of Tab — Tab moves focus to the unit
+  // Select, which can swallow events or open its listbox under certain MUI
+  // focus-trap configurations.
+  await handle.evaluate((el) => (el as HTMLInputElement).blur());
+  await handle.dispose();
 };
 
 const setEditCompoundUnit = async (

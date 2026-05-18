@@ -105,7 +105,6 @@ const slice = createSlice<
     });
     builder.addCase(setViewportHasChanged, (state, { payload: { name, hasChanged } }) => {
       const vp = { ...state.viewports[name], hasChanged };
-      persistViewportState(vp);
       return {
         ...state,
         viewports: { ...state.viewports, [name]: vp },

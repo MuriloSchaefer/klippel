@@ -71,6 +71,14 @@ export default function ProcessTimeAccordion({
           const elective = p.electiveNodeId
             ? (graph?.state?.nodes[p.electiveNodeId] as ElectiveNode | undefined)
             : undefined;
+          // A row is only "computed" when the cached computedTimePerUnit was
+          // derived from the *current* costTime. The debounced middleware
+          // takes ~300ms to rerun on edits; without this check, the row
+          // briefly advertises stale numbers as fresh.
+          const currentCostTimeHash = p.costTime ? JSON.stringify(p.costTime) : "";
+          const isFresh =
+            minutesPerUnit !== undefined &&
+            p.computedTimeFromCostTimeHash === currentCostTimeHash;
           return (
             <ListItem
               id={`process-time-accordion-item-${p.id}`}
@@ -78,9 +86,7 @@ export default function ProcessTimeAccordion({
               data-testid="process-time-item"
               data-process-id={p.id}
               data-process-label={p.label}
-              data-process-time-status={
-                minutesPerUnit !== undefined ? "computed" : "pending"
-              }
+              data-process-time-status={isFresh ? "computed" : "pending"}
               tabIndex={0}
               sx={{
                 display: "flex",

@@ -17,7 +17,8 @@ import { saveModel } from "../../../store/variations/actions";
  */
 export default function SaveModelButton({
   variationId,
-}: Readonly<{ variationId: string }>) {
+  disabled = false,
+}: Readonly<{ variationId: string; disabled?: boolean }>) {
   const dispatch = useDispatch();
   const pointerModule = useModule<IPointerModule>("Pointer");
   const keyboardShortcutsModule =
@@ -64,7 +65,7 @@ export default function SaveModelButton({
         <ConfirmAndCloseButton
           key="confirm"
           data-testid="save-model-confirm"
-          disabled={!message.trim()}
+          disabled={disabled || !message.trim()}
           handleConfirm={() => {
             const trimmed = message.trim();
             if (!trimmed) return;
@@ -88,7 +89,10 @@ export default function SaveModelButton({
         >
           <SaveSharpIcon
             fontSize="small"
-            sx={{ ":hover": { color: "primary.main" } }}
+            sx={{
+              opacity: disabled ? 0.4 : 1,
+              ":hover": { color: disabled ? "inherit" : "primary.main" },
+            }}
           />
         </ShortcutHint>
       </Box>

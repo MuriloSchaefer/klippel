@@ -13,9 +13,12 @@ export type Model = {
 }
 
 export type ModelVariation = Model & {
-  variationId: string 
+  variationId: string
   instanceId: string // in memory id, used for graphId, svgId. Overwriten when loading from disk
   selectedPart: string
+  // True when the session SVG has not yet been pushed to Jazz. Set on
+  // uploadSVG, cleared on modelSaved after the Save button persists.
+  svgDirty?: boolean
 }
 
 export type ComposerModuleState = {
@@ -200,6 +203,10 @@ export type ProcessNode = Node & {
     electiveNodeId?: string; // optional reference to an elective node - if set, process only applies when elective.value is true
     computedTimePerUnit?: { amount: number; unit: string };
     timeAudit?: ProcessTimeAudit;
+    // JSON snapshot of the costTime that produced the current computedTimePerUnit.
+    // Mismatch with the current costTime means a recompute is pending and any
+    // computedTimePerUnit / timeAudit value is stale.
+    computedTimeFromCostTimeHash?: string;
 }
 
 export type VisualizationDom = {

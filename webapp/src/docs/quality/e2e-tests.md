@@ -8,12 +8,46 @@ This is normative. New tests must follow every rule that applies; existing tests
 
 ## 1. File layout
 
-- **Test files** live next to the MCP tool they exercise: `mcpTools/tests/<feature>.e2e.test.ts`. One file covers both the click and shortcut variants of a feature (one `describe` block per variant).
+E2E tests live in each module's own `tests/` folder, organized first by **collaboration scope** and then by **category**. Tests do **not** live next to the MCP tool or component they exercise — only drivers do.
+
+```
+<module>/tests/
+  collaborative/         # exercises multi-instance / multi-peer Jazz behavior
+    functionality/       # primary behavioral tests under collaboration
+    persistence/
+      session-management/  # lease/lock/identity lifecycle across peers
+      jazz/                # CoValue sync, conflict resolution, content trust
+    integrity/           # cross-peer invariants, symmetry, idempotence
+    performance/         # latency / throughput budgets under collaboration
+    security/            # auth, sanitization, capability boundaries across peers
+  standalone/            # single-instance, no live peers
+    functionality/       # default home for click + shortcut feature tests
+    persistence/
+      session-management/  # workspace open/close, single-writer lock, WAL
+      jazz/                # SQLite-backed Jazz round-trip, local rehydrate
+    integrity/           # round-trip symmetry, invariants on local state
+    performance/
+    security/            # input sanitization, sandboxing, secrets handling
+```
+
+Rules:
+
+- **Test files** live under the module's `tests/<scope>/<category>[/<subcategory>]/` directory: `<module>/tests/standalone/functionality/<feature>.e2e.test.ts`. One file still covers both the click and shortcut variants of a feature (one `describe` block per variant).
+- **Pick `collaborative` vs `standalone` by what the test exercises**, not by what the module supports. A test is `collaborative` only if it spins up — or asserts behavior against — more than one Jazz peer / Electron instance, or a real sync server. Otherwise it is `standalone`, even if the underlying code path goes through Jazz.
+- **Pick the category by the failure mode the test guards against:**
+  - `functionality` — "does the feature do what it claims" (default).
+  - `persistence/session-management` — workspace lifecycle, single-writer locks, lease acquire/renew/release, identity handoff.
+  - `persistence/jazz` — CoValue durability, SQLite-backed rehydrate, sync convergence, content trust on load.
+  - `integrity` — round-trip symmetry, idempotence, derived-value invariants that must hold regardless of path taken.
+  - `performance` — assertions on time / memory / payload-size budgets. A test that merely happens to be slow is not a performance test.
+  - `security` — sanitization (SVG `<script>` strip, etc.), auth/permission rejection, capability boundaries.
+- **One file, one category.** If a feature genuinely needs two angles (e.g. functionality + security), split into two files in two folders, not one file with mixed `describe`s.
 - **Drivers** live next to the React component they drive, under `drivers/`:
   - `drivers/<Component>.click.puppeteer.ts` — DOM-click flows.
   - `drivers/<Component>.shortcut.puppeteer.ts` — keyboard-shortcut flows.
 - **Helpers shared across modules** live under `webapp/src/helpers/puppeteer/` (e.g. `closeOverlays.ts`, `resetWorkspace.ts`).
 - Every driver file starts with `/* istanbul ignore file */` so coverage instrumentation does not rewrite the function bodies puppeteer serializes into the browser.
+- Do **not** create `mcpTools/tests/` or co-locate `*.e2e.test.ts` next to source files. Legacy locations are being migrated — see the change plan at `webapp/src/system/modules/Composer/docs/changes/` (`reorganize-e2e-tests-by-scope-and-category`).
 
 ## 2. Selectors
 
@@ -98,6 +132,7 @@ Document and skip the case rather than working around it:
 
 Before opening a PR:
 
+- [ ] Test file lives under `<module>/tests/<collaborative|standalone>/<category>[/<subcategory>]/`; scope and category match the test's actual failure mode.
 - [ ] Driver lives next to the component; file starts with `/* istanbul ignore file */`.
 - [ ] No `timeout:` override on any `waitForSelector` / `waitForFunction` call (except the documented bounded-feature-detection exception).
 - [ ] No `setTimeout` / `waitForTimeout` sleeps.

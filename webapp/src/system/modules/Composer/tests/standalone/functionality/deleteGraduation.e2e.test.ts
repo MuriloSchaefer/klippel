@@ -1,0 +1,82 @@
+/**
+ * E2E tests for deleteGraduation (click + shortcut). Skips if CDP unreachable.
+ */
+import puppeteer, { Browser, Page } from 'puppeteer-core';
+import { cleanupWorkspace, resetWorkspace } from '@helpers/puppeteer/resetWorkspace';
+
+const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
+const CDP_URL = `http://localhost:${CDP_PORT}`;
+
+let browser: Browser | null = null;
+let page: Page | null = null;
+
+jest.mock('../../../../../../../electron/main/mcp/puppeteer', () => ({
+  getPage: () => {
+    if (!page) throw new Error(`Klippel dev app not reachable at ${CDP_URL}.`);
+    return page;
+  },
+}));
+
+import { addGraduationsTool } from '@system/modules/Composer/mcpTools/addGraduations';
+import { addGraduationsShortcutTool } from '@system/modules/Composer/mcpTools/addGraduationsShortcut';
+import { deleteGraduationTool } from '@system/modules/Composer/mcpTools/deleteGraduation';
+import { deleteGraduationShortcutTool } from '@system/modules/Composer/mcpTools/deleteGraduationShortcut';
+import { openGarmentDetailsTool } from '@system/modules/Composer/mcpTools/openGarmentDetails';
+import { createModelTool } from '@system/modules/Composer/mcpTools/createModel';
+import { openModelTool } from '@system/modules/Composer/mcpTools/openModel';
+import { switchRibbonTabTool } from '@kernel/modules/Layout/mcpTools/switchRibbonTab';
+
+const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
+const rowSel = (label: string) =>
+  `[data-testid="graduation-item"][data-graduation-label="${label}"]`;
+
+beforeAll(async () => {
+  browser = await puppeteer.connect({ browserURL: CDP_URL, defaultViewport: null });
+  const pages = await browser.pages();
+  page = pages.find((p) => p.url().startsWith('http://localhost:')) ?? pages[0];
+  if (!page) throw new Error('No renderer page found in Electron');
+  await resetWorkspace(page, 'e2e-graduations-delete');
+
+  await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
+  await switchRibbonTabTool.execute({ label: 'Compositor' });
+  await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
+
+  const id = `e2e-${uniqueSuffix()}`;
+  const name = `E2E DeleteGraduation ${id}`;
+  await createModelTool.execute({ name, id });
+  await page.waitForSelector('[role="pointer-panel-content"] #name', {
+    hidden: true,
+    timeout: 10_000,
+  });
+  await openModelTool.execute({ modelName: name });
+  await openGarmentDetailsTool.execute();
+}, 60_000);
+
+afterAll(async () => {
+  if (browser) await browser.disconnect();
+  cleanupWorkspace('e2e-graduations-delete');
+});
+
+describe('deleteGraduation via click (E2E)', () => {
+  it('deletes a graduation by label', async () => {
+    const label = `del-c-${uniqueSuffix()}`;
+    await addGraduationsTool.execute({ names: [label] });
+    await page!.waitForSelector(rowSel(label), { timeout: 10_000 });
+
+    await deleteGraduationTool.execute({ label });
+
+    await page!.waitForSelector(rowSel(label), { hidden: true, timeout: 5_000 });
+  }, 60_000);
+});
+
+describe('deleteGraduation via shortcut (E2E)', () => {
+  it('deletes a graduation by focusing its row and pressing d', async () => {
+    const label = `del-s-${uniqueSuffix()}`;
+    await addGraduationsShortcutTool.execute({ names: [label] });
+    await page!.waitForSelector(rowSel(label), { timeout: 10_000 });
+
+    await deleteGraduationShortcutTool.execute({ label });
+
+    await page!.waitForSelector(rowSel(label), { hidden: true, timeout: 5_000 });
+  }, 60_000);
+});

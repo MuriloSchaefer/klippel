@@ -111,7 +111,22 @@ function writeCredentials(dir: string, creds: Credentials): void {
  * failure mode as today.
  */
 async function acquireDbLock(lockPath: string): Promise<() => Promise<void>> {
-  const options = { retries: 0, stale: 30_000 };
+  // `onCompromised` swallows the watchdog's stat error. proper-lockfile spawns
+  // a setInterval (driven by `stale`) that re-stats `${lockPath}.lock` to
+  // refresh mtime; if the workspace dir is wiped externally (e2e
+  // `resetWorkspace`, manual cleanup, hot-reload between tests), the next tick
+  // hits ENOENT and the default handler throws synchronously inside the timer
+  // — escaping every try/catch and bubbling up as an uncaught main-process
+  // exception. We don't care: the workspace is being torn down anyway.
+  const options = {
+    retries: 0,
+    stale: 30_000,
+    onCompromised: (err: Error & { code?: string }) => {
+      if (err.code !== "ENOENT") {
+        console.error("[jazz] lock watchdog compromised", err);
+      }
+    },
+  };
   try {
     return await lockfile.lock(lockPath, options);
   } catch (err) {

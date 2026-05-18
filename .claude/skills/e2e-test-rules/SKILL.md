@@ -16,6 +16,9 @@ The full, normative rule set lives at [webapp/src/docs/quality/e2e-tests.md](../
 
 ## Hard rules (quick reference; full text in the doc)
 
+- Tests live under `<module>/tests/<collaborative|standalone>/<category>[/<subcategory>]/`. **Do not** put `*.e2e.test.ts` under `mcpTools/tests/` or next to source files.
+  - `collaborative` only when the test asserts behavior across more than one Jazz peer / Electron instance; otherwise `standalone`.
+  - Categories: `functionality` (default), `persistence/session-management`, `persistence/jazz`, `integrity`, `performance`, `security`. One file, one category.
 - No `timeout:` overrides on `waitForSelector` / `waitForFunction`. No `setTimeout` / `waitForTimeout` sleeps.
 - Drivers start with `/* istanbul ignore file */`. MCP tool files (`mcpTools/*.ts`) contain no inline browser callbacks — put them in a driver.
 - Shortcut variants must not import any `*.click.puppeteer.ts` driver.
