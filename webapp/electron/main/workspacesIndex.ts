@@ -5,6 +5,7 @@ export type WorkspaceIndexEntry = {
   name: string;
   coId: string;
   syncOptIn: boolean;
+  syncUrl?: string;
 };
 
 const INDEX_PATH = "workspaces.index.json";

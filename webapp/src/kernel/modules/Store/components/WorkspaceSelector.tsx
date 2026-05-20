@@ -6,6 +6,8 @@ import { useAppDispatch, useAppSelector, useCurrentWorkspace } from "../hooks";
 import { selectModuleState } from "../selectors";
 import { selectWorkspace } from "../actions";
 import { NewWorkspaceButton } from "./NewWorkspaceButton";
+import { ShareWorkspaceButton } from "./ShareWorkspaceButton";
+import { JoinWorkspaceButton } from "./JoinWorkspaceButton";
 
 export default function WorkspaceSelector() {
   const dispatch = useAppDispatch();
@@ -35,6 +37,8 @@ export default function WorkspaceSelector() {
       </Select>
     </FormControl>
       <NewWorkspaceButton />
+      <ShareWorkspaceButton />
+      <JoinWorkspaceButton />
       <Divider orientation="vertical" flexItem/>
     </Box>
   );

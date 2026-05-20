@@ -7,6 +7,7 @@ import {
   saveSession,
   sessionSaved,
 } from "./actions";
+import { workspaceSelected } from "@kernel/modules/Store/actions";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
 import { uniqueId } from "lodash";
 import { ComposerModuleState, Model } from "../../typings";
@@ -83,6 +84,19 @@ middlewares.startListening({
       }),
     );
     dispatch(listModels());
+  },
+});
+
+// The per-workspace `.session/Composer/models` cache rehydrates the model
+// list into state when a workspace is selected. For workspaces that have
+// no local session cache yet — freshly joined collaborative ones — the
+// rehydrate leaves state empty and the UI shows no models. Force a Jazz
+// round-trip on every workspace switch so the rendered list matches the
+// authoritative CoValue tree.
+middlewares.startListening({
+  actionCreator: workspaceSelected,
+  effect: async (_, listenerApi) => {
+    listenerApi.dispatch(listModels());
   },
 });
 

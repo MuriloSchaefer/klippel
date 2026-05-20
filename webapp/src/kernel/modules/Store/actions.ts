@@ -20,6 +20,12 @@ export const selectWorkspace = createAction<{workspace: string}>(
 export const createWorkspace = createAction<{name: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Create workspace`
 );
+export const joinWorkspace = createAction<{name: string; coId: string; syncUrl: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Join workspace`
+);
+export const enableWorkspaceSync = createAction<{syncUrl: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Enable workspace sync`
+);
 
 // Events
 export const storeInitialized = createAction(
@@ -42,6 +48,12 @@ export const workspaceSelected = createAction<{workspace: string}>(
 );
 export const workspaceCreated = createAction<{name: string; coId?: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace created`
+);
+export const workspaceJoined = createAction<{name: string; coId: string; syncUrl: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace joined`
+);
+export const workspaceSyncEnabled = createAction<{syncUrl: string}>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Workspace sync enabled`
 );
 export const accountIdResolved = createAction<{accountId: string | null}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Account id resolved`

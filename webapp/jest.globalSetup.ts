@@ -100,6 +100,16 @@ const probeCdp = async (): Promise<boolean> => {
 };
 
 export default async function globalSetup() {
+  // Collaborative tests spawn their own Electron peers via
+  // `collaborativeHarness`; the shared dev app on :9222 is unused and
+  // would just burn ~150 MB of RSS during the run. The
+  // `test:e2e:collaborative` script sets this flag so we short-circuit.
+  if (process.env.KLIPPEL_E2E_SKIP_GLOBAL_SETUP === '1') {
+    // eslint-disable-next-line no-console
+    console.log('[globalSetup] KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 — skipping shared Klippel boot');
+    (globalThis as any).__KLIPPEL_OWNED_PROCESS__ = false;
+    return;
+  }
   if (!process.env.ENV_NAME) {
     throw new Error('ENV_NAME is required (e.g. ENV_NAME=small-app npx jest)');
   }

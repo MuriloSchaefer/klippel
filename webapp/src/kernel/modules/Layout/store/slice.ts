@@ -23,23 +23,35 @@ export function persistTheme(state: {theme: PaletteMode}) {
   });
   return state
 }
-const restoreThemeSession = async (sessionPath: PathLike = ".session/Layout") => {
-  const exists = await storage.exists(`${sessionPath}/state.json`);
-  if (!exists) return layoutInitialState
-  const fileContent = await storage.readFile<string>(`${sessionPath}/theme.json`, {encoding: 'utf-8'});
-  return JSON.parse(fileContent) as {theme: PaletteMode};
-}
+/**
+ * Restore only the persisted theme. Earlier this returned the full
+ * `LayoutState` and the rehydrator replaced the whole slice on every
+ * workspace switch — clobbering runtime-registered ribbon tabs and
+ * already-rehydrated nested slices (`panels`, `viewportManager`). Now the
+ * rehydrator is scoped to the one field this module persists; nested
+ * slices keep their own rehydration, and ribbon tabs survive the switch.
+ */
+const restoreThemeSession = async (
+  sessionPath: PathLike = ".session/Layout",
+): Promise<{ theme: PaletteMode }> => {
+  const exists = await storage.exists(`${sessionPath}/theme.json`);
+  if (!exists) return { theme: layoutInitialState.theme };
+  const fileContent = await storage.readFile<string>(`${sessionPath}/theme.json`, {
+    encoding: "utf-8",
+  });
+  return JSON.parse(fileContent) as { theme: PaletteMode };
+};
 
 const buildLayoutInitial = async (): Promise<LayoutState> => ({
   ...layoutInitialState,
-  ...await restoreThemeSession(),
+  ...(await restoreThemeSession()),
   panels: panelsSlice.getInitialState(),
   viewportManager: viewportManagerSlice.getInitialState(),
 });
 
-export const layoutRehydrated = defineRehydration<LayoutState>(
+export const layoutRehydrated = defineRehydration<{ theme: PaletteMode }>(
   `${MODULE_NAME}/rehydrated`,
-  buildLayoutInitial,
+  restoreThemeSession,
 );
 
 const slice = createSlice({
@@ -47,7 +59,12 @@ const slice = createSlice({
     initialState: await buildLayoutInitial(),
     reducers: {},
     extraReducers: (builder) => {
-      builder.addCase(layoutRehydrated, (_state, { payload }) => payload);
+      // Patch only the theme — preserve panels, viewportManager (own
+      // rehydrators), and ribbonMenu (runtime-registered tabs).
+      builder.addCase(layoutRehydrated, (state, { payload }) => ({
+        ...state,
+        theme: payload.theme,
+      }));
       builder.addCase(
         switchTheme,
         (state: LayoutState, { payload: { theme } }) => {

@@ -1,6 +1,8 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import {
   createWorkspace,
+  enableWorkspaceSync,
+  joinWorkspace,
   listWorkspaces,
   pauseSessionAutoSaver,
   resumeSessionAutoSaver,
@@ -10,7 +12,9 @@ import {
   sessionAutoSaverResumed,
   sessionSaved,
   workspaceCreated,
+  workspaceJoined,
   workspaceSelected,
+  workspaceSyncEnabled,
   workspacesListed,
 } from "./actions";
 import { persistState } from "./slice";
@@ -115,6 +119,38 @@ middlewares.startListening({
 
     dispatch(listWorkspaces());
     dispatch(workspaceCreated({ name: payload.name, coId }));
+    // Auto-select the newly created workspace so the UI flips to it
+    // immediately. Without this, the user (and the Share button which
+    // gates on `workspaceCoIds[selectedWorkspace]`) stays on whatever
+    // was active before — typically the bootstrap "pessoal".
+    dispatch(selectWorkspace({ workspace: payload.name }));
+  },
+});
+middlewares.startListening({
+  actionCreator: joinWorkspace,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch } = listenerApi;
+    // Unlike `createWorkspace`, there is no sensible offline fallback for a
+    // failed join — the whole point is to reach a remote CoValue. Let the
+    // error propagate so the renderer surfaces it instead of silently
+    // leaving the user on the previous workspace.
+    await jazz.joinWorkspace(payload);
+    dispatch(listWorkspaces());
+    dispatch(workspaceJoined(payload));
+    // Auto-select the joined workspace so the user sees it immediately.
+    dispatch(selectWorkspace({ workspace: payload.name }));
+  },
+});
+middlewares.startListening({
+  actionCreator: enableWorkspaceSync,
+  effect: async ({ payload }, listenerApi) => {
+    const { dispatch } = listenerApi;
+    try {
+      await jazz.enableSync(payload.syncUrl);
+      dispatch(workspaceSyncEnabled(payload));
+    } catch (err) {
+      console.error("[Store] enable workspace sync failed", err);
+    }
   },
 });
 

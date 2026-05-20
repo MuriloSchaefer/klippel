@@ -10,6 +10,7 @@ import {
   accountIdResolved,
   syncStatusChanged,
   workspaceCreated,
+  workspaceJoined,
 } from "./actions";
 import { setCurrentWorkspace } from "./workspaceScope";
 import type { PathLike } from "fs";
@@ -111,6 +112,16 @@ const slice = createSlice({
         workspaceCoIds: payload.coId
           ? { ...state.workspaceCoIds, [payload.name]: payload.coId }
           : state.workspaceCoIds,
+      })
+    );
+    // Joined workspaces carry the same coId/syncOptIn contract as created
+    // ones — record the coId so the Share button can render the right
+    // invite without re-querying main process.
+    builder.addCase(
+      workspaceJoined,
+      (state, { payload }) => ({
+        ...state,
+        workspaceCoIds: { ...state.workspaceCoIds, [payload.name]: payload.coId },
       })
     );
   },

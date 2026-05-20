@@ -7,7 +7,13 @@ import type {
 } from "../../src/system/modules/Composer/typings";
 
 export type JazzWorkspaceHandle = { name: string; coId: string; dir: string };
-export type JazzWorkspaceIndexEntry = { name: string; coId: string; syncOptIn: boolean };
+export type JazzWorkspaceIndexEntry = {
+  name: string;
+  coId: string;
+  syncOptIn: boolean;
+  syncUrl?: string;
+};
+export type JazzJoinWorkspaceInput = { name: string; coId: string; syncUrl: string };
 
 export const jazzApi = {
   // Workspaces
@@ -16,6 +22,10 @@ export const jazzApi = {
     ipcRenderer.invoke("jazz-create-workspace", name),
   ensureWorkspace: (name: string): Promise<JazzWorkspaceIndexEntry> =>
     ipcRenderer.invoke("jazz-ensure-workspace", name),
+  joinWorkspace: (input: JazzJoinWorkspaceInput): Promise<JazzWorkspaceIndexEntry> =>
+    ipcRenderer.invoke("jazz-join-workspace", input),
+  enableSync: (syncUrl: string): Promise<JazzWorkspaceIndexEntry> =>
+    ipcRenderer.invoke("jazz-enable-sync", syncUrl),
   listWorkspaces: (): Promise<JazzWorkspaceIndexEntry[]> =>
     ipcRenderer.invoke("jazz-list-workspaces"),
   openWorkspace: (name: string): Promise<JazzWorkspaceHandle> =>

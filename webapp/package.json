@@ -48,7 +48,8 @@
     "styled-components": "^6.4.1",
     "toad-scheduler": "^3.1.0",
     "tslib": "^2.8.1",
-    "update-electron-app": "^3.1.2"
+    "update-electron-app": "^3.1.2",
+    "ws": "^8.20.1"
   },
   "resolutions": {
     "styled-components": "^5.3.3"
@@ -56,13 +57,16 @@
   "scripts": {
     "start": "electron-vite preview --mode development",
     "dev": "electron-vite dev --watch --mode development --sourcemap",
+    "jazz:sync": "jazz-run sync --in-memory --host 127.0.0.1 --port ${KLIPPEL_JAZZ_SYNC_PORT:-4242}",
     "prebuild": "electron-vite build",
     "package": "electron-vite build && electron-forge package",
     "make": "electron-vite build && electron-forge make",
     "publish": "electron-forge publish",
     "package:tests": "node scripts/build-test-bundle.mjs",
     "test:e2e": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 jest",
-    "test:e2e:headless": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 KLIPPEL_USE_XVFB=1 jest"
+    "test:e2e:headless": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 KLIPPEL_USE_XVFB=1 jest",
+    "test:e2e:collaborative": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_DEV_LOG=1 jest --testPathPatterns tests/collaborative/",
+    "test:e2e:collaborative:headless": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_USE_XVFB=1 xvfb-run -a --server-args=\"-screen 0 1280x1024x24\" jest --testPathPatterns tests/collaborative/"
   },
   "repository": {
     "url": "git@github.com:MuriloSchaefer/klippel.git"
@@ -119,6 +123,7 @@
     "@types/react-test-renderer": "^19.1.0",
     "@types/styled-components": "^5.1.36",
     "@types/svg-parser": "^2.0.6",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitejs/plugin-react-refresh": "^1.3.6",
     "babel-jest": "^30.3.0",
@@ -132,6 +137,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "gh-pages": "^6.3.0",
     "install": "^0.13.0",
+    "jazz-run": "^0.19.22",
     "jest": "^30.3.0",
     "module-alias": "^2.3.4",
     "npm": "^11.13.0",

@@ -13,19 +13,29 @@ const sanitize = (workspace: string): string => {
 
 export const getCurrentWorkspace = async (): Promise<string> => {
   if (cached) return cached;
+  // KLIPPEL_INITIAL_WORKSPACE wins when present — used by the collaborative
+  // debug launch configs to spin each peer up directly into a known
+  // workspace instead of "pessoal". Surfaced through the preload bridge
+  // (`window.electron.env`) since the renderer has no direct process.env.
+  // Persisted session still overrides it on subsequent boots, since the
+  // user may have switched workspaces since.
+  const rawOverride = (globalThis as unknown as {
+    electron?: { env?: { KLIPPEL_INITIAL_WORKSPACE?: string } };
+  }).electron?.env?.KLIPPEL_INITIAL_WORKSPACE;
+  const envOverride = rawOverride && rawOverride.trim() ? sanitize(rawOverride) : undefined;
   try {
     const exists = await storage.exists(".session/Store/state.json");
     if (!exists) {
-      cached = "pessoal";
+      cached = envOverride ?? "pessoal";
       return cached;
     }
     const content = await storage.readFile<string>(".session/Store/state.json", {
       encoding: "utf-8",
     });
     const parsed = JSON.parse(content) as { selectedWorkspace?: string };
-    cached = parsed?.selectedWorkspace || "pessoal";
+    cached = parsed?.selectedWorkspace || envOverride || "pessoal";
   } catch {
-    cached = "pessoal";
+    cached = envOverride ?? "pessoal";
   }
   return cached;
 };

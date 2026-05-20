@@ -17,12 +17,40 @@ import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
 import { debounce } from "./utils";
 import { initHeliaHooks, initHeliaNode } from "./ipfs";
 
+// Swallow EPIPE on stdout/stderr writes. When the parent process closes
+// the inherited stdio pipe (Jest harness disconnects, VS Code debugger
+// detaches, a `npm run` wrapper exits) any console.log that lands during
+// Electron's own shutdown raises `write EPIPE` and Electron's default
+// uncaught-exception handler pops a modal dialog — blocking shutdown
+// every time. The pipe is gone anyway, so silently dropping the write
+// is the right contract.
+process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EPIPE") return;
+  // Re-throw anything else so genuine I/O errors still surface.
+  throw err;
+});
+process.stderr.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EPIPE") return;
+  throw err;
+});
+
 updateElectronApp();
 if (require("electron-squirrel-startup")) app.quit();
 
-const CDP_PORT = '9222';
+// Allow a per-instance CDP port so the collaborative-test harness (and
+// manual two-window testing) can spawn multiple Electron processes side by
+// side without colliding on 9222.
+const CDP_PORT = process.env.KLIPPEL_CDP_PORT ?? '9222';
 app.commandLine.appendSwitch('remote-debugging-port', CDP_PORT);
 process.env.CDP_PORT = CDP_PORT;
+
+// Each Electron instance needs its own `userData` directory or they fight
+// over Chromium's profile lock. Default behavior is unchanged
+// (`~/.config/Klippel`); the harness and manual two-window testing pass
+// `KLIPPEL_USER_DATA_DIR` to point each peer at a distinct dir.
+if (process.env.KLIPPEL_USER_DATA_DIR) {
+  app.setPath("userData", process.env.KLIPPEL_USER_DATA_DIR);
+}
 
 async function createTray(mainWindow: BrowserWindow): Promise<Tray> {
   const tray = new Tray('');
@@ -162,13 +190,23 @@ app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
 
-  installExtension(REACT_DEVELOPER_TOOLS)
-    .then((ext) => console.log(`Added Extension:  ${ext.name} (${ext.version})`))
-    .catch((err) => console.error("An error occurred: ", err));
+  // React/Redux DevTools registration races the GPU process under Xvfb
+  // — their service-worker init hangs without a real compositor, the
+  // collaborative harness then times out waiting for CDP, and Electron
+  // bails with `Failed to shutdown`. Skip extension install in any
+  // headless e2e environment; nothing in the test path needs them.
+  const skipDevExtensions =
+    process.env.KLIPPEL_USE_XVFB === "1" ||
+    process.env.KLIPPEL_E2E_SKIP_DEV_EXTENSIONS === "1";
+  if (!skipDevExtensions) {
+    installExtension(REACT_DEVELOPER_TOOLS)
+      .then((ext) => console.log(`Added Extension:  ${ext.name} (${ext.version})`))
+      .catch((err) => console.error("An error occurred: ", err));
 
-  installExtension(REDUX_DEVTOOLS)
-    .then((ext) => console.log(`Added Extension:  ${ext.name} (${ext.version})`))
-    .catch((err) => console.error("An error occurred: ", err));
+    installExtension(REDUX_DEVTOOLS)
+      .then((ext) => console.log(`Added Extension:  ${ext.name} (${ext.version})`))
+      .catch((err) => console.error("An error occurred: ", err));
+  }
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

@@ -4,8 +4,13 @@ import {
   closeActiveWorkspace,
   createJazzWorkspace,
   ensureJazzWorkspace,
+  joinJazzWorkspace,
+  enableJazzWorkspaceSync,
   listJazzWorkspaces,
+  type JoinWorkspaceInput,
   getAccountId,
+} from "./jazz";
+import {
   listModels,
   loadModel,
   createModel,
@@ -16,7 +21,7 @@ import {
   releaseEditLease,
   uploadModelSvg,
   loadModelSvg,
-} from "./jazz";
+} from "../../src/system/modules/Composer/main/models";
 
 export function initJazzHooks() {
   ipcMain.handle("jazz-open-workspace", async (_event, name: string) => {
@@ -40,6 +45,14 @@ export function initJazzHooks() {
 
   ipcMain.handle("jazz-ensure-workspace", async (_event, name: string) => {
     return ensureJazzWorkspace(name);
+  });
+
+  ipcMain.handle("jazz-join-workspace", async (_event, input: JoinWorkspaceInput) => {
+    return joinJazzWorkspace(input);
+  });
+
+  ipcMain.handle("jazz-enable-sync", async (_event, syncUrl: string) => {
+    return enableJazzWorkspaceSync(syncUrl);
   });
 
   ipcMain.handle("jazz-list-workspaces", async () => {

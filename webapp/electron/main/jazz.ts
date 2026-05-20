@@ -7,7 +7,6 @@ import {
   createJazzContextFromExistingCredentials,
   MockSessionProvider,
   Group,
-  co,
   type Account,
 } from "jazz-tools";
 // cojson does not expose its storage adapters through its public `exports`
@@ -15,21 +14,16 @@ import {
 // `/index.js` so node's exports resolver matches a real file path.
 import { getSqliteStorage } from "cojson/dist/storage/sqlite/index.js";
 import type { SQLiteDatabaseDriver } from "cojson/dist/storage/sqlite/index.js";
+import type { Peer } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
+import { WebSocketPeerWithReconnection } from "cojson-transport-ws";
+import WebSocket from "ws";
 import {
-  EditLease,
   KlippelAccount,
-  ModelCoMap,
   ModelsMap,
   WorkspaceCoMap,
   WorkspaceMetadata,
 } from "../../src/kernel/modules/Store/schema";
-import type {
-  CreateModelInput,
-  EditLeaseSnapshot,
-  LoadedModel,
-  ModelSummary,
-} from "../../src/system/modules/Composer/typings";
 import { getAbsPath } from "./storage";
 import {
   upsertWorkspace,
@@ -48,6 +42,7 @@ export type ActiveWorkspace = {
   dir: string;
   coId: string;
   context: JazzContext;
+  syncUrl?: string;
   release: () => Promise<void>;
 };
 
@@ -55,6 +50,78 @@ let activeWorkspace: ActiveWorkspace | null = null;
 
 function workspaceDir(name: string): string {
   return getAbsPath(`workspaces/${name}`);
+}
+
+/**
+ * Validate a peer sync URL before we open a WebSocket to it. Accept ws:// or
+ * wss:// only; reject embedded userinfo so a malicious invite cannot exfil
+ * credentials in the URL. The harness and the Share UI both rely on this —
+ * the renderer can also re-validate before saving, but main-process is the
+ * authoritative boundary.
+ */
+function isValidSyncUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "ws:" && parsed.protocol !== "wss:") return false;
+    if (parsed.username || parsed.password) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolveSyncUrl(
+  indexEntry: WorkspaceIndexEntry | undefined,
+  envOverride: string | undefined,
+): string | undefined {
+  const candidate = envOverride ?? indexEntry?.syncUrl;
+  if (!candidate) return undefined;
+  if (!isValidSyncUrl(candidate)) {
+    console.error("[jazz] rejecting invalid sync URL", candidate);
+    return undefined;
+  }
+  return candidate;
+}
+
+type SyncReconnector = {
+  enable: () => void;
+  disable: () => void;
+  waitUntilConnected: () => Promise<void>;
+};
+
+/**
+ * Construct the WebSocket-peer reconnector used to keep the local Jazz
+ * node attached to a sync server. Matches the pattern jazz-tools uses
+ * in its own SSR helper: the reconnector handles the WS open/close
+ * lifecycle and calls `addPeer` on the sync manager when the socket is
+ * ready. We pass `WebSocket` from the `ws` package so this works on the
+ * node side; browser builds use the global.
+ */
+function createSyncReconnector(
+  url: string,
+  node: {
+    syncManager: {
+      addPeer: (peer: Peer) => void;
+      peers?: Record<string, unknown>;
+    };
+  },
+): SyncReconnector {
+  return new WebSocketPeerWithReconnection({
+    peer: url,
+    reconnectionTimeout: 500,
+    addPeer: (peer) => {
+      node.syncManager.addPeer(peer);
+    },
+    removePeer: () => {
+      // `WebSocketPeerWithReconnection` reports the disconnect; cojson's
+      // sync manager already cleans up its end via the peer's `outgoing`
+      // close handler, so there is nothing for us to do here.
+    },
+    WebSocketConstructor:
+      WebSocket as unknown as ConstructorParameters<
+        typeof WebSocketPeerWithReconnection
+      >[0]["WebSocketConstructor"],
+  });
 }
 
 function applyPragmas(db: Database.Database) {
@@ -176,6 +243,21 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
   const crypto = await WasmCrypto.create();
   const existing = readCredentials(dir);
 
+  // Resolve sync URL. Env var wins (e2e harness, dev script), else the
+  // index entry's `syncUrl`. We wire the WS peer *after* context creation
+  // — `WebSocketPeerWithReconnection.enable()` adds the peer to the
+  // sync manager once the socket is OPEN, which is the pattern
+  // jazz-tools itself uses (see `createSSRJazzAgent`). The previous
+  // approach of passing a half-connected `Peer` in `peers: [...]` left
+  // the cojson side waiting forever for an outgoing connection that the
+  // raw `new WebSocket(url)` had not finished establishing.
+  const indexEntry = findWorkspace(name);
+  const envSyncUrl = process.env.KLIPPEL_JAZZ_SYNC_URL;
+  const syncUrl =
+    indexEntry?.syncOptIn || envSyncUrl
+      ? resolveSyncUrl(indexEntry, envSyncUrl)
+      : undefined;
+
   let context: JazzContext;
   if (existing) {
     context = await createJazzContextFromExistingCredentials({
@@ -206,6 +288,22 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
     });
   }
 
+  // Now that the context exists, wire the sync reconnector and wait for
+  // the socket to open so the very next `WorkspaceCoMap.load` finds a
+  // live peer instead of an empty sync manager.
+  let syncReconnector: SyncReconnector | null = null;
+  if (syncUrl) {
+    syncReconnector = createSyncReconnector(syncUrl, context.node as unknown as {
+      syncManager: { addPeer: (peer: Peer) => void; peers?: Record<string, unknown> };
+    });
+    syncReconnector.enable();
+    try {
+      await syncReconnector.waitUntilConnected();
+    } catch (err) {
+      console.error("[jazz] sync waitUntilConnected failed", err);
+    }
+  }
+
   const jazzIdPath = join(dir, ".jazz-id");
   const coId = existsSync(jazzIdPath)
     ? readFileSync(jazzIdPath, { encoding: "utf-8" }).trim()
@@ -216,16 +314,35 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
     dir,
     coId,
     context,
+    syncUrl,
     release: async () => {
+      // `context.done()` fires `node.gracefulShutdown()` but does NOT await
+      // it, so a follow-up close that races pending storage writes hits
+      // "The database connection is not open" inside cojson's local
+      // transactions queue. Drive `gracefulShutdown` directly and await it
+      // — it drains queues, flushes pending writes, and closes the storage
+      // adapter (which closes the better-sqlite3 handle our driver owns).
       try {
-        context.done();
+        await (context.node as unknown as { gracefulShutdown: () => Promise<unknown> })
+          .gracefulShutdown();
       } catch (err) {
-        console.error("[jazz] context.done() failed", err);
+        console.error("[jazz] node.gracefulShutdown failed", err);
       }
+      if (syncReconnector) {
+        try {
+          syncReconnector.disable();
+        } catch (err) {
+          console.error("[jazz] sync reconnector disable failed", err);
+        }
+      }
+      // After gracefulShutdown the DB is normally closed. The pragma path
+      // is kept best-effort so the jazz-foundation test still observes a
+      // truncated WAL when the storage adapter happens to leave the
+      // handle open (older cojson builds).
       try {
         db.pragma("wal_checkpoint(TRUNCATE)");
-      } catch (err) {
-        console.error("[jazz] wal_checkpoint failed", err);
+      } catch {
+        /* DB already closed by gracefulShutdown — expected */
       }
       try {
         db.close();
@@ -296,6 +413,154 @@ export function listJazzWorkspaces(): WorkspaceIndexEntry[] {
   return readWorkspacesIndex();
 }
 
+export type JoinWorkspaceInput = {
+  name: string;
+  coId: string;
+  syncUrl: string;
+};
+
+/**
+ * Join an existing collaborative workspace by `coId` through a sync server.
+ * Creates a local workspace dir, opens a Jazz node with the WebSocket peer
+ * wired up, loads the remote `WorkspaceCoMap`, and registers the workspace
+ * locally with `syncOptIn: true`. Does not call `WorkspaceCoMap.create` —
+ * the CoValue already exists on the originating peer.
+ */
+export async function joinJazzWorkspace(
+  input: JoinWorkspaceInput,
+): Promise<WorkspaceIndexEntry> {
+  const { name, coId, syncUrl } = input;
+  if (!isValidSyncUrl(syncUrl)) {
+    throw new Error(`Invalid sync URL: ${syncUrl}`);
+  }
+  if (findWorkspace(name)) {
+    throw new Error(`Workspace "${name}" already exists`);
+  }
+  if (activeWorkspace) await closeActiveWorkspace();
+
+  // Pre-register so `openWorkspaceJazzNodeInner` reads the sync settings on
+  // boot and dials the peer before we try to load the remote workspace.
+  const entry: WorkspaceIndexEntry = { name, coId, syncOptIn: true, syncUrl };
+  upsertWorkspace(entry);
+
+  // Write `.jazz-id` ahead of context creation so a future reopen sees a
+  // valid workspace even if `WorkspaceCoMap.load` is slow on first sync.
+  const dir = workspaceDir(name);
+  ensureDirSync(dir);
+  outputFileSync(join(dir, ".jazz-id"), coId);
+
+  try {
+    await openWorkspaceJazzNode(name);
+    // Deep-load the workspace tree (root + models record + each model)
+    // before returning. Without this, a subsequent `requireWorkspace`
+    // with `resolve: { models: { $each: {...} } }` may surface
+    // `$isLoaded: false` while children are still streaming, and the
+    // renderer's first `listModels` throws "Could not load workspace".
+    // The `$onError: "catch"` per child keeps a slow/unauthorized model
+    // from blocking the whole tree.
+    const loaded = await WorkspaceCoMap.load(coId, {
+      resolve: {
+        models: { $each: { editLease: { $onError: "catch" } } },
+      },
+    });
+    if (!loaded || ("$isLoaded" in loaded && loaded.$isLoaded === false)) {
+      throw new Error(`Could not load remote workspace ${coId} via ${syncUrl}`);
+    }
+  } catch (err) {
+    // Bootstrap failed — drop the half-registered entry so retries don't hit
+    // the "already exists" guard.
+    removeWorkspace(name);
+    if (activeWorkspace?.name === name) await closeActiveWorkspace();
+    throw err;
+  }
+  return entry;
+}
+
+/**
+ * Flip `syncOptIn`/`disallowRelay` on the active workspace's metadata and
+ * record the URL on the local index entry. Called by the Share UI and by
+ * the e2e harness. Returns the updated entry. Does not reconnect — the
+ * peer will be wired on the next `openWorkspaceJazzNode` (i.e. after the
+ * next `closeActiveWorkspace` or app restart). Callers that need an
+ * immediate connection should `closeActiveWorkspace` + `ensureJazzWorkspace`.
+ */
+export async function enableJazzWorkspaceSync(
+  syncUrl: string,
+): Promise<WorkspaceIndexEntry> {
+  if (!isValidSyncUrl(syncUrl)) {
+    throw new Error(`Invalid sync URL: ${syncUrl}`);
+  }
+  if (!activeWorkspace?.coId) throw new Error("No active workspace");
+  const settled = await WorkspaceCoMap.load(activeWorkspace.coId, {
+    resolve: { metadata: true },
+  });
+  if (!settled || ("$isLoaded" in settled && settled.$isLoaded === false)) {
+    throw new Error(`Could not load workspace ${activeWorkspace.coId}`);
+  }
+  const workspace = settled as {
+    metadata: { $jazz: { set: (k: string, v: unknown) => void } };
+    $jazz: { owner: Group };
+  };
+  workspace.metadata.$jazz.set("syncOptIn", true);
+  workspace.metadata.$jazz.set("disallowRelay", false);
+  workspace.metadata.$jazz.set("syncUrl", syncUrl);
+
+  // Grant remote peers write access to the workspace group. Models and the
+  // models map inherit this group at creation time (see createModel / the
+  // initial ModelsMap), so this single addMember unlocks the whole tree
+  // for any peer that learns the workspace coId. This is the trust model
+  // for v1: knowledge of the coId == collaborator. Tighter ACLs land later.
+  const group = workspace.$jazz.owner;
+  if (group instanceof Group) {
+    group.addMember("everyone", "writer");
+  }
+
+  const name = activeWorkspace.name;
+  const existing = findWorkspace(name);
+  if (!existing) throw new Error(`Workspace "${name}" not in index`);
+  const updated: WorkspaceIndexEntry = { ...existing, syncOptIn: true, syncUrl };
+  upsertWorkspace(updated);
+
+  // Reopen the workspace so `openWorkspaceJazzNodeInner` dials the
+  // WebSocket peer. The node takes `peers` at creation time; without the
+  // reopen, the local CoValues stay isolated and remote joiners hang on
+  // `WorkspaceCoMap.load`. The reopen is fast (the SQLite store is hot)
+  // and the metadata writes above are flushed by the close-path WAL
+  // checkpoint, so peers see them on first sync.
+  await closeActiveWorkspace();
+  const reopened = await openWorkspaceJazzNode(name);
+  // After the reopen the fresh context has not yet seen the workspace
+  // CoMap — the sync manager will only push CoValues the local node
+  // knows about. Load the tree (including models + their leases) into
+  // the new context so the data is replayed from SQLite into memory and
+  // then forwarded to the sync server. Without this, `waitForSync`
+  // times out: the node has nothing to sync because nothing was loaded.
+  if (reopened.coId) {
+    try {
+      await WorkspaceCoMap.load(reopened.coId, {
+        resolve: {
+          models: { $each: { editLease: { $onError: "catch" } } },
+        },
+      });
+    } catch (err) {
+      console.error("[jazz] preload workspace after enableSync failed", err);
+    }
+    try {
+      const node = reopened.context.node as unknown as {
+        syncManager?: {
+          waitForSync?: (id: string, timeout?: number) => Promise<unknown>;
+        };
+      };
+      if (node.syncManager?.waitForSync) {
+        await node.syncManager.waitForSync(reopened.coId, 15_000);
+      }
+    } catch (err) {
+      console.error("[jazz] waitForSync after enableSync failed", err);
+    }
+  }
+  return updated;
+}
+
 /**
  * Open the workspace's Jazz node if both the index entry and `.jazz-id`
  * exist; otherwise bootstrap a fresh `WorkspaceCoMap`. Handles:
@@ -332,240 +597,3 @@ export async function getAccountId(): Promise<string | null> {
   return account.$jazz.id;
 }
 
-// ---------------------------------------------------------------------------
-// Phase 2a — Models
-// ---------------------------------------------------------------------------
-
-const LEASE_TTL_MS = 60_000;
-
-async function requireWorkspace() {
-  if (!activeWorkspace) throw new Error("No active workspace");
-  if (!activeWorkspace.coId) throw new Error("Active workspace has no coId");
-  const settled = await WorkspaceCoMap.load(activeWorkspace.coId, {
-    resolve: {
-      models: { $each: { editLease: { $onError: "catch" } } },
-    },
-  });
-  if (!settled || ("$isLoaded" in settled && settled.$isLoaded === false)) {
-    throw new Error(`Could not load workspace ${activeWorkspace.coId}`);
-  }
-  // settled is now the loaded variant of Settled<...>.
-  return settled as Exclude<typeof settled, { $isLoaded: false }>;
-}
-
-function currentAccountId(): string {
-  const account = activeWorkspace!.context.account as unknown as { $jazz: { id: string } };
-  return account.$jazz.id;
-}
-
-type LoadedLease = {
-  holderAccountId: string;
-  acquiredAt: number;
-  expiresAt: number;
-  $jazz: { set: (key: "expiresAt", value: number) => void };
-};
-
-/**
- * Normalize the `MaybeLoaded<EditLease>` we get from the resolved query into
- * either a fully loaded lease or `undefined`. `$onError: "catch"` lets a
- * missing/unauthorized lease through as a NotLoaded record; we treat both as
- * "no usable lease" since Phase 2a doesn't depend on knowing why it's absent.
- */
-function loadedLease(model: { editLease?: unknown }): LoadedLease | undefined {
-  const lease = model.editLease as
-    | (LoadedLease & { $isLoaded?: boolean })
-    | { $isLoaded: false }
-    | undefined;
-  if (!lease) return undefined;
-  if ("$isLoaded" in lease && lease.$isLoaded === false) return undefined;
-  return lease as LoadedLease;
-}
-
-export async function listModels(): Promise<ModelSummary[]> {
-  const workspace = await requireWorkspace();
-  const out: ModelSummary[] = [];
-  for (const [id, model] of Object.entries(workspace.models)) {
-    if (!model) continue;
-    out.push({
-      id,
-      coId: model.$jazz.id,
-      name: model.name,
-      description: model.description,
-      hasSvg: model.$jazz.refs.svg !== undefined,
-      updatedAt: model.updatedAt,
-    });
-  }
-  return out;
-}
-
-export async function loadModel(id: string): Promise<LoadedModel | null> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) return null;
-  const lease = loadedLease(model);
-  return {
-    id: model.id,
-    coId: model.$jazz.id,
-    name: model.name,
-    description: model.description,
-    graphJson: model.graphJson,
-    hasSvg: model.svg !== undefined,
-    updatedAt: model.updatedAt,
-    editLease: lease
-      ? {
-          holderAccountId: lease.holderAccountId,
-          acquiredAt: lease.acquiredAt,
-          expiresAt: lease.expiresAt,
-        }
-      : undefined,
-  };
-}
-
-export async function createModel(input: CreateModelInput): Promise<ModelSummary> {
-  const workspace = await requireWorkspace();
-  if (workspace.models[input.id]) {
-    throw new Error(`Model "${input.id}" already exists`);
-  }
-  const owner = workspace.$jazz.owner;
-  const model = ModelCoMap.create(
-    {
-      id: input.id,
-      name: input.name,
-      description: input.description ?? "",
-      graphJson: input.graphJson,
-      updatedAt: Date.now(),
-    },
-    owner,
-  );
-  workspace.models.$jazz.set(input.id, model);
-  return {
-    id: model.id,
-    coId: model.$jazz.id,
-    name: model.name,
-    description: model.description,
-    hasSvg: false,
-    updatedAt: model.updatedAt,
-  };
-}
-
-function leaseHeldByOther(model: { editLease?: unknown }): boolean {
-  const lease = loadedLease(model);
-  if (!lease) return false;
-  if (lease.expiresAt < Date.now()) return false;
-  return lease.holderAccountId !== currentAccountId();
-}
-
-export async function updateModelGraph(id: string, graphJson: string): Promise<void> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) throw new Error(`Model "${id}" not found`);
-  if (leaseHeldByOther(model)) {
-    throw new Error(`Model "${id}" is locked by another editor`);
-  }
-  model.$jazz.set("graphJson", graphJson);
-  model.$jazz.set("updatedAt", Date.now());
-}
-
-export async function updateModelDescription(id: string, description: string): Promise<void> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) throw new Error(`Model "${id}" not found`);
-  model.$jazz.set("description", description);
-  model.$jazz.set("updatedAt", Date.now());
-}
-
-export async function acquireEditLease(id: string): Promise<EditLeaseSnapshot> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) throw new Error(`Model "${id}" not found`);
-  const existing = loadedLease(model);
-  if (existing && existing.expiresAt >= Date.now() && existing.holderAccountId !== currentAccountId()) {
-    throw new Error(`Model "${id}" is locked by ${existing.holderAccountId}`);
-  }
-  const now = Date.now();
-  const owner = model.$jazz.owner;
-  const lease = EditLease.create(
-    {
-      holderAccountId: currentAccountId(),
-      acquiredAt: now,
-      expiresAt: now + LEASE_TTL_MS,
-    },
-    owner,
-  );
-  model.$jazz.set("editLease", lease);
-  return {
-    holderAccountId: lease.holderAccountId,
-    acquiredAt: lease.acquiredAt,
-    expiresAt: lease.expiresAt,
-  };
-}
-
-export async function renewEditLease(id: string): Promise<EditLeaseSnapshot> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) throw new Error(`Model "${id}" not found`);
-  const lease = loadedLease(model);
-  if (!lease || lease.holderAccountId !== currentAccountId()) {
-    throw new Error(`Cannot renew lease for "${id}" — not the holder`);
-  }
-  const now = Date.now();
-  lease.$jazz.set("expiresAt", now + LEASE_TTL_MS);
-  return {
-    holderAccountId: lease.holderAccountId,
-    acquiredAt: lease.acquiredAt,
-    expiresAt: lease.expiresAt,
-  };
-}
-
-export async function releaseEditLease(id: string): Promise<void> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) return;
-  const lease = loadedLease(model);
-  if (!lease || lease.holderAccountId !== currentAccountId()) return;
-  model.$jazz.set("editLease", undefined);
-}
-
-/**
- * Upload an SVG payload as a BinaryCoStream attached to `ModelCoMap.svg`.
- * The renderer hands us the raw markup string; we transcode to bytes and
- * delegate to Jazz's chunked stream writer. Sanitization is the renderer's
- * job (DOMPurify) — main-process is content-agnostic.
- */
-export async function uploadModelSvg(id: string, svgContent: string): Promise<{ coId: string }> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) throw new Error(`Model "${id}" not found`);
-  if (leaseHeldByOther(model)) {
-    throw new Error(`Model "${id}" is locked by another editor`);
-  }
-  const bytes = new TextEncoder().encode(svgContent);
-  // ArrayBuffer typing across DOM and Node lib varies; the underlying buffer
-  // is interchangeable at runtime.
-  const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  const owner = model.$jazz.owner;
-  const stream = await co.fileStream().createFromArrayBuffer(
-    ab,
-    "image/svg+xml",
-    `${id}.svg`,
-    { owner },
-  );
-  model.$jazz.set("svg", stream);
-  model.$jazz.set("updatedAt", Date.now());
-  return { coId: stream.$jazz.id };
-}
-
-/**
- * Read the SVG BinaryCoStream attached to a model back to a UTF-8 string.
- * Returns `null` if the model has no SVG yet.
- */
-export async function loadModelSvg(id: string): Promise<string | null> {
-  const workspace = await requireWorkspace();
-  const model = workspace.models[id];
-  if (!model) throw new Error(`Model "${id}" not found`);
-  const svgRef = model.$jazz.refs.svg;
-  if (!svgRef) return null;
-  const blob = await co.fileStream().loadAsBlob(svgRef.id);
-  if (!blob) return null;
-  return new TextDecoder().decode(await blob.arrayBuffer());
-}

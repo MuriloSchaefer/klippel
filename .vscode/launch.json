@@ -33,6 +33,111 @@
       "presentation": {
         "hidden": true
       }
+    },
+
+    // --- Two-peer collaborative-debug pair (with HMR) --------------------
+    // Peer A owns the electron-vite dev server (default Vite port 5173) +
+    // its own Electron child. Peer B is a plain Electron launch that loads
+    // the same `ELECTRON_RENDERER_URL`, so it picks up the same HMR stream.
+    // Both processes start with `--inspect=<port>` (via electron-vite for
+    // A, runtimeArgs for B) so the Node main-process debugger attaches.
+    //
+    // Env knobs read by `electron/main/index.ts` and `storage.ts`:
+    //   ENV_NAME             — per-peer FS root under `~/klippel/envs/`
+    //   KLIPPEL_CDP_PORT     — Chromium remote-debugging port (renderer attach)
+    //   KLIPPEL_USER_DATA_DIR — per-peer Chromium profile dir
+    {
+      "name": "Peer A — Main + Vite Dev (HMR)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/webapp",
+      "runtimeExecutable": "${workspaceFolder}/webapp/node_modules/.bin/electron-vite",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/webapp/node_modules/.bin/electron-vite.cmd"
+      },
+      "runtimeArgs": ["dev", "--watch", "--mode", "development", "--sourcemap"],
+      "preLaunchTask": "klippel:reset-peer-A",
+      "autoAttachChildProcesses": true,
+      "outputCapture": "std",
+      "env": {
+        "ENV_NAME": "${input:peerAEnv}",
+        "KLIPPEL_CDP_PORT": "9222",
+        "KLIPPEL_USER_DATA_DIR": "/tmp/klippel-${input:peerAEnv}",
+        "KLIPPEL_INITIAL_WORKSPACE": "${input:peerAWorkspace}",
+        "KLIPPEL_DEV_LOG": "1",
+        "ELECTRON_RUN_AS_NODE": null
+      },
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      "name": "Peer A — Renderer",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/webapp/src",
+      "timeout": 60000,
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      "name": "Peer B — Main (HMR)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/webapp",
+      "runtimeExecutable": "${workspaceFolder}/webapp/node_modules/.bin/electron",
+      // Peer B reuses Peer A's electron-vite dev server. `is.dev` is true
+      // for both unpackaged launches; the main process reads
+      // ELECTRON_RENDERER_URL and connects to the same Vite stream, so HMR
+      // edits in `src/**` push to both renderers in lockstep.
+      "runtimeArgs": ["--inspect=9230", "."],
+      "preLaunchTask": "klippel:prepare-peer-B-hmr",
+      "autoAttachChildProcesses": false,
+      "outputCapture": "std",
+      "env": {
+        "ENV_NAME": "${input:peerBEnv}",
+        "KLIPPEL_CDP_PORT": "9223",
+        "KLIPPEL_USER_DATA_DIR": "/tmp/klippel-${input:peerBEnv}",
+        "KLIPPEL_INITIAL_WORKSPACE": "${input:peerBWorkspace}",
+        "KLIPPEL_DEV_LOG": "1",
+        "ELECTRON_RENDERER_URL": "http://localhost:5173/",
+        "ELECTRON_RUN_AS_NODE": null
+      },
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      "name": "Peer B — Renderer",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9223,
+      "webRoot": "${workspaceFolder}/webapp/src",
+      "timeout": 60000,
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      "name": "Jazz Sync Server",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/webapp",
+      "runtimeExecutable": "${workspaceFolder}/webapp/node_modules/.bin/jazz-run",
+      "runtimeArgs": [
+        "sync",
+        "--in-memory",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "4242"
+      ],
+      "outputCapture": "std",
+      "presentation": {
+        "hidden": true
+      }
     }
   ],
   "compounds": [
@@ -42,6 +147,51 @@
       "presentation": {
         "order": 1
       }
+    },
+    {
+      "name": "Debug Two Peers (Collaborative, HMR)",
+      "configurations": [
+        "Jazz Sync Server",
+        "Peer A — Main + Vite Dev (HMR)",
+        "Peer A — Renderer",
+        "Peer B — Main (HMR)",
+        "Peer B — Renderer"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "order": 2
+      }
+    }
+  ],
+  // Prompts shown when launching the two-peer compound. Defaults match the
+  // historical peerA/peerB convention so the existing flow keeps working
+  // without typing anything. Override to spin up named identities like
+  // alice/bob, or to preload each peer directly into a chosen workspace
+  // (e.g. one peer creates "design", the other joins by URL into "design").
+  "inputs": [
+    {
+      "id": "peerAEnv",
+      "type": "promptString",
+      "description": "Peer A — ENV_NAME (FS root under ~/klippel/envs/)",
+      "default": "peerA"
+    },
+    {
+      "id": "peerAWorkspace",
+      "type": "promptString",
+      "description": "Peer A — initial workspace name (leave empty for 'pessoal')",
+      "default": ""
+    },
+    {
+      "id": "peerBEnv",
+      "type": "promptString",
+      "description": "Peer B — ENV_NAME",
+      "default": "peerB"
+    },
+    {
+      "id": "peerBWorkspace",
+      "type": "promptString",
+      "description": "Peer B — initial workspace name (leave empty for 'pessoal')",
+      "default": ""
     }
   ]
 }

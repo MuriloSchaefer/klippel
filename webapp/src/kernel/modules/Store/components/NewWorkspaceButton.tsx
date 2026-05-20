@@ -29,7 +29,8 @@ export function NewWorkspaceButton() {
       component={
         <Box
           component={"form"}
-          id="new-model-form"
+          id="new-workspace-form"
+          data-testid="new-workspace-panel"
           sx={{ display: "flex", flexDirection: "column", gap: 1, padding: 2, minWidth: '250px' }}
         >
           <Typography sx={{ padding: 1, width: "100%", textAlign: "center" }}>
@@ -38,12 +39,13 @@ export function NewWorkspaceButton() {
           <FormControl>
             <TextField
               error={!name}
-              id="name"
+              id="new-workspace-name"
               label="Nome"
               variant="standard"
               sx={{ marginBottom: 1 }}
               onChange={(evt) => setName((old) => evt.target.value)}
               value={name}
+              data-testid="new-workspace-name"
               helperText={
                 <Box sx={{ lineHeight: 1 }}>
                   <Typography sx={{ color: name ? "green" : "red" }}>
@@ -58,7 +60,8 @@ export function NewWorkspaceButton() {
       actions={[
         <ConfirmAndCloseButton
           type="submit"
-          id="new-model-form"
+          id="new-workspace-form-accept"
+          data-testid="new-workspace-submit"
           value={"Submit"}
           color="success"
           key="accept"
@@ -67,7 +70,7 @@ export function NewWorkspaceButton() {
         />,
       ]}
     >
-      <IconButton>
+      <IconButton aria-label="create-workspace" data-testid="new-workspace-button">
         <CreateNewFolderIcon />
       </IconButton>
     </PointerContainer>

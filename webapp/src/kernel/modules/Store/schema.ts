@@ -6,6 +6,7 @@ export const WorkspaceMetadata = co.map({
   ownerAccountId: z.string(),
   syncOptIn: z.boolean(),
   disallowRelay: z.boolean(),
+  syncUrl: z.string().optional(),
 });
 
 /**

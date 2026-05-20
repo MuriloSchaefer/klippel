@@ -50,10 +50,13 @@ const slice = createSlice({
   initialState: await restoreModelsSession(),
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(modelsListed, (state, { payload }) => ({
-      ...state,
-      ...payload.reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {}),
-    }));
+    // Replace, don't merge: `modelsListed` is the authoritative snapshot
+    // from Jazz, so it must drop entries from a previous workspace that no
+    // longer exist in the new one. A merge would leak stale models across
+    // workspace switches (and is invisible in single-workspace UX).
+    builder.addCase(modelsListed, (_state, { payload }) =>
+      payload.reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {}),
+    );
     builder.addCase(modelsRehydrated, (_state, { payload }) => payload);
   },
 });

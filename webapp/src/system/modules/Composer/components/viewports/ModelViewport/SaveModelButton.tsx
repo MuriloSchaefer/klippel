@@ -81,7 +81,9 @@ export default function SaveModelButton({
         id="composer-save-model"
         role="button"
         aria-label="save-model"
-        sx={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}
+        aria-disabled={disabled || undefined}
+        data-disabled={disabled ? "true" : "false"}
+        sx={{ display: "inline-flex", alignItems: "center", cursor: disabled ? "not-allowed" : "pointer" }}
       >
         <ShortcutHint
           placement="bottom-center"

@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // Per-peer env-dir wipe. The path matches `KLIPPEL_USER_DATA_DIR` /
+    // `~/klippel/envs/<ENV_NAME>` set in launch.json so a fresh run starts
+    // from clean state. The prompts are shared with launch.json via
+    // matching `input` ids, so VS Code only asks once per launch.
+    {
+      "label": "klippel:reset-peer-A",
+      "type": "shell",
+      "command": "rm -rf /tmp/klippel-${input:peerAEnv} \"$HOME/klippel/envs/${input:peerAEnv}\"",
+      "presentation": { "reveal": "silent", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "klippel:reset-peer-B",
+      "type": "shell",
+      "command": "rm -rf /tmp/klippel-${input:peerBEnv} \"$HOME/klippel/envs/${input:peerBEnv}\"",
+      "presentation": { "reveal": "silent", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "klippel:wait-for-vite-dev",
+      "type": "shell",
+      "command": "until curl -sf -o /dev/null --max-time 1 http://localhost:5173/; do sleep 0.5; done",
+      "presentation": { "reveal": "silent", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "klippel:prepare-peer-B-hmr",
+      "dependsOrder": "sequence",
+      "dependsOn": ["klippel:reset-peer-B", "klippel:wait-for-vite-dev"],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "peerAEnv",
+      "type": "promptString",
+      "description": "Peer A — ENV_NAME",
+      "default": "peerA"
+    },
+    {
+      "id": "peerBEnv",
+      "type": "promptString",
+      "description": "Peer B — ENV_NAME",
+      "default": "peerB"
+    }
+  ]
+}
