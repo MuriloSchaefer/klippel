@@ -21,6 +21,8 @@ import WebSocket from "ws";
 import {
   KlippelAccount,
   ModelsMap,
+  ModelSummariesMap,
+  ModelSummary,
   WorkspaceCoMap,
   WorkspaceMetadata,
 } from "../../src/kernel/modules/Store/schema";
@@ -37,12 +39,26 @@ type Credentials = { accountID: string; accountSecret: string };
 
 type JazzContext = Awaited<ReturnType<typeof createJazzContextForNewAccount>>;
 
+/**
+ * Cached, deep-resolved `WorkspaceCoMap` handle scoped to the active
+ * workspace. Resolved once at open (or on first access) with
+ * `metadata + modelSummaries.$each + models` and reused across every IPC
+ * call. Replaces the previous "WorkspaceCoMap.load on every IPC" path
+ * (jazz-performance.md §2.2).
+ *
+ * `models` is resolved as a container only — entries are loaded on demand
+ * by `loadModel` via `ModelCoMap.load(modelCoId)` so the cached handle
+ * stays bounded by the (lightweight) summary count, not by model bodies.
+ */
+type LoadedWorkspaceHandle = Awaited<ReturnType<typeof WorkspaceCoMap.load>>;
+
 export type ActiveWorkspace = {
   name: string;
   dir: string;
   coId: string;
   context: JazzContext;
   syncUrl?: string;
+  handle: LoadedWorkspaceHandle | null;
   release: () => Promise<void>;
 };
 
@@ -315,6 +331,7 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
     coId,
     context,
     syncUrl,
+    handle: null,
     release: async () => {
       // `context.done()` fires `node.gracefulShutdown()` but does NOT await
       // it, so a follow-up close that races pending storage writes hits
@@ -363,13 +380,118 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
     },
   };
 
-  return activeWorkspace;
+  return activeWorkspace!;
+}
+
+/**
+ * Resolve (and cache) the active workspace's `WorkspaceCoMap` handle.
+ *
+ * The resolve set is intentionally narrow:
+ *   - `metadata` — read on every IPC for syncOptIn / ownerAccountId.
+ *   - `modelSummaries.$each` — drives `listModels` and is the index used
+ *     by `loadModel` to look up a model's coId.
+ *   - `models` (container only) — lets mutators call `models.$jazz.set`
+ *     without dragging each `ModelCoMap`'s history through the sync
+ *     manager. Individual models are loaded on demand by `loadModel` /
+ *     mutators via `ModelCoMap.load(modelCoId)`.
+ *
+ * Backfill: workspaces created before lazy hydration landed have no
+ * `modelSummaries` record (or have an empty one while `models` is
+ * populated). On first call after upgrade we walk `models`, synthesize
+ * the missing summaries, and write them back. Idempotent — subsequent
+ * calls observe a fully-populated `modelSummaries` and skip the walk.
+ */
+export async function requireActiveWorkspaceHandle(): Promise<LoadedWorkspaceHandle> {
+  if (!activeWorkspace) throw new Error("No active workspace");
+  if (!activeWorkspace.coId) throw new Error("Active workspace has no coId");
+  if (activeWorkspace.handle) return activeWorkspace.handle;
+
+  const settled = await WorkspaceCoMap.load(activeWorkspace.coId, {
+    resolve: {
+      metadata: true,
+      models: true,
+      modelSummaries: { $each: { $onError: "catch" }, $onError: "catch" },
+    },
+  });
+  if (!settled || ("$isLoaded" in settled && settled.$isLoaded === false)) {
+    throw new Error(`Could not load workspace ${activeWorkspace.coId}`);
+  }
+  await backfillModelSummaries(settled);
+  activeWorkspace.handle = settled;
+  return settled;
+}
+
+/**
+ * One-time migration for pre-lazy-hydration workspaces. If
+ * `modelSummaries` is absent or missing entries that exist in `models`,
+ * synthesize them from the deep-resolved `ModelCoMap` bodies. Runs once
+ * per process on first `requireActiveWorkspaceHandle` after upgrade; the
+ * cost (a single `models.$each` deep-load) is paid only when the
+ * summary record is incomplete.
+ */
+async function backfillModelSummaries(workspace: LoadedWorkspaceHandle): Promise<void> {
+  const w = workspace as unknown as {
+    $jazz: { owner: Group; set: (k: string, v: unknown) => void };
+    models: Record<string, unknown>;
+    modelSummaries?: Record<string, unknown> | null;
+  };
+  const modelIds = Object.keys(w.models ?? {});
+  const summaryIds = new Set(Object.keys(w.modelSummaries ?? {}));
+  if (modelIds.length > 0 && modelIds.every((id) => summaryIds.has(id))) return;
+
+  // Deep-load the models record so we can read each model's fields. This
+  // is the one path that still walks `models.$each` — it runs at most
+  // once per workspace per process.
+  const deep = await WorkspaceCoMap.load(workspace.$jazz.id, {
+    resolve: { models: { $each: { $onError: "catch" } } },
+  });
+  if (!deep || ("$isLoaded" in deep && deep.$isLoaded === false)) return;
+  const deepModels = (deep as unknown as { models: Record<string, unknown> }).models;
+
+  const owner = w.$jazz.owner;
+  let summariesRecord = w.modelSummaries as unknown as
+    | (Record<string, unknown> & { $jazz: { set: (k: string, v: unknown) => void } })
+    | null
+    | undefined;
+  if (!summariesRecord) {
+    const created = ModelSummariesMap.create({}, owner);
+    w.$jazz.set("modelSummaries", created);
+    summariesRecord = created as unknown as typeof summariesRecord;
+  }
+
+  for (const id of modelIds) {
+    if (summaryIds.has(id)) continue;
+    const model = deepModels[id] as
+      | undefined
+      | {
+          $isLoaded?: boolean;
+          $jazz: { id: string; refs: { svg?: unknown } };
+          id: string;
+          name: string;
+          description: string;
+          updatedAt: number;
+        };
+    if (!model || model.$isLoaded === false) continue;
+    const summary = ModelSummary.create(
+      {
+        id: model.id,
+        modelCoId: model.$jazz.id,
+        name: model.name,
+        description: model.description,
+        updatedAt: model.updatedAt,
+        hasSvg: model.$jazz.refs.svg !== undefined,
+      },
+      owner,
+    );
+    summariesRecord!.$jazz.set(id, summary);
+  }
 }
 
 export async function closeActiveWorkspace(): Promise<void> {
   if (!activeWorkspace) return;
   const ws = activeWorkspace;
   activeWorkspace = null;
+  ws.handle = null;
   await ws.release();
 }
 
@@ -398,7 +520,8 @@ export async function createJazzWorkspace(name: string): Promise<WorkspaceIndexE
     group,
   );
   const models = ModelsMap.create({}, group);
-  const workspace = WorkspaceCoMap.create({ metadata, models }, group);
+  const modelSummaries = ModelSummariesMap.create({}, group);
+  const workspace = WorkspaceCoMap.create({ metadata, models, modelSummaries }, group);
   const coId = workspace.$jazz.id;
 
   outputFileSync(join(ws.dir, ".jazz-id"), coId);
@@ -451,16 +574,15 @@ export async function joinJazzWorkspace(
 
   try {
     await openWorkspaceJazzNode(name);
-    // Deep-load the workspace tree (root + models record + each model)
-    // before returning. Without this, a subsequent `requireWorkspace`
-    // with `resolve: { models: { $each: {...} } }` may surface
-    // `$isLoaded: false` while children are still streaming, and the
-    // renderer's first `listModels` throws "Could not load workspace".
-    // The `$onError: "catch"` per child keeps a slow/unauthorized model
-    // from blocking the whole tree.
+    // Load only the summaries record so the renderer's first `listModels`
+    // works without blocking on every full `ModelCoMap` body. The full
+    // bodies stream in on demand via `loadModel` (jazz-performance.md
+    // §2.2). `$onError: "catch"` per child keeps a slow/unauthorized
+    // summary from blocking the whole tree.
     const loaded = await WorkspaceCoMap.load(coId, {
       resolve: {
-        models: { $each: { editLease: { $onError: "catch" } } },
+        metadata: true,
+        modelSummaries: { $each: { $onError: "catch" }, $onError: "catch" },
       },
     });
     if (!loaded || ("$isLoaded" in loaded && loaded.$isLoaded === false)) {
@@ -504,6 +626,7 @@ export async function enableJazzWorkspaceSync(
   workspace.metadata.$jazz.set("syncOptIn", true);
   workspace.metadata.$jazz.set("disallowRelay", false);
   workspace.metadata.$jazz.set("syncUrl", syncUrl);
+  if (activeWorkspace) activeWorkspace.handle = null;
 
   // Grant remote peers write access to the workspace group. Models and the
   // models map inherit this group at creation time (see createModel / the
@@ -537,9 +660,14 @@ export async function enableJazzWorkspaceSync(
   // times out: the node has nothing to sync because nothing was loaded.
   if (reopened.coId) {
     try {
+      // Preload only the summaries; full model bodies stream on demand.
+      // Matches the lazy-hydration path elsewhere — the previous deep
+      // `models.$each.editLease` load forced every model into RAM just
+      // to seed the sync manager.
       await WorkspaceCoMap.load(reopened.coId, {
         resolve: {
-          models: { $each: { editLease: { $onError: "catch" } } },
+          metadata: true,
+          modelSummaries: { $each: { $onError: "catch" }, $onError: "catch" },
         },
       });
     } catch (err) {

@@ -47,9 +47,37 @@ export const ModelCoMap = co.map({
 
 export const ModelsMap = co.record(z.string(), ModelCoMap);
 
+/**
+ * ModelSummary — denormalized projection of a single `ModelCoMap` carrying
+ * only the fields the model-list UI renders. `listModels` walks summaries
+ * instead of deep-resolving every `ModelCoMap` (which drags `graphJson`,
+ * `editLease`, and the SVG ref through the sync manager on every IPC call).
+ *
+ * Kept in lockstep with the parent `ModelCoMap` by main-process mutators
+ * (`createModel`, `updateModelGraph`, `updateModelDescription`,
+ * `uploadModelSvg`). `modelCoId` is the canonical pointer used by
+ * `loadModel` to resolve the full body directly.
+ *
+ * Rationale: jazz-performance.md §2.2 (action item #1).
+ */
+export const ModelSummary = co.map({
+  id: z.string(),
+  modelCoId: z.string(),
+  name: z.string(),
+  description: z.string(),
+  updatedAt: z.number(),
+  hasSvg: z.boolean(),
+});
+
+export const ModelSummariesMap = co.record(z.string(), ModelSummary);
+
 export const WorkspaceCoMap = co.map({
   metadata: WorkspaceMetadata,
   models: ModelsMap,
+  // Optional for schema-backward compatibility — workspaces created before
+  // lazy hydration landed do not have this record. `requireWorkspace` in
+  // the main process lazily creates + backfills it on first open.
+  modelSummaries: co.optional(ModelSummariesMap),
 });
 
 export const KlippelRoot = co.map({
