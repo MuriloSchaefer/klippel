@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   IconButton,
@@ -16,13 +16,17 @@ import {
 } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import { debounce } from "@kernel/utils";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import type { GraduationNode } from "../../../typings";
 import { MODULE_NAME } from "../../../constants";
 
-export default function GraduationItem({
-  node,
+type GraduationDisplay = Pick<GraduationNode, "id" | "label" | "order" | "amount">;
+
+const GraduationItem = React.memo(function GraduationItem({
+  nodeId,
   variationId,
   index,
   moveUp,
@@ -30,33 +34,45 @@ export default function GraduationItem({
   canMoveUp,
   canMoveDown,
 }: {
-  node: GraduationNode;
+  nodeId: string;
   variationId: string;
-  garmentId: string;
   index: number;
-  moveUp: () => void;
-  moveDown: () => void;
+  moveUp: (index: number) => void;
+  moveDown: (index: number) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
 }) {
-  const variation = useVariation({ variationId });
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
+  const { actions } = useVariationActions({ variationId });
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint } = keyboardShortcutsModule.components;
 
+  const node = useAppSelector(
+    (s: any): GraduationDisplay | undefined => {
+      const n = s.Graph?.graphs?.[variationId]?.nodes?.[nodeId] as
+        | GraduationNode
+        | undefined;
+      if (!n) return undefined;
+      return { id: n.id, label: n.label, order: n.order, amount: n.amount };
+    },
+    shallowEqual,
+  );
+
   const [isEditing, setIsEditing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [form, setForm] = useState(() => ({
-    label: node.label ?? "",
-    amount: node.amount ?? 0,
+    label: node?.label ?? "",
+    amount: node?.amount ?? 0,
   }));
 
   const rowRef = useRef<HTMLLIElement | null>(null);
   const refocusAfterEditRef = useRef(false);
 
   useEffect(() => {
-    setForm({ label: node.label ?? "", amount: node.amount ?? 0 });
-  }, [node.id, node.label, node.amount]);
+    if (node) setForm({ label: node.label ?? "", amount: node.amount ?? 0 });
+  }, [node?.id, node?.label, node?.amount]);
 
   useEffect(() => {
     if (!isEditing && refocusAfterEditRef.current) {
@@ -69,11 +85,13 @@ export default function GraduationItem({
     () =>
       debounce(
         (changes: Partial<GraduationNode>) =>
-          variation.actions.updateGraduation(node.id, changes),
+          actions.updateGraduation(nodeId, changes),
         400,
       ),
-    [node.id],
+    [nodeId],
   );
+
+  if (!node) return null;
 
   const handleAmountChange = (value: number) => {
     const sanitized =
@@ -83,7 +101,7 @@ export default function GraduationItem({
   };
 
   const handleSave = () => {
-    variation.actions.updateGraduation(node.id, {
+    actions.updateGraduation(nodeId, {
       label: form.label,
       amount: form.amount,
     });
@@ -216,7 +234,7 @@ export default function GraduationItem({
                 data-testid="graduation-item-delete"
                 aria-label="delete-graduation"
                 sx={{ "&:hover": { color: "error.main" } }}
-                onClick={() => variation.actions.removeGraduation(node.id)}
+                onClick={() => actions.removeGraduation(nodeId)}
               >
                 <DeleteOutlineSharp color="error" />
               </IconButton>
@@ -244,7 +262,7 @@ export default function GraduationItem({
                 data-testid="graduation-item-move-up"
                 aria-label="move-up"
                 disabled={!canMoveUp}
-                onClick={moveUp}
+                onClick={() => moveUp(index)}
               >
                 <ArrowUpward fontSize="small" />
               </IconButton>
@@ -258,7 +276,7 @@ export default function GraduationItem({
                 data-testid="graduation-item-move-down"
                 aria-label="move-down"
                 disabled={!canMoveDown}
-                onClick={moveDown}
+                onClick={() => moveDown(index)}
               >
                 <ArrowDownward fontSize="small" />
               </IconButton>
@@ -287,4 +305,6 @@ export default function GraduationItem({
       </Box>
     </ListItem>
   );
-}
+});
+
+export default GraduationItem;

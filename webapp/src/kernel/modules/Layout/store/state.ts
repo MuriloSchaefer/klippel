@@ -38,5 +38,6 @@ export const layoutInitialState: LayoutState = {
         type: "home",
       },
     },
+    dirtyViewports: {},
   },
 };

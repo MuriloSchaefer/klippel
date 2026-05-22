@@ -1,34 +1,35 @@
+import React from "react";
 import { List, ListItem, Typography, useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import type { IMaterialsModule } from "@system/modules/Materials";
-import { VariationGraphState, type MaterialNode } from "../../../typings";
+import { type MaterialNode } from "../../../typings";
 import AddMaterialButton from "./AddMaterialButton";
 import MaterialItem from "./components/MaterialItem";
-import { useMemo } from "react";
 
-export default function MaterialListAccordion({
+function MaterialListAccordion({
   variationId,
 }: Readonly<{
   variationId: string;
 }>) {
   const theme = useTheme();
-  const graphModule = useModule<IGraphModule>("Graph");
-  const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph<VariationGraphState>(variationId);
-  const materialNodes = useMemo(()=>{
-    return graph?.state
-    ? (Object.values(graph.state.nodes).filter(
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
+
+  const materialNodes = useAppSelector(
+    (s: any): MaterialNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
         (n): n is MaterialNode => n.type === "MATERIAL",
-      ))
-    : [];
-  }, [graph.state])
+      );
+    },
+    shallowEqual,
+  );
 
-
-  // Get materials module and hook
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const useMaterials = materialsModule.hooks.useMaterials;
-
   const materials = useMaterials();
 
   return (
@@ -57,3 +58,5 @@ export default function MaterialListAccordion({
     </>
   );
 }
+
+export default React.memo(MaterialListAccordion);

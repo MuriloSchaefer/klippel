@@ -1,27 +1,32 @@
+import React, { useMemo } from "react";
 import { Box, List, ListItem, Typography, useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
-import { useMemo } from "react";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import { IConverterModule } from "@system/modules/Converter";
 import { ProcessNode } from "../../../typings";
 
-export default function ProcessCostAccordion({
+function ProcessCostAccordion({
   variationId,
 }: Readonly<{ variationId: string }>) {
   const theme = useTheme();
-  const graphModule = useModule<IGraphModule>("Graph");
-  const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId);
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
 
   const converterModule = useModule<IConverterModule>("Converter");
   const converter = converterModule.hooks.useConverter();
   const useUnits = converterModule.hooks.useUnits;
 
-  const processNodes: ProcessNode[] = graph?.state
-    ? (Object.values(graph.state.nodes).filter(
-        (n: any) => n.type === "PROCESS"
-      ) as ProcessNode[])
-    : [];
+  const processNodes = useAppSelector(
+    (s: any): ProcessNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
+        (n) => n.type === "PROCESS",
+      ) as ProcessNode[];
+    },
+    shallowEqual,
+  );
 
   const units = useUnits(["reais11", "unitario18", "minutos249"] as string[]);
 
@@ -160,3 +165,5 @@ export default function ProcessCostAccordion({
     </List>
   );
 }
+
+export default React.memo(ProcessCostAccordion);

@@ -5,7 +5,7 @@ import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { IConverterModule } from "@system/modules/Converter";
 import { CompoundValue } from "@system/modules/Converter/typings";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 import { snapCostTime } from "../../../utils/snapCostTime";
 
@@ -20,7 +20,7 @@ export default function AddProcessButton({
   const { CompoundSelector } = converterModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
 
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
 
   const [form, setForm] = useState<{
     name: string;
@@ -108,7 +108,7 @@ export default function AddProcessButton({
           disabled={!form.name.trim()}
           handleConfirm={() => {
             if (!form.name.trim()) return;
-            variation.actions.addProcess(form);
+            actions.addProcess(form);
             resetForm();
           }}
         />,

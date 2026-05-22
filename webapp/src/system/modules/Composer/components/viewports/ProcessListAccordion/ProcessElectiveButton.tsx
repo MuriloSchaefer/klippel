@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   Box,
   FormControl,
@@ -11,10 +11,11 @@ import {
 } from "@mui/material";
 import { HowToVoteSharp } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import useVariation from "../../../hooks/useVariation";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 import type { ProcessNode, ElectiveNode } from "../../../typings";
 
@@ -30,38 +31,43 @@ export default function ProcessElectiveButton({
   onClose?: () => void;
 }) {
   const pointerModule = useModule<IPointerModule>("Pointer");
-  const graphModule = useModule<IGraphModule>("Graph");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const storeModule = useModule<Store>("Store");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
-  const { useGraph } = graphModule.hooks;
   const { ShortcutHint } = keyboardShortcutsModule.components;
+  const { useAppSelector } = storeModule.hooks;
 
-  const variation = useVariation({ variationId });
-  const graph = useGraph(variationId);
+  const { actions } = useVariationActions({ variationId });
 
   const [selectedElectiveId, setSelectedElectiveId] = useState<string | undefined>(
     processNode.electiveNodeId
   );
 
-  const electiveNodes = useMemo(() => {
-    if (!graph.state) return [];
-    return Object.values(graph.state.nodes).filter(
-      (n): n is ElectiveNode => n.type === "ELECTIVE"
-    );
-  }, [graph.state]);
+  const electiveNodes = useAppSelector(
+    (s: any): ElectiveNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return Object.values(nodes).filter(
+        (n: any): n is ElectiveNode => n.type === "ELECTIVE",
+      );
+    },
+    shallowEqual,
+  );
 
-  const currentElective = useMemo(() => {
-    if (!processNode.electiveNodeId || !graph.state) return null;
-    return graph.state.nodes[processNode.electiveNodeId] as ElectiveNode;
-  }, [processNode.electiveNodeId, graph.state]);
+  const currentElective = useAppSelector(
+    (s: any): ElectiveNode | null =>
+      processNode.electiveNodeId
+        ? (s.Graph?.graphs?.[variationId]?.nodes?.[processNode.electiveNodeId] as ElectiveNode) ?? null
+        : null,
+  );
 
   const handleConfirm = useCallback(() => {
-    variation.actions.updateProcess(processNode.id, {
+    actions.updateProcess(processNode.id, {
       electiveNodeId: selectedElectiveId || undefined,
     });
-  }, [selectedElectiveId, processNode.id, variation.actions]);
+  }, [selectedElectiveId, processNode.id, actions]);
 
   const tooltipTitle = currentElective
     ? `Vinculado ao eletivo "${currentElective.label}" (${currentElective.value ? "ativo" : "inativo"})`

@@ -1,52 +1,63 @@
-import { useMemo } from "react";
+import React, { useCallback, useRef } from "react";
 import { Box, List, ListItem, Typography, useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
-import useVariation from "../../../hooks/useVariation";
-import type { GraduationNode, VariationGraphState } from "../../../typings";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import AddGraduationButton from "./AddGraduationButton";
 import GraduationItem from "./GraduationItem";
 
-export default function GraduationListAccordion({
+function GraduationListAccordion({
   variationId,
   garmentId,
 }: Readonly<{ variationId: string; garmentId: string }>) {
   const theme = useTheme();
-  const variation = useVariation({ variationId });
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
+  const { actions } = useVariationActions({ variationId });
 
-  const graphModule = useModule<IGraphModule>("Graph");
-  const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph<VariationGraphState>(variationId);
+  // Returns sorted IDs only — strings are stable under shallowEqual even when
+  // the computation middleware adds computedProcessTime to graduation nodes.
+  const sortedGraduationIds = useAppSelector(
+    (s: any): string[] => {
+      const graph = s.Graph?.graphs?.[variationId];
+      if (!graph) return [];
+      const pairs: { id: string; order: number }[] = [];
+      for (const e of Object.values(graph.edges) as any[]) {
+        if (e.sourceId !== garmentId || e.type !== "HAS_GRADUATION") continue;
+        const n = graph.nodes[e.targetId];
+        if (!n || n.type !== "GRADUATION") continue;
+        pairs.push({ id: n.id, order: n.order ?? 0 });
+      }
+      pairs.sort((a, b) => a.order - b.order);
+      return pairs.map((p) => p.id);
+    },
+    shallowEqual,
+  );
 
-  const graduationEdges = graph?.state
-    ? Object.values(graph.state.edges).filter(
-        (e: any) => e.sourceId === garmentId && e.type === "HAS_GRADUATION",
-      )
-    : [];
+  const idsRef = useRef(sortedGraduationIds);
+  idsRef.current = sortedGraduationIds;
 
-  const graduationNodes = graduationEdges
-    .map((e: any) => graph.state?.nodes[e.targetId])
-    .filter(Boolean) as GraduationNode[];
+  const moveUp = useCallback(
+    (index: number) => {
+      if (index <= 0) return;
+      const ids = [...idsRef.current];
+      [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
+      actions.reorderGraduations(ids);
+    },
+    [actions],
+  );
 
-  const sortedGraduations = useMemo(() => {
-    const copy = [...graduationNodes];
-    copy.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    return copy;
-  }, [graduationNodes]);
-
-  const moveUp = (index: number) => {
-    if (index <= 0) return;
-    const ids = sortedGraduations.map((n) => n.id);
-    [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
-    variation.actions.reorderGraduations(ids);
-  };
-
-  const moveDown = (index: number) => {
-    if (index >= sortedGraduations.length - 1) return;
-    const ids = sortedGraduations.map((n) => n.id);
-    [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
-    variation.actions.reorderGraduations(ids);
-  };
+  const moveDown = useCallback(
+    (index: number) => {
+      const ids = idsRef.current;
+      if (index >= ids.length - 1) return;
+      const copy = [...ids];
+      [copy[index], copy[index + 1]] = [copy[index + 1], copy[index]];
+      actions.reorderGraduations(copy);
+    },
+    [actions],
+  );
 
   return (
     <>
@@ -55,24 +66,23 @@ export default function GraduationListAccordion({
       </Box>
 
       <List sx={{ p: 0 }}>
-        {sortedGraduations.length === 0 ? (
+        {sortedGraduationIds.length === 0 ? (
           <ListItem>
             <Typography color={theme.palette.text.secondary}>
               Nenhuma graduação
             </Typography>
           </ListItem>
         ) : (
-          sortedGraduations.map((node, idx) => (
+          sortedGraduationIds.map((id, idx) => (
             <GraduationItem
-              key={node.id}
-              node={node}
+              key={id}
+              nodeId={id}
               variationId={variationId}
-              garmentId={garmentId}
               index={idx}
-              moveUp={() => moveUp(idx)}
-              moveDown={() => moveDown(idx)}
+              moveUp={moveUp}
+              moveDown={moveDown}
               canMoveUp={idx > 0}
-              canMoveDown={idx < sortedGraduations.length - 1}
+              canMoveDown={idx < sortedGraduationIds.length - 1}
             />
           ))
         )}
@@ -80,3 +90,5 @@ export default function GraduationListAccordion({
     </>
   );
 }
+
+export default React.memo(GraduationListAccordion);

@@ -3,7 +3,7 @@ import { createListenerMiddleware, PayloadAction } from "@reduxjs/toolkit";
 import { saveSession, sessionSaved, switchTheme, themeSwitched } from "./actions";
 import { LayoutState } from "./state";
 import { persistTheme } from "./slice";
-import { persistActiveVP, persistViewportState } from "./viewports/slice";
+import { persistActiveVP, persistDirtyViewports, persistViewportState } from "./viewports/slice";
 import { persistVPGroupState } from "./viewports/groups/slice";
 import { persistPanelsState } from "./panels/slice";
 import { persistRibbonMenuState } from "./ribbonMenu/slice";
@@ -19,6 +19,7 @@ middlewares.startListening({
 
       Object.values(state.viewportManager.viewports).filter(vp => vp.name != 'home').forEach(persistViewportState)
       persistActiveVP(state.viewportManager.activeViewport)
+      persistDirtyViewports(state.viewportManager.dirtyViewports)
       Object.values(state.viewportManager.groups).forEach(persistVPGroupState)
 
       persistPanelsState(state.panels)

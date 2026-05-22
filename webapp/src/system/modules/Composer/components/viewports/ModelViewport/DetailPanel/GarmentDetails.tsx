@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo, useState } from "react";
 import useModule from "@kernel/hooks/useModule";
 import type { ILayoutModule } from "@kernel/modules/Layout";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
@@ -5,7 +6,6 @@ import { Box, FormControl, Input, InputLabel, Typography } from "@mui/material";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { debounce } from "@kernel/utils";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
-import { useEffect, useMemo, useState } from "react";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
 import {
   ELECTIVE_LIST_CONTEXT_ID,
@@ -19,7 +19,7 @@ import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
 import VisualizationListAccordion from "../../VisualizationListAccordion";
 import GraduationListAccordion from "../../../viewports/GraduationListAccordion";
 
-export default function GarmentDetails({
+function GarmentDetails({
   variationId,
   selectedPart = "garment",
 }: Readonly<{
@@ -159,3 +159,5 @@ export default function GarmentDetails({
     </Box>
   );
 }
+
+export default React.memo(GarmentDetails);

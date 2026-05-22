@@ -20,6 +20,11 @@ export const selectViewportStates = createSelector(
   (state) => state?.viewports
 );
 
+export const selectDirtyViewports = createSelector(
+  getViewportManagerState,
+  (state): { [name: string]: boolean } => state?.dirtyViewports ?? {}
+);
+
 export type ViewportStateSelector = <O = ViewportState>(
   state: ViewportState
 ) => O;

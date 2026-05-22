@@ -1,17 +1,27 @@
+import React from "react";
 import { Box, List, useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/Graphs";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import AddProcessButton from "./AddProcessButton";
 import ProcessItem from "./ProcessItem";
 
-export default function ProcessListAccordion({
+function ProcessListAccordion({
   variationId,
 }: Readonly<{ variationId: string; parentId: string }>) {
-  const graphModule = useModule<IGraphModule>("Graph");
+  const storeModule = useModule<Store>("Store");
   const theme = useTheme();
+  const { useAppSelector } = storeModule.hooks;
 
-  const processNodes = graphModule.hooks.useGraph(variationId, (g) =>
-    Object.values(g?.nodes ?? {}).filter((n) => n.type === "PROCESS"),
+  const processNodeIds = useAppSelector(
+    (s: any): string[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[])
+        .filter((n) => n.type === "PROCESS")
+        .map((n) => n.id as string);
+    },
+    shallowEqual,
   );
 
   return (
@@ -19,7 +29,7 @@ export default function ProcessListAccordion({
       <Box sx={{ display: "flex", justifyContent: "flex-start", mb: 1 }}>
         <AddProcessButton variationId={variationId} />
       </Box>
-      {!processNodes.state || processNodes.state.length === 0 ? (
+      {processNodeIds.length === 0 ? (
         <>Nenhum processo adicionado</>
       ) : (
         <List
@@ -33,11 +43,11 @@ export default function ProcessListAccordion({
             },
           }}
         >
-          {processNodes.state.map((process) => (
+          {processNodeIds.map((id) => (
             <ProcessItem
-              key={process.id}
+              key={id}
               variationId={variationId}
-              nodeId={process.id}
+              nodeId={id}
             />
           ))}
         </List>
@@ -45,3 +55,5 @@ export default function ProcessListAccordion({
     </Box>
   );
 }
+
+export default React.memo(ProcessListAccordion);

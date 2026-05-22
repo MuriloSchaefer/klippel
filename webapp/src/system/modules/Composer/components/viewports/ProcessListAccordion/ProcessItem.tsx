@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Chip,
@@ -13,23 +13,24 @@ import {
   DeleteOutlineSharp,
 } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { IConverterModule } from "@system/modules/Converter";
 import { IMaterialsModule } from "@system/modules/Materials";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import {
   ConsumesEdge,
   ElectiveNode,
   MaterialNode,
   ProcessNode,
 } from "../../../typings";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 import ProcessEditButton from "./ProcessEditButton";
 import ProcessElectiveButton from "./ProcessElectiveButton";
 import ProcessMaterialUsageButton from "./processMaterialUsageButton";
 
-export default function ProcessItem({
+function ProcessItem({
   variationId,
   nodeId,
 }: {
@@ -37,42 +38,78 @@ export default function ProcessItem({
   nodeId: string;
 }) {
   const theme = useTheme();
-  const graphModule = useModule<IGraphModule>("Graph");
+  const storeModule = useModule<Store>("Store");
   const converterModule = useModule<IConverterModule>("Converter");
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint } = keyboardShortcutsModule.components;
+  const { useAppSelector } = storeModule.hooks;
 
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
   const { useUnits } = converterModule.hooks;
   const { useMaterials, useMaterialTypes } = materialsModule.hooks;
 
-  const graph = graphModule.hooks.useGraph(variationId);
-  const node = useMemo(
-    () => graph.state?.nodes[nodeId] as ProcessNode,
-    [graph.state, nodeId],
+  // Custom equality: ignore computed write-back fields so computation middleware
+  // (which adds computedTimePerUnit/timeAudit) doesn't trigger unnecessary re-renders.
+  const node = useAppSelector(
+    (s: any) =>
+      s.Graph?.graphs?.[variationId]?.nodes?.[nodeId] as ProcessNode | undefined,
+    (prev, next) => {
+      if (prev === next) return true;
+      if (!prev || !next) return false;
+      return (
+        prev.id === next.id &&
+        prev.label === next.label &&
+        prev.electiveNodeId === next.electiveNodeId &&
+        prev.costTime === next.costTime &&
+        prev.costMoney === next.costMoney
+      );
+    },
   );
+
+  const linkedElective = useAppSelector((s: any): ElectiveNode | null => {
+    const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+    if (!nodes) return null;
+    const n = nodes[nodeId] as ProcessNode | undefined;
+    if (!n?.electiveNodeId) return null;
+    return (nodes[n.electiveNodeId] as ElectiveNode) ?? null;
+  });
+
+  const materialsConsumptions = useAppSelector(
+    (s: any): ConsumesEdge[] => {
+      const edges = s.Graph?.graphs?.[variationId]?.edges;
+      if (!edges) return [];
+      return (Object.values(edges) as any[]).filter(
+        (e): e is ConsumesEdge => e.type === "CONSUMES" && e.sourceId === nodeId,
+      );
+    },
+    shallowEqual,
+  );
+
+  const graphMaterialNodes = useAppSelector(
+    (s: any): Record<string, MaterialNode> => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return {};
+      const result: Record<string, MaterialNode> = {};
+      for (const n of Object.values(nodes) as any[]) {
+        if (n.type === "MATERIAL") result[n.id] = n as MaterialNode;
+      }
+      return result;
+    },
+    shallowEqual,
+  );
+
   const units = useUnits();
   const materials = useMaterials();
   const materialTypes = useMaterialTypes();
 
-  const linkedElective = useMemo(() => {
-    if (!node?.electiveNodeId || !graph.state) return null;
-    return graph.state.nodes[node.electiveNodeId] as ElectiveNode;
-  }, [node?.electiveNodeId, graph.state]);
-
-  const materialsConsumptions = useMemo(
-    () =>
-      Object.values(graph.state?.edges ?? {}).filter(
-        (e): e is ConsumesEdge => e.type === "CONSUMES" && e.sourceId === nodeId,
-      ),
-    [graph.state?.edges, nodeId],
-  );
-
   const [isFocused, setIsFocused] = useState(false);
   const rowRef = useRef<HTMLDivElement | null>(null);
   const refocusAfterEditRef = useRef(false);
+  const handleClose = useCallback(() => {
+    refocusAfterEditRef.current = true;
+  }, []);
 
   useEffect(() => {
     if (refocusAfterEditRef.current) {
@@ -81,7 +118,7 @@ export default function ProcessItem({
     }
   });
 
-  if (!graph.state || !units || !node) return null;
+  if (!units || !node) return null;
 
   return (
     <Box
@@ -163,10 +200,10 @@ export default function ProcessItem({
             }}
           >
             {materialsConsumptions.map((mc) => {
-              const mat =
-                materials![
-                  (graph.state!.nodes[mc.targetId] as MaterialNode).materialId
-                ];
+              const matNode = graphMaterialNodes[mc.targetId];
+              if (!matNode || !materials) return null;
+              const mat = materials[matNode.materialId];
+              if (!mat) return null;
               const matType = materialTypes[mat.type];
               const schema = matType.schemas[mat.schemaVersion];
               const extraAttr = mat.attributes[schema.selector.extra];
@@ -235,7 +272,7 @@ export default function ProcessItem({
                 next && next.matches('[data-testid="process-item"]')
                   ? next
                   : fallback;
-              variation.actions.removeProcess(node.id);
+              actions.removeProcess(node.id);
               if (target) {
                 setTimeout(() => target.focus(), 0);
               }
@@ -248,28 +285,24 @@ export default function ProcessItem({
           variationId={variationId}
           processNode={node}
           isFocused={isFocused}
-          onClose={() => {
-            refocusAfterEditRef.current = true;
-          }}
+          onClose={handleClose}
         />
         <ProcessElectiveButton
           variationId={variationId}
           processNode={node}
           isFocused={isFocused}
-          onClose={() => {
-            refocusAfterEditRef.current = true;
-          }}
+          onClose={handleClose}
         />
         <ProcessMaterialUsageButton
           variationId={variationId}
           processNodeId={node.id}
           isFocused={isFocused}
-          onClose={() => {
-            refocusAfterEditRef.current = true;
-          }}
+          onClose={handleClose}
         />
       </Box>
       <Divider />
     </Box>
   );
 }
+
+export default React.memo(ProcessItem);

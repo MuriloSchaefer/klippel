@@ -66,7 +66,8 @@
     "test:e2e": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 jest",
     "test:e2e:headless": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 KLIPPEL_USE_XVFB=1 jest",
     "test:e2e:collaborative": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_DEV_LOG=1 jest --testPathPatterns tests/collaborative/",
-    "test:e2e:collaborative:headless": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_USE_XVFB=1 xvfb-run -a --server-args=\"-screen 0 1280x1024x24\" jest --testPathPatterns tests/collaborative/"
+    "test:e2e:collaborative:headless": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_USE_XVFB=1 xvfb-run -a --server-args=\"-screen 0 1280x1024x24\" jest --testPathPatterns tests/collaborative/",
+    "rebuild:native": "node -e \"require('@electron/rebuild').rebuild({buildPath:process.cwd(),electronVersion:require('./node_modules/electron/package.json').version,onlyModules:['better-sqlite3'],force:true}).then(()=>console.log('done')).catch(e=>{console.error(e);process.exit(1)})\""
   },
   "repository": {
     "url": "git@github.com:MuriloSchaefer/klippel.git"

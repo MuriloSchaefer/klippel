@@ -9,7 +9,7 @@ import {
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 
 export default function AddGraduationButton({
@@ -21,7 +21,7 @@ export default function AddGraduationButton({
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
   const [names, setNames] = useState("");
 
   async function handleConfirm() {
@@ -31,7 +31,7 @@ export default function AddGraduationButton({
       .filter(Boolean);
     if (splitNames.length === 0) return;
 
-    variation.actions.addGraduations(splitNames, garmentId);
+    actions.addGraduations(splitNames, garmentId);
     setNames("");
   }
 
