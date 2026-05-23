@@ -9,7 +9,7 @@ import { IPointerModule } from "@kernel/modules/Pointer";
 import AddSharpIcon from "@mui/icons-material/AddSharp";
 
 import { useTheme } from "@mui/material/styles";
-import useVariation from "@system/modules/Composer/hooks/useVariation";
+import { useVariationActions } from "@system/modules/Composer/hooks/useVariationActions";
 
 interface AddPartForm {
   name: string;
@@ -25,7 +25,7 @@ export const AddPartButton = ({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
 
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
   const theme = useTheme();
 
   const [form, setForm] = useState<AddPartForm>({
@@ -33,7 +33,7 @@ export const AddPartButton = ({
   });
 
   const handleSubmit = useCallback(() => {
-    variation.actions.addPart(form.name, parentId);
+    actions.addPart(form.name, parentId);
   }, [form]);
 
   return (

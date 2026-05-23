@@ -1,4 +1,5 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
+import { batch } from "react-redux";
 import {
   graphLoaded,
   nodeAdded,
@@ -59,6 +60,7 @@ computationMiddlewares.startListening({
       (n): n is MaterialNode => (n as any).type === "MATERIAL"
     );
 
+    const materialUpdates: Array<{ nodeId: string; changes: object }> = [];
     for (const materialNode of materialNodes) {
       const materialState = state.Materials?.materials[materialNode.materialId];
       if (!materialState) continue;
@@ -70,13 +72,10 @@ computationMiddlewares.startListening({
         conversionGraphState,
       });
 
-      listenerApi.dispatch(
-        updateNode({
-          graphId,
-          nodeId: materialNode.id,
-          changes: { computedCost: cost, computedTotal: total, costAudit: audit },
-        })
-      );
+      materialUpdates.push({
+        nodeId: materialNode.id,
+        changes: { computedCost: cost, computedTotal: total, costAudit: audit },
+      });
     }
 
     const processNodes = Object.values(graphState.nodes ?? {}).filter(
@@ -84,6 +83,7 @@ computationMiddlewares.startListening({
     );
 
     const processTimeResults: { [processNodeId: string]: ProcessNode["computedTimePerUnit"] } = {};
+    const processUpdates: Array<{ nodeId: string; changes: object }> = [];
     for (const processNode of processNodes) {
       const { time, audit } = computeProcessTime({
         processNodeId: processNode.id,
@@ -91,17 +91,14 @@ computationMiddlewares.startListening({
         conversionGraphState,
       });
       processTimeResults[processNode.id] = time;
-      listenerApi.dispatch(
-        updateNode({
-          graphId,
-          nodeId: processNode.id,
-          changes: {
-            computedTimePerUnit: time,
-            timeAudit: audit,
-            computedTimeFromCostTimeHash: costTimeHash(processNode.costTime),
-          },
-        })
-      );
+      processUpdates.push({
+        nodeId: processNode.id,
+        changes: {
+          computedTimePerUnit: time,
+          timeAudit: audit,
+          computedTimeFromCostTimeHash: costTimeHash(processNode.costTime),
+        },
+      });
     }
 
     // Build a graphState snapshot with the fresh per-process results so
@@ -126,20 +123,31 @@ computationMiddlewares.startListening({
     const graduationNodes = Object.values(graphState.nodes ?? {}).filter(
       (n): n is GraduationNode => (n as any).type === "GRADUATION"
     );
+    const graduationUpdates: Array<{ nodeId: string; changes: object }> = [];
     for (const g of graduationNodes) {
       const r = graduationResults[g.id];
       if (!r) continue;
-      listenerApi.dispatch(
-        updateNode({
-          graphId,
-          nodeId: g.id,
-          changes: {
-            computedProcessTime: r.computedProcessTime,
-            processTimeAudit: r.processTimeAudit,
-          },
-        })
-      );
+      graduationUpdates.push({
+        nodeId: g.id,
+        changes: {
+          computedProcessTime: r.computedProcessTime,
+          processTimeAudit: r.processTimeAudit,
+        },
+      });
     }
+
+    // Dispatch all write-backs in a single React batch — one render commit instead of three.
+    batch(() => {
+      for (const { nodeId, changes } of materialUpdates) {
+        listenerApi.dispatch(updateNode({ graphId, nodeId, changes }));
+      }
+      for (const { nodeId, changes } of processUpdates) {
+        listenerApi.dispatch(updateNode({ graphId, nodeId, changes }));
+      }
+      for (const { nodeId, changes } of graduationUpdates) {
+        listenerApi.dispatch(updateNode({ graphId, nodeId, changes }));
+      }
+    });
   },
 });
 

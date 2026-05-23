@@ -4,7 +4,6 @@ export interface ViewportState<S = any> {
     type: string;
     group?: string
     extra?: S
-    hasChanged?: boolean
   }
   export interface ViewportGroupState {
     name: string;
@@ -17,4 +16,5 @@ export interface ViewportState<S = any> {
     groups: ViewportGroups
     activeViewport: string;
     viewports: {[name: string]: ViewportState}
+    dirtyViewports: {[name: string]: boolean}
   }

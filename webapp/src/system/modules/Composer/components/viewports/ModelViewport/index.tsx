@@ -1,15 +1,15 @@
-// Removed duplicate import of useModule
 import MaterialListAccordion from "../MaterialListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import { MATERIAL_LIST_CONTEXT_ID, MODULE_NAME, PROCESS_TIME_LIST_CONTEXT_ID } from "../../../constants";
+import {
+  MATERIAL_LIST_CONTEXT_ID,
+  MODULE_NAME,
+  PROCESS_TIME_LIST_CONTEXT_ID,
+} from "../../../constants";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
-import SaveModelButton from "./SaveModelButton";
-import LeaseBanner from "./LeaseBanner";
 import CompositionTree from "../CompositionTree/CompositionTree";
-import useVariation from "../../../hooks/useVariation";
-import useEditLease from "../../../hooks/useEditLease";
+import LeaseStatusRow from "./LeaseStatusRow";
 import SVGView from "./SVGView";
 import GraphView from "./GraphView";
 import { Box, Button, ButtonGroup } from "@mui/material";
@@ -23,14 +23,16 @@ import { ISVGModule } from "@kernel/modules/SVG";
 import { ErrorBoundary } from "react-error-boundary";
 import { fallbackRender } from "@kernel/App";
 import React, { useMemo } from "react";
+import ViewportNotificationsTray from "@kernel/modules/Layout/components/SystemTray/ViewportNotificationsTray";
 
 function ModelViewport() {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const svgModule = useModule<ISVGModule>("SVG");
-  const keyboardShortcuts = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
-  const { ShortcutProvider, FocusShortcutProvider, ShortcutHint } = keyboardShortcuts.components;
-  const { ViewportNotificationsTray, SettingsPanel, Accordion, DetailsPanel } =
-    layoutModule.components;
+  const keyboardShortcuts =
+    useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
+  const { ShortcutProvider, FocusShortcutProvider, ShortcutHint } =
+    keyboardShortcuts.components;
+  const { SettingsPanel, Accordion, DetailsPanel } = layoutModule.components;
 
   const { useActiveViewport, useViewportManager } = layoutModule.hooks;
   const { SVGEditorToolkit } = svgModule.components;
@@ -38,137 +40,139 @@ function ModelViewport() {
   const activeVP = useActiveViewport();
   const vpManager = useViewportManager();
 
-  const variation = useVariation({ variationId: activeVP.extra.variationId });
-  const leaseStatus = useEditLease(variation.state?.id);
+  const variationId = activeVP.extra.variationId as string;
 
   const view = useMemo(() => {
     switch (activeVP.extra.view) {
       case "svg":
-        return <SVGView variationId={activeVP.extra.variationId as string} />;
+        return <SVGView variationId={variationId} />;
       case "graph":
-        return <GraphView variationId={activeVP.extra.variationId as string} />;
+        return <GraphView variationId={variationId} />;
       default:
         return <>Erro! tipo de visualização não encontrada</>;
     }
-  }, [activeVP.extra.view, activeVP.extra.variationId]);
+  }, [activeVP.extra.view, variationId]);
 
   return (
     <SVGEditorToolkit>
       <ShortcutProvider contextId={`${MODULE_NAME}/ModelViewport`}>
-      <Box
-        sx={{
-          position: "relative",
-          height: "100%",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <ViewportNotificationsTray>
-          <SaveModelButton
-            variationId={activeVP.extra.variationId as string}
-            disabled={leaseStatus.kind === "held_by_other"}
-          />
-        </ViewportNotificationsTray>
-        <LeaseBanner status={leaseStatus} />
+        <Box
+          sx={{
+            position: "relative",
+            height: "100%",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <ViewportNotificationsTray>
+            <LeaseStatusRow variationId={variationId} />
+          </ViewportNotificationsTray>
 
-        <SettingsPanel>
-          <Accordion
-            name="Composição"
-            icon={<AccountTreeSharpIcon />}
-            summary="composição da peça"
-          >
-            <CompositionTree variationId={activeVP.extra.variationId} />
-          </Accordion>
+          <SettingsPanel>
+            <Accordion
+              name="Composição"
+              icon={<AccountTreeSharpIcon />}
+              summary="composição da peça"
+            >
+              <CompositionTree variationId={variationId} />
+            </Accordion>
             <FocusShortcutProvider contextId={MATERIAL_LIST_CONTEXT_ID}>
               <Accordion
-              shortcutHint={`${MODULE_NAME}/MaterialList/focus`}
+                shortcutHint={`${MODULE_NAME}/MaterialList/focus`}
                 name="Materiais"
                 icon={<WidgetsSharpIcon />}
                 summary="Materiais referenciados na composição"
               >
-                <MaterialListAccordion variationId={activeVP.extra.variationId} />
+                <MaterialListAccordion variationId={variationId} />
               </Accordion>
             </FocusShortcutProvider>
-          <FocusShortcutProvider contextId={PROCESS_TIME_LIST_CONTEXT_ID}>
+            <FocusShortcutProvider contextId={PROCESS_TIME_LIST_CONTEXT_ID}>
+              <Accordion
+                shortcutHint={`${MODULE_NAME}/ProcessTimeList/focus`}
+                name="Tempo"
+                icon={<AccessTimeSharpIcon />}
+                summary="Resumo de tempo por processo"
+              >
+                <ProcessTimeAccordion variationId={variationId} />
+              </Accordion>
+            </FocusShortcutProvider>
             <Accordion
-              shortcutHint={`${MODULE_NAME}/ProcessTimeList/focus`}
-              name="Tempo"
-              icon={<AccessTimeSharpIcon />}
-              summary="Resumo de tempo por processo"
+              name="Custo"
+              icon={<PaidSharpIcon />}
+              summary="Resumo de custo por processo"
             >
-              <ProcessTimeAccordion variationId={activeVP.extra.variationId} />
+              <ProcessCostAccordion variationId={variationId} />
             </Accordion>
-          </FocusShortcutProvider>
-          <Accordion
-            name="Custo"
-            icon={<PaidSharpIcon />}
-            summary="Resumo de custo por processo"
+          </SettingsPanel>
+
+          <DetailsPanel>
+            <DetailPanel
+              variationId={variationId}
+              selectedPart={activeVP.extra.selectedPart}
+            />
+          </DetailsPanel>
+
+          <Box
+            id="composer-active-view"
+            data-active-view={activeVP.extra.view}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
-            <ProcessCostAccordion variationId={activeVP.extra.variationId} />
-          </Accordion>
-        </SettingsPanel>
+            <ErrorBoundary fallbackRender={fallbackRender}>
+              {view}
+            </ErrorBoundary>
+          </Box>
 
-        <DetailsPanel>
-          <DetailPanel
-            variationId={activeVP.extra.variationId}
-            selectedPart={activeVP.extra.selectedPart}
-          />
-        </DetailsPanel>
-
-        <Box
-          id="composer-active-view"
-          data-active-view={activeVP.extra.view}
-          sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
-        >
-          <ErrorBoundary fallbackRender={fallbackRender}>{view}</ErrorBoundary>
-        </Box>
-
-        <Box sx={{ position: "absolute", top: 16, left: 16 }}>
-          <ButtonGroup
-            variant="contained"
-            aria-label="alterar modo de visualização"
-          >
-            <ShortcutHint
-              shortcutId={`${MODULE_NAME}/ModelViewport/viewAsGraph`}
-              placement="bottom-right"
+          <Box sx={{ position: "absolute", top: 16, left: 16 }}>
+            <ButtonGroup
+              variant="contained"
+              aria-label="alterar modo de visualização"
             >
-              <Button
-                id="composer-view-graph"
-                onClick={() => {
-                  vpManager.functions.setExtras(activeVP.name, {
-                    ...activeVP.extra,
-                    view: "graph",
-                  });
-                }}
-                variant={"contained"}
+              <ShortcutHint
+                shortcutId={`${MODULE_NAME}/ModelViewport/viewAsGraph`}
+                placement="bottom-right"
               >
-                Grafo
-              </Button>
-            </ShortcutHint>
-            <ShortcutHint
-              shortcutId={`${MODULE_NAME}/ModelViewport/viewAsSVG`}
-              placement="bottom-right"
-            >
-              <Button
-                id="composer-view-svg"
-                onClick={() => {
-                  vpManager.functions.setExtras(activeVP.name, {
-                    ...activeVP.extra,
-                    view: "svg",
-                  });
-                }}
-                sx={{
-                  ":hover": { cursor: "pointer", color: "primary.main" },
-                }}
-                variant={"contained"}
+                <Button
+                  id="composer-view-graph"
+                  onClick={() => {
+                    vpManager.functions.setExtras(activeVP.name, {
+                      ...activeVP.extra,
+                      view: "graph",
+                    });
+                  }}
+                  variant={"contained"}
+                >
+                  Grafo
+                </Button>
+              </ShortcutHint>
+              <ShortcutHint
+                shortcutId={`${MODULE_NAME}/ModelViewport/viewAsSVG`}
+                placement="bottom-right"
               >
-                Desenho
-              </Button>
-            </ShortcutHint>
-          </ButtonGroup>
+                <Button
+                  id="composer-view-svg"
+                  onClick={() => {
+                    vpManager.functions.setExtras(activeVP.name, {
+                      ...activeVP.extra,
+                      view: "svg",
+                    });
+                  }}
+                  sx={{
+                    ":hover": { cursor: "pointer", color: "primary.main" },
+                  }}
+                  variant={"contained"}
+                >
+                  Desenho
+                </Button>
+              </ShortcutHint>
+            </ButtonGroup>
+          </Box>
         </Box>
-      </Box>
       </ShortcutProvider>
     </SVGEditorToolkit>
   );

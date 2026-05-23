@@ -1,25 +1,30 @@
+import React from "react";
 import { Box, List, ListItem, Typography, useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
-import type { VariationGraphState, VisualizationNode } from "../../../typings";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
+import type { VisualizationNode } from "../../../typings";
 import AddVisualizationButton from "./AddVisualizationButton";
 import VisualizationItem from "./VisualizationItem";
 
-export default function VisualizationListAccordion({
+function VisualizationListAccordion({
   variationId,
   garmentId,
 }: Readonly<{ variationId: string; garmentId: string }>) {
   const theme = useTheme();
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
 
-  const graphModule = useModule<IGraphModule>("Graph");
-  const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph<VariationGraphState>(variationId);
-
-  const visualizationNodes = graph?.state
-    ? (Object.values(graph.state.nodes).filter(
+  const visualizationNodes = useAppSelector(
+    (s: any): VisualizationNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
         (n): n is VisualizationNode => n.type === "VISUALIZATION",
-      ))
-    : [];
+      );
+    },
+    shallowEqual,
+  );
 
   return (
     <Box data-testid="visualization-list">
@@ -50,3 +55,5 @@ export default function VisualizationListAccordion({
     </Box>
   );
 }
+
+export default React.memo(VisualizationListAccordion);

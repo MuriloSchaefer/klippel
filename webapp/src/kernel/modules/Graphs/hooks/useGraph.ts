@@ -1,4 +1,5 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useCallback } from "react";
+import { useStore } from "react-redux";
 import { createSelector } from "reselect";
 import { Edge } from "@kernel/modules/Graphs/interfaces/Edge";
 import { Node } from "@kernel/modules/Graphs/interfaces/Node";
@@ -94,10 +95,12 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
   );
   const graphState = useAppSelector<R | undefined>(selector);
 
-  const innerState = useAppSelector(
-    (state: { Graph: GraphsManagerState } | undefined) =>
-      state?.Graph && state.Graph.graphs[graphId],
+  const store = useStore();
+  const getInnerState = useCallback(
+    () => (store.getState() as any)?.Graph?.graphs?.[graphId] as GraphState | undefined,
+    [graphId],
   );
+
   return {
     id: graphId,
     state: graphState,
@@ -122,14 +125,17 @@ const useGraph = <G extends GraphState = GraphState, R = G>(
         dispatch(addEdge({ graphId, edge }));
       },
       updateEdge: (edgeId, changes) => {
-        const currentEdge = innerState?.edges[edgeId];
+        const currentEdge = getInnerState()?.edges[edgeId];
         if (!currentEdge) throw Error("edge do not exits");
         dispatch(updateEdge({ graphId, edgeId, changes }));
       },
       removeEdge: (id) => {
         dispatch(removeEdge({ graphId, edgeId: id }));
       },
-      nodeExists: (nodeId) => (innerState ? nodeId in innerState.nodes : false),
+      nodeExists: (nodeId) => {
+        const g = getInnerState();
+        return g ? nodeId in g.nodes : false;
+      },
 
       search: (
         strategy,

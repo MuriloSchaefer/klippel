@@ -24,7 +24,7 @@ import { ViewportState } from "../../store/viewports/state";
 import { VIEWPORT_NOTIFICATIONS_ID } from "../../constants";
 import { selectAllGroups } from "../../store/viewports/groups/selectors";
 import useActiveViewport from "../../hooks/useActiveViewport";
-import { selectViewportStates } from "../../store/viewports/selectors";
+import { selectDirtyViewports, selectViewportStates } from "../../store/viewports/selectors";
 
 type GroupedViewports = {
   notGrouped: ViewportState[];
@@ -45,6 +45,7 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
 
   const activeViewport = useActiveViewport();
   const viewports = useAppSelector(selectViewportStates);
+  const dirtyViewports = useAppSelector(selectDirtyViewports);
 
   const adaptedState = useMemo(
     () =>
@@ -131,10 +132,10 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                           }}
                         >
                           <Box sx={{ display: "flex", gap: 1 }}>
-                            {vp.hasChanged && <span>* </span>}
+                            {dirtyViewports[vp.name] && <span>* </span>}
                             <span>{vp.title}</span>
                           </Box>
-                          {vp.hasChanged ? (
+                          {dirtyViewports[vp.name] ? (
                             <PointerContainer
                               component={<span>Fechar sem salvar?</span>}
                               onConfirm={() => handleCloseViewport(vp.name)}
@@ -195,8 +196,8 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                           justifyContent: "space-between",
                         }}
                       >
-                        <span>{vp.hasChanged ? `*${vp.title}` : vp.title}</span>
-                        {vp.hasChanged ? (
+                        <span>{dirtyViewports[vp.name] ? `*${vp.title}` : vp.title}</span>
+                        {dirtyViewports[vp.name] ? (
                           <PointerContainer
                             component={<span>Fechar sem salvar?</span>}
                             onConfirm={() => handleCloseViewport(vp.name)}

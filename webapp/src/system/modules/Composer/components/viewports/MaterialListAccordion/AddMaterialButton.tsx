@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { shallowEqual } from "react-redux";
 import {
   Button,
   Box,
@@ -10,10 +11,10 @@ import {
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IMaterialsModule } from "@system/modules/Materials";
-import useVariation from "../../../hooks/useVariation";
-import { IGraphModule } from "@kernel/modules/Graphs";
+import { Store } from "@kernel/modules/Store";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { MODULE_NAME } from "../../../constants";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 
 export default function AddMaterialButton({
   variationId,
@@ -23,22 +24,34 @@ export default function AddMaterialButton({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const theme = useTheme();
   const materialModule = useModule<IMaterialsModule>("Materials");
-  const graphModule = useModule<IGraphModule>("Graph");
+  const storeModule = useModule<Store>("Store");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
   const { MaterialTypeMultiSelector, MaterialSelector, MaterialTypeSelector } =
     materialModule.components;
+  const { useAppSelector } = storeModule.hooks;
 
-  const variation = useVariation({ variationId });
-  const graph = graphModule.hooks.useGraph(variationId);
+  const { actions } = useVariationActions({ variationId });
+
+  const nodeKeys = useAppSelector(
+    (s: any): string[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      return nodes ? Object.keys(nodes) : [];
+    },
+    shallowEqual,
+  );
+
   const [selectedType, setSelectedType] = useState<string>("");
   const [selectedMaterial, setSelectedMaterial] = useState<number | null>(null);
   const [label, setLabel] = useState<string>(
     `material-${Math.random().toString(36).substring(2, 8)}`
   );
   const [typeRestrictions, setTypeRestrictions] = useState<string[]>([]);
+
+  const normalizedLabel = label.toLowerCase().replaceAll(/\s+/g, "-");
+  const labelExists = nodeKeys.includes(normalizedLabel);
 
   const resetForm = () => {
     setSelectedType("");
@@ -74,13 +87,9 @@ export default function AddMaterialButton({
                     </Typography>
                     <Typography
                       sx={{
-                        color:
-                          label && graph.state &&
-                          !Object.keys(graph.state.nodes).includes(
-                            label.toLowerCase().replaceAll(/\s+/g, "-")
-                          )
-                            ? theme.palette.success.main
-                            : theme.palette.error.main,
+                        color: label && !labelExists
+                          ? theme.palette.success.main
+                          : theme.palette.error.main,
                       }}
                     >
                       Deve ser único
@@ -149,24 +158,14 @@ export default function AddMaterialButton({
         <ConfirmAndCloseButton
           key="confirm"
           data-testid="add-material-confirm"
-          disabled={
-            !selectedType ||
-            !selectedMaterial ||
-            !label ||
-            (graph.state &&
-            Object.keys(graph.state!.nodes).includes(
-              label.toLowerCase().replaceAll(/\s+/g, "-")
-            ))
-          }
+          disabled={!selectedType || !selectedMaterial || !label || labelExists}
           handleConfirm={() => {
             if (selectedType && selectedMaterial) {
-              // Persist to graph
-              variation.actions.addMaterial(
+              actions.addMaterial(
                 selectedMaterial,
                 label,
                 typeRestrictions
               );
-              // Focus the freshly added row once it mounts.
               const addedLabel = label;
               const start = Date.now();
               const tryFocus = () => {

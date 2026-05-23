@@ -3,7 +3,7 @@ import { Box, IconButton, ListItem, Switch, Typography, useTheme } from "@mui/ma
 import { DeleteOutlineSharp } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import type { ElectiveNode } from "../../../typings";
 import { MODULE_NAME } from "../../../constants";
 import ElectiveEditButton from "./ElectiveEditButton";
@@ -16,7 +16,7 @@ export default function ElectiveItem({
   variationId: string;
 }) {
   const theme = useTheme();
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint } = keyboardShortcutsModule.components;
@@ -73,7 +73,7 @@ export default function ElectiveItem({
           data-testid="elective-item-value"
           checked={!!node.value}
           onChange={(_, checked) =>
-            variation.actions.updateElective(node.id, { value: checked })
+            actions.updateElective(node.id, { value: checked })
           }
           color="primary"
         />
@@ -101,7 +101,7 @@ export default function ElectiveItem({
                 next && next.matches('[data-testid="elective-item"]')
                   ? next
                   : fallback;
-              variation.actions.removeElective(node.id);
+              actions.removeElective(node.id);
               if (target) {
                 setTimeout(() => target.focus(), 0);
               }

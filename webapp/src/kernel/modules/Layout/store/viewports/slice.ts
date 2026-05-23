@@ -35,6 +35,23 @@ export const persistActiveVP = (vpName: string) => {
   return vpName;
 };
 
+const DIRTY_SESSION_PATH = ".session/Layout/viewPortManager/dirtyViewports.json";
+
+export const persistDirtyViewports = (dirtyViewports: { [name: string]: boolean }) => {
+  storage.writeBlob(
+    DIRTY_SESSION_PATH,
+    new Blob([JSON.stringify(dirtyViewports)]),
+    { encoding: "utf-8" },
+  );
+};
+
+const restoreDirtyViewports = async (): Promise<{ [name: string]: boolean }> => {
+  const exists = await storage.exists(DIRTY_SESSION_PATH);
+  if (!exists) return {};
+  const content = await storage.readFile<string>(DIRTY_SESSION_PATH, { encoding: "utf-8" });
+  return JSON.parse(content) as { [name: string]: boolean };
+};
+
 const restoreSession = async (
   sessionPath: PathLike = ".session/Layout/viewPortManager/viewports"
 ): Promise<{ [name: string]: ViewportState }> => {
@@ -76,6 +93,7 @@ const buildInitialState = async (): Promise<viewportManagerState> => ({
   groups: groupsSlice.getInitialState(),
   activeViewport: await restoreActiveVPSession(),
   viewports: await restoreSession(),
+  dirtyViewports: await restoreDirtyViewports(),
 });
 
 export const viewportsRehydrated = defineRehydration<viewportManagerState>(
@@ -94,20 +112,20 @@ const slice = createSlice<
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(addViewport, (state: viewportManagerState, { payload }) => {
-      const vp = { ...payload, hasChanged: false };
       return {
         ...state,
         viewports: {
           ...state.viewports,
-          [vp.name]: vp,
+          [payload.name]: payload,
         },
+        dirtyViewports: { ...state.dirtyViewports, [payload.name]: false },
       };
     });
     builder.addCase(setViewportHasChanged, (state, { payload: { name, hasChanged } }) => {
-      const vp = { ...state.viewports[name], hasChanged };
+      if (state.dirtyViewports[name] === hasChanged) return state;
       return {
         ...state,
-        viewports: { ...state.viewports, [name]: vp },
+        dirtyViewports: { ...state.dirtyViewports, [name]: hasChanged },
       };
     });
     builder.addCase(
@@ -116,6 +134,7 @@ const slice = createSlice<
         storage.deleteFile(
           `.session/Layout/viewPortManager/viewports/${payload.name}.json`
         );
+        const { [payload.name]: _removed, ...remainingDirty } = state.dirtyViewports;
         return {
           ...state,
           activeViewport: "home",
@@ -126,6 +145,7 @@ const slice = createSlice<
             },
             {}
           ),
+          dirtyViewports: remainingDirty,
         };
       }
     );

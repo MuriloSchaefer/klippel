@@ -1,6 +1,5 @@
 import type { SelectChangeEvent } from "@mui/material/Select";
 import { GridRenderEditCellParams, useGridApiContext } from "@mui/x-data-grid";
-import { MaterialType } from "../../store/materialTypes/state";
 import MaterialTypeSelector from "./MaterialType";
 
 export const  CRUDMaterialTypeCell = ({ id, field, value, multiple=false }: GridRenderEditCellParams & {multiple?: boolean}) => {

@@ -79,10 +79,10 @@ middlewares.startListening({
     const { dispatch, getState } = listenerApi;
     const {
       Layout: {
-        viewportManager: { viewports },
+        viewportManager: { dirtyViewports },
       },
     } = getState() as { Layout: LayoutState };
-    dispatch(viewportHasChangedSet({ name: payload.name, hasChanged: viewports[payload.name].hasChanged ?? false })); // dispatch event
+    dispatch(viewportHasChangedSet({ name: payload.name, hasChanged: dirtyViewports[payload.name] ?? false })); // dispatch event
   },
 });
 

@@ -15,14 +15,14 @@ import { DeleteOutlineSharp } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { ISVGModule } from "@kernel/modules/SVG";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import type {
   MaterialNode,
-  VariationGraphState,
   VisualizationDom,
 } from "../../../typings";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 
 export default function AddVisualizationButton({
@@ -32,20 +32,29 @@ export default function AddVisualizationButton({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
-  const graphModule = useModule<IGraphModule>("Graph");
+  const storeModule = useModule<Store>("Store");
   const svgModule = useModule<ISVGModule>("SVG");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
+  const { useAppSelector } = storeModule.hooks;
 
-  const variation = useVariation({ variationId });
-  const graph = graphModule.hooks.useGraph<VariationGraphState>(variationId);
+  const { actions } = useVariationActions({ variationId });
   const svgToolkit = svgModule.hooks.useSVGEditorToolkit();
 
-  const materialNodes = graph?.state
-    ? Object.values(graph.state.nodes).filter(
+  const materialNodes = useAppSelector(
+    (s: any): MaterialNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
         (n): n is MaterialNode => n.type === "MATERIAL",
-      )
-    : [];
+      );
+    },
+    // Only id and label are used in this component; ignore computed fields.
+    (prev, next) => {
+      if (prev.length !== next.length) return false;
+      return prev.every((n, i) => n.id === next[i].id && n.label === next[i].label);
+    },
+  );
 
   const [name, setName] = useState<string>(
     `visual-${Math.random().toString(36).substring(2, 8)}`,
@@ -244,7 +253,7 @@ export default function AddVisualizationButton({
           disabled={!canConfirm}
           handleConfirm={() => {
             if (!canConfirm) return;
-            variation.actions.addVisualization(
+            actions.addVisualization(
               name,
               garmentId,
               materialNodeId,

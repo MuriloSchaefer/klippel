@@ -7,7 +7,7 @@ import { IConverterModule } from "@system/modules/Converter";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { CompoundValue } from "@system/modules/Converter/typings";
 import { ProcessNode } from "../../../typings";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 import { snapCostTime } from "../../../utils/snapCostTime";
 
@@ -30,7 +30,7 @@ export default function ProcessEditButton({
   const { CompoundSelector } = converterModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
 
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
 
   const defaultCompound: CompoundValue = {
     quotient: { amount: 1, unit: "unitario18" },
@@ -103,7 +103,7 @@ export default function ProcessEditButton({
           handleConfirm={() => {
             if (!processNode.id) return;
             if (!form.name.trim()) return;
-            variation.actions.updateProcess(processNode.id, {
+            actions.updateProcess(processNode.id, {
               label: form.name.trim(),
               costTime: form.costTime,
               costMoney: form.costMoney,

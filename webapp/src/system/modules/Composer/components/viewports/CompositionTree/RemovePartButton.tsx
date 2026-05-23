@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import DeleteSharpIcon from "@mui/icons-material/DeleteSharp";
 
 import { useTheme } from "@mui/material/styles";
-import useVariation from "@system/modules/Composer/hooks/useVariation";
+import { useVariationActions } from "@system/modules/Composer/hooks/useVariationActions";
 
 export const RemovePartButton = ({
   variationId,
@@ -13,11 +13,11 @@ export const RemovePartButton = ({
   variationId: string;
   itemId: string;
 }) => {
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
   const theme = useTheme();
 
   const handleRemoval = useCallback(() => {
-    variation.actions.removePart(itemId);
+    actions.removePart(itemId);
   }, []);
 
   return (

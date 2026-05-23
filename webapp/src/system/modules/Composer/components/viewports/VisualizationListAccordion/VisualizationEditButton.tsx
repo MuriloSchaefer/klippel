@@ -15,15 +15,15 @@ import { DeleteOutlineSharp, EditOutlined } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { ISVGModule } from "@kernel/modules/SVG";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import type {
   MaterialNode,
-  VariationGraphState,
   VisualizationDom,
   VisualizationNode,
 } from "../../../typings";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 
 export default function VisualizationEditButton({
@@ -40,21 +40,26 @@ export default function VisualizationEditButton({
   const pointerModule = useModule<IPointerModule>("Pointer");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
-  const graphModule = useModule<IGraphModule>("Graph");
+  const storeModule = useModule<Store>("Store");
   const svgModule = useModule<ISVGModule>("SVG");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
+  const { useAppSelector } = storeModule.hooks;
 
-  const variation = useVariation({ variationId });
-  const graph = graphModule.hooks.useGraph<VariationGraphState>(variationId);
+  const { actions } = useVariationActions({ variationId });
   const svgToolkit = svgModule.hooks.useSVGEditorToolkit();
 
-  const materialNodes = graph?.state
-    ? Object.values(graph.state.nodes).filter(
+  const materialNodes = useAppSelector(
+    (s: any): MaterialNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
         (n): n is MaterialNode => n.type === "MATERIAL",
-      )
-    : [];
+      );
+    },
+    shallowEqual,
+  );
 
   const [name, setName] = useState<string>(node.label ?? "");
   const [materialNodeId, setMaterialNodeId] = useState<string>(
@@ -244,7 +249,7 @@ export default function VisualizationEditButton({
           disabled={!canConfirm}
           handleConfirm={() => {
             if (!canConfirm) return;
-            variation.actions.updateVisualization(node.id, {
+            actions.updateVisualization(node.id, {
               label: name,
               materialNodeId,
               doms,

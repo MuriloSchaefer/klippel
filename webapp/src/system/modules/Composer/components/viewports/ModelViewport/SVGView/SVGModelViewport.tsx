@@ -1,6 +1,7 @@
 import type { ISVGModule } from "@kernel/modules/SVG";
 import useModule from "@kernel/hooks/useModule";
-import useVariation from "../../../../hooks/useVariation";
+import { Store } from "@kernel/modules/Store";
+import { ComposerModuleState } from "../../../../typings";
 import React, { useMemo, useRef } from "react";
 import { debounce } from "@kernel/utils";
 import { zoomIdentity, zoomTransform, ZoomTransform } from "d3";
@@ -13,10 +14,15 @@ export default function SVGModelViewport({
     d3Components: { Grid },
   } = useModule<ISVGModule>("SVG");
 
-  const variation = useVariation({ variationId });
-  const svg = useSVG(variation.state.svg!, variationId);
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
+  const svgPath = useAppSelector(
+    (s: { Composer: ComposerModuleState }) => s.Composer?.variations?.[variationId]?.svg,
+  ) as string;
+
+  const svg = useSVG(svgPath, variationId);
   const editor = useSVGEditor({
-    svgPath: variation.state.svg!,
+    svgPath,
     instanceName: variationId,
     beforeInjection: (svg) => svg,
   });

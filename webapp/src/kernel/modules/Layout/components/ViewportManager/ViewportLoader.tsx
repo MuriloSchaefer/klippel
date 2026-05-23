@@ -28,9 +28,9 @@ const ViewportLoader = () => {
     <ErrorBoundary
       FallbackComponent={fallbackRender}
     >
-      {React.createElement(comp, viewportState, [])}
+      {React.createElement(comp, viewportState)}
     </ErrorBoundary>
   );
 };
 
-export default ViewportLoader;
+export default React.memo(ViewportLoader);

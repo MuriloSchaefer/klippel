@@ -1,20 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Chip, IconButton, ListItem, Typography, useTheme } from "@mui/material";
 import { DeleteOutlineSharp } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import type { IMaterialsModule } from "@system/modules/Materials";
-import useVariation from "../../../hooks/useVariation";
+import { Store } from "@kernel/modules/Store";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import type {
   MaterialNode,
-  VariationGraphState,
   VisualizationNode,
 } from "../../../typings";
 import { MODULE_NAME } from "../../../constants";
 import VisualizationEditButton from "./VisualizationEditButton";
 
-export default function VisualizationItem({
+function VisualizationItem({
   node,
   variationId,
 }: {
@@ -22,18 +21,21 @@ export default function VisualizationItem({
   variationId: string;
 }) {
   const theme = useTheme();
-  const graphModule = useModule<IGraphModule>("Graph");
+  const storeModule = useModule<Store>("Store");
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint } = keyboardShortcutsModule.components;
+  const { useAppSelector } = storeModule.hooks;
 
-  const graph = graphModule.hooks.useGraph<VariationGraphState>(variationId);
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
 
-  const materialNode = graph?.state?.nodes?.[node.materialNodeId] as
-    | MaterialNode
-    | undefined;
+  const materialNode = useAppSelector(
+    (s: any) =>
+      s.Graph?.graphs?.[variationId]?.nodes?.[node.materialNodeId] as
+        | MaterialNode
+        | undefined,
+  );
   const materialId = materialNode?.materialId;
   const materials = materialsModule.hooks.useMaterials(
     materialId !== undefined ? [materialId] : [],
@@ -62,7 +64,6 @@ export default function VisualizationItem({
   const rowRef = useRef<HTMLLIElement | null>(null);
   const refocusAfterEditRef = useRef(false);
 
-  // re-focus the row after edit pointer closes (the edit pointer manages its own focus internally)
   useEffect(() => {
     if (refocusAfterEditRef.current) {
       refocusAfterEditRef.current = false;
@@ -151,7 +152,7 @@ export default function VisualizationItem({
                 next && next.matches('[data-testid="visualization-item"]')
                   ? next
                   : fallback;
-              variation.actions.removeVisualization(node.id);
+              actions.removeVisualization(node.id);
               if (target) {
                 setTimeout(() => target.focus(), 0);
               }
@@ -172,3 +173,5 @@ export default function VisualizationItem({
     </ListItem>
   );
 }
+
+export default React.memo(VisualizationItem);

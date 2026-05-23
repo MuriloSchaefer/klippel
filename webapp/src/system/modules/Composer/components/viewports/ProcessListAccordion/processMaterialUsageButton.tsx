@@ -1,3 +1,10 @@
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { DeleteSharp, ExpandMoreSharp, TableViewSharp } from "@mui/icons-material";
 import {
   Accordion,
@@ -22,22 +29,243 @@ import {
 } from "@mui/material";
 
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { Store } from "@kernel/modules/Store";
+import { batch, shallowEqual } from "react-redux";
+import { debounce } from "@kernel/utils";
 
 import type { IMaterialsModule } from "@system/modules/Materials";
-import { useCallback, useMemo, useState } from "react";
+import type { MaterialState } from "@system/modules/Materials/store/materials/state";
 import {
   ConsumesEdge,
   GraduationNode,
   MaterialNode,
 } from "@system/modules/Composer/typings";
-import useVariation from "@system/modules/Composer/hooks/useVariation";
+import { useVariationActions } from "@system/modules/Composer/hooks/useVariationActions";
 import { MODULE_NAME } from "@system/modules/Composer/constants";
 import { CompoundValue } from "@system/modules/Converter/typings";
 import CompoundSelector from "@system/modules/Converter/components/CompoundSelector";
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
+
+// ---------------------------------------------------------------------------
+// ConsumesEdgeRow — one material consumption entry with local state + debounced dispatch
+// ---------------------------------------------------------------------------
+
+type VariationActions = ReturnType<typeof useVariationActions>["actions"];
+
+interface ConsumesEdgeRowProps {
+  edge: ConsumesEdge;
+  materialNode: MaterialNode;
+  material: MaterialState;
+  graduations: GraduationNode[];
+  processNodeId: string;
+  actions: VariationActions;
+  MaterialSelector: React.ComponentType<{ type: string; value: number; disabled?: boolean }>;
+}
+
+const ConsumesEdgeRow = React.memo(function ConsumesEdgeRow({
+  edge,
+  materialNode,
+  material,
+  graduations,
+  processNodeId,
+  actions,
+  MaterialSelector,
+}: ConsumesEdgeRowProps) {
+  // Local state mirrors Redux so the controlled TextField shows keystrokes immediately.
+  const [localAmount, setLocalAmount] = useState(edge.amount);
+  const [localGrade, setLocalGrade] = useState<Record<string, CompoundValue>>({});
+
+  // Track the last value we dispatched so we don't incorrectly re-sync local state
+  // from our own dispatch settling back from Redux.
+  const lastDispatchedAmountRef = useRef(edge.amount);
+  const pendingGradeRef = useRef<Record<string, CompoundValue>>({});
+
+  // Sync localAmount when the Redux edge.amount changes externally (undo, remote peer).
+  useEffect(() => {
+    if (edge.amount !== lastDispatchedAmountRef.current) {
+      setLocalAmount(edge.amount);
+      lastDispatchedAmountRef.current = edge.amount;
+    }
+  }, [edge.amount]);
+
+  // Reset local grade overrides when Redux consumptionPerGrade changes externally
+  // (e.g. the toggle switch adds/removes an override, or remote sync).
+  const consumptionPerGrade = edge.consumptionPerGrade;
+  useEffect(() => {
+    setLocalGrade({});
+    pendingGradeRef.current = {};
+  }, [consumptionPerGrade]);
+
+  const debouncedUpdateAmount = useMemo(
+    () =>
+      debounce((v: CompoundValue) => {
+        lastDispatchedAmountRef.current = v;
+        actions.updateProcessMaterialConsumption(processNodeId, materialNode.id, v);
+      }, 300),
+    [processNodeId, materialNode.id, actions],
+  );
+
+  // Batch-flush all pending grade updates in one Redux commit.
+  const debouncedFlushGrades = useMemo(
+    () =>
+      debounce(() => {
+        const updates = { ...pendingGradeRef.current };
+        pendingGradeRef.current = {};
+        batch(() => {
+          for (const [gId, v] of Object.entries(updates)) {
+            actions.setProcessMaterialConsumptionForGraduation(
+              processNodeId,
+              materialNode.id,
+              gId,
+              v,
+            );
+          }
+        });
+      }, 300),
+    [processNodeId, materialNode.id, actions],
+  );
+
+
+  const handleAmountChange = useCallback(
+    (v: CompoundValue) => {
+      setLocalAmount(v);
+      lastDispatchedAmountRef.current = v;
+      debouncedUpdateAmount(v);
+    },
+    [debouncedUpdateAmount],
+  );
+
+  const handleGradeChange = useCallback(
+    (graduationId: string, v: CompoundValue) => {
+      setLocalGrade((prev) => ({ ...prev, [graduationId]: v }));
+      pendingGradeRef.current = { ...pendingGradeRef.current, [graduationId]: v };
+      debouncedFlushGrades();
+    },
+    [debouncedFlushGrades],
+  );
+
+  return (
+    <ListItem sx={{ flexDirection: "column", alignItems: "stretch" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <FormControl>
+          <MaterialSelector type={material.type} value={material.id} disabled />
+        </FormControl>
+        <FormControl>
+          <CompoundSelector value={localAmount} onChange={handleAmountChange} />
+        </FormControl>
+        <IconButton>
+          <DeleteSharp
+            color="error"
+            onClick={() =>
+              actions.removeProcessMaterialConsumption(processNodeId, materialNode.id)
+            }
+          />
+        </IconButton>
+      </Box>
+
+      {graduations.length > 0 && (
+        <Accordion
+          data-testid="link-material-grade-accordion"
+          disableGutters
+          elevation={0}
+          sx={{
+            mt: 1,
+            "&:before": { display: "none" },
+            backgroundColor: "transparent",
+          }}
+        >
+          <AccordionSummary
+            data-testid="link-material-grade-accordion-summary"
+            expandIcon={<ExpandMoreSharp />}
+            sx={{ px: 1, minHeight: 32 }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              Consumo por graduação
+              {Object.keys(edge.consumptionPerGrade ?? {}).length > 0 &&
+                ` · ${Object.keys(edge.consumptionPerGrade ?? {}).length} personalizada(s)`}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 1 }}>
+            <Stack spacing={1}>
+              {graduations.map((g) => {
+                const isOverride = !!edge.consumptionPerGrade?.[g.id];
+                const reduxValue = edge.consumptionPerGrade?.[g.id] ?? edge.amount;
+                const displayValue = localGrade[g.id] ?? reduxValue;
+                const delta = edge.gradeDeltas?.[g.id];
+                return (
+                  <Box
+                    key={g.id}
+                    data-testid="link-material-grade-row"
+                    data-graduation-label={g.label}
+                    sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                  >
+                    <Typography variant="body2" sx={{ minWidth: 80 }}>
+                      {g.label}
+                    </Typography>
+                    <FormControlLabel
+                      data-testid="link-material-grade-switch"
+                      control={
+                        <Switch
+                          size="small"
+                          checked={isOverride}
+                          onChange={(_, checked) => {
+                            if (checked) {
+                              actions.setProcessMaterialConsumptionForGraduation(
+                                processNodeId,
+                                materialNode.id,
+                                g.id,
+                                edge.amount,
+                              );
+                            } else {
+                              actions.clearProcessMaterialConsumptionForGraduation(
+                                processNodeId,
+                                materialNode.id,
+                                g.id,
+                              );
+                            }
+                          }}
+                        />
+                      }
+                      label={isOverride ? "personalizar" : "usar padrão"}
+                    />
+                    <FormControl data-testid="link-material-grade-consumption">
+                      <CompoundSelector
+                        value={displayValue}
+                        onChange={(v) => handleGradeChange(g.id, v)}
+                      />
+                    </FormControl>
+                    <Chip
+                      size="small"
+                      label={
+                        delta === undefined
+                          ? "—"
+                          : `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}%`
+                      }
+                      color={
+                        delta === undefined
+                          ? "default"
+                          : delta >= 0
+                          ? "success"
+                          : "warning"
+                      }
+                      variant="outlined"
+                    />
+                  </Box>
+                );
+              })}
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+      )}
+    </ListItem>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// ProcessMaterialUsageButton
+// ---------------------------------------------------------------------------
 
 export default function ProcessMaterialUsageButton({
   variationId,
@@ -52,20 +280,20 @@ export default function ProcessMaterialUsageButton({
 }) {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const materialsModule = useModule<IMaterialsModule>("Materials");
-  const graphModule = useModule<IGraphModule>("Graph");
+  const storeModule = useModule<Store>("Store");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
 
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
   const { MaterialSelector } = materialsModule.components;
+  const { useAppSelector } = storeModule.hooks;
 
-  const { useGraph } = graphModule.hooks;
   const { useMaterials } = materialsModule.hooks;
 
   const materials = useMaterials();
-  const variation = useVariation({ variationId });
-  const graph = useGraph(variationId);
+  const { actions } = useVariationActions({ variationId });
+
   const [newForm, setNewForm] = useState<{
     materialNodeId?: string;
     amount: CompoundValue;
@@ -77,28 +305,92 @@ export default function ProcessMaterialUsageButton({
     },
   });
 
-  const graphMaterials = useMemo(
-    () =>
-      Object.values(graph.state?.nodes ?? {}).filter(
-        (n): n is MaterialNode => n.type === "MATERIAL"
-      ),
-    [graph.state]
+  // Fix 3: custom equality guards — only re-render when fields used in the UI change,
+  // not when computation middleware adds computedCost/computedProcessTime etc.
+  const graphMaterials = useAppSelector(
+    (s: any): MaterialNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
+        (n): n is MaterialNode => n.type === "MATERIAL",
+      );
+    },
+    (prev, next) => {
+      if (prev.length !== next.length) return false;
+      return prev.every(
+        (n, i) =>
+          n.id === next[i].id &&
+          n.label === next[i].label &&
+          n.materialId === next[i].materialId,
+      );
+    },
   );
 
-  const selectedNodeMaterial = useMemo(() => {
-    if (!newForm.materialNodeId || !materials) return undefined;
-    const node = graphMaterials.find((n) => n.id === newForm.materialNodeId);
-    return node ? materials[node.materialId] : undefined;
-  }, [graphMaterials, materials, newForm.materialNodeId]);
+  const graduations = useAppSelector(
+    (s: any): GraduationNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[])
+        .filter((n): n is GraduationNode => n.type === "GRADUATION")
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    },
+    (prev, next) => {
+      if (prev.length !== next.length) return false;
+      return prev.every(
+        (n, i) =>
+          n.id === next[i].id &&
+          n.label === next[i].label &&
+          n.order === next[i].order &&
+          n.amount === next[i].amount,
+      );
+    },
+  );
+
+  const consumesEdges = useAppSelector(
+    (s: any): ConsumesEdge[] => {
+      const edges = s.Graph?.graphs?.[variationId]?.edges;
+      if (!edges) return [];
+      return (Object.values(edges) as any[]).filter(
+        (e): e is ConsumesEdge =>
+          e.type === "CONSUMES" && e.sourceId === processNodeId,
+      );
+    },
+    shallowEqual,
+  );
+
+  const graphNodes = useAppSelector(
+    (s: any): Record<string, MaterialNode> => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return {};
+      const result: Record<string, MaterialNode> = {};
+      for (const n of Object.values(nodes) as any[]) {
+        if (n.type === "MATERIAL") result[n.id] = n as MaterialNode;
+      }
+      return result;
+    },
+    (prev, next) => {
+      const pk = Object.keys(prev);
+      const nk = Object.keys(next);
+      if (pk.length !== nk.length) return false;
+      return pk.every((k) => prev[k]?.id === next[k]?.id && prev[k]?.materialId === next[k]?.materialId);
+    },
+  );
+
+  const selectedNodeMaterial =
+    newForm.materialNodeId && materials
+      ? (() => {
+          const node = graphMaterials.find((n) => n.id === newForm.materialNodeId);
+          return node ? materials[node.materialId] : undefined;
+        })()
+      : undefined;
 
   const handleAddNewRecord = useCallback(() => {
-    if (!graph.state) return;
     if (!newForm.materialNodeId)
       throw Error("Material nao encontrado no modelo. Adicione-o antes");
-    variation.actions.addProcessMaterialConsumption(
+    actions.addProcessMaterialConsumption(
       processNodeId,
       newForm.materialNodeId,
-      newForm.amount
+      newForm.amount,
     );
     setNewForm({
       materialNodeId: undefined,
@@ -107,30 +399,7 @@ export default function ProcessMaterialUsageButton({
         dividend: { amount: 1, unit: "unitario18" },
       },
     });
-  }, [graph, newForm.materialNodeId, newForm.amount, processNodeId, variation.actions]);
-
-  const handleMaterialUsageUpdate = useCallback(
-    (e: Edge, v: CompoundValue) => {
-      const materialNode = graph.state!.nodes[e.targetId] as MaterialNode;
-
-      variation.actions.updateProcessMaterialConsumption(
-        processNodeId,
-        materialNode.id,
-        v
-      );
-    },
-    [variation, graph.state]
-  )
-
-  const graduations = useMemo(
-    () =>
-      Object.values(graph.state?.nodes ?? {})
-        .filter((n): n is GraduationNode => n.type === "GRADUATION")
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    [graph.state]
-  );
-
-  if (!graph.state) return null;
+  }, [newForm.materialNodeId, newForm.amount, processNodeId, actions]);
 
   return (
     <PointerContainer
@@ -195,166 +464,24 @@ export default function ProcessMaterialUsageButton({
             </Button>
             <Divider />
             <List>
-              {Object.values(graph.state.edges)
-                .filter(
-                  (e): e is ConsumesEdge =>
-                    e.type === "CONSUMES" && e.sourceId === processNodeId
-                )
-                .map((e) => {
-                  const materialNode = graph.state!.nodes[
-                    e.targetId
-                  ] as MaterialNode;
-                  const material = materials![materialNode.materialId];
-                  return (
-                    <ListItem
-                      key={e.id}
-                      sx={{ flexDirection: "column", alignItems: "stretch" }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <FormControl>
-                          <MaterialSelector
-                            type={material.type}
-                            value={material.id}
-                            disabled
-                          />
-                        </FormControl>
-                        <FormControl>
-                          <CompoundSelector
-                            value={e.amount}
-                            onChange={(v) => handleMaterialUsageUpdate(e, v)}
-                          />
-                        </FormControl>
-                        <IconButton>
-                          <DeleteSharp
-                            color="error"
-                            onClick={() =>
-                              variation.actions.removeProcessMaterialConsumption(
-                                processNodeId,
-                                materialNode.id
-                              )
-                            }
-                          />
-                        </IconButton>
-                      </Box>
-                      {graduations.length > 0 && (
-                        <Accordion
-                          data-testid="link-material-grade-accordion"
-                          disableGutters
-                          elevation={0}
-                          sx={{
-                            mt: 1,
-                            "&:before": { display: "none" },
-                            backgroundColor: "transparent",
-                          }}
-                        >
-                          <AccordionSummary
-                            data-testid="link-material-grade-accordion-summary"
-                            expandIcon={<ExpandMoreSharp />}
-                            sx={{ px: 1, minHeight: 32 }}
-                          >
-                            <Typography variant="caption" color="text.secondary">
-                              Consumo por graduação
-                              {Object.keys(e.consumptionPerGrade ?? {}).length >
-                                0 &&
-                                ` · ${
-                                  Object.keys(e.consumptionPerGrade ?? {}).length
-                                } personalizada(s)`}
-                            </Typography>
-                          </AccordionSummary>
-                          <AccordionDetails sx={{ px: 1 }}>
-                          <Stack spacing={1}>
-                            {graduations.map((g) => {
-                              const isOverride =
-                                !!e.consumptionPerGrade?.[g.id];
-                              const consumption =
-                                e.consumptionPerGrade?.[g.id] ?? e.amount;
-                              const delta = e.gradeDeltas?.[g.id];
-                              return (
-                                <Box
-                                  key={g.id}
-                                  data-testid="link-material-grade-row"
-                                  data-graduation-label={g.label}
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                  }}
-                                >
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ minWidth: 80 }}
-                                  >
-                                    {g.label}
-                                  </Typography>
-                                  <FormControlLabel
-                                    data-testid="link-material-grade-switch"
-                                    control={
-                                      <Switch
-                                        size="small"
-                                        checked={isOverride}
-                                        onChange={(_, checked) => {
-                                          if (checked) {
-                                            variation.actions.setProcessMaterialConsumptionForGraduation(
-                                              processNodeId,
-                                              materialNode.id,
-                                              g.id,
-                                              e.amount
-                                            );
-                                          } else {
-                                            variation.actions.clearProcessMaterialConsumptionForGraduation(
-                                              processNodeId,
-                                              materialNode.id,
-                                              g.id
-                                            );
-                                          }
-                                        }}
-                                      />
-                                    }
-                                    label={
-                                      isOverride ? "personalizar" : "usar padrão"
-                                    }
-                                  />
-                                  <FormControl data-testid="link-material-grade-consumption">
-                                    <CompoundSelector
-                                      value={consumption}
-                                      onChange={(v) =>
-                                        variation.actions.setProcessMaterialConsumptionForGraduation(
-                                          processNodeId,
-                                          materialNode.id,
-                                          g.id,
-                                          v
-                                        )
-                                      }
-                                    />
-                                  </FormControl>
-                                  <Chip
-                                    size="small"
-                                    label={
-                                      delta === undefined
-                                        ? "—"
-                                        : `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}%`
-                                    }
-                                    color={
-                                      delta === undefined
-                                        ? "default"
-                                        : delta >= 0
-                                        ? "success"
-                                        : "warning"
-                                    }
-                                    variant="outlined"
-                                  />
-                                </Box>
-                              );
-                            })}
-                          </Stack>
-                          </AccordionDetails>
-                        </Accordion>
-                      )}
-                    </ListItem>
-                  );
-                })}
+              {consumesEdges.map((e) => {
+                const materialNode = graphNodes[e.targetId];
+                if (!materialNode || !materials) return null;
+                const material = materials[materialNode.materialId];
+                if (!material) return null;
+                return (
+                  <ConsumesEdgeRow
+                    key={e.id}
+                    edge={e}
+                    materialNode={materialNode}
+                    material={material}
+                    graduations={graduations}
+                    processNodeId={processNodeId}
+                    actions={actions}
+                    MaterialSelector={MaterialSelector}
+                  />
+                );
+              })}
             </List>
           </Box>
         </Box>

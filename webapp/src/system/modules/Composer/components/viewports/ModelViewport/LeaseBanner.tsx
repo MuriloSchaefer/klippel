@@ -30,7 +30,7 @@ export default function LeaseBanner({ status }: Readonly<{ status: LeaseStatus }
     <Box
       data-testid="composer-lease-banner"
       data-lease-holder={holder}
-      sx={{ position: "absolute", top: 8, left: "50%", transform: "translateX(-50%)", zIndex: 10 }}
+      sx={{ position: "absolute", top: 8, left: "50%", transform: "translate(-110%, 0%)", zIndex: 10 }}
     >
       <Alert severity="warning" icon={<LockSharpIcon fontSize="small" />} variant="filled">
         Modelo em edição por {holder.slice(0, 12)}… — somente leitura (expira em {expiresIn}s)

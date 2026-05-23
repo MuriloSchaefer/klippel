@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ListItem } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
 import useModule from "@kernel/hooks/useModule";
 import type { IMaterialsModule } from "@system/modules/Materials";
 import { fallbackRender } from "@kernel/App";
-import useVariation from "../../../../hooks/useVariation";
+import { useVariationActions } from "../../../../hooks/useVariationActions";
 import type { MaterialNode } from "../../../../typings";
 import type { MaterialState } from "@system/modules/Materials/store/materials/state";
 import type { Color } from "@system/modules/Materials/typings";
@@ -22,11 +22,16 @@ export default function MaterialItem({
 }) {
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const materialTypes = materialsModule.hooks.useMaterialTypes();
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
   const [isEditing, setIsEditing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const rowRef = useRef<HTMLLIElement | null>(null);
   const refocusAfterEditRef = useRef(false);
+  const handleEdit = useCallback(() => setIsEditing(true), []);
+  const handleDelete = useCallback(
+    () => actions.removeMaterialNode(node.id),
+    [actions, node.id],
+  );
 
   useEffect(() => {
     if (!isEditing && refocusAfterEditRef.current) {
@@ -95,8 +100,8 @@ export default function MaterialItem({
             node={node}
             material={material}
             isFocused={isFocused}
-            onEdit={() => setIsEditing(true)}
-            onDelete={() => variation.actions.removeMaterialNode(node.id)}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         ) : (
           <EditMaterial
@@ -108,7 +113,7 @@ export default function MaterialItem({
               setIsEditing(false);
             }}
             onSave={(materialId) => {
-              variation.actions.updateMaterial(node.id, materialId);
+              actions.updateMaterial(node.id, materialId);
               refocusAfterEditRef.current = true;
               setIsEditing(false);
             }}

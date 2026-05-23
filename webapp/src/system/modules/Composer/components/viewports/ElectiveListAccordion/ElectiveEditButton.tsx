@@ -11,7 +11,7 @@ import { EditOutlined } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
-import useVariation from "../../../hooks/useVariation";
+import { useVariationActions } from "../../../hooks/useVariationActions";
 import type { ElectiveNode } from "../../../typings";
 import { MODULE_NAME } from "../../../constants";
 
@@ -32,7 +32,7 @@ export default function ElectiveEditButton({
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
 
-  const variation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
 
   const [name, setName] = useState<string>(node.label ?? "");
   const [defaultValue, setDefaultValue] = useState<boolean>(!!node.defaultValue);
@@ -76,7 +76,7 @@ export default function ElectiveEditButton({
           disabled={!name.trim()}
           handleConfirm={() => {
             if (!name.trim()) return;
-            variation.actions.updateElective(node.id, {
+            actions.updateElective(node.id, {
               label: name.trim(),
               defaultValue,
             });

@@ -1,7 +1,9 @@
+import React from "react";
 import { Box, Chip, IconButton, List, ListItem, Tooltip, Typography, useTheme } from "@mui/material";
 import { FactCheckOutlined } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
-import type { IGraphModule } from "@kernel/modules/Graphs";
+import { Store } from "@kernel/modules/Store";
+import { shallowEqual } from "react-redux";
 import type { IConverterModule } from "@system/modules/Converter";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
@@ -9,13 +11,12 @@ import { ElectiveNode, GraduationNode, ProcessNode } from "../../../typings";
 import { MODULE_NAME } from "../../../constants";
 import ProcessTimeAuditContent from "./ProcessTimeAuditContent";
 
-export default function ProcessTimeAccordion({
+function ProcessTimeAccordion({
   variationId,
 }: Readonly<{ variationId: string }>) {
   const theme = useTheme();
-  const graphModule = useModule<IGraphModule>("Graph");
-  const useGraph = graphModule.hooks.useGraph;
-  const graph = useGraph(variationId);
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
 
   const converterModule = useModule<IConverterModule>("Converter");
   const useUnits = converterModule.hooks.useUnits;
@@ -27,13 +28,40 @@ export default function ProcessTimeAccordion({
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint } = keyboardShortcutsModule.components;
 
-  const nodes = graph?.state ? Object.values(graph.state.nodes) : [];
-  const processNodes = nodes.filter(
-    (n: any) => n.type === "PROCESS"
-  ) as ProcessNode[];
-  const graduationNodes = nodes.filter(
-    (n: any) => n.type === "GRADUATION"
-  ) as GraduationNode[];
+  const processNodes = useAppSelector(
+    (s: any): ProcessNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
+        (n) => n.type === "PROCESS",
+      ) as ProcessNode[];
+    },
+    shallowEqual,
+  );
+
+  const graduationNodes = useAppSelector(
+    (s: any): GraduationNode[] => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return [];
+      return (Object.values(nodes) as any[]).filter(
+        (n) => n.type === "GRADUATION",
+      ) as GraduationNode[];
+    },
+    shallowEqual,
+  );
+
+  const electiveMap = useAppSelector(
+    (s: any): Record<string, ElectiveNode> => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return {};
+      const result: Record<string, ElectiveNode> = {};
+      for (const n of Object.values(nodes) as any[]) {
+        if (n.type === "ELECTIVE") result[n.id] = n as ElectiveNode;
+      }
+      return result;
+    },
+    shallowEqual,
+  );
 
   const totalMinutesPerUnit = processNodes.reduce(
     (sum, p) => sum + (p.computedTimePerUnit?.amount ?? 0),
@@ -69,7 +97,7 @@ export default function ProcessTimeAccordion({
         processNodes.map((p) => {
           const minutesPerUnit = p.computedTimePerUnit?.amount;
           const elective = p.electiveNodeId
-            ? (graph?.state?.nodes[p.electiveNodeId] as ElectiveNode | undefined)
+            ? electiveMap[p.electiveNodeId]
             : undefined;
           // A row is only "computed" when the cached computedTimePerUnit was
           // derived from the *current* costTime. The debounced middleware
@@ -192,3 +220,5 @@ export default function ProcessTimeAccordion({
     </List>
   );
 }
+
+export default React.memo(ProcessTimeAccordion);

@@ -1,8 +1,9 @@
 import useModule from "@kernel/hooks/useModule";
-import { IGraphModule } from "@kernel/modules/Graphs";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+import { Store } from "@kernel/modules/Store";
 import { alpha, Box, styled, useTheme } from "@mui/material";
+import { shallowEqual } from "react-redux";
 import {
   RichTreeView,
   TreeItemContent,
@@ -16,11 +17,11 @@ import {
   useTreeItem,
   UseTreeItemParameters,
 } from "@mui/x-tree-view";
-import useVariation from "@system/modules/Composer/hooks/useVariation";
+import { useVariationActions } from "@system/modules/Composer/hooks/useVariationActions";
+import { ComposerModuleState } from "@system/modules/Composer/typings";
 import React, { useMemo } from "react";
 import AddPartButton from "./AddPartButton";
 import RemovePartButton from "./RemovePartButton";
-import { VariationGraphState } from "@system/modules/Composer/typings";
 type Item = {
   id: string;
   label: string;
@@ -59,6 +60,8 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
   const { id, itemId, label, disabled, children, variationId, ...other } =
     props;
   const theme = useTheme();
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
 
   const {
     getRootProps,
@@ -69,7 +72,9 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
     status,
   } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
 
-  const modelVariation = useVariation({ variationId });
+  const selectedPart = useAppSelector(
+    (s: { Composer: ComposerModuleState }) => s.Composer?.variations?.[variationId]?.selectedPart,
+  );
 
   return (
     <TreeItemProvider id={itemId} itemId={itemId}>
@@ -97,7 +102,7 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
             sx={{ flexGrow: 1, display: "flex", gap: 1, alignItems: "center" }}
           >
             <TreeItemLabel {...getLabelProps()} />
-            {modelVariation.state?.selectedPart === itemId && (
+            {selectedPart === itemId && (
               <>
                 <AddPartButton variationId={variationId} parentId={itemId} />
                 <RemovePartButton variationId={variationId} itemId={itemId} />
@@ -129,24 +134,46 @@ export default function CompositionTree({
 }: Readonly<{
   variationId: string;
 }>) {
-  const graphModule = useModule<IGraphModule>("Graph");
-  const { useGraph } = graphModule.hooks;
-  const graph = useGraph<VariationGraphState>(variationId);
-  const tree = useMemo(() => {
-    if (!graph.state) return [];
+  const storeModule = useModule<Store>("Store");
+  const { useAppSelector } = storeModule.hooks;
 
-    return Object.values(graph.state.nodes).reduce((acc, curr) => {
-      if (curr.type === "GARMENT") {
-        let root = buildSubTree(graph.state!, curr);
-
-        return [...acc, root];
+  const partNodes = useAppSelector(
+    (s: any): Record<string, Node> => {
+      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
+      if (!nodes) return {};
+      const result: Record<string, Node> = {};
+      for (const n of Object.values(nodes) as any[]) {
+        if (n.type === "GARMENT" || n.type === "PART") result[n.id] = n as Node;
       }
+      return result;
+    },
+    shallowEqual,
+  );
 
+  const partEdges = useAppSelector(
+    (s: any): Record<string, any> => {
+      const edges = s.Graph?.graphs?.[variationId]?.edges;
+      if (!edges) return {};
+      const result: Record<string, any> = {};
+      for (const e of Object.values(edges) as any[]) {
+        if (e.type === "HAS_PART") result[e.id] = e;
+      }
+      return result;
+    },
+    shallowEqual,
+  );
+
+  const tree = useMemo(() => {
+    const partialGraph = { nodes: partNodes, edges: partEdges } as unknown as GraphState;
+    return Object.values(partNodes).reduce((acc, curr) => {
+      if ((curr as any).type === "GARMENT") {
+        return [...acc, buildSubTree(partialGraph, curr)];
+      }
       return acc;
     }, [] as Item[]);
-  }, [graph.state]);
+  }, [partNodes, partEdges]);
 
-  const modelVariation = useVariation({ variationId });
+  const { actions } = useVariationActions({ variationId });
   return (
     <Box data-testid="composition-tree">
     <RichTreeView
@@ -164,7 +191,7 @@ export default function CompositionTree({
         },
       }}
       onItemSelectionToggle={(e, itemId, selected) => {
-        if (selected) modelVariation.actions.selectPart(itemId);
+        if (selected) actions.selectPart(itemId);
       }}
       sx={{ flexGrow: 1, maxWidth: "100%", overflowY: "auto" }}
     />
