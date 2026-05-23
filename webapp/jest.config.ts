@@ -13,7 +13,7 @@ export default async (): Promise<Config> => {
     coverageDirectory: './.jest/coverage',
     moduleFileExtensions: defaults.moduleFileExtensions,
     transform: {
-      '^.+\\.(t|j)sx?$': ['@swc/jest'],
+      '^.+\\.(t|j)sx?$': ['@swc/jest', {}],
     },
     extensionsToTreatAsEsm: ['.ts', '.tsx'],
     moduleNameMapper: {

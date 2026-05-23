@@ -4,6 +4,9 @@
   "author": "Murilo Francisco Schaefer",
   "description": "Uma aplicação para fazer o geerenciamento de orçamentos em roupas",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "main": "./dist/electron/main/index.js",
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
