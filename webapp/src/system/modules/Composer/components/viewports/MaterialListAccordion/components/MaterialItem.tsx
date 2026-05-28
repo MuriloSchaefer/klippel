@@ -18,7 +18,7 @@ export default function MaterialItem({
 }: {
   variationId: string;
   node: MaterialNode;
-  material: MaterialState;
+  material: MaterialState | undefined;
 }) {
   const materialsModule = useModule<IMaterialsModule>("Materials");
   const materialTypes = materialsModule.hooks.useMaterialTypes();
@@ -40,19 +40,20 @@ export default function MaterialItem({
     }
   }, [isEditing]);
 
-  // Find material type and schema
-  const materialType = materialTypes[material?.type];
-  const schema = materialType?.schemas?.[material?.schemaVersion];
-  const label = material?.attributes[schema.selector.principal];
-  const extra = schema.selector.extra
-    ? material?.attributes[schema.selector.extra]
+  const materialType = material ? materialTypes[material.type] : undefined;
+  const schema = materialType?.schemas?.[material?.schemaVersion ?? ""];
+  const selector = schema?.selector;
+  const label = selector?.principal
+    ? material?.attributes?.[selector.principal]
+    : undefined;
+  const extra = selector?.extra
+    ? material?.attributes?.[selector.extra]
     : null;
-  // Find color attribute name in schema
-  let colors = Object.entries(schema?.attributes ?? {}).find(
-    ([attrName, attrDef]) => attrDef === "color"
+  const colors = Object.entries(schema?.attributes ?? {}).find(
+    ([, attrDef]) => attrDef === "color",
   );
   const color: Color | undefined = colors
-    ? material?.attributes[colors[0]]
+    ? material?.attributes?.[colors[0]]
     : undefined;
 
   return (
@@ -105,7 +106,7 @@ export default function MaterialItem({
           />
         ) : (
           <EditMaterial
-            type={material.type}
+            type={material?.type ?? ""}
             typeRestrictions={node.typeRestrictions}
             materialId={node.materialId}
             onCancel={() => {

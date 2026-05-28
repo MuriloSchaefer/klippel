@@ -5,6 +5,8 @@ import {
   joinWorkspace,
   listWorkspaces,
   pauseSessionAutoSaver,
+  peersRefreshed,
+  refreshFromPeers,
   resumeSessionAutoSaver,
   saveSession,
   selectWorkspace,
@@ -41,6 +43,47 @@ middlewares.startListening({
     persistState(state);
 
     dispatch(sessionSaved()); // dispatch event
+  },
+});
+middlewares.startListening({
+  actionCreator: refreshFromPeers,
+  effect: async (_, listenerApi) => {
+    // Kernel-level orchestration point — modules with workspace-scoped
+    // state listen on `peersRefreshed` and refetch from Jazz.
+    //
+    // Re-open the active workspace in the main process *first*. Each
+    // domain `api.load()` call (e.g. Materials' `jazz.materials.load`)
+    // reads through the cached workspace handle and its already-
+    // resolved CoValue subtree — without a fresh resolve, a peer's
+    // delta that arrived since the handle was opened isn't visible
+    // even though it's sitting in cojson. `ensureWorkspace` does the
+    // same re-resolution `selectWorkspace` does on a workspace switch,
+    // which is why workspace switching has always refreshed correctly
+    // and a bare `loadMaterialsCatalog` dispatch did not.
+    const { Store: { selectedWorkspace } } =
+      listenerApi.getState() as { Store: StoreState };
+
+    
+
+    // listenerApidispatch(selectWorkspace({ workspace: payload.name }));
+    if (selectedWorkspace) {
+      try {
+        // Full close + reopen of the Jazz node. `ensureWorkspace` is a
+        // no-op when the active workspace name already matches, which
+        // means the cached `WorkspaceCoMap` handle (and its resolved
+        // catalog subtree) stays in place — peer deltas held in cojson
+        // are visible, but a fresh deep-resolve never happens, so the
+        // renderer's `loadMaterialsCatalog` keeps returning the same
+        // snapshot. `refreshWorkspace` releases the SQLite lock,
+        // re-dials the sync peer, and re-creates the cojson context so
+        // the next `requireActiveWorkspaceHandle` rebuilds the resolved
+        // view from scratch.
+        await jazz.refreshWorkspace(selectedWorkspace);
+      } catch (err) {
+        console.error("[Store/refreshFromPeers] Jazz refresh failed", err);
+      }
+    }
+    listenerApi.dispatch(peersRefreshed());
   },
 });
 middlewares.startListening({
@@ -99,6 +142,11 @@ middlewares.startListening({
     }
 
     dispatch(workspaceSelected(payload)); // dispatch event
+    // Persist the new selection immediately so a renderer reload (HMR,
+    // crash, or manual refresh) doesn't lose the active workspace and
+    // silently fall back to "pessoal" — which would close the live Jazz
+    // node and sever the sync connection.
+    dispatch(saveSession());
   },
 });
 middlewares.startListening({

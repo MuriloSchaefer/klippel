@@ -9,6 +9,14 @@ export interface MaterialTypeSchema {
         principal: string
         extra: string
     }
+    /**
+     * Default unit (`UnitNode.id` from the conversion graph) for the
+     * `stock` field on materials of this type. Optional for backward
+     * compatibility with schemas authored before this lived in the
+     * schema; the Add-material form falls back to a blank picker so
+     * the user can still set it manually.
+     */
+    stockUnit?: string
 }
 export interface SchemaMap {
     [version: string]: MaterialTypeSchema

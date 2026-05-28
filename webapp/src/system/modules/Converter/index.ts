@@ -3,6 +3,7 @@ import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import { startModule } from "./kernelCalls";
 import ScaleSlider from "./components/ScaleSlider";
 import UnitAmountSelector from "./components/UnitAmountSelector";
+import UnitSelector from "./components/UnitSelector";
 import CompoundSelector from "./components/CompoundSelector";
 import { useScales } from "./hooks/useScales";
 import useUnits from "./hooks/useUnits";
@@ -19,6 +20,7 @@ export interface IConverterModule extends IModule {
         ScaleSlider: typeof ScaleSlider;
         CompoundSelector: typeof CompoundSelector;
         UnitAmountSelector: typeof UnitAmountSelector;
+        UnitSelector: typeof UnitSelector;
         CompoundUnit: typeof CompoundUnit;
     },
     store: {
@@ -49,6 +51,7 @@ const module: IConverterModule = {
         ScaleSlider,
         CompoundSelector,
         UnitAmountSelector,
+        UnitSelector,
         CompoundUnit
     },
     store: {

@@ -26,6 +26,9 @@ export const joinWorkspace = createAction<{name: string; coId: string; syncUrl: 
 export const enableWorkspaceSync = createAction<{syncUrl: string}>(
   `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Enable workspace sync`
 );
+export const refreshFromPeers = createAction(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Refresh from peers`
+);
 
 // Events
 export const storeInitialized = createAction(
@@ -60,6 +63,9 @@ export const accountIdResolved = createAction<{accountId: string | null}>(
 );
 export const syncStatusChanged = createAction<{status: 'offline' | 'syncing' | 'synced'}>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Sync status changed`
+);
+export const peersRefreshed = createAction(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Peers refreshed`
 );
 
 

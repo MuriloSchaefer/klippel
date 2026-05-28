@@ -25,6 +25,9 @@ yarn-error.log*
 # jest cache
 .jest
 
+# repeat-tests.mjs run logs
+.tests-executions
+
 ComposerOld
 ipfs/
 bin/

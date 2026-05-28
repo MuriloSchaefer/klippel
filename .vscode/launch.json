@@ -65,7 +65,8 @@
         "KLIPPEL_USER_DATA_DIR": "/tmp/klippel-${input:peerAEnv}",
         "KLIPPEL_INITIAL_WORKSPACE": "${input:peerAWorkspace}",
         "KLIPPEL_DEV_LOG": "1",
-        "ELECTRON_RUN_AS_NODE": null
+        "ELECTRON_RUN_AS_NODE": null,
+        "KLIPPEL_JAZZ_DEBUG": "1",
       },
       "presentation": {
         "hidden": true
@@ -103,7 +104,8 @@
         "KLIPPEL_INITIAL_WORKSPACE": "${input:peerBWorkspace}",
         "KLIPPEL_DEV_LOG": "1",
         "ELECTRON_RENDERER_URL": "http://localhost:5173/",
-        "ELECTRON_RUN_AS_NODE": null
+        "ELECTRON_RUN_AS_NODE": null,
+        "KLIPPEL_JAZZ_DEBUG": "1",
       },
       "presentation": {
         "hidden": true
@@ -116,6 +118,34 @@
       "port": 9223,
       "webRoot": "${workspaceFolder}/webapp/src",
       "timeout": 60000,
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      // Drives the share/join UI on Peer A and Peer B once both
+      // renderers are up. Runs as a plain node process inside the
+      // compound — its own polling waits for CDP :9222 / :9223 to be
+      // reachable, so launch order inside the compound doesn't matter.
+      // See `webapp/scripts/two-peer-share.mjs` for the flow.
+      "name": "Peer Auto-Share",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/webapp",
+      "runtimeExecutable": "node",
+      "program": "${workspaceFolder}/webapp/scripts/two-peer-share.mjs",
+      "args": [
+        "--peerA-cdp=9222",
+        "--peerB-cdp=9223",
+        "--workspace=${input:sharedWorkspace}",
+        "--joined-name=${input:sharedWorkspace}"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "outputCapture": "std",
+      "env": {
+        "ELECTRON_RUN_AS_NODE": null
+      },
       "presentation": {
         "hidden": true
       }
@@ -155,7 +185,8 @@
         "Peer A — Main + Vite Dev (HMR)",
         "Peer A — Renderer",
         "Peer B — Main (HMR)",
-        "Peer B — Renderer"
+        "Peer B — Renderer",
+        "Peer Auto-Share"
       ],
       "stopAll": true,
       "presentation": {
@@ -192,6 +223,12 @@
       "type": "promptString",
       "description": "Peer B — initial workspace name (leave empty for 'pessoal')",
       "default": ""
+    },
+    {
+      "id": "sharedWorkspace",
+      "type": "promptString",
+      "description": "Auto-share — shared workspace name (created on A, joined by B)",
+      "default": "shared"
     }
   ]
 }

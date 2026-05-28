@@ -6,6 +6,7 @@
 import * as path from 'path';
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '@helpers/puppeteer/resetWorkspace';
+import { seedMaterialsCatalog } from '@helpers/puppeteer/seedMaterialsCatalog';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -87,6 +88,7 @@ beforeAll(async () => {
   if (!page) throw new Error('No renderer page found in Electron');
   await resetWorkspace(page, 'e2e-editVisualization');
   await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
+  await seedMaterialsCatalog(page);
   await switchRibbonTabTool.execute({ label: 'Compositor' });
   await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
 }, 45_000);

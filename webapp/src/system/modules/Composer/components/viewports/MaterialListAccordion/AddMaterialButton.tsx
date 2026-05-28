@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import {
   Button,
@@ -44,7 +44,7 @@ export default function AddMaterialButton({
   );
 
   const [selectedType, setSelectedType] = useState<string>("");
-  const [selectedMaterial, setSelectedMaterial] = useState<number | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [label, setLabel] = useState<string>(
     `material-${Math.random().toString(36).substring(2, 8)}`
   );
@@ -59,6 +59,10 @@ export default function AddMaterialButton({
     setTypeRestrictions([]);
     setLabel(`material-${Math.random().toString(36).substring(2, 8)}`);
   };
+
+  useEffect(()=>{
+    console.log(selectedMaterial)
+  }, [selectedMaterial])
 
   return (
     <PointerContainer
@@ -145,7 +149,7 @@ export default function AddMaterialButton({
                 <MaterialSelector
                   type={selectedType}
                   value={selectedMaterial ?? undefined}
-                  onChange={(id: number) => setSelectedMaterial(id)}
+                  onChange={(id: string) => setSelectedMaterial(id)}
                 />
               ) : (
                 <>Selecione um tipo de material</>

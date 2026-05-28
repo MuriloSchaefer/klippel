@@ -21,6 +21,18 @@ export function persistTheme(state: {theme: PaletteMode}) {
   storage.writeBlob(".session/Layout/theme.json", new Blob([JSON.stringify(state)]), {
     encoding: "utf-8",
   });
+  // Mirror to the renderer's `localStorage` so the preference
+  // survives a workspace switch into a workspace that has never
+  // persisted a `theme.json`. Read back by `restoreThemeSession`
+  // below; also by `kernelCalls/index.ts` on cold boot.
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("theme", state.theme);
+    }
+  } catch {
+    // localStorage can throw under sandboxed test envs; the disk
+    // copy above is the durable source of truth.
+  }
   return state
 }
 /**
@@ -35,7 +47,22 @@ const restoreThemeSession = async (
   sessionPath: PathLike = ".session/Layout",
 ): Promise<{ theme: PaletteMode }> => {
   const exists = await storage.exists(`${sessionPath}/theme.json`);
-  if (!exists) return { theme: layoutInitialState.theme };
+  if (!exists) {
+    // No workspace-local preference yet — fall back to the renderer's
+    // `localStorage`, which `persistTheme` mirrors on every change.
+    // This keeps the theme stable when switching into a fresh
+    // workspace; otherwise the user would snap back to
+    // `layoutInitialState.theme` every time.
+    let stored: PaletteMode | null = null;
+    try {
+      if (typeof localStorage !== "undefined") {
+        stored = localStorage.getItem("theme") as PaletteMode | null;
+      }
+    } catch {
+      stored = null;
+    }
+    return { theme: stored ?? layoutInitialState.theme };
+  }
   const fileContent = await storage.readFile<string>(`${sessionPath}/theme.json`, {
     encoding: "utf-8",
   });

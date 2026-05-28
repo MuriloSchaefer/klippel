@@ -18,11 +18,36 @@ import type { Peer } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import { WebSocketPeerWithReconnection } from "cojson-transport-ws";
 import WebSocket from "ws";
+import { logger as cojsonLogger, LogLevel as CojsonLogLevel } from "cojson";
+import { recordEntry as recordSyncLog } from "./jazzLogBuffer";
+
+// Crank up cojson's internal log level when the user opts in. Useful
+// for diagnosing sync failures: at DEBUG you see every peer (dis)connect,
+// every outgoing/incoming sync message, and every CoValue load. Set
+// `KLIPPEL_JAZZ_DEBUG=1` (or `=debug`) in launch.json / shell env.
+const jazzDebugRaw = (process.env.KLIPPEL_JAZZ_DEBUG ?? "").toLowerCase();
+if (jazzDebugRaw && jazzDebugRaw !== "0" && jazzDebugRaw !== "false") {
+  const level =
+    jazzDebugRaw === "info"
+      ? CojsonLogLevel.INFO
+      : jazzDebugRaw === "warn"
+      ? CojsonLogLevel.WARN
+      : CojsonLogLevel.DEBUG;
+  cojsonLogger.setLevel(level);
+  const levelName =
+    level === CojsonLogLevel.DEBUG
+      ? "DEBUG"
+      : level === CojsonLogLevel.INFO
+      ? "INFO"
+      : "WARN";
+  console.log(
+    `[jazz] cojson log level → ${levelName} (KLIPPEL_JAZZ_DEBUG=${jazzDebugRaw})`,
+  );
+}
 import {
   KlippelAccount,
   ModelsMap,
   ModelSummariesMap,
-  ModelSummary,
   WorkspaceCoMap,
   WorkspaceMetadata,
 } from "../../src/kernel/modules/Store/schema";
@@ -34,6 +59,7 @@ import {
   removeWorkspace,
   type WorkspaceIndexEntry,
 } from "./workspacesIndex";
+import { getMainModules } from "./modules";
 
 type Credentials = { accountID: string; accountSecret: string };
 
@@ -59,6 +85,13 @@ export type ActiveWorkspace = {
   context: JazzContext;
   syncUrl?: string;
   handle: LoadedWorkspaceHandle | null;
+  /**
+   * Reference to the WebSocket reconnector that backs sync for this
+   * workspace, exposed so the diagnostic `jazz-sync-status` IPC can
+   * report whether the socket is actually connected. `null` for
+   * sync-disabled workspaces.
+   */
+  syncReconnector?: SyncReconnector | null;
   release: () => Promise<void>;
 };
 
@@ -304,11 +337,17 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
     });
   }
 
+  recordSyncLog("info", `[workspace] opened "${name}"`, {
+    dir,
+    syncUrl: syncUrl ?? null,
+  });
+
   // Now that the context exists, wire the sync reconnector and wait for
   // the socket to open so the very next `WorkspaceCoMap.load` finds a
   // live peer instead of an empty sync manager.
   let syncReconnector: SyncReconnector | null = null;
   if (syncUrl) {
+    recordSyncLog("info", `[sync] connecting to ${syncUrl}`);
     syncReconnector = createSyncReconnector(syncUrl, context.node as unknown as {
       syncManager: { addPeer: (peer: Peer) => void; peers?: Record<string, unknown> };
     });
@@ -332,6 +371,7 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
     context,
     syncUrl,
     handle: null,
+    syncReconnector,
     release: async () => {
       // `context.done()` fires `node.gracefulShutdown()` but does NOT await
       // it, so a follow-up close that races pending storage writes hits
@@ -386,105 +426,73 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
 /**
  * Resolve (and cache) the active workspace's `WorkspaceCoMap` handle.
  *
- * The resolve set is intentionally narrow:
- *   - `metadata` — read on every IPC for syncOptIn / ownerAccountId.
- *   - `modelSummaries.$each` — drives `listModels` and is the index used
- *     by `loadModel` to look up a model's coId.
- *   - `models` (container only) — lets mutators call `models.$jazz.set`
- *     without dragging each `ModelCoMap`'s history through the sync
- *     manager. Individual models are loaded on demand by `loadModel` /
- *     mutators via `ModelCoMap.load(modelCoId)`.
+ * The resolve set is built by shallow-merging `{ metadata: true }` (always)
+ * with each registered module's `workspaceResolve()`. Modules own disjoint
+ * top-level fields today (Composer: `models` / `modelSummaries`;
+ * Materials: `materials`), so a one-level spread is sufficient.
  *
- * Backfill: workspaces created before lazy hydration landed have no
- * `modelSummaries` record (or have an empty one while `models` is
- * populated). On first call after upgrade we walk `models`, synthesize
- * the missing summaries, and write them back. Idempotent — subsequent
- * calls observe a fully-populated `modelSummaries` and skip the walk.
+ * After the load resolves, each module's `onWorkspaceLoaded` hook runs
+ * (in parallel) before the handle is cached — currently used by Composer
+ * to backfill `modelSummaries` for pre-lazy-hydration workspaces.
  */
 export async function requireActiveWorkspaceHandle(): Promise<LoadedWorkspaceHandle> {
   if (!activeWorkspace) throw new Error("No active workspace");
   if (!activeWorkspace.coId) throw new Error("Active workspace has no coId");
   if (activeWorkspace.handle) return activeWorkspace.handle;
 
+  const resolve: Record<string, unknown> = { metadata: true };
+  for (const m of getMainModules()) {
+    if (m.workspaceResolve) Object.assign(resolve, m.workspaceResolve());
+  }
+
   const settled = await WorkspaceCoMap.load(activeWorkspace.coId, {
-    resolve: {
-      metadata: true,
-      models: true,
-      modelSummaries: { $each: { $onError: "catch" }, $onError: "catch" },
-    },
+    resolve: resolve as never,
   });
   if (!settled || ("$isLoaded" in settled && settled.$isLoaded === false)) {
     throw new Error(`Could not load workspace ${activeWorkspace.coId}`);
   }
-  await backfillModelSummaries(settled);
+  await Promise.all(
+    getMainModules().map(async (m) => {
+      if (!m.onWorkspaceLoaded) return;
+      try {
+        await m.onWorkspaceLoaded(settled);
+      } catch (err) {
+        console.error(`[jazz] ${m.name}.onWorkspaceLoaded failed`, err);
+      }
+    }),
+  );
   activeWorkspace.handle = settled;
   return settled;
 }
 
 /**
- * One-time migration for pre-lazy-hydration workspaces. If
- * `modelSummaries` is absent or missing entries that exist in `models`,
- * synthesize them from the deep-resolved `ModelCoMap` bodies. Runs once
- * per process on first `requireActiveWorkspaceHandle` after upgrade; the
- * cost (a single `models.$each` deep-load) is paid only when the
- * summary record is incomplete.
+ * Drop the cached `WorkspaceCoMap` handle so the next
+ * `requireActiveWorkspaceHandle` rebuilds the resolved view from
+ * scratch. Call this after mutating a shallow-resolved ref on the
+ * workspace (e.g. `workspace.$jazz.set("materials", …)`) — the cached
+ * handle's `$jazz.refs.<field>` accessor was captured at resolve time
+ * and does not reflect refs written afterwards, so subsequent reads
+ * through the cached handle see a stale `undefined` and re-create the
+ * field, wiping data.
  */
-async function backfillModelSummaries(workspace: LoadedWorkspaceHandle): Promise<void> {
-  const w = workspace as unknown as {
-    $jazz: { owner: Group; set: (k: string, v: unknown) => void };
-    models: Record<string, unknown>;
-    modelSummaries?: Record<string, unknown> | null;
-  };
-  const modelIds = Object.keys(w.models ?? {});
-  const summaryIds = new Set(Object.keys(w.modelSummaries ?? {}));
-  if (modelIds.length > 0 && modelIds.every((id) => summaryIds.has(id))) return;
+export function invalidateActiveWorkspaceHandle(): void {
+  if (activeWorkspace) activeWorkspace.handle = null;
+}
 
-  // Deep-load the models record so we can read each model's fields. This
-  // is the one path that still walks `models.$each` — it runs at most
-  // once per workspace per process.
-  const deep = await WorkspaceCoMap.load(workspace.$jazz.id, {
-    resolve: { models: { $each: { $onError: "catch" } } },
-  });
-  if (!deep || ("$isLoaded" in deep && deep.$isLoaded === false)) return;
-  const deepModels = (deep as unknown as { models: Record<string, unknown> }).models;
-
-  const owner = w.$jazz.owner;
-  let summariesRecord = w.modelSummaries as unknown as
-    | (Record<string, unknown> & { $jazz: { set: (k: string, v: unknown) => void } })
-    | null
-    | undefined;
-  if (!summariesRecord) {
-    const created = ModelSummariesMap.create({}, owner);
-    w.$jazz.set("modelSummaries", created);
-    summariesRecord = created as unknown as typeof summariesRecord;
+/**
+ * Build the deep-resolve set used by `joinJazzWorkspace` and
+ * `enableJazzWorkspaceSync` to preload CoValues into the local node
+ * so cojson's sync manager can gossip them to peers. Shallow-merges
+ * `{ metadata: true }` with each module's `syncPreloadResolve()` —
+ * Composer contributes `modelSummaries`, Materials contributes the
+ * deep `materials` tree (shared with `requireCatalog`).
+ */
+function buildSyncPreloadResolve(): Record<string, unknown> {
+  const resolve: Record<string, unknown> = { metadata: true };
+  for (const m of getMainModules()) {
+    if (m.syncPreloadResolve) Object.assign(resolve, m.syncPreloadResolve());
   }
-
-  for (const id of modelIds) {
-    if (summaryIds.has(id)) continue;
-    const model = deepModels[id] as
-      | undefined
-      | {
-          $isLoaded?: boolean;
-          $jazz: { id: string; refs: { svg?: unknown } };
-          id: string;
-          name: string;
-          description: string;
-          updatedAt: number;
-        };
-    if (!model || model.$isLoaded === false) continue;
-    const summary = ModelSummary.create(
-      {
-        id: model.id,
-        modelCoId: model.$jazz.id,
-        name: model.name,
-        description: model.description,
-        updatedAt: model.updatedAt,
-        hasSvg: model.$jazz.refs.svg !== undefined,
-      },
-      owner,
-    );
-    summariesRecord!.$jazz.set(id, summary);
-  }
+  return resolve;
 }
 
 export async function closeActiveWorkspace(): Promise<void> {
@@ -492,11 +500,76 @@ export async function closeActiveWorkspace(): Promise<void> {
   const ws = activeWorkspace;
   activeWorkspace = null;
   ws.handle = null;
+  // Close hooks run sequentially: each module may detach live CoValue
+  // subscriptions, and the unsubscribe must complete before the Jazz
+  // node's storage adapter closes underneath them (otherwise an
+  // unsubscribe races a closed sqlite handle and throws).
+  for (const m of getMainModules()) {
+    if (!m.onWorkspaceClose) continue;
+    try {
+      await m.onWorkspaceClose();
+    } catch (err) {
+      console.error(`[jazz] ${m.name}.onWorkspaceClose failed`, err);
+    }
+  }
   await ws.release();
 }
 
 export function getActiveWorkspace(): ActiveWorkspace | null {
   return activeWorkspace;
+}
+
+export type JazzSyncStatus = {
+  workspaceName: string | null;
+  workspaceCoId: string | null;
+  /** Resolved sync URL the reconnector dials; `null` when offline. */
+  syncUrl: string | null;
+  /** `syncOptIn` flag from the workspace's local index entry. */
+  syncOptIn: boolean;
+  /** Peer ids currently registered on cojson's sync manager. */
+  peers: string[];
+  /** True iff a peer matching `syncUrl` is in the registered set. */
+  connected: boolean;
+  /** Cojson account id for this peer. */
+  accountId: string | null;
+};
+
+/**
+ * Snapshot of the local node's sync surface. Designed to be called
+ * from DevTools (`await window.electron.jazz.syncStatus()`) to
+ * diagnose "my edits aren't reaching the other peer" — checks each
+ * piece in turn: do we have a workspace, is sync enabled in the
+ * index, is the WS peer actually registered.
+ */
+export async function getSyncStatus(): Promise<JazzSyncStatus> {
+  const ws = activeWorkspace;
+  if (!ws) {
+    return {
+      workspaceName: null,
+      workspaceCoId: null,
+      syncUrl: null,
+      syncOptIn: false,
+      peers: [],
+      connected: false,
+      accountId: null,
+    };
+  }
+  const entry = findWorkspace(ws.name);
+  const node = ws.context.node as unknown as {
+    syncManager?: { peers?: Record<string, unknown> };
+  };
+  const peers = Object.keys(node.syncManager?.peers ?? {});
+  const connected = ws.syncUrl ? peers.some((id) => id.includes(ws.syncUrl!)) : false;
+  const account = ws.context.account as unknown as { $jazz?: { id?: string } };
+  return {
+    workspaceName: ws.name,
+    workspaceCoId: ws.coId || null,
+    syncUrl: ws.syncUrl ?? null,
+    syncOptIn: !!entry?.syncOptIn,
+    peers,
+    connected,
+    accountId: account?.$jazz?.id ?? null,
+  };
 }
 
 export async function createJazzWorkspace(name: string): Promise<WorkspaceIndexEntry> {
@@ -579,11 +652,14 @@ export async function joinJazzWorkspace(
     // bodies stream in on demand via `loadModel` (jazz-performance.md
     // §2.2). `$onError: "catch"` per child keeps a slow/unauthorized
     // summary from blocking the whole tree.
+    // Joiners must pull the materials catalog from the sync server
+    // eagerly — without it, the materials ref is observable on the
+    // WorkspaceCoMap but the catalog CoMap itself isn't requested and
+    // `requireCatalog`'s subsequent deep load races the sync.
+    // `buildSyncPreloadResolve` aggregates each module's contribution
+    // (Composer: `modelSummaries`; Materials: deep catalog).
     const loaded = await WorkspaceCoMap.load(coId, {
-      resolve: {
-        metadata: true,
-        modelSummaries: { $each: { $onError: "catch" }, $onError: "catch" },
-      },
+      resolve: buildSyncPreloadResolve() as never,
     });
     if (!loaded || ("$isLoaded" in loaded && loaded.$isLoaded === false)) {
       throw new Error(`Could not load remote workspace ${coId} via ${syncUrl}`);
@@ -660,15 +736,17 @@ export async function enableJazzWorkspaceSync(
   // times out: the node has nothing to sync because nothing was loaded.
   if (reopened.coId) {
     try {
-      // Preload only the summaries; full model bodies stream on demand.
-      // Matches the lazy-hydration path elsewhere — the previous deep
-      // `models.$each.editLease` load forced every model into RAM just
-      // to seed the sync manager.
+      // Lazy-hydration: Composer contributes a shallow `modelSummaries`
+      // preload (full model bodies stream on demand via `loadModel`),
+      // Materials contributes the deep catalog preload — catalogs are
+      // written by the seed/Materials IPC *before* share-enable, so by
+      // the time we reopen they already exist in SQLite. cojson's sync
+      // manager only pushes CoValues the local node has in its loaded
+      // set, so without pulling the catalog into memory the post-reopen
+      // sync server never receives the catalog data — joiners would see
+      // the ref but not the contents.
       await WorkspaceCoMap.load(reopened.coId, {
-        resolve: {
-          metadata: true,
-          modelSummaries: { $each: { $onError: "catch" }, $onError: "catch" },
-        },
+        resolve: buildSyncPreloadResolve() as never,
       });
     } catch (err) {
       console.error("[jazz] preload workspace after enableSync failed", err);
@@ -717,6 +795,27 @@ export async function ensureJazzWorkspace(name: string): Promise<WorkspaceIndexE
   }
   if (activeWorkspace) await closeActiveWorkspace();
   return createJazzWorkspace(name);
+}
+
+/**
+ * Force-reopen the active workspace's Jazz node. Unlike
+ * `ensureJazzWorkspace`, this always tears down the current context
+ * (releasing the SQLite lock, dropping the cached deep-resolved
+ * `WorkspaceCoMap` handle, and re-dialing the sync peer) before
+ * re-opening, so the next `requireActiveWorkspaceHandle` reads a fresh
+ * resolved view — which is what the "Atualizar" / refreshFromPeers
+ * flow needs to actually pull peer deltas into the renderer.
+ */
+export async function refreshJazzWorkspace(name: string): Promise<WorkspaceIndexEntry> {
+  const indexEntry = findWorkspace(name);
+  const dir = workspaceDir(name);
+  const hasJazzId = existsSync(join(dir, ".jazz-id"));
+  if (!indexEntry || !hasJazzId) {
+    return ensureJazzWorkspace(name);
+  }
+  if (activeWorkspace) await closeActiveWorkspace();
+  await openWorkspaceJazzNode(name);
+  return indexEntry;
 }
 
 export async function getAccountId(): Promise<string | null> {

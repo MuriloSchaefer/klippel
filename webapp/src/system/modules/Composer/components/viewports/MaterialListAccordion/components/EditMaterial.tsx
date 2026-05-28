@@ -13,8 +13,8 @@ export default function EditMaterial({
 }: Readonly<{
   type: string;
   typeRestrictions: string[];
-  materialId: number;
-  onSave: (materialId: number) => void;
+  materialId: string;
+  onSave: (materialId: string) => void;
   onCancel: () => void;
 }>) {
   const theme = useTheme();
@@ -23,7 +23,7 @@ export default function EditMaterial({
 
   const [form, setForm] = useState<{
     type: string;
-    materialId: number | undefined;
+    materialId: string | undefined;
   }>({ materialId, type });
   
   return (

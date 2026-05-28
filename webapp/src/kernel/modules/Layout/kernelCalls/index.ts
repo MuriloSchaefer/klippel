@@ -14,6 +14,8 @@ import panelsMiddleware from "../store/panels/middlewares";
 import slice, { sessionSaver } from "../store/slice";
 import { PostBootInitializationProps, StartModuleProps } from "@kernel/modules/base";
 import HomeViewport from "../components/ViewportManager/HomeViewport";
+import PeersIndicator from "../components/SystemTray/PeersIndicator";
+import SyncLogsIndicator from "../components/SystemTray/SyncLogsIndicator";
 import { switchTheme } from "../store/actions";
 import { type PaletteMode } from "@mui/material";
 import { collapseSettings, expandSettings, closeDetails, openDetails } from "../store/panels/actions";
@@ -50,7 +52,13 @@ export const startModule = ({
     [VIEWPORT_TYPE_REGISTRY_NAME]: {
       home: HomeViewport,
     },
-    [SYSTEM_TRAY_REGISTRY_NAME]: {}
+    [SYSTEM_TRAY_REGISTRY_NAME]: {
+      // Jazz sync diagnostics — live next to the workspace selector
+      // so users can see at a glance whether sync is healthy and
+      // drill into the cojson event stream without DevTools.
+      peersIndicator: PeersIndicator,
+      syncLogsIndicator: SyncLogsIndicator,
+    }
   });
 };
 

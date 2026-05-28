@@ -1,21 +1,24 @@
 {
   "version": "2.0.0",
   "tasks": [
-    // Per-peer env-dir wipe. The path matches `KLIPPEL_USER_DATA_DIR` /
-    // `~/klippel/envs/<ENV_NAME>` set in launch.json so a fresh run starts
-    // from clean state. The prompts are shared with launch.json via
-    // matching `input` ids, so VS Code only asks once per launch.
+    // Per-peer Chromium-profile wipe. Only `/tmp/klippel-<env>` (the
+    // Chromium user-data dir set as `KLIPPEL_USER_DATA_DIR` in
+    // launch.json) is removed so each run starts with a clean
+    // renderer/devtools state. The Jazz workspace data under
+    // `~/klippel/envs/<ENV_NAME>` is intentionally *not* wiped — the
+    // SQLite store there must survive across debugger restarts so the
+    // previous session's catalog/model edits persist.
     {
       "label": "klippel:reset-peer-A",
       "type": "shell",
-      "command": "rm -rf /tmp/klippel-${input:peerAEnv} \"$HOME/klippel/envs/${input:peerAEnv}\"",
+      "command": "rm -rf /tmp/klippel-${input:peerAEnv}",
       "presentation": { "reveal": "silent", "panel": "dedicated" },
       "problemMatcher": []
     },
     {
       "label": "klippel:reset-peer-B",
       "type": "shell",
-      "command": "rm -rf /tmp/klippel-${input:peerBEnv} \"$HOME/klippel/envs/${input:peerBEnv}\"",
+      "command": "rm -rf /tmp/klippel-${input:peerBEnv}",
       "presentation": { "reveal": "silent", "panel": "dedicated" },
       "problemMatcher": []
     },

@@ -24,9 +24,9 @@ const MaterialSelector = ({
   disabled = false
 }: {
   type: string;
-  value?: number;
+  value?: string;
   filter?: (option: MaterialState) => boolean;
-  onChange?: (value: number) => void;
+  onChange?: (value: string) => void;
   disabled?: boolean
 }) => {
   const storeModule = useModule<Store>("Store");
@@ -39,11 +39,11 @@ const MaterialSelector = ({
       Object.values(materials)
         .filter((mat) => mat.type === type)
         .filter(filter ?? noFilter)
-        .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {} as Record<number, MaterialState>)
+        .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {} as Record<string, MaterialState>)
     ),
     [type, filter, noFilter]
   );
-  const materials = (useAppSelector(materialsSelector) ?? {}) as Record<number, MaterialState>;
+  const materials = (useAppSelector(materialsSelector) ?? {}) as Record<string, MaterialState>;
 
   const schemaObj = materialType!.schemas[materialType!.latestSchema];
   const selector = schemaObj.selector;
@@ -109,8 +109,7 @@ const MaterialSelector = ({
   );
 
   const handleMaterialSelection = useCallback(
-    (e: SelectChangeEvent<number>) => {
-      if (typeof e.target.value === "string") return;
+    (e: SelectChangeEvent<string>) => {
       if (onChange) onChange(e.target.value);
     },
     [materials]
@@ -167,7 +166,7 @@ const MaterialSelector = ({
         <InputLabel id={`label`} sx={{ textTransform: "capitalize" }}>
           {selector.extra}
         </InputLabel>
-        <Select<number>
+        <Select<string>
           labelId={`label`}
           id={`material-extra`}
           value={selectedMaterial?.id ?? ""}

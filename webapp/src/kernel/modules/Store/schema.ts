@@ -71,6 +71,94 @@ export const ModelSummary = co.map({
 
 export const ModelSummariesMap = co.record(z.string(), ModelSummary);
 
+/**
+ * Materials catalog — per-CoValue graph.
+ *
+ * Diverges from `ModelCoMap.graphJson` (one atomic blob behind an
+ * `EditLease`). The catalog is long-lived shared state edited
+ * concurrently at attribute granularity; every node, edge, and
+ * attribute is its own CoValue so per-cell CRDTs let parallel edits
+ * merge with no lease. See
+ * `system/modules/Materials/docs/architecture/graph-semantics.md`.
+ */
+export const NodePosition = co.map({ x: z.number(), y: z.number() });
+
+// One attribute cell — its own CoValue, so users editing different
+// attributes of the same material never collide. Object-typed
+// attributes recurse through `children`.
+export const AttributeCoMap = co.map({
+  key: z.string(),
+  valueJson: z.optional(z.string()),
+  get children() {
+    return co.optional(co.record(z.string(), AttributeCoMap));
+  },
+});
+
+// stock — its own CoMap; `amount` / `unit` are independent CRDT registers.
+export const StockCoMap = co.map({ amount: z.number(), unit: z.string() });
+
+export const AttributeRecord = co.record(z.string(), AttributeCoMap);
+
+export const MaterialCoMap = co.map({
+  id: z.string(),
+  type: z.string(),
+  label: z.optional(z.string()),
+  position: NodePosition,
+  attributes: AttributeRecord,
+  stock: StockCoMap,
+  composition: co.optional(AttributeRecord),
+  caracteristics: co.optional(AttributeRecord),
+  externalId: z.optional(z.string()),
+  externalURL: z.optional(z.string()),
+  description: z.optional(z.string()),
+  schemaVersion: z.string(),
+  updatedAt: z.number(),
+});
+
+// Material-type schema version. Immutable once written — `schemaJson`
+// stays atomic since there is no parallel-edit concern.
+export const MaterialTypeCoMap = co.map({
+  id: z.string(), // `${name}@${version}`
+  schemaJson: z.string(),
+});
+
+// industry / seller — plain typed fields, each its own CRDT register.
+export const OrgNodeCoMap = co.map({
+  id: z.string(),
+  type: z.string(), // "industry" | "seller"
+  label: z.optional(z.string()),
+  position: NodePosition,
+  name: z.string(),
+  country: z.optional(z.string()),
+  contact: z.optional(z.string()),
+  updatedAt: z.number(),
+});
+
+export const EdgeCoMap = co.map({
+  id: z.string(),
+  type: z.string(),
+  sourceId: z.string(),
+  targetId: z.string(),
+});
+
+// Exported record types — also referenced by `Materials/main/materials.ts`
+// when it has to create the catalog's child records on first use.
+// Passing the right concrete schema keeps Jazz's runtime validation from
+// rejecting subsequent `.$jazz.set(id, MaterialCoMap)` inserts (a
+// `co.record(z.string(), AttributeCoMap)` would refuse).
+export const MaterialsRecord = co.record(z.string(), MaterialCoMap);
+export const MaterialTypesRecord = co.record(z.string(), MaterialTypeCoMap);
+export const OrgNodesRecord = co.record(z.string(), OrgNodeCoMap);
+export const EdgesRecord = co.record(z.string(), EdgeCoMap);
+
+export const MaterialCatalogCoMap = co.map({
+  materials: MaterialsRecord,
+  materialTypes: MaterialTypesRecord,
+  industries: OrgNodesRecord,
+  sellers: OrgNodesRecord,
+  edges: EdgesRecord,
+});
+
 export const WorkspaceCoMap = co.map({
   metadata: WorkspaceMetadata,
   models: ModelsMap,
@@ -78,6 +166,10 @@ export const WorkspaceCoMap = co.map({
   // lazy hydration landed do not have this record. `requireWorkspace` in
   // the main process lazily creates + backfills it on first open.
   modelSummaries: co.optional(ModelSummariesMap),
+  // Materials catalog. Optional so pre-Materials workspaces still load;
+  // `requireMaterialsCatalog` in `Materials/main/materials.ts` lazily
+  // creates and seeds it on first open.
+  materials: co.optional(MaterialCatalogCoMap),
 });
 
 export const KlippelRoot = co.map({

@@ -1,0 +1,191 @@
+import { registerMainModule } from "../../../../../electron/main/modules";
+import {
+  loadMaterialsCatalog,
+  seedCatalogIfEmpty,
+  addMaterial,
+  updateMaterial,
+  updateMaterialStock,
+  deleteMaterial,
+  registerMaterialTypeVersion,
+  onCatalogChange,
+  dropCatalogSubscription,
+  materialsCatalogResolve,
+} from "./materials";
+import { runImportXlsx, onImportFinished } from "./importer";
+import type {
+  AddMaterialInput,
+  MaterialTypeVersionDTO,
+  SeedCatalogInput,
+  UpdateMaterialInput,
+  UpdateMaterialStockInput,
+} from "../typings/catalog";
+
+registerMainModule({
+  name: "Materials",
+
+  workspaceResolve: () => ({
+    materials: { $onError: "catch" },
+  }),
+
+  syncPreloadResolve: () => ({
+    materials: materialsCatalogResolve,
+  }),
+
+  onWorkspaceClose: () => {
+    // Detach the Jazz subscription before the node shuts down — the
+    // per-renderer listeners stay registered and pick the new
+    // workspace's catalog back up on the next `requireCatalog`.
+    dropCatalogSubscription();
+  },
+
+  registerIpc: ({ ipcMain }) => {
+    ipcMain.handle("jazz-materials-load", async () => {
+      try {
+        const snapshot = await loadMaterialsCatalog();
+        // Force a structured-clone round-trip in main so a non-cloneable
+        // value (typically a leaked Jazz proxy) blows up here — with a
+        // useful path — instead of in Electron's IPC layer where the
+        // error is opaque "An object could not be cloned".
+        try {
+          structuredClone(snapshot);
+        } catch (cloneErr) {
+          console.error(
+            "[jazz-materials-load] snapshot is not structured-cloneable",
+            cloneErr,
+            "\nsnapshot keys:",
+            {
+              materials: Object.keys(snapshot.materials),
+              materialTypes: Object.keys(snapshot.materialTypes),
+              industries: Object.keys(snapshot.industries),
+              sellers: Object.keys(snapshot.sellers),
+              edges: Object.keys(snapshot.edges),
+            },
+          );
+          const sections: Array<[string, Record<string, unknown>]> = [
+            ["materials", snapshot.materials],
+            ["materialTypes", snapshot.materialTypes],
+            ["industries", snapshot.industries],
+            ["sellers", snapshot.sellers],
+            ["edges", snapshot.edges],
+          ];
+          for (const [section, record] of sections) {
+            for (const [id, entry] of Object.entries(record)) {
+              try {
+                structuredClone(entry);
+              } catch (entryErr) {
+                console.error(
+                  `[jazz-materials-load] non-cloneable entry at ${section}.${id}`,
+                  entryErr,
+                  "entry:",
+                  entry,
+                );
+              }
+            }
+          }
+          throw new Error(
+            `loadMaterialsCatalog snapshot contains non-cloneable value: ${
+              cloneErr instanceof Error ? cloneErr.message : String(cloneErr)
+            }`,
+          );
+        }
+        return snapshot;
+      } catch (err) {
+        console.error("[jazz-materials-load] loadMaterialsCatalog threw", err);
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(`loadMaterialsCatalog failed: ${message}`);
+      }
+    });
+    ipcMain.handle(
+      "jazz-materials-seed",
+      async (_event, input: SeedCatalogInput) => seedCatalogIfEmpty(input),
+    );
+    ipcMain.handle(
+      "jazz-materials-add",
+      async (_event, input: AddMaterialInput) => addMaterial(input),
+    );
+    ipcMain.handle(
+      "jazz-materials-update",
+      async (_event, input: UpdateMaterialInput) => updateMaterial(input),
+    );
+    ipcMain.handle(
+      "jazz-materials-update-stock",
+      async (_event, input: UpdateMaterialStockInput) =>
+        updateMaterialStock(input),
+    );
+    ipcMain.handle(
+      "jazz-materials-delete",
+      async (_event, id: string) => deleteMaterial(id),
+    );
+    ipcMain.handle(
+      "jazz-materials-register-type-version",
+      async (
+        _event,
+        input: MaterialTypeVersionDTO & { predecessorId?: string },
+      ) => registerMaterialTypeVersion(input),
+    );
+
+    // Catalog change subscription — when the main-side Jazz node observes
+    // a mutation to the active workspace's `MaterialCatalogCoMap` (local
+    // edit or remote sync), `onCatalogChange` fires; we forward the tick
+    // to every renderer that subscribed via `jazz-materials:subscribe`.
+    const materialsListeners = new Map<number, () => void>();
+    ipcMain.handle("jazz-materials:subscribe", (event) => {
+      const wcId = event.sender.id;
+      materialsListeners.get(wcId)?.();
+      const off = onCatalogChange(() => {
+        if (event.sender.isDestroyed()) return;
+        event.sender.send("jazz-materials:changed");
+      });
+      materialsListeners.set(wcId, off);
+      event.sender.once("destroyed", () => {
+        materialsListeners.get(wcId)?.();
+        materialsListeners.delete(wcId);
+      });
+      return { success: true } as const;
+    });
+    ipcMain.handle("jazz-materials:unsubscribe", (event) => {
+      const wcId = event.sender.id;
+      materialsListeners.get(wcId)?.();
+      materialsListeners.delete(wcId);
+      return { success: true } as const;
+    });
+
+    // Import job — renderer hands over the xlsx bytes; main parses and
+    // writes off-thread. The handler returns the `jobId` immediately;
+    // completion (or top-level failure) lands on `materials:import-finished`.
+    ipcMain.handle(
+      "materials:import-xlsx",
+      async (_event, buffer: ArrayBuffer | Uint8Array) => {
+        const arrayBuffer =
+          buffer instanceof Uint8Array
+            ? buffer.buffer.slice(
+                buffer.byteOffset,
+                buffer.byteOffset + buffer.byteLength,
+              )
+            : buffer;
+        return runImportXlsx(arrayBuffer as ArrayBuffer);
+      },
+    );
+    const importFinishedListeners = new Map<number, () => void>();
+    ipcMain.handle("materials:import-finished:subscribe", (event) => {
+      const wcId = event.sender.id;
+      importFinishedListeners.get(wcId)?.();
+      const off = onImportFinished((payload) => {
+        if (event.sender.isDestroyed()) return;
+        event.sender.send("materials:import-finished", payload);
+      });
+      importFinishedListeners.set(wcId, off);
+      event.sender.once("destroyed", () => {
+        importFinishedListeners.get(wcId)?.();
+        importFinishedListeners.delete(wcId);
+      });
+      return { success: true } as const;
+    });
+    ipcMain.handle("materials:import-finished:unsubscribe", (event) => {
+      const wcId = event.sender.id;
+      importFinishedListeners.get(wcId)?.();
+      importFinishedListeners.delete(wcId);
+      return { success: true } as const;
+    });
+  },
+});

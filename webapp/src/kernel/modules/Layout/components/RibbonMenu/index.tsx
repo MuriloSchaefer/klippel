@@ -204,23 +204,37 @@ const RibbonMenu = ({ systemTray }: RibbonMenuProps) => {
           minHeight: "10vh"
         }}
       >
-        {tabs &&
-          Object.entries(tabs).map(([name, tab]) => (
-            <TabPanel value={name} key={`ribbon-panel-${name}`}>
-              {tab.sectionNames &&
-                tab.sectionNames.map((sectionName) => {
-                  const comp = componentRegistryManager.functions.getComponent(
-                    SECTIONS_REGISTRY_NAME,
-                    sectionName
-                  );
-                  return createElement(
-                    comp,
-                    { key: `ribbon-panel-${name}-section-${sectionName}` },
-                    []
-                  );
-                })}
-            </TabPanel>
-          ))}
+        {/*
+          Render only the active tab's panel. MUI's `<TabPanel>`
+          otherwise keeps every registered tab mounted in the DOM and
+          toggles `hidden` — N modules → N panels mounted, which both
+          clutters the DOM and pays the render cost for sections the
+          user can't see. Ribbon sections are cheap React trees and
+          re-mount instantly on tab switch, so unmounting the
+          inactive ones is the right trade.
+        */}
+        {tabs && activeTab && tabs[activeTab] && (
+          <TabPanel
+            value={activeTab}
+            key={`ribbon-panel-${activeTab}`}
+            sx={{ display: "flex" }}
+          >
+            {tabs[activeTab].sectionNames &&
+              tabs[activeTab].sectionNames.map((sectionName) => {
+                const comp = componentRegistryManager.functions.getComponent(
+                  SECTIONS_REGISTRY_NAME,
+                  sectionName,
+                );
+                return createElement(
+                  comp,
+                  {
+                    key: `ribbon-panel-${activeTab}-section-${sectionName}`,
+                  },
+                  [],
+                );
+              })}
+          </TabPanel>
+        )}
       </Box>
     </TabContext>
   );

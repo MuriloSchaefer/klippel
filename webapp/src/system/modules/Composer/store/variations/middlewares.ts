@@ -2,10 +2,11 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import type { GraphState, GraphsManagerState } from "@kernel/modules/Graphs/store/state";
-import { loadGraph } from "@kernel/modules/Graphs/store/graphInstance/actions";
+import { loadGraph, updateNode as updateNodeAction } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { saveSession, sessionSaved } from "../models/actions";
-import { ComposerModuleState } from "@system/modules/Composer/typings";
-import { modelOpened, openModel, partSelected, selectPart, uploadSVG, svgUploaded, saveModel, modelSaved, modelSaveFailed  } from "./actions";
+import { ComposerModuleState, MaterialNode } from "@system/modules/Composer/typings";
+import { modelOpened, openModel, partSelected, selectPart, uploadSVG, svgUploaded, saveModel, modelSaved, modelSaveFailed, refreshMaterialSnapshots, materialSnapshotsRefreshed } from "./actions";
+import type { MaterialsModuleState } from "@system/modules/Materials/store/state";
 import { persistVariation } from "./slice";
 import { loadSVG } from "@kernel/modules/SVG/store/actions";
 import { sanitizeSvg } from "@kernel/modules/SVG/utils/sanitizeSvg";
@@ -191,6 +192,43 @@ middlewares.startListening({
       const reason = err instanceof Error ? err.message : String(err);
       dispatch(modelSaveFailed({ variationId, modelId: variation.id, error: reason }));
     }
+  },
+});
+
+middlewares.startListening({
+  actionCreator: refreshMaterialSnapshots,
+  effect: async ({ payload: { variationId } }, listenerApi) => {
+    const { dispatch, getState } = listenerApi;
+    const state = getState() as {
+      Graph: GraphsManagerState;
+      Materials: MaterialsModuleState | undefined;
+    };
+    const graph = state.Graph?.graphs?.[variationId];
+    const materials = state.Materials?.materials;
+    if (!graph || !materials) {
+      dispatch(materialSnapshotsRefreshed({ variationId, updated: 0 }));
+      return;
+    }
+    let updated = 0;
+    for (const node of Object.values(graph.nodes)) {
+      if (node.type !== "MATERIAL") continue;
+      const mNode = node as MaterialNode;
+      const fresh = materials[mNode.materialId];
+      if (!fresh || mNode.materialSnapshot === fresh) continue;
+      dispatch(
+        updateNodeAction({
+          graphId: variationId,
+          nodeId: mNode.id,
+          changes: { ...mNode, materialSnapshot: fresh } as MaterialNode,
+        }),
+      );
+      updated++;
+    }
+    const activeViewport = selectActiveViewport(getState() as any);
+    if (updated > 0 && activeViewport) {
+      dispatch(setViewportHasChanged({ name: activeViewport, hasChanged: true }));
+    }
+    dispatch(materialSnapshotsRefreshed({ variationId, updated }));
   },
 });
 

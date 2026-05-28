@@ -11,7 +11,13 @@ import { getAbsPath, initStorageHooks } from "./storage";
 import { startMcpServer } from "./mcp";
 import initScheduler from "./scheduler";
 import { initJazzHooks } from "./jazz-hooks";
+import { installCojsonLogTap } from "./jazzLogBuffer";
 import { closeActiveWorkspace } from "./jazz";
+// Side-effecting imports — each module's `main/index.ts` calls
+// `registerMainModule` at import time. They must land before
+// `initJazzHooks` so the registry is populated when jazz handlers fire.
+import "../../src/system/modules/Composer/main";
+import "../../src/system/modules/Materials/main";
 import { existsSync, ensureDirSync, outputFile, readdirSync, readFileSync } from "fs-extra";
 import DEFAULT_WINDOW_CONFIG from "./defaultWindow";
 import { debounce } from "./utils";
@@ -126,6 +132,10 @@ async function createWindow(): Promise<BrowserWindow> {
     },
   });
   initStorageHooks(scheduler, mainWindow);
+  // Install the cojson log tap *before* `initJazzHooks` so the IPC
+  // handlers it registers see a ready buffer; the tap itself is
+  // idempotent and may also be installed earlier.
+  installCojsonLogTap();
   initJazzHooks();
   // const eo = await initOllama()
   // console.log(eo)

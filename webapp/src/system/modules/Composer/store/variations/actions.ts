@@ -36,3 +36,10 @@ export const modelSaved = createAction<{ variationId: string, modelId: string, m
 export const modelSaveFailed = createAction<{ variationId: string, modelId: string, error: string }>(
   `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Model save failed`
 );
+
+export const refreshMaterialSnapshots = createAction<{ variationId: string }>(
+  `[${MODULE_NAME}:${ACTION_TYPES.COMMAND}] Refresh material snapshots`
+);
+export const materialSnapshotsRefreshed = createAction<{ variationId: string, updated: number }>(
+  `[${MODULE_NAME}:${ACTION_TYPES.EVENT}] Material snapshots refreshed`
+);

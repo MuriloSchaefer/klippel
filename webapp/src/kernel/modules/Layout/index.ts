@@ -21,6 +21,7 @@ import CustomTextArea from "./components/CustomFields/TextArea";
 import ColorPicker from "./components/ColorPicker";
 import CRUDTextFieldCell from "./components/CRUDGrid/TextFieldCell";
 import useActiveViewport from "./hooks/useActiveViewport";
+import RibbonSection from "./components/RibbonMenu/RibbonSection";
 
 export interface ILayoutModule extends IModule {
   name: typeof MODULE_NAME,
@@ -36,7 +37,8 @@ export interface ILayoutModule extends IModule {
     CRUDTextFieldCell: typeof CRUDTextFieldCell,
     CRUDGrid: typeof CRUDGrid,
     CustomTextArea: typeof CustomTextArea,
-    ColorPicker: typeof ColorPicker
+    ColorPicker: typeof ColorPicker,
+    RibbonSection: typeof RibbonSection,
   },
   contexts: {
     CRUDGridContext: typeof CRUDGridContext,
@@ -81,7 +83,8 @@ const LayoutModule: ILayoutModule = {
     CRUDTextFieldCell,
     CRUDGridProvider,
     CustomTextArea,
-    ColorPicker
+    ColorPicker,
+    RibbonSection,
   },
   contexts: {CRUDGridContext},
   hooks: {

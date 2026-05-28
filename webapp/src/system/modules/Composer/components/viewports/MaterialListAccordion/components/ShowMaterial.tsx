@@ -35,7 +35,7 @@ export default function ShowMaterial({
   onDelete: () => void;
   variationId: string;
   node: MaterialNode;
-  material: MaterialState;
+  material: MaterialState | undefined;
   isFocused?: boolean;
 }) {
   const theme = useTheme();
@@ -49,7 +49,7 @@ export default function ShowMaterial({
   const { PointerContainer } = pointerModule.components;
   const { ShortcutHint } = keyboardShortcutsModule.components;
 
-  const units = useUnits([material.stock?.unit].filter(Boolean) as string[]);
+  const units = useUnits([material?.stock?.unit].filter(Boolean) as string[]);
 
   const abbreviation = stock && units?.[stock.unit]?.abbreviation;
 
@@ -67,7 +67,7 @@ export default function ShowMaterial({
           </Typography>
           <Typography color={theme.palette.text.secondary} sx={{ ml: 1 }} data-testid="material-extra">
             (
-            {typeof extra === "object" && "label" in extra
+            {extra && typeof extra === "object" && "label" in extra
               ? extra.label
               : extra}
             )
@@ -106,21 +106,27 @@ export default function ShowMaterial({
             Custo por unidade:{" "}
             <span data-testid="material-cost-info">
               <ErrorBoundary fallbackRender={fallbackRenderLabelOnly}>
-                <MaterialCostInfo
-                  variationId={variationId}
-                  node={node}
-                  material={material}
-                />
+                {material ? (
+                  <MaterialCostInfo
+                    variationId={variationId}
+                    node={node}
+                    material={material}
+                  />
+                ) : null}
               </ErrorBoundary>
             </span>
           </Typography>
           <PointerContainer
             component={
-              <MaterialCostAuditContent
-                variationId={variationId}
-                node={node}
-                material={material}
-              />
+              <>
+                {material ? (
+                  <MaterialCostAuditContent
+                    variationId={variationId}
+                    node={node}
+                    material={material}
+                  />
+                ) : null}
+              </>
             }
             actions={[]}
           >

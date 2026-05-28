@@ -2,7 +2,7 @@
 
 import { StartModuleProps } from "../base";
 import { SYSTEM_TRAY_REGISTRY_NAME } from "../Layout/constants";
-import { listWorkspaces } from "./actions";
+import { listWorkspaces, refreshFromPeers } from "./actions";
 import SessionAutoSaverIcon from "./components/SessionAutoSaverIcon";
 import WorkspaceSelector from "./components/WorkspaceSelector";
 import { sessionSaver } from "./slice";
@@ -39,6 +39,16 @@ export const restartModule = ({
       // boot we'd otherwise hit "workspace has no coId"). Single call covers
       // the open-existing, fresh-bootstrap, and stale-entry cases.
       await globalThis.electron.jazz.ensureWorkspace(selected);
+      // First sync after boot. `ensureWorkspace` only opens the local
+      // Jazz node; it doesn't guarantee peer deltas have been pulled
+      // (the WS reconnector dials asynchronously, and modules that
+      // boot before the first sync round-trip see stale-from-disk
+      // catalog state). Firing `refreshFromPeers` here re-opens the
+      // node through `refreshJazzWorkspace`, which rebuilds the
+      // cojson context with the WS peer wired from the start, and
+      // then fans out `peersRefreshed` so domain modules (Materials,
+      // …) reload their slices from the freshly-resolved catalog.
+      dispatch(refreshFromPeers());
     } catch (err) {
       console.error("[Store/boot] Jazz attach failed", err);
     }

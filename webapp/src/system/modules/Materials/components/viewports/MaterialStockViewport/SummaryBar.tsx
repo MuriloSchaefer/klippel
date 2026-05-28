@@ -1,0 +1,72 @@
+import React, { useMemo } from "react";
+import { Box, Typography } from "@mui/material";
+import useMaterialTypes from "../../../hooks/useMaterialTypes";
+import type { MaterialState } from "../../../store/materials/state";
+
+interface Props {
+  materials: MaterialState[];
+}
+
+/**
+ * Per-type stock total. Monetary totals are deferred (no `price`
+ * field in the current fixture) — Phase 4 wires them once a price
+ * source lands. Unit is taken from the first material in each group;
+ * mixed-unit groups fall back to a blank unit.
+ */
+const SummaryBar: React.FC<Props> = ({ materials }) => {
+  const materialTypes = useMaterialTypes();
+
+  const groups = useMemo(() => {
+    const byType: Record<string, { amount: number; unit: string; mixed: boolean }> =
+      {};
+    for (const m of materials) {
+      const t = m.type;
+      if (!byType[t]) byType[t] = { amount: 0, unit: m.stock?.unit ?? "", mixed: false };
+      const g = byType[t];
+      g.amount += m.stock?.amount ?? 0;
+      if (g.unit && m.stock?.unit && g.unit !== m.stock.unit) g.mixed = true;
+    }
+    return byType;
+  }, [materials]);
+
+  const total = useMemo(
+    () => materials.reduce((acc, m) => acc + (m.stock?.amount ?? 0), 0),
+    [materials],
+  );
+
+  return (
+    <Box
+      data-testid="material-stock-summary"
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 2,
+        px: 2,
+        py: 1,
+        borderTop: "1px solid",
+        borderColor: "divider",
+        alignItems: "center",
+      }}
+    >
+      {Object.entries(groups).map(([type, g]) => (
+        <Box key={type} sx={{ display: "flex", flexDirection: "column" }}>
+          <Typography variant="caption" color="text.secondary">
+            {materialTypes?.[type]?.label ?? type}
+          </Typography>
+          <Typography variant="body2">
+            {g.amount.toLocaleString()} {g.mixed ? "" : g.unit}
+          </Typography>
+        </Box>
+      ))}
+      <Box sx={{ flex: 1 }} />
+      <Box sx={{ textAlign: "right" }}>
+        <Typography variant="caption" color="text.secondary">
+          Total
+        </Typography>
+        <Typography variant="body2">{total.toLocaleString()}</Typography>
+      </Box>
+    </Box>
+  );
+};
+
+export default SummaryBar;

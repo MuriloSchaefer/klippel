@@ -3,6 +3,7 @@ import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
 import { CompoundValue } from "@system/modules/Converter/typings";
+import { MaterialState } from "@system/modules/Materials/store/materials/state";
 
 export type Model = {
     id: string,
@@ -168,7 +169,11 @@ export type GraduationProcessTimeAudit = {
 export type MaterialNode = Node & {
     type: "MATERIAL";
     label: string;
-    materialId: number;
+    materialId: string;
+    // Cached snapshot of the catalog material at the time the node was added
+    // or last refreshed. Lets the accordion render before/without the
+    // Materials redux slice being available (e.g. when loading a .session).
+    materialSnapshot?: MaterialState;
     attributes?: {}
     typeRestrictions: string[];
     computedCost?: CompoundValue;

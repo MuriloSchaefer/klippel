@@ -157,6 +157,16 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
       enabled: true,
     },
     {
+      id: `${MODULE_NAME}/ModelViewport/refreshMaterials`,
+      key: 'r',
+      contextId: MATERIAL_LIST_CONTEXT_ID,
+      action: () => {
+        document.getElementById("composer-refresh-materials")?.click();
+      },
+      description: 'Refresh material info',
+      enabled: true,
+    },
+    {
       id: `${MODULE_NAME}/MaterialList/focus`,
       key: 'Ctrl+m',
       contextId: `${MODULE_NAME}/ModelViewport`,

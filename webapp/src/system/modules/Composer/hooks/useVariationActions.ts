@@ -130,7 +130,7 @@ export function useVariationActions({ variationId }: { variationId: string }) {
           markChanged();
         },
 
-        addMaterial: (materialId: number, label: string, typeRestrictions: string[]) => {
+        addMaterial: (materialId: string, label: string, typeRestrictions: string[]) => {
           const material = materialsRef.current?.[materialId];
           if (!material) {
             console.error("Material not found:", materialId);
@@ -142,6 +142,7 @@ export function useVariationActions({ variationId }: { variationId: string }) {
             type: "MATERIAL",
             label,
             materialId,
+            materialSnapshot: material,
             position: { x: 0, y: 0 },
             typeRestrictions,
           };
@@ -405,13 +406,18 @@ export function useVariationActions({ variationId }: { variationId: string }) {
           markChanged();
         },
 
-        updateMaterial: (nodeId: string, materialId: number) => {
+        updateMaterial: (nodeId: string, materialId: string) => {
           const g = getGraph();
           if (!g) return;
-          const newNode = { ...g.nodes[nodeId], materialId } as MaterialNode;
+          const material = materialsRef.current?.[materialId];
+          const newNode = {
+            ...g.nodes[nodeId],
+            materialId,
+            materialSnapshot: material,
+          } as MaterialNode;
           dispatch(updateNodeAction({ graphId: variationId, nodeId, changes: newNode }));
 
-          const material = materialsRef.current![materialId];
+          if (!material) return;
           const schema = materialTypesRef.current[material.type]?.schemas[material.schemaVersion];
           const colorAttr = Object.entries(schema.attributes).find(([, v]) => v === "color");
           if (!colorAttr) return;

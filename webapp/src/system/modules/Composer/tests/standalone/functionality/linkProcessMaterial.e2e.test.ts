@@ -8,6 +8,7 @@
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { cleanupWorkspace, resetWorkspace } from '@helpers/puppeteer/resetWorkspace';
 import { closeOpenOverlays } from '@helpers/puppeteer/closeOverlays';
+import { seedMaterialsCatalog } from '@helpers/puppeteer/seedMaterialsCatalog';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -51,6 +52,7 @@ beforeAll(async () => {
   await resetWorkspace(page, 'e2e-process-link-material');
 
   await page.waitForSelector('#ribbon-menu-tabs', { timeout: 15_000 });
+  await seedMaterialsCatalog(page);
   await switchRibbonTabTool.execute({ label: 'Compositor' });
   await page.waitForSelector('[aria-label="create-model"]', { timeout: 15_000 });
 
