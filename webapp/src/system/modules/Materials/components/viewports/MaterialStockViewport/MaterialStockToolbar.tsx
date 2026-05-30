@@ -104,4 +104,4 @@ const MaterialStockToolbar: React.FC<Props> = ({
   );
 };
 
-export default MaterialStockToolbar;
+export default React.memo(MaterialStockToolbar);

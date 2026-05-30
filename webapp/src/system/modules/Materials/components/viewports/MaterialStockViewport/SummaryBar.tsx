@@ -69,4 +69,4 @@ const SummaryBar: React.FC<Props> = ({ materials }) => {
   );
 };
 
-export default SummaryBar;
+export default React.memo(SummaryBar);

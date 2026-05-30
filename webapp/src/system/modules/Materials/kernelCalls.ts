@@ -144,5 +144,34 @@ export function postBootInitialization({
       description: "Focus material search",
       enabled: true,
     },
+    {
+      // `e`/`d` act on the currently-selected grid row: they click that
+      // row's trailing-column trigger, reusing the per-row
+      // `PointerContainer` (Update form / delete confirmation) rather
+      // than duplicating dispatch logic. Hints live on the selected
+      // row's icons (see `UpdateMaterialButton` / `DeleteMaterialButton`).
+      id: `${MODULE_NAME}/MaterialStockViewport/editSelected`,
+      key: "e",
+      contextId: `${MODULE_NAME}/MaterialStockViewport`,
+      action: () =>
+        document
+          .querySelector(".MuiDataGrid-row.Mui-selected")
+          ?.querySelector<HTMLElement>('[data-testid^="material-row-update-"]')
+          ?.click(),
+      description: "Editar material selecionado",
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/MaterialStockViewport/deleteSelected`,
+      key: "d",
+      contextId: `${MODULE_NAME}/MaterialStockViewport`,
+      action: () =>
+        document
+          .querySelector(".MuiDataGrid-row.Mui-selected")
+          ?.querySelector<HTMLElement>('[data-testid^="material-row-delete-"]')
+          ?.click(),
+      description: "Excluir material selecionado",
+      enabled: true,
+    },
   ]);
 }

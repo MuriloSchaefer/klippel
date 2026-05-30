@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { Box } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
@@ -16,13 +16,11 @@ import { deleteMaterial } from "../../../store/materials/actions";
 export interface MaterialStockExtra {
   view: "table" | "quadtree";
   query: string;
-  selectedId?: string | null;
 }
 
 const DEFAULT_EXTRA: MaterialStockExtra = {
   view: "table",
   query: "",
-  selectedId: null,
 };
 
 const MaterialStockViewport: React.FC = () => {
@@ -35,28 +33,38 @@ const MaterialStockViewport: React.FC = () => {
   const dispatch = storeModule.hooks.useAppDispatch();
 
   const activeVP = useActiveViewport<MaterialStockExtra>();
-  const extra: MaterialStockExtra = { ...DEFAULT_EXTRA, ...(activeVP.extra ?? {}) };
+  const extra: MaterialStockExtra = useMemo(
+    () => ({ ...DEFAULT_EXTRA, ...(activeVP.extra ?? {}) }),
+    [activeVP.extra],
+  );
   const filtered = useFilteredMaterials(extra.query);
+
+  // Read latest `extra` via a ref so `patchExtra` (and the view/query
+  // handlers derived from it) stay referentially stable — an unstable
+  // handler would defeat the memoized `MaterialStockToolbar`.
+  const extraRef = useRef(extra);
+  extraRef.current = extra;
 
   const patchExtra = useCallback(
     (patch: Partial<MaterialStockExtra>) => {
       dispatch(
         setExtrasViewport({
           name: activeVP.name,
-          extras: { ...extra, ...patch },
+          extras: { ...extraRef.current, ...patch },
         }),
       );
     },
-    [dispatch, activeVP.name, extra],
+    [dispatch, activeVP.name],
   );
 
-  const handleUpdate = useCallback(
-    (_id: string) => {
-      // Phase 3 wires the MaterialFormContainer; until then surface a
-      // hook point so e2e can assert the click path exists.
-      console.debug("[MaterialStockViewport] update requested", _id);
-    },
-    [],
+  const handleViewChange = useCallback(
+    (view: MaterialStockExtra["view"]) => patchExtra({ view }),
+    [patchExtra],
+  );
+
+  const handleQueryChange = useCallback(
+    (query: string) => patchExtra({ query }),
+    [patchExtra],
   );
 
   const handleDelete = useCallback(
@@ -87,23 +95,8 @@ const MaterialStockViewport: React.FC = () => {
         </Box>
       );
     }
-    return (
-      <TableView
-        materials={filtered}
-        selectedId={extra.selectedId ?? null}
-        onSelect={(id) => patchExtra({ selectedId: id })}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-      />
-    );
-  }, [
-    extra.view,
-    extra.selectedId,
-    filtered,
-    handleUpdate,
-    handleDelete,
-    patchExtra,
-  ]);
+    return <TableView materials={filtered} onDelete={handleDelete} />;
+  }, [extra.view, filtered, handleDelete]);
 
   return (
     <ShortcutProvider contextId={`${MODULE_NAME}/MaterialStockViewport`}>
@@ -118,9 +111,9 @@ const MaterialStockViewport: React.FC = () => {
       >
         <MaterialStockToolbar
           view={extra.view}
-          onViewChange={(view) => patchExtra({ view })}
+          onViewChange={handleViewChange}
           query={extra.query}
-          onQueryChange={(query) => patchExtra({ query })}
+          onQueryChange={handleQueryChange}
         />
         {view}
         <SummaryBar materials={filtered} />

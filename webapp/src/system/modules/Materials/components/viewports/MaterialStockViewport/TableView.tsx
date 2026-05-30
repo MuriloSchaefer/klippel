@@ -1,15 +1,21 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Box } from "@mui/material";
 import {
   DataGrid,
-  GridActionsCellItem,
   GridColDef,
   GridRowParams,
+  GridRowSelectionModel,
+  useGridApiRef,
 } from "@mui/x-data-grid";
-import EditSharpIcon from "@mui/icons-material/EditSharp";
 import useMaterialTypes from "../../../hooks/useMaterialTypes";
 import DeleteMaterialButton from "./DeleteMaterialButton";
+import UpdateMaterialButton from "./UpdateMaterialButton";
 import type { MaterialState } from "../../../store/materials/state";
+
+// Module-level so its identity never changes — an unstable `getRowId`
+// makes DataGrid rebuild its entire row-id map and re-render every row.
+const getRowId = (row: Record<string, unknown>) =>
+  String((row as unknown as MaterialState).id);
 
 type ExtraPart = { text: string; swatch?: string };
 
@@ -60,27 +66,51 @@ const extraParts = (attributes: unknown): ExtraPart[] => {
 
 interface Props {
   materials: MaterialState[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
-  onUpdate: (id: string) => void;
   onDelete: (id: string) => void;
 }
+
+const EMPTY_SELECTION: GridRowSelectionModel = {
+  type: "include",
+  ids: new Set(),
+};
 
 /**
  * Read-only MUI DataGrid. The first row is auto-selected on mount and
  * whenever the filtered set changes; arrow keys cycle the selection
  * with top↔bottom wrap. All edits route through the Update form via
  * the trailing actions column — there is no inline cell editing.
+ *
+ * Selection is driven imperatively through `apiRef`, never through a
+ * controlled `rowSelectionModel` prop. Passing selection as a prop would
+ * re-render `TableView` → `DataGrid` on every keypress, and DataGrid bundles
+ * all its props into the `GridRootPropsContext` it hands every cell — so a
+ * single new props object re-renders the entire grid (headers + all cells),
+ * not just the selected rows. Going through `apiRef` mutates internal grid
+ * state instead, so MUI's granular selectors re-render only the two rows
+ * whose selection actually changed and `TableView` never re-renders.
  */
-const TableView: React.FC<Props> = ({
-  materials,
-  selectedId,
-  onSelect,
-  onUpdate,
-  onDelete,
-}) => {
+const TableView: React.FC<Props> = ({ materials, onDelete }) => {
   const materialTypes = useMaterialTypes();
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const apiRef = useGridApiRef();
+
+  // Source of truth for the current selection. A ref (not state) so updating
+  // it never re-renders TableView; the selected row is re-rendered by MUI's
+  // own selection state, and `getActions` reads this ref to toggle the hint.
+  const selectedIdRef = useRef<string | null>(null);
+
+  // Push a selection into the grid's internal state. Keeps the ref in sync
+  // synchronously so keyboard handlers (Enter, arrow cycling) can read the
+  // latest value immediately.
+  const applySelection = useCallback(
+    (id: string | null) => {
+      selectedIdRef.current = id;
+      apiRef.current?.setRowSelectionModel(
+        id ? { type: "include", ids: new Set([id]) } : EMPTY_SELECTION,
+      );
+    },
+    [apiRef],
+  );
 
   const columns: GridColDef[] = useMemo(
     () => [
@@ -170,60 +200,74 @@ const TableView: React.FC<Props> = ({
         type: "actions",
         headerName: "",
         width: 100,
-        getActions: (params: GridRowParams) => [
-          <GridActionsCellItem
-            key="update"
-            icon={<EditSharpIcon />}
-            label="Atualizar"
-            data-testid={`material-row-update-${params.id}`}
-            onClick={() => onUpdate(String(params.id))}
-            showInMenu={false}
-          />,
-          <DeleteMaterialButton
-            key="delete"
-            id={String(params.id)}
-            onConfirm={onDelete}
-          />,
-        ],
+        getActions: (params: GridRowParams) => {
+          const isSelected = String(params.id) === selectedIdRef.current;
+          return [
+            <UpdateMaterialButton
+              key="update"
+              material={params.row as MaterialState}
+              selected={isSelected}
+            />,
+            <DeleteMaterialButton
+              key="delete"
+              id={String(params.id)}
+              onConfirm={onDelete}
+              selected={isSelected}
+            />,
+          ];
+        },
       },
     ],
-    [materialTypes, onUpdate, onDelete],
+    [materialTypes, onDelete],
   );
 
-  // Auto-select first row on mount + when the filtered set changes
-  // and the previous selection is no longer present.
+  // Auto-select first row on mount + when the filtered set changes and the
+  // previous selection is no longer present. Runs after DataGrid mounts, so
+  // `apiRef.current` is populated.
   useEffect(() => {
+    const cur = selectedIdRef.current;
     if (materials.length === 0) {
-      if (selectedId !== null) onSelect(null);
+      if (cur !== null) applySelection(null);
       return;
     }
-    if (!selectedId || !materials.find((m) => String(m.id) === selectedId)) {
-      onSelect(String(materials[0].id));
+    if (!cur || !materials.find((m) => String(m.id) === cur)) {
+      applySelection(String(materials[0].id));
     }
-  }, [materials, selectedId, onSelect]);
+  }, [materials, applySelection]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Enter" && e.key !== "Escape") {
       return;
     }
+    const cur = selectedIdRef.current;
     if (e.key === "Escape") {
-      onSelect(null);
+      applySelection(null);
       return;
     }
     if (e.key === "Enter") {
-      if (selectedId) {
+      if (cur) {
         e.preventDefault();
-        onUpdate(selectedId);
+        document.getElementById(`material-row-update-${cur}`)?.click();
       }
       return;
     }
     if (materials.length === 0) return;
-    const idx = materials.findIndex((m) => String(m.id) === selectedId);
+    const idx = materials.findIndex((m) => String(m.id) === cur);
     const dir = e.key === "ArrowDown" ? 1 : -1;
     const nextIdx = (idx + dir + materials.length) % materials.length;
     e.preventDefault();
-    onSelect(String(materials[nextIdx].id));
+    applySelection(String(materials[nextIdx].id));
   };
+
+  // Keep the ref in sync with selections originating inside the grid (row
+  // clicks, native keyboard) without re-rendering TableView.
+  const handleRowSelectionModelChange = useCallback(
+    (model: GridRowSelectionModel) => {
+      const next = (model.ids.values().next().value as string | undefined) ?? null;
+      selectedIdRef.current = next;
+    },
+    [],
+  );
 
   return (
     <Box
@@ -234,19 +278,13 @@ const TableView: React.FC<Props> = ({
       tabIndex={0}
     >
       <DataGrid
+        apiRef={apiRef}
         rows={materials as unknown as Record<string, unknown>[]}
         columns={columns}
-        getRowId={(row) => String((row as MaterialState).id)}
+        getRowId={getRowId}
         density="compact"
         disableColumnMenu
-        rowSelectionModel={selectedId ? { type: "include", ids: new Set([selectedId]) } as any : undefined}
-        onRowSelectionModelChange={(model: any) => {
-          // MUI v7+: model.ids is a Set
-          const ids = model?.ids ? Array.from(model.ids) : (model as string[] | undefined);
-          const next = (ids?.[0] as string | undefined) ?? null;
-          if (next !== selectedId) onSelect(next);
-        }}
-        onRowClick={(params) => onSelect(String(params.id))}
+        onRowSelectionModelChange={handleRowSelectionModelChange}
       />
     </Box>
   );

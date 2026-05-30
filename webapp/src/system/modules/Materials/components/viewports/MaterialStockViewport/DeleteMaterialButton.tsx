@@ -3,6 +3,8 @@ import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import DeleteOutlineSharpIcon from "@mui/icons-material/DeleteOutlineSharp";
 import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
+import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { MODULE_NAME } from "../../../constants";
 
 /**
  * Per-row delete trigger. Wraps the trash icon in a `PointerContainer`
@@ -15,9 +17,13 @@ import type { IPointerModule } from "@kernel/modules/Pointer";
 const DeleteMaterialButton: React.FC<{
   id: string;
   onConfirm: (id: string) => void;
-}> = ({ id, onConfirm }) => {
+  selected?: boolean;
+}> = ({ id, onConfirm, selected = false }) => {
   const pointerModule = useModule<IPointerModule>("Pointer");
+  const keyboardShortcutsModule =
+    useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { PointerContainer, ConfirmAndCloseButton } = pointerModule.components;
+  const { ShortcutHint } = keyboardShortcutsModule.components;
 
   return (
     <PointerContainer
@@ -52,14 +58,28 @@ const DeleteMaterialButton: React.FC<{
         <IconButton
           size="small"
           color="error"
+          id={`material-row-delete-${id}`}
           aria-label={`delete-material-${id}`}
           data-testid={`material-row-delete-${id}`}
         >
-          <DeleteOutlineSharpIcon fontSize="small" />
+          {selected ? (
+            <ShortcutHint
+              shortcutId={`${MODULE_NAME}/MaterialStockViewport/deleteSelected`}
+              placement="bottom-center"
+            >
+              <DeleteOutlineSharpIcon fontSize="small" />
+            </ShortcutHint>
+          ) : (
+            <DeleteOutlineSharpIcon fontSize="small" />
+          )}
         </IconButton>
       </Tooltip>
     </PointerContainer>
   );
 };
 
-export default DeleteMaterialButton;
+// Memoized: the grid re-renders every visible cell on each selection change
+// (MUI updates its internal context), but only the rows whose `selected`
+// flips need to re-render this popup subtree. Without memo all ~13 visible
+// rows re-render their Tooltip/Popper on every arrow keypress.
+export default React.memo(DeleteMaterialButton);

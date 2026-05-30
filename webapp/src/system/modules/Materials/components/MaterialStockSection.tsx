@@ -26,7 +26,7 @@ const MaterialStockSection: React.FC = () => {
       "MaterialStock",
       undefined,
       "materialstock-",
-      { view: "table", query: "", selectedId: null },
+      { view: "table", query: "" },
     );
     viewportManager.functions.selectViewport(name);
   }, [viewportManager]);
