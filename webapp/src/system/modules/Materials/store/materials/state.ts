@@ -6,11 +6,9 @@ export type CompositionMap = {
 }
 
 export interface MaterialState{
-    // Legacy fixtures use numeric ids; Jazz-backed catalog rows use
-    // slugs. Legacy consumers (Composer's material list) still treat
-    // this as a `number` — we type-cheat at the boundary in
-    // `catalogAdapter.ts` rather than fan a `string | number` through
-    // every selector.
+    // Catalog rows are addressed by slug ids. Kept as `string`
+    // end-to-end (the Jazz catalog, selectors, and Composer's material
+    // nodes all use the slug verbatim).
     id: string,
     type: string,
     schemaVersion: string

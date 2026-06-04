@@ -6,15 +6,15 @@ import { useMemo } from "react";
 
 
     
-export default function (materials?: number[]) {
+export default function (materials?: string[]) {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
 
   const defaultSelector = useMemo(() => {
     if (!materials) return undefined
 
-    return (state: MaterialsState) => 
-      materials.reduce((acc, curr: number) => {
+    return (state: MaterialsState) =>
+      materials.reduce((acc, curr: string) => {
         if (!materials.includes(curr)) {
             delete acc[curr]
             return acc

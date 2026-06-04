@@ -107,7 +107,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
       },
       removePart: (partId: string) => { graph.actions.removeNode(partId); markChanged(); },
       addMaterial: (
-        materialId: number,
+        materialId: string,
         label: string,
         typeRestrictions: string[],
       ) => {
@@ -348,7 +348,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
         }
         markChanged();
       },
-      updateMaterial: (nodeId: string, materialId: number) => {
+      updateMaterial: (nodeId: string, materialId: string) => {
         if (!graph.state) return;
         const newNode = {
           ...graph.state.nodes[nodeId],

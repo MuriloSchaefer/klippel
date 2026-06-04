@@ -21,16 +21,8 @@ import {
 } from '@helpers/puppeteer/resetWorkspace';
 import { resetUIState } from '@helpers/puppeteer/closeOverlays';
 import { clickRibbonTab } from '@kernel/modules/Layout/mcpTools/drivers/switchRibbonTab.puppeteer';
-import {
-  importFixtureCatalog,
-  openImportCatalogPanel,
-  pickFixture,
-  confirmImport,
-  waitForImportSummary,
-} from '@system/modules/Materials/components/drivers/importCatalog.click.puppeteer';
-import {
-  importFixtureCatalogViaShortcut,
-} from '@system/modules/Materials/components/drivers/importCatalog.shortcut.puppeteer';
+import { importCatalogTool } from '@system/modules/Materials/mcpTools/importCatalog';
+import { importCatalogShortcutTool } from '@system/modules/Materials/mcpTools/importCatalogShortcut';
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -109,7 +101,7 @@ describe('importCatalog via click (E2E)', () => {
     const before = await loadCatalogCounts(page!);
     expect(before).toEqual({ types: 0, materials: 0 });
 
-    await importFixtureCatalog(page!);
+    await importCatalogTool.execute();
 
     await page!.waitForFunction(async () => {
       const snap = await window.electron.jazz.materials.load();
@@ -124,13 +116,13 @@ describe('importCatalog via click (E2E)', () => {
   it('is idempotent — re-importing the fixture adds no new rows', async () => {
     // Self-contained: seed the catalog ourselves so the test runs the
     // same whether the file is executed in order, in isolation via a
-    // `-t` filter, or with the describe blocks reordered. `importFixtureCatalog`
+    // `-t` filter, or with the describe blocks reordered. `importCatalogTool`
     // leaves the import panel open on the post-import summary view —
     // drain UI state before the re-import so the dismiss-snackbar click
     // isn't intercepted by the still-open modal.
     const initial = await loadCatalogCounts(page!);
     if (initial.materials === 0) {
-      await importFixtureCatalog(page!);
+      await importCatalogTool.execute();
       await page!.waitForFunction(async () => {
         const snap = await window.electron.jazz.materials.load();
         return Object.keys(snap.materials ?? {}).length > 0;
@@ -143,11 +135,9 @@ describe('importCatalog via click (E2E)', () => {
 
     await dismissSnackbar(page!);
 
-    await openImportCatalogPanel(page!);
-    await pickFixture(page!);
-    await confirmImport(page!);
-    await openImportCatalogPanel(page!);
-    await waitForImportSummary(page!);
+    // Re-import through the same tool — its idempotent skip-set means the
+    // catalog counts must be unchanged afterwards.
+    await importCatalogTool.execute();
 
     const after = await loadCatalogCounts(page!);
     expect(after).toEqual(before);
@@ -169,7 +159,7 @@ describe('importCatalog via shortcut (E2E)', () => {
     const before = await loadCatalogCounts(page!);
     expect(before).toEqual({ types: 0, materials: 0 });
 
-    await importFixtureCatalogViaShortcut(page!);
+    await importCatalogShortcutTool.execute();
 
     await page!.waitForFunction(async () => {
       const snap = await window.electron.jazz.materials.load();

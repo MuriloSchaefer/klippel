@@ -217,7 +217,11 @@ const UpdateMaterialTypeSection: React.FC = () => {
               onChange={(e) => setSelectedType(String(e.target.value))}
             >
               {typeOptions.map((t) => (
-                <MenuItem key={t.name} value={t.name}>
+                <MenuItem
+                  key={t.name}
+                  value={t.name}
+                  data-latest-schema={t.latestSchema}
+                >
                   {t.label} ({t.latestSchema})
                 </MenuItem>
               ))}

@@ -78,9 +78,7 @@ export function materialDtoToState(
   edges: EdgeDTO[],
 ): MaterialState {
   return {
-    // `id` is typed as `number` for legacy compatibility — slug ids
-    // are still stored verbatim at runtime. See `state.ts`.
-    id: dto.id as unknown as number,
+    id: dto.id,
     type: dto.type,
     schemaVersion: dto.schemaVersion,
     suppliers: suppliersFor(dto.id, edges),

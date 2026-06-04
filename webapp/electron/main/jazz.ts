@@ -15,7 +15,11 @@ import {
 import { getSqliteStorage } from "cojson/dist/storage/sqlite/index.js";
 import type { SQLiteDatabaseDriver } from "cojson/dist/storage/sqlite/index.js";
 import type { Peer } from "cojson";
-import { WasmCrypto } from "cojson/crypto/WasmCrypto";
+// Same reason as the `cojson/dist/*` storage imports above: the crypto
+// adapter isn't in cojson's public `exports` map, so reach into the
+// published `./dist/*` path with an explicit `.js` so node's exports
+// resolver (and tsc under the current moduleResolution) matches a real file.
+import { WasmCrypto } from "cojson/dist/crypto/WasmCrypto.js";
 import { WebSocketPeerWithReconnection } from "cojson-transport-ws";
 import WebSocket from "ws";
 import { logger as cojsonLogger, LogLevel as CojsonLogLevel } from "cojson";

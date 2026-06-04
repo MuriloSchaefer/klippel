@@ -61,7 +61,7 @@ interface ConsumesEdgeRowProps {
   graduations: GraduationNode[];
   processNodeId: string;
   actions: VariationActions;
-  MaterialSelector: React.ComponentType<{ type: string; value: number; disabled?: boolean }>;
+  MaterialSelector: React.ComponentType<{ type: string; value: string; disabled?: boolean }>;
 }
 
 const ConsumesEdgeRow = React.memo(function ConsumesEdgeRow({
