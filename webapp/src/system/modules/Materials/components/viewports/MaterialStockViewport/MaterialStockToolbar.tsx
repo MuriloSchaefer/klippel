@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   InputAdornment,
@@ -11,7 +11,17 @@ import GridViewSharpIcon from "@mui/icons-material/GridViewSharp";
 import SearchSharpIcon from "@mui/icons-material/SearchSharp";
 import useModule from "@kernel/hooks/useModule";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
+import { debounce } from "@kernel/utils";
 import { MODULE_NAME } from "../../../constants";
+
+/**
+ * How long typing must pause before the query propagates to the filter.
+ * The input echoes keystrokes instantly from local state; only the
+ * expensive part (Redux dispatch → re-filter → DataGrid re-render)
+ * waits for this, so a fast typist triggers one filter pass, not one
+ * per keystroke.
+ */
+const SEARCH_DEBOUNCE_MS = 250;
 
 interface Props {
   view: "table" | "quadtree";
@@ -37,6 +47,36 @@ const MaterialStockToolbar: React.FC<Props> = ({
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint } = keyboardShortcuts.components;
 
+  // Local mirror of the query so the input stays responsive while the
+  // upstream filter is debounced. `onQueryChange` is read through a ref
+  // so the debounced fn stays stable across renders (a new identity
+  // would reset the timer mid-type).
+  const [localQuery, setLocalQuery] = useState(query);
+  const onQueryChangeRef = useRef(onQueryChange);
+  onQueryChangeRef.current = onQueryChange;
+
+  // Sync when the query changes from outside (programmatic clear,
+  // workspace switch). Echoes of our own debounced push are no-ops; the
+  // effect doesn't run mid-type because `query` only changes once the
+  // debounced push lands.
+  useEffect(() => {
+    setLocalQuery(query);
+  }, [query]);
+
+  const pushQuery = useMemo(
+    () =>
+      debounce((value: string) => onQueryChangeRef.current(value), SEARCH_DEBOUNCE_MS),
+    [],
+  );
+
+  const handleQueryInput = useCallback(
+    (value: string) => {
+      setLocalQuery(value);
+      pushQuery(value);
+    },
+    [pushQuery],
+  );
+
   return (
     <Box
       sx={{
@@ -54,8 +94,8 @@ const MaterialStockToolbar: React.FC<Props> = ({
           data-testid="material-stock-search"
           size="small"
           placeholder="Buscar materiais"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
+          value={localQuery}
+          onChange={(e) => handleQueryInput(e.target.value)}
           slotProps={{
             input: {
               startAdornment: (

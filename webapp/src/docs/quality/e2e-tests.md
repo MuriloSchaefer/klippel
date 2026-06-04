@@ -145,6 +145,51 @@ Before opening a PR:
 
 ---
 
+## 11. Performance tests
+
+Performance tests live under `<module>/tests/<scope>/performance/` and assert against a **declared time / memory / payload budget** (per Section 1, a test that merely happens to be slow is not a performance test). They inherit every rule above — no fixed timeouts, `data-*` mirrors for waits, `resetWorkspace`/`resetUIState` isolation — plus the rules in this section. The rationale and the options trade-off that produced these rules is [src/docs/analysis/performance-tests.md](../analysis/performance-tests.md); this section is the normative distillation.
+
+### 11.1 Budgets are mandatory and recorded
+
+- Every perf `it` asserts a **named budget** (e.g. cold-open p95 < 800 ms at 1k materials). A perf test with no numeric assertion is not allowed — it cannot catch slow degradation inside a pass.
+- Append one machine-readable record per measured outcome to a JSON artifact under `webapp/.tests-executions/` (sibling to the run logs): `{ surface, cardinality, peers, metric, value, p50, p95, hardware }`. Numbers are **trended**, not just pass/failed.
+- Budget thresholds are calibrated from a first reference run; record the hardware in the artifact. Do not hard-code a number you have not measured at least once.
+
+### 11.2 Cardinality tiers drive the seeding path
+
+The workload size dictates how you get the workspace into state. **Do not** use one mechanism for all sizes — the bulk-seed IPC and full-snapshot assertions both break past ~1k.
+
+| Tier | Seed | Storage / setup | Assertion read |
+| --- | --- | --- | --- |
+| ≤ 1k | live `seed` IPC (`window.electron.jazz.materials.seed`) | live seed in `beforeAll`, or `cpSync` from a materialized base | full snapshot `load()` acceptable |
+| 10k | **batched** seed (chunked) or direct-SQLite, materialized once | `cpSync` from a `BASE_WORKSPACE` base (Option 3) | targeted by-id lookup; avoid full snapshot |
+| 100k | **direct-SQLite, out of band** — single bulk IPC is infeasible (blocks/OOMs main) | `cpSync` from a hash-keyed cached base; **never commit the built DB** | **must** use by-id lookup + count mirror; full `load()` is itself O(N) |
+
+- At **≥ 10k you must use the materialize-once + `cpSync` pattern** (a `pretest:perf` step seeds the base; tests copy it). Re-seeding 100k every run would dominate the measurement.
+- Commit the **seed manifest + generator + a content hash**, not the built workspace bytes (a 100k catalog with SVG blobs is hundreds of MiB). The `pretest:perf` step rebuilds the base only when the hash changes and **fails loudly on a stale cache**.
+
+### 11.3 Address data deterministically — never scan to discover it
+
+A perf test must **derive** its target a priori, never scan the catalog to find a name/id. This is what keeps a 100k-row test deterministic and fast.
+
+- **Index-derived identities.** The generator is PRNG-seeded and identities are functions of the row index: material `i` → `id = mat-{seed}-{i}`, `label = "Material {i}"`, type `type-{i % T}@0.0.1`. Human-looking names come from a fixed dictionary cycled by index. A test computes `mat-{seed}-0` or `mat-{seed}-{count/2}`; it does not look one up.
+- **Planted probe rows.** Inject known, uniquely-labeled needles (`__probe_search__`, `__probe_edit__`, `__probe_delete__`) the dictionary never emits. Search/edit/delete tests target those — unique by construction, known a priori, independent of the random bulk.
+- **Index sidecar.** The generator emits a tiny `{ seed, count, types, probes, firstId, lastId, sampleIds }` table-of-contents next to the manifest. Tests read that, not the bulk catalog, to learn what is in the fixture.
+
+### 11.4 Assertions must be O(1), not O(N)
+
+- **Verify a single entity via a by-id lookup IPC** (`materials.get(id)`), not the full-catalog `load()` snapshot — `jazz-materials-load` structured-clones the whole catalog on every call ([Materials/main/index.ts](../../system/modules/Materials/main/index.ts)), so a full-snapshot assertion times the clone, not the surface, at scale. If the by-id IPC does not exist yet, add it (it is also the production lazy-load pattern) before writing a > 10k test.
+- **Wait on the DataGrid count mirror** (a `data-*` row-count attribute on `SummaryBar` / `MaterialStockViewport`) for "catalog reached N rows" — a single selector wait, not a `waitForFunction` snapshot scan. Add the mirror if absent (per Section 2).
+- The collaborative convergence surface (peer B reflects peer A) uses the same by-id lookup, not `waitForCatalogIPC`'s full `load()`, above the tier where a full snapshot is affordable.
+
+### 11.5 Shared primitives (build once, reuse)
+
+- `webapp/src/helpers/puppeteer/generateMaterialsCatalog.ts` — pure, PRNG-seeded `(opts) => SeedCatalogInput`. Emits index-derived ids, planted probes, the index sidecar, and a realistic `conformsTo` / `manufacturedBy` edge graph with representative blob/`composition` sizes. No `page` dependency.
+- `webapp/src/helpers/puppeteer/seedSyntheticMaterials.ts` — drives the tier-appropriate seed path, asserts `seeded === true`, and waits on the count mirror. This is the only seeding entry point a perf test calls.
+- Standalone tests: `catalogColdOpen` (S1), `listInteraction` (S2/S3). Collaborative: `catalogConvergence` (S6), parameterized over peer count.
+
+---
+
 ## Reference
 
 - `webapp/src/helpers/puppeteer/closeOverlays.ts` — `closeOpenOverlays`, `resetUIState`.
@@ -153,3 +198,4 @@ Before opening a PR:
 - `webapp/src/docs/mcp-server.md` — MCP server architecture and tool registration.
 - `webapp/src/docs/mcp-tool-reuse.md` — paired tool patterns.
 - `webapp/src/system/modules/Composer/docs/changes/2026-05-15-e32e37-replace-test-timeouts-with-waits.md` — rationale for the no-fixed-timeouts rule.
+- `webapp/src/docs/analysis/performance-tests.md` — performance-suite options analysis (fixtures vs. seeding vs. hybrid), tiering, and data-addressability rationale behind Section 11.

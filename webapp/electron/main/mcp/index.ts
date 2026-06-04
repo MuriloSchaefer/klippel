@@ -20,6 +20,7 @@ import { toggleDetailsPanelTool } from '../../../src/kernel/modules/Layout/mcpTo
 import { toggleDetailsPanelShortcutTool } from '../../../src/kernel/modules/Layout/mcpTools/toggleDetailsPanelShortcut';
 import { expandAccordionTool } from '../../../src/kernel/modules/Layout/mcpTools/expandAccordion';
 import { registerMcpTools as registerComposerTools } from '../../../src/system/modules/Composer/mcpTools';
+import { registerMcpTools as registerMaterialsTools } from '../../../src/system/modules/Materials/mcpTools';
 import { createBudgetTool } from '../../../src/system/modules/Orders/mcpTools/createBudget';
 
 export async function startMcpServer() {
@@ -49,6 +50,9 @@ export async function startMcpServer() {
 
   // Register Composer module tools
   registerComposerTools(server);
+
+  // Register Materials module tools
+  registerMaterialsTools(server);
 
   server.registerTool(createBudgetTool.name, { description: createBudgetTool.description, inputSchema: { label: z.string() } }, ({ label }) => createBudgetTool.execute({ label }));
 

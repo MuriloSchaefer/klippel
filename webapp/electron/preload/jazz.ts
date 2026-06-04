@@ -128,6 +128,13 @@ export const jazzApi = {
   materials: {
     load: (): Promise<CatalogSnapshot> =>
       ipcRenderer.invoke("jazz-materials-load"),
+    /**
+     * Resolve a single material by id, O(1) — the scale-safe read for
+     * perf assertions (never full-snapshot `load()` at 10k/100k).
+     * Resolves `null` when absent. See e2e-tests.md §11.4.
+     */
+    get: (id: string): Promise<MaterialDTO | null> =>
+      ipcRenderer.invoke("jazz-materials-get", id),
     seed: (input: SeedCatalogInput): Promise<{ seeded: boolean }> =>
       ipcRenderer.invoke("jazz-materials-seed", input),
     addMaterial: (input: AddMaterialInput): Promise<MaterialDTO> =>

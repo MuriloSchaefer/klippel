@@ -75,6 +75,18 @@ export default async function globalTeardown() {
   if (!(globalThis as any).__KLIPPEL_OWNED_PROCESS__) return;
   const pid = (globalThis as any).__KLIPPEL_DEV_PID__ as number | undefined;
 
+  // Instrumentation (KLIPPEL_TEARDOWN_AUDIT=1): capture the shared-app process
+  // tree BEFORE the kill sequence, so we can report any survivors afterward.
+  // Dynamic import + try/catch so this can never break teardown.
+  const audit = process.env.KLIPPEL_TEARDOWN_AUDIT === '1';
+  let auditWatched: number[] = [];
+  if (audit && pid) {
+    try {
+      const { captureTree } = await import('./src/helpers/puppeteer/processAudit');
+      auditWatched = captureTree([pid]);
+    } catch { /* audit module unavailable — skip */ }
+  }
+
   // Graceful path: ask Electron to quit via CDP. This unwinds the renderer,
   // main process, and GPU subprocess in order; without it `npm run dev`
   // (npm → electron-vite → electron) tends to leak the windowed app even
@@ -109,5 +121,12 @@ export default async function globalTeardown() {
     console.warn(
       `[globalTeardown] Klippel still reachable on CDP :${CDP_PORT} after teardown — next run may reuse a dirty instance.`,
     );
+  }
+
+  if (audit && auditWatched.length) {
+    try {
+      const { logSurvivors } = await import('./src/helpers/puppeteer/processAudit');
+      logSurvivors('globalTeardown(shared-app)', auditWatched);
+    } catch { /* ignore */ }
   }
 }

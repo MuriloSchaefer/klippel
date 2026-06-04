@@ -505,6 +505,21 @@ export async function loadMaterialsCatalog(): Promise<CatalogSnapshot> {
   return snapshot;
 }
 
+/**
+ * Resolve a single material by id, O(1) against the catalog record —
+ * the scale-safe read path for perf tests and lazy renderer loads.
+ * Unlike `loadMaterialsCatalog`, this does not project the whole
+ * catalog (which is O(N) and structured-cloned per call), so it stays
+ * cheap at 10k/100k materials. Returns `null` when the id is absent.
+ * See e2e-tests.md §11.4.
+ */
+export async function getMaterial(id: string): Promise<MaterialDTO | null> {
+  const { catalog } = await requireCatalog();
+  const co = catalog.materials[id] as AnyRecord | undefined;
+  if (!co) return null;
+  return materialCoMapToDto(co);
+}
+
 function createMaterialCoValue(dto: MaterialDTO, owner: Owner) {
   return MaterialCoMap.create(
     {

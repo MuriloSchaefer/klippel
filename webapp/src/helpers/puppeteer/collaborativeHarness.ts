@@ -21,6 +21,8 @@ import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { request as httpRequest } from "node:http";
 import puppeteer, { type Browser, type Page } from "puppeteer-core";
+import { captureTree, logSurvivors } from "./processAudit";
+import { killProcessTree } from "./processTree";
 
 export type Peer = {
   name: string;
@@ -267,25 +269,20 @@ function tailLog(logPath: string, maxBytes = 8192): string {
 }
 
 async function cleanupPeer(peer: Peer): Promise<void> {
-  try { await peer.browser.disconnect(); } catch { /* ignore */ }
-  try { await killChild(peer.process); } catch { /* ignore */ }
+  // 1. Graceful: ask Electron to quit its whole multi-process tree over CDP
+  //    (`close`, not `disconnect` — disconnect leaves the app running). Bounded
+  //    so a wedged renderer can't stall teardown.
+  try {
+    await Promise.race([peer.browser.close(), sleep(3000)]);
+  } catch { /* ignore */ }
+  // 2. Guarantee the rest is gone. The peer's `process` is the `xvfb-run`
+  //    wrapper, which has no signal trap and abandons its Xvfb + Electron
+  //    children when killed — so we reap the captured tree by PID, not just
+  //    the wrapper. This is the fix for the headless run leak.
+  await killProcessTree(peer.process.pid);
+  // 3. Only remove the dirs once the processes that were using them are dead.
   try { if (existsSync(peer.userDataDir)) rmSync(peer.userDataDir, { recursive: true, force: true }); } catch { /* ignore */ }
   try { if (existsSync(peer.envDir)) rmSync(peer.envDir, { recursive: true, force: true }); } catch { /* ignore */ }
-}
-
-async function killChild(child: ChildProcess, signal: NodeJS.Signals = "SIGTERM"): Promise<void> {
-  if (child.exitCode !== null || child.signalCode !== null) return;
-  await new Promise<void>((resolve) => {
-    const t = setTimeout(() => {
-      try { child.kill("SIGKILL"); } catch { /* ignore */ }
-      resolve();
-    }, 3000);
-    child.once("exit", () => {
-      clearTimeout(t);
-      resolve();
-    });
-    try { child.kill(signal); } catch { resolve(); }
-  });
 }
 
 /**
@@ -360,13 +357,22 @@ export async function spawnCollaborativePeers(
     }
   } catch (err) {
     for (const peer of peers) await cleanupPeer(peer);
-    try { await killChild(syncProcess); } catch { /* ignore */ }
+    try { await killProcessTree(syncProcess.pid); } catch { /* ignore */ }
     throw err;
   }
 
   const teardown = async () => {
+    // Instrumentation (KLIPPEL_TEARDOWN_AUDIT=1): record the process trees of
+    // every peer wrapper + the sync server BEFORE killing, so we can report
+    // which PIDs the kill path leaves behind. Capture is a no-op when the
+    // audit is off, and never alters the kill path below.
+    const watched = captureTree([
+      ...peers.map((p) => p.process.pid),
+      syncProcess.pid,
+    ]);
     for (const peer of peers) await cleanupPeer(peer);
-    try { await killChild(syncProcess); } catch { /* ignore */ }
+    try { await killProcessTree(syncProcess.pid); } catch { /* ignore */ }
+    logSurvivors(`collaborativeHarness(${prefix})`, watched);
   };
 
   return {

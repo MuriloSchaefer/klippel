@@ -1,6 +1,7 @@
 import { registerMainModule } from "../../../../../electron/main/modules";
 import {
   loadMaterialsCatalog,
+  getMaterial,
   seedCatalogIfEmpty,
   addMaterial,
   updateMaterial,
@@ -95,6 +96,10 @@ registerMainModule({
         throw new Error(`loadMaterialsCatalog failed: ${message}`);
       }
     });
+    ipcMain.handle(
+      "jazz-materials-get",
+      async (_event, id: string) => getMaterial(id),
+    );
     ipcMain.handle(
       "jazz-materials-seed",
       async (_event, input: SeedCatalogInput) => seedCatalogIfEmpty(input),

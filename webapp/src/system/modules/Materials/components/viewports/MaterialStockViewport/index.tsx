@@ -108,6 +108,11 @@ const MaterialStockViewport: React.FC = () => {
           flexDirection: "column",
         }}
         data-testid="material-stock-viewport"
+        // Row-count mirror for e2e/perf waits — reflects the post-search
+        // (`filtered`) row count, so it doubles as the "catalog reached N
+        // rows" signal on cold-open (empty query ⇒ all rows) and the
+        // "search narrowed to K rows" signal. See e2e-tests.md §11.4.
+        data-material-count={filtered.length}
       >
         <MaterialStockToolbar
           view={extra.view}
