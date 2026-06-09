@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { validateSVGFilePath } from '../../../../../electron/main/mcp/helpers/validateSVGFilePath';
 import {
@@ -11,14 +12,7 @@ export const uploadVariationSVGTool = {
   description:
     'Upload an SVG file from disk to the active Composer variation by clicking the empty-state "Fazer upload de SVG" button. Requires the ModelViewport to be in SVG view with no SVG yet loaded.',
   inputSchema: {
-    type: 'object' as const,
-    properties: {
-      filePath: {
-        type: 'string',
-        description: 'Absolute path to a .svg file on the host filesystem.',
-      },
-    },
-    required: ['filePath'],
+    filePath: z.string().describe('Absolute path to a .svg file on the host filesystem.'),
   },
   async execute({ filePath }: { filePath: string }) {
     validateSVGFilePath(filePath);

@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { Children, cloneElement, isValidElement, ReactNode, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import useModule from '@kernel/hooks/useModule';
 import { Store } from '@kernel/modules/Store';
@@ -18,11 +18,15 @@ import { pushContext, popContext } from '../store/actions';
 export interface FocusShortcutProviderProps {
   contextId: string;
   children: ReactNode;
+  // Layout props (e.g. `state`) injected by parents like SettingsPanel via
+  // cloneElement are forwarded onto the wrapped child — see the return below.
+  [key: string]: unknown;
 }
 
 const FocusShortcutProvider: React.FC<FocusShortcutProviderProps> = ({
   contextId,
   children,
+  ...forwarded
 }) => {
   const storeModule = useModule<Store>('Store');
   const { useAppDispatch } = storeModule.hooks;
@@ -66,7 +70,11 @@ const FocusShortcutProvider: React.FC<FocusShortcutProviderProps> = ({
   return (
     <ShortcutContext.Provider value={{ contextId }}>
       <Box ref={wrapperRef} sx={{ display: 'contents' }}>
-        {children}
+        {Object.keys(forwarded).length > 0
+          ? Children.map(children, (child) =>
+              isValidElement(child) ? cloneElement(child, forwarded) : child
+            )
+          : children}
       </Box>
     </ShortcutContext.Provider>
   );

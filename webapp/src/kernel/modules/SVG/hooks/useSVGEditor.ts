@@ -9,11 +9,51 @@ import { useTheme } from "@mui/material/styles";
 import { EditorToolkitContext } from "../components/SVGEditorToolkit";
 import { randomString } from "@kernel/utils";
 import useD3Container from "./useD3Container";
+import renderManipulationHandles from "../components/d3/ManipulationHandles";
 
 interface SVGEditorProps {
   svgPath: string;
   instanceName: string;
   beforeInjection?: (svgRoot: SVGSVGElement) => SVGSVGElement;
+}
+
+// Parse an injected SVG fragment robustly. Wrapping in a namespaced <svg> so
+// fragments using xlink:href (e.g. <use xlink:href="#id">) parse without a
+// "Namespace prefix xlink ... not defined" error, and importing the first
+// element into the target document. Returns null on parse failure.
+function parseInjectedFragment(
+  markup: string,
+  ownerDocument: Document,
+): Element | null {
+  const wrapped = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">${markup}</svg>`;
+  const doc = new DOMParser().parseFromString(wrapped, "image/svg+xml");
+  if (doc.querySelector("parsererror")) return null;
+  const first = doc.documentElement.firstElementChild;
+  if (!first) return null;
+  return ownerDocument.importNode(first, true) as Element;
+}
+
+// Cheap djb2 digest of an injected fragment's markup. Used to key the defs join
+// so a *changed* markup (e.g. a re-cropped logo <symbol>) forces an exit+enter
+// re-parse instead of d3's no-op update — the DOM `id` is reapplied on enter, so
+// any <use href="#id"> keeps resolving to the freshly parsed element.
+//
+// Memoized by entry identity: Redux only allocates a new entry object when the
+// entry actually changes, so an unchanged entry keeps its cached digest (no
+// re-hash of large logo markup on every zoom/drag frame) while a changed entry
+// is a fresh object → cache miss → new digest → new key → re-parse.
+const _digestCache = new WeakMap<object, string>();
+function entryMarkupDigest(entry: { markup?: string }): string {
+  const cached = _digestCache.get(entry);
+  if (cached !== undefined) return cached;
+  const markup = entry.markup ?? "";
+  let h = 5381;
+  for (let i = 0; i < markup.length; i++) {
+    h = ((h << 5) + h) ^ markup.charCodeAt(i);
+  }
+  const digest = (h >>> 0).toString(36);
+  _digestCache.set(entry, digest);
+  return digest;
 }
 
 interface SVGEditor {
@@ -60,7 +100,11 @@ export const useSVGEditor = ({
     (a, b) => {
       if (a === b) return true;
       if (!a || !b) return false;
-      return a.content === b.content && a.proxies === b.proxies;
+      return (
+        a.content === b.content &&
+        a.proxies === b.proxies &&
+        a.injected === b.injected
+      );
     },
   );
   const dispatch = useAppDispatch();
@@ -91,8 +135,12 @@ export const useSVGEditor = ({
     svgState?.content,
     parsedSVG,
     tools.pickElement.enabled,
-    tools.hightlightedElements,
+    tools.highlightedElements,
+    tools.manipulate.enabled,
+    tools.manipulate.targetId,
+    tools.manipulate.mode,
     svgState?.proxies,
+    svgState?.injected,
   ]);
 
   const x = scaleLinear()
@@ -132,23 +180,57 @@ export const useSVGEditor = ({
       return;
     }
 
+    // Mount injected "container" elements into parsedSVG (the queried subtree)
+    // BEFORE the proxy pass, so the proxy loop can reach them by id and apply
+    // their transform/clip. Idempotent: clear prior injections first, then
+    // re-mount from state, so repeated renderPreview calls don't accumulate.
+    parsedSVG
+      .querySelectorAll(".svg-injected-container")
+      .forEach((n) => n.remove());
+    const containerEntries = Object.values(svgState?.injected ?? {})
+      .filter((e) => e.mount === "container")
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    containerEntries.forEach((entry) => {
+      const imported = parseInjectedFragment(
+        entry.markup,
+        parsedSVG.ownerDocument,
+      );
+      if (!imported) return;
+      imported.setAttribute("id", entry.id);
+      imported.classList.add("svg-injected-container");
+      // With an anchor, mount the element immediately after the anchor (exact-id
+      // lookup) so a clipped placement paints just above its clip target; else
+      // append at the end of the content (paints on top of the whole drawing).
+      const anchorEl = entry.anchor
+        ? parsedSVG.getElementById(entry.anchor)
+        : null;
+      if (anchorEl?.parentNode) {
+        anchorEl.parentNode.insertBefore(imported, anchorEl.nextSibling);
+      } else {
+        parsedSVG.appendChild(imported);
+      }
+    });
+
     // attach proxies
     const proxies = Object.entries(svgState?.proxies ?? {});
     proxies.forEach(([id, attributes]) => {
-      const elem = parsedSVG.querySelector(`#${id}`);
+      const elem = parsedSVG.getElementById(id);
       Object.entries(attributes).forEach(([attr, value]) => {
         elem?.setAttribute(attr, value as string);
-        const styles = elem?.getAttribute("style")
-        if (styles){
-          const newStyle = styles.split(";").filter((s) => !s.includes(attr)).join(";");
+        const styles = elem?.getAttribute("style");
+        if (styles) {
+          const newStyle = styles
+            .split(";")
+            .filter((s) => !s.includes(attr))
+            .join(";");
           if (newStyle) elem?.setAttribute("style", newStyle);
         }
       });
     });
 
-    // hightlighted elements
-    if (tools.hightlightedElements) {
-      tools.hightlightedElements.forEach((id) => {
+    // highlighted elements
+    if (tools.highlightedElements) {
+      tools.highlightedElements.forEach((id) => {
         const e = parsedSVG.getElementById(id);
         if (e) {
           e.setAttribute("fill", "url(#pick-hatch-pattern)");
@@ -161,27 +243,45 @@ export const useSVGEditor = ({
       let elements = tools.pickElement.getSelectables(parsedSVG);
       const pickingElementsTemp: PickingElements = [];
       elements.map((element: SVGElement) => {
-        const styles = element.getAttribute("style")
-        const noFillorStrokeStyle =   styles ? styles.split(";").filter((s) => !s.includes('fill') && !s.includes('stroke')).join(";") : '';
-        const styleFillColor = styles?.split(";").find((s) => s.includes("fill"))?.split(":")[1].trim();
-        const styleStrokeColor = styles?.split(";").find((s) => s.includes("stroke"))?.split(":")[1].trim();
-        const styleStrokeWidth = styles?.split(";").find((s) => s.includes("stroke-width"))?.split(":")[1].trim();
-
+        const styles = element.getAttribute("style");
+        const noFillorStrokeStyle = styles
+          ? styles
+              .split(";")
+              .filter((s) => !s.includes("fill") && !s.includes("stroke"))
+              .join(";")
+          : "";
+        const styleFillColor = styles
+          ?.split(";")
+          .find((s) => s.includes("fill"))
+          ?.split(":")[1]
+          .trim();
+        const styleStrokeColor = styles
+          ?.split(";")
+          .find((s) => s.includes("stroke"))
+          ?.split(":")[1]
+          .trim();
+        const styleStrokeWidth = styles
+          ?.split(";")
+          .find((s) => s.includes("stroke-width"))
+          ?.split(":")[1]
+          .trim();
 
         const currFillColor = element.getAttribute("fill") ?? styleFillColor;
-        const currStrokeColor = element.getAttribute("stroke") ?? styleStrokeColor;
-        const currStrokeWidth = element.getAttribute("stroke-width") ?? styleStrokeWidth;
+        const currStrokeColor =
+          element.getAttribute("stroke") ?? styleStrokeColor;
+        const currStrokeWidth =
+          element.getAttribute("stroke-width") ?? styleStrokeWidth;
 
         const handlers = {
           pointerover: (e: PointerEvent) => {
             e.stopPropagation();
-            if (currFillColor && currFillColor !== "none"){
+            if (currFillColor && currFillColor !== "none") {
               element.setAttribute("style", noFillorStrokeStyle);
-              console.log(currFillColor)
+              console.log(currFillColor);
               element.setAttribute("fill", "url(#pick-hatch-pattern)");
             }
 
-            if (currStrokeColor && currStrokeColor !== "none"){
+            if (currStrokeColor && currStrokeColor !== "none") {
               element.setAttribute("style", noFillorStrokeStyle);
               element.setAttribute("stroke", theme.palette.primary.main);
             }
@@ -189,10 +289,11 @@ export const useSVGEditor = ({
           pointerout: (e: PointerEvent) => {
             e.stopPropagation();
             if (styles) element.setAttribute("style", styles);
-            if (currFillColor ) {
-              element.setAttribute("fill", currFillColor)}
-            else {
-              element.removeAttribute("fill")}
+            if (currFillColor) {
+              element.setAttribute("fill", currFillColor);
+            } else {
+              element.removeAttribute("fill");
+            }
 
             if (currStrokeColor)
               element.setAttribute("stroke", currStrokeColor);
@@ -276,6 +377,39 @@ export const useSVGEditor = ({
         .attr("x2", "0")
         .attr("y2", "10")
         .attr("style", `stroke:${theme.palette.primary.main}; stroke-width:2;`);
+
+      // Injected "defs" entries (logo <symbol>/<image> sources), keyed by id so
+      // enter/update/exit semantics keep them in sync without duplicating. Safe
+      // against renderPreview's preview-group wipe: this is the defs block.
+      const defsEntries = Object.values(svgState?.injected ?? {})
+        .filter((e) => e.mount === "defs")
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      defs
+        .selectAll<SVGGElement, (typeof defsEntries)[number]>(".injected-def")
+        // Key by id + markup digest: when an existing def's markup changes the
+        // key changes, so the stale element exits and a re-parsed one enters
+        // (d3's update branch can't replace already-parsed DOM in place).
+        .data(defsEntries, (d: any) => `${d.id}::${entryMarkupDigest(d)}`)
+        .join(
+          (enter) =>
+            enter.append((d) => {
+              const parsed = parseInjectedFragment(
+                d.markup,
+                svgRef.current!.ownerDocument,
+              );
+              const el = (parsed ??
+                svgRef.current!.ownerDocument.createElementNS(
+                  "http://www.w3.org/2000/svg",
+                  "g",
+                )) as unknown as SVGGElement;
+              el.setAttribute("id", d.id);
+              el.classList.add("injected-def");
+              return el;
+            }),
+          (update) => update,
+          (exit) => exit.remove(),
+        )
+        .order();
     },
     (root, selection, datum) => {
       const preview = selection
@@ -287,11 +421,21 @@ export const useSVGEditor = ({
       renderPreview(root, preview);
     },
     (root, selection, datum) => {
-      selection
+      const toolsGroup = selection
         .selectAll("#SVG-editor-tools")
         .data([1])
         .join("g")
         .attr("id", "SVG-editor-tools");
+      // @ts-ignore d3 selection generic mismatch
+      renderManipulationHandles(toolsGroup, {
+        svgRoot: svgRef.current,
+        targetId: tools.manipulate.enabled
+          ? tools.manipulate.targetId
+          : undefined,
+        mode: tools.manipulate.mode,
+        onTransform: tools.manipulate.onTransform,
+        color: theme.palette.secondary.main,
+      });
     },
   ]);
 

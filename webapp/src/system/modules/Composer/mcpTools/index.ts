@@ -65,6 +65,14 @@ import { focusProcessTimeListTool } from './focusProcessTimeList';
 import { cycleProcessTimeFocusTool } from './cycleProcessTimeFocus';
 import { openProcessTimeAuditTool } from './openProcessTimeAudit';
 import { openProcessTimeAuditShortcutTool } from './openProcessTimeAuditShortcut';
+import { addLogoTool } from './addLogo';
+import { addLogoShortcutTool } from './addLogoShortcut';
+import { addLogoPlacementTool } from './addLogoPlacement';
+import { addLogoPlacementShortcutTool } from './addLogoPlacementShortcut';
+import { deleteLogoTool } from './deleteLogo';
+import { deleteLogoShortcutTool } from './deleteLogoShortcut';
+import { linkLogoElectiveTool } from './linkLogoElective';
+import { linkLogoElectiveShortcutTool } from './linkLogoElectiveShortcut';
 
 const TOOLS = [
   openModelTool,
@@ -132,6 +140,14 @@ const TOOLS = [
   cycleProcessTimeFocusTool,
   openProcessTimeAuditTool,
   openProcessTimeAuditShortcutTool,
+  addLogoTool,
+  addLogoShortcutTool,
+  addLogoPlacementTool,
+  addLogoPlacementShortcutTool,
+  deleteLogoTool,
+  deleteLogoShortcutTool,
+  linkLogoElectiveTool,
+  linkLogoElectiveShortcutTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

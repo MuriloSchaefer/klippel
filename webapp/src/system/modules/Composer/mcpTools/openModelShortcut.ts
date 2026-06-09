@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { clickModelOptionByName, waitForConfirmModelSelectionEnabled, waitForModalClosed } from '../components/OpenModelIconButton/drivers/openModel.puppeteer';
 
@@ -9,10 +10,10 @@ export const openModelShortcutTool = {
   description:
     'Open an existing model by name using the registered keyboard shortcut (W) to trigger the modal. With no arguments, only opens the modal.',
   inputSchema: {
-    type: 'object' as const,
-    properties: {
-      modelName: { type: 'string', description: 'Name of the model to open. If omitted, only opens the selection modal.' },
-    },
+    modelName: z
+      .string()
+      .optional()
+      .describe('Name of the model to open. If omitted, only opens the selection modal.'),
   },
   async execute({ modelName }: { modelName?: string } = {}) {
     const page = await getPage();

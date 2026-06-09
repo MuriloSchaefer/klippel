@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { clickModelOptionByName, waitForConfirmModelSelectionEnabled, waitForModalClosed } from '../components/OpenModelIconButton/drivers/openModel.puppeteer';
 
@@ -6,11 +7,7 @@ export const openModelTool = {
   name: 'openModel',
   description: 'Open an existing model by name in a new viewport tab.',
   inputSchema: {
-    type: 'object' as const,
-    properties: {
-      modelName: { type: 'string' },
-    },
-    required: ['modelName'],
+    modelName: z.string(),
   },
   async execute({ modelName }: { modelName: string }) {
     const page = await getPage();

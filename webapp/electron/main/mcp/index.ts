@@ -58,5 +58,8 @@ export async function startMcpServer() {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.info('[MCP] klippel domain server listening on stdio');
+  // Must log to stderr, never stdout: stdout is the JSON-RPC channel for the
+  // stdio transport, and any stray bytes there corrupt the framing and make the
+  // client drop the connection.
+  console.error('[MCP] klippel domain server listening on stdio');
 }

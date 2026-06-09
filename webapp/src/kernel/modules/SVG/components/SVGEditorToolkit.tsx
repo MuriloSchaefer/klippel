@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useMemo, useState } from "react";
-import { EditorToolkit } from "../interfaces";
+import { EditorToolkit, ManipulateMode, ManipulateTransform } from "../interfaces";
 
 export type EditorToolkitType = {
   state: EditorToolkit;
@@ -11,16 +11,38 @@ export type EditorToolkitType = {
     callback: (element: SVGElement) => void
   ) => void;
   cancelPickElement: () => void;
+  // svgtoolbox helpers (spatial editing of an injected element)
+  selectManipulable: (
+    id: string,
+    handlers?: {
+      onTransform?: (id: string, t: ManipulateTransform) => void;
+      onClip?: (id: string, clipTargetId: string) => void;
+      getSelectables?: (svgRoot: SVGSVGElement) => SVGElement[];
+    }
+  ) => void;
+  setManipulateMode: (mode: ManipulateMode) => void;
+  cancelManipulate: () => void;
 };
+
+const noopTransform = (_id: string, _t: ManipulateTransform) => null;
+const noopClip = (_id: string, _clipTargetId: string) => null;
+
 const INITIAL_VALUE: EditorToolkitType = {
   state: {
     tools: {
-      hightlightedElements: [],
+      highlightedElements: [],
       pickElement: {
         type: "SVGElement",
         enabled: false,
         getSelectables: (svgRoot: SVGSVGElement) => [] as SVGElement[],
         callback: (element: SVGElement) => null,
+      },
+      manipulate: {
+        enabled: false,
+        targetId: undefined,
+        mode: "idle",
+        onTransform: noopTransform,
+        onClip: noopClip,
       },
     },
   },
@@ -28,6 +50,9 @@ const INITIAL_VALUE: EditorToolkitType = {
   unHighlightElement: () => null,
   pickElement: () => null,
   cancelPickElement: () => null,
+  selectManipulable: () => null,
+  setManipulateMode: () => null,
+  cancelManipulate: () => null,
 };
 
 export const EditorToolkitContext =
@@ -39,19 +64,24 @@ export const Provider = ({
   children: React.ReactElement | React.ReactElement[];
 }) => {
   const [state, setState] = useState<EditorToolkit>(INITIAL_VALUE.state);
+
+  // Default selectables for clip-mode picks: any element carrying an id.
+  const [clipSelectables, setClipSelectables] = useState<
+    ((svgRoot: SVGSVGElement) => SVGElement[]) | undefined
+  >(undefined);
+
   const values = useMemo<EditorToolkitType>(
     () => ({
       state,
       highlightElement: (id) => {
-        if (id && !state.tools.hightlightedElements.includes(id)){
+        if (id && !state.tools.highlightedElements.includes(id)) {
           setState((state) => ({
             ...state,
             tools: {
               ...state.tools,
-              hightlightedElements: [...state.tools.hightlightedElements, id],
+              highlightedElements: [...state.tools.highlightedElements, id],
             },
           }));
-          
         }
       },
       unHighlightElement: (id) => {
@@ -59,7 +89,7 @@ export const Provider = ({
           ...state,
           tools: {
             ...state.tools,
-            hightlightedElements: state.tools.hightlightedElements.filter(
+            highlightedElements: state.tools.highlightedElements.filter(
               (e) => e !== id
             ),
           },
@@ -75,7 +105,7 @@ export const Provider = ({
         }));
       },
       pickElement: (type, getSelectables, callback) => {
-        setState({
+        setState((state) => ({
           ...state,
           tools: {
             ...state.tools,
@@ -95,10 +125,83 @@ export const Provider = ({
               },
             },
           },
-        });
+        }));
+      },
+      selectManipulable: (id, handlers) => {
+        if (handlers?.getSelectables)
+          setClipSelectables(() => handlers.getSelectables);
+        setState((state) => ({
+          ...state,
+          tools: {
+            ...state.tools,
+            manipulate: {
+              ...state.tools.manipulate,
+              enabled: true,
+              targetId: id,
+              mode: "idle",
+              onTransform: handlers?.onTransform ?? state.tools.manipulate.onTransform,
+              onClip: handlers?.onClip ?? state.tools.manipulate.onClip,
+            },
+          },
+        }));
+      },
+      setManipulateMode: (mode) => {
+        const targetId = state.tools.manipulate.targetId;
+        // Clip mode delegates to the existing pickElement flow: pick the target
+        // element, then hand it to the host's onClip and drop back to idle.
+        if (mode === "clip" && targetId) {
+          const onClip = state.tools.manipulate.onClip;
+          const getSelectables =
+            clipSelectables ??
+            ((svgRoot: SVGSVGElement) =>
+              Array.from(svgRoot.querySelectorAll<SVGElement>("[id]")).filter(
+                (el) => el.id !== targetId
+              ));
+          setState((state) => ({
+            ...state,
+            tools: {
+              ...state.tools,
+              manipulate: { ...state.tools.manipulate, mode: "clip" },
+              pickElement: {
+                type: "SVGElement",
+                enabled: true,
+                getSelectables,
+                callback: (selected) => {
+                  setState((s) => ({
+                    ...s,
+                    tools: {
+                      ...s.tools,
+                      pickElement: INITIAL_VALUE.state.tools.pickElement,
+                      manipulate: { ...s.tools.manipulate, mode: "idle" },
+                    },
+                  }));
+                  if (selected.id) onClip(targetId, selected.id);
+                },
+              },
+            },
+          }));
+          return;
+        }
+        setState((state) => ({
+          ...state,
+          tools: {
+            ...state.tools,
+            manipulate: { ...state.tools.manipulate, mode },
+          },
+        }));
+      },
+      cancelManipulate: () => {
+        setState((state) => ({
+          ...state,
+          tools: {
+            ...state.tools,
+            manipulate: INITIAL_VALUE.state.tools.manipulate,
+            pickElement: INITIAL_VALUE.state.tools.pickElement,
+          },
+        }));
       },
     }),
-    [state]
+    [state, clipSelectables]
   );
 
   useEffect(() => {
@@ -108,6 +211,7 @@ export const Provider = ({
         tools: {
           ...state.tools,
           pickElement: INITIAL_VALUE.state.tools.pickElement,
+          manipulate: INITIAL_VALUE.state.tools.manipulate,
         },
       }));
     };

@@ -2,7 +2,7 @@
 import Edge from "@kernel/modules/Graphs/interfaces/Edge";
 import Node from "@kernel/modules/Graphs/interfaces/Node";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
-import { CompoundValue } from "@system/modules/Converter/typings";
+import { CompoundValue, UnitValue } from "@system/modules/Converter/typings";
 import { MaterialState } from "@system/modules/Materials/store/materials/state";
 
 export type Model = {
@@ -228,6 +228,85 @@ export type VisualizationNode = Node & {
     doms: VisualizationDom[]; // list of SVG element ids and per-entry options
 }
 
+// --- Logos (embroidery / silk-screen) ---------------------------------------
+
+export type LogoMethod = "embroidery" | "silkscreen";
+
+export type LogoPlacement = {
+    placementId: string;                 // small hash, unique within the logo
+    name: string;                        // user-facing, e.g. "Manga direita"
+    master?: boolean;                    // marks the auto-created placement; descriptive only — NOT delete-protected
+    size: { width: UnitValue; height: UnitValue }; // PHYSICAL size of THIS placement; drives its cost
+    transform: { x: number; y: number; rotation: number; scale: number }; // position + rotation (deg) + VISUAL scale
+    clipTargetId?: string;               // id of the SVG element to clip into
+}
+
+export type LogoSource =
+    | { kind: "svg"; documentId: string }                       // → DOCUMENT node holding sanitized markup, injected as <symbol>
+    | { kind: "raster"; documentId: string; pendingVector: boolean }; // → DOCUMENT node holding quantized image, injected as <image>
+
+export type LogoPlacementCostAudit = {
+    placementId: string;
+    name: string;
+    size: { width: UnitValue; height: UnitValue };
+    skipped: boolean;
+    skipReason?: string;
+    attributeNormalisations: AttributeNormalisationAudit[];
+    context: { [name: string]: number };  // substituted inputs (colors/width/height/methodFactor/gradesTotal)
+    expression?: string;
+    cost: number;
+}
+
+export type LogoCostAudit = {
+    computedAt: string;
+    skipped: boolean;                    // whole-logo elective gate
+    skipReason?: string;
+    methodFactor: number;
+    gradesTotal: number;
+    gradesBreakdown: { graduationId: string; label: string; amount: number }[];
+    placements: LogoPlacementCostAudit[];
+    total: number;
+}
+
+// The "main copy": a draggable/resizable overlay on top of the editor (DOM
+// layer, screen/editor-pixel space — does NOT zoom with the drawing). Move +
+// resize only (no rotation). It is the staging source, not a costed placement.
+export type LogoMainCopy = {
+    x: number;       // px from the editor wrapper's top-left
+    y: number;
+    width: number;   // px
+    height: number;  // px (aspect-locked to the art)
+}
+
+export type LogoNode = Node & {
+    type: "LOGO";
+    label: string;
+    logoId: string;                      // small hash
+    method: LogoMethod;
+    colors: number;
+    defaultSize: { width: UnitValue; height: UnitValue }; // seeds new placements
+    source: LogoSource;
+    mainCopy?: LogoMainCopy;             // overlay staging copy (drag/resize, no rotation)
+    electiveNodeId?: string;             // optional elective gate (same field as ProcessNode)
+    costExpression?: string;             // numeric expression over { colors, width, height, methodFactor, gradesTotal }
+    computedCost?: CompoundValue;        // written back by the middleware's bulk LOGO loop
+    costAudit?: LogoCostAudit;
+    placements: LogoPlacement[];         // in-content placements (scale/move/rotate/clip); may be empty
+}
+
+// Generic blob storage node. Holds draw-view SVGs, plotter files, orders,
+// receipts, etc. — this change implements only the minimum needed for logos
+// while leaving the type open to other kinds.
+export type DocumentNode = Node & {
+    type: "DOCUMENT";
+    documentId: string;                  // small hash; referenced by LogoSource.documentId
+    kind: string;                        // open discriminator — "logo-svg" | "logo-raster" now
+    mime: string;                        // e.g. "image/svg+xml", "image/png"
+    filename?: string;                   // original upload name
+    encoding: "base64";                  // only encoding for now
+    data: string;                        // base64-encoded blob content
+}
+
 // edges definitions
 export type HasPartEdge = Edge & {
     type: "HAS_PART";
@@ -265,6 +344,18 @@ export type HasVisualizationEdge = Edge & {
 export type VisualizationOfEdge = Edge & {
     type: "VISUALIZATION_OF";
 }
+export type HasLogoEdge = Edge & {
+    type: "HAS_LOGO";
+}
+export type LogoOfEdge = Edge & {
+    type: "LOGO_OF";
+}
+export type HasDocumentEdge = Edge & {
+    type: "HAS_DOCUMENT";
+}
+export type DocumentOfEdge = Edge & {
+    type: "DOCUMENT_OF";
+}
 export type ConsumesEdge = Edge & {
     type: "CONSUMES";
     // default consumption (baseline) used when a graduation has no explicit override
@@ -282,9 +373,9 @@ export type ConsumedByEdge = Edge & {
 }
 export type VariationGraphState = GraphState & {
     nodes: {
-        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode | VisualizationNode | GraduationNode;
+        [key: string]: GarmentNode | PartNode | MaterialNode | ElectiveNode | ProcessNode | VisualizationNode | GraduationNode | LogoNode | DocumentNode;
     };
     edges: {
-        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge | HasVisualizationEdge | VisualizationOfEdge | HasGraduationEdge | GraduationOfEdge;
+        [key: string]: HasPartEdge | PartOfEdge | MaterialOfEdge | HasMaterialEdge | HasElectiveEdge | ElectiveOfEdge | HasProcessEdge | ProcessOfEdge | ConsumesEdge | ConsumedByEdge | HasVisualizationEdge | VisualizationOfEdge | HasGraduationEdge | GraduationOfEdge | HasLogoEdge | LogoOfEdge | HasDocumentEdge | DocumentOfEdge;
     };
 }

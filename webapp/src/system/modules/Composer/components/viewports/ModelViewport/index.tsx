@@ -1,4 +1,5 @@
 import MaterialListAccordion from "../MaterialListAccordion";
+import LogoListAccordion from "../LogoListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
@@ -6,13 +7,16 @@ import {
   MATERIAL_LIST_CONTEXT_ID,
   MODULE_NAME,
   PROCESS_TIME_LIST_CONTEXT_ID,
+  LOGO_LIST_CONTEXT_ID,
 } from "../../../constants";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import CompositionTree from "../CompositionTree/CompositionTree";
 import LeaseStatusRow from "./LeaseStatusRow";
 import SVGView from "./SVGView";
 import GraphView from "./GraphView";
-import { Box, Button, ButtonGroup } from "@mui/material";
+import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import GestureSharpIcon from "@mui/icons-material/GestureSharp";
 import DetailPanel from "./DetailPanel";
 import WidgetsSharpIcon from "@mui/icons-material/WidgetsSharp";
 import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
@@ -104,6 +108,16 @@ function ModelViewport() {
             >
               <ProcessCostAccordion variationId={variationId} />
             </Accordion>
+            <FocusShortcutProvider contextId={LOGO_LIST_CONTEXT_ID}>
+              <Accordion
+                shortcutHint={`${MODULE_NAME}/LogoList/focus`}
+                name="Logos"
+                icon={<ImageOutlinedIcon />}
+                summary="Logos (bordado / serigrafia)"
+              >
+                <LogoListAccordion variationId={variationId} />
+              </Accordion>
+            </FocusShortcutProvider>
           </SettingsPanel>
 
           <DetailsPanel>
@@ -112,6 +126,58 @@ function ModelViewport() {
               selectedPart={activeVP.extra.selectedPart}
             />
           </DetailsPanel>
+
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              alignItems: "center",
+              p: 1,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Box sx={{ flex: 1 }} />
+
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={activeVP.extra.view}
+              onChange={(_e, v) => {
+                if (v)
+                  vpManager.functions.setExtras(activeVP.name, {
+                    ...activeVP.extra,
+                    view: v,
+                  });
+              }}
+              aria-label="alterar modo de visualização"
+            >
+              <ShortcutHint
+                shortcutId={`${MODULE_NAME}/ModelViewport/viewAsGraph`}
+              >
+                <ToggleButton
+                  value="graph"
+                  id="composer-view-graph"
+                  data-testid="composer-view-graph"
+                  aria-label="Grafo"
+                >
+                  <AccountTreeSharpIcon fontSize="small" />
+                </ToggleButton>
+              </ShortcutHint>
+              <ShortcutHint
+                shortcutId={`${MODULE_NAME}/ModelViewport/viewAsSVG`}
+              >
+                <ToggleButton
+                  value="svg"
+                  id="composer-view-svg"
+                  data-testid="composer-view-svg"
+                  aria-label="Desenho"
+                >
+                  <GestureSharpIcon fontSize="small" />
+                </ToggleButton>
+              </ShortcutHint>
+            </ToggleButtonGroup>
+          </Box>
 
           <Box
             id="composer-active-view"
@@ -126,51 +192,6 @@ function ModelViewport() {
             <ErrorBoundary fallbackRender={fallbackRender}>
               {view}
             </ErrorBoundary>
-          </Box>
-
-          <Box sx={{ position: "absolute", top: 16, left: 16 }}>
-            <ButtonGroup
-              variant="contained"
-              aria-label="alterar modo de visualização"
-            >
-              <ShortcutHint
-                shortcutId={`${MODULE_NAME}/ModelViewport/viewAsGraph`}
-                placement="bottom-right"
-              >
-                <Button
-                  id="composer-view-graph"
-                  onClick={() => {
-                    vpManager.functions.setExtras(activeVP.name, {
-                      ...activeVP.extra,
-                      view: "graph",
-                    });
-                  }}
-                  variant={"contained"}
-                >
-                  Grafo
-                </Button>
-              </ShortcutHint>
-              <ShortcutHint
-                shortcutId={`${MODULE_NAME}/ModelViewport/viewAsSVG`}
-                placement="bottom-right"
-              >
-                <Button
-                  id="composer-view-svg"
-                  onClick={() => {
-                    vpManager.functions.setExtras(activeVP.name, {
-                      ...activeVP.extra,
-                      view: "svg",
-                    });
-                  }}
-                  sx={{
-                    ":hover": { cursor: "pointer", color: "primary.main" },
-                  }}
-                  variant={"contained"}
-                >
-                  Desenho
-                </Button>
-              </ShortcutHint>
-            </ButtonGroup>
           </Box>
         </Box>
       </ShortcutProvider>

@@ -12,9 +12,10 @@ import {
 } from "@kernel/modules/Graphs/store/graphInstance/actions";
 import { CONVERSION_GRAPH_NAME } from "@system/modules/Converter/constants";
 import { computeMaterialCost } from "../../utils/computeMaterialCost";
+import { computeLogoCost } from "../../utils/computeLogoCost";
 import { computeProcessTime } from "../../utils/computeProcessTime";
 import { computeGraduationProcessTotals } from "../../utils/computeGraduationProcessTotals";
-import type { MaterialNode, ProcessNode, GraduationNode } from "../../typings";
+import type { MaterialNode, ProcessNode, GraduationNode, LogoNode } from "../../typings";
 
 const DEBOUNCE_MS = 300;
 
@@ -136,6 +137,26 @@ computationMiddlewares.startListening({
       });
     }
 
+    // Third bulk loop: recompute every LOGO node's cost (summed across its
+    // placements) on any non-conversion graph action. Cost recompute on logo
+    // edits, elective toggles, and graduation/quantity changes all come for
+    // free this way — exactly like materials/processes.
+    const logoNodes = Object.values(graphState.nodes ?? {}).filter(
+      (n): n is LogoNode => (n as any).type === "LOGO"
+    );
+    const logoUpdates: Array<{ nodeId: string; changes: object }> = [];
+    for (const logoNode of logoNodes) {
+      const { cost, audit } = computeLogoCost({
+        logoNodeId: logoNode.id,
+        graphState,
+        conversionGraphState,
+      });
+      logoUpdates.push({
+        nodeId: logoNode.id,
+        changes: { computedCost: cost, costAudit: audit },
+      });
+    }
+
     // Dispatch all write-backs in a single React batch — one render commit instead of three.
     batch(() => {
       for (const { nodeId, changes } of materialUpdates) {
@@ -145,6 +166,9 @@ computationMiddlewares.startListening({
         listenerApi.dispatch(updateNode({ graphId, nodeId, changes }));
       }
       for (const { nodeId, changes } of graduationUpdates) {
+        listenerApi.dispatch(updateNode({ graphId, nodeId, changes }));
+      }
+      for (const { nodeId, changes } of logoUpdates) {
         listenerApi.dispatch(updateNode({ graphId, nodeId, changes }));
       }
     });

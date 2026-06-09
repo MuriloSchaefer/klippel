@@ -1,13 +1,14 @@
 {
   "mcpServers": {
     "klippel": {
-      "command": "npx",
+      "command": "/bin/bash",
       "args": [
-        "tsx",
-        "/home/schaefer/Documents/personal/klippel/webapp/electron/main/mcp/server.ts"
+        "-c",
+        "export PATH=/home/schaefer/.nvm/versions/node/v24.15.0/bin:$PATH; exec npx tsx /home/schaefer/Documents/personal/klippel/webapp/electron/main/mcp/server.ts"
       ],
       "env": {
-        "CDP_PORT": "9222"
+        "CDP_PORT": "9222",
+        "TSX_TSCONFIG_PATH": "/home/schaefer/Documents/personal/klippel/webapp/tsconfig.json"
       }
     },
     "mui-mcp": {

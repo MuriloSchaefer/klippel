@@ -5,11 +5,12 @@ import { MODULE_NAME, MODULE_VERSION } from "./constants";
 import useD3Container from "./hooks/useD3Container";
 import useSVG from "./hooks/useSVG";
 import useSVGManager from "./hooks/useSVGManager";
-import { startModule } from "./kernelCalls";
+import { startModule, postBootInitialization } from "./kernelCalls";
 import DependencyCircle from "./components/d3/DependencyCircle";
 import { selectSVGState } from "./store/selectors";
 import { useSVGEditor } from "./hooks/useSVGEditor";
 import SVGEditorToolkit from './components/SVGEditorToolkit';
+import SVGToolbox from './components/SVGToolbox';
 import useSVGEditorToolkit from "./hooks/useSVGEditorToolkit";
 
 export interface ISVGModule extends IModule {
@@ -17,6 +18,7 @@ export interface ISVGModule extends IModule {
   version: typeof MODULE_VERSION;
   components: {
     SVGEditorToolkit: typeof SVGEditorToolkit
+    SVGToolbox: typeof SVGToolbox
   };
   d3Components: {
     Grid: typeof D3Grid;
@@ -49,7 +51,8 @@ const module: ISVGModule = {
   version: MODULE_VERSION,
   depends_on: [],
   components: {
-    SVGEditorToolkit
+    SVGEditorToolkit,
+    SVGToolbox
   },
   d3Components: { Grid: D3Grid, ChordPlot, DependencyCircle },
   hooks: {
@@ -62,6 +65,7 @@ const module: ISVGModule = {
   selectors: {selectSVGState},
   kernelCalls: {
     startModule,
+    postBootInitialization,
     restartModule() {},
     shutdownModule() {},
   },

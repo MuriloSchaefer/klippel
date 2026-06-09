@@ -5,14 +5,17 @@ import { ComposerModuleState } from "../../../../typings";
 import React, { useMemo, useRef } from "react";
 import { debounce } from "@kernel/utils";
 import { zoomIdentity, zoomTransform, ZoomTransform } from "d3";
+import LogoMainCopyOverlay from "./LogoMainCopyOverlay";
 
 export default function SVGModelViewport({
   variationId,
 }: Readonly<{ variationId: string }>) {
+  const svgModule = useModule<ISVGModule>("SVG");
   const {
     hooks: { useSVGEditor, useSVG },
     d3Components: { Grid },
-  } = useModule<ISVGModule>("SVG");
+    components: { SVGToolbox },
+  } = svgModule;
 
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
@@ -84,9 +87,11 @@ export default function SVGModelViewport({
     <div
       ref={editor.wrapperRef}
       id="svg-editor-wrapper"
-      style={{ height: "100%", width: "100%", minWidth: 500 }}
+      style={{ height: "100%", width: "100%", minWidth: 500, position: "relative" }}
     >
+      <SVGToolbox />
       <svg ref={editor.svgRef} id={`svg-editor`} width="100%" height="100%" />
+      <LogoMainCopyOverlay variationId={variationId} />
     </div>
   );
 }

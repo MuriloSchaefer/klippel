@@ -2,7 +2,7 @@ import { ACTION_TYPES } from "@kernel/constants";
 import { createAction } from "@reduxjs/toolkit";
 import { CSSProperties } from "react";
 import { MODULE_NAME } from "../constants";
-import { SVGState, Proxies } from "./state";
+import { SVGState, Proxies, InjectedElement } from "./state";
 
 // Commands
 export const saveSession = createAction(
@@ -48,6 +48,23 @@ export const deleteProxy = createAction<{
   id: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Delete proxy`);
 
+export const addInjectedElement = createAction<{
+  path: string;
+  instanceName: string;
+  element: InjectedElement;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Add injected element`);
+export const updateInjectedElement = createAction<{
+  path: string;
+  instanceName: string;
+  id: string;
+  changes: Partial<InjectedElement>;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Update injected element`);
+export const deleteInjectedElement = createAction<{
+  path: string;
+  instanceName: string;
+  id: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Delete injected element`);
+
 export const updateSVG = createAction<{
   path: string;
   instanceName: string;
@@ -85,6 +102,23 @@ export const proxyDeleted = createAction<{
   instanceName: string;
   id: string;
 }>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.COMMAND}] Proxy deleted`);
+
+export const injectedElementAdded = createAction<{
+  path: string;
+  instanceName: string;
+  element: InjectedElement;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] Injected element added`);
+export const injectedElementUpdated = createAction<{
+  path: string;
+  instanceName: string;
+  id: string;
+  changes: Partial<InjectedElement>;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] Injected element updated`);
+export const injectedElementDeleted = createAction<{
+  path: string;
+  instanceName: string;
+  id: string;
+}>(`[${MODULE_NAME}:SVG:${ACTION_TYPES.EVENT}] Injected element deleted`);
 
 export const SVGUpdated = createAction<{
   path: string;

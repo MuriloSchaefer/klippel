@@ -12,6 +12,9 @@ import {
   updateProxy,
   saveSession,
   removeInstance,
+  addInjectedElement,
+  updateInjectedElement,
+  deleteInjectedElement,
 } from "./actions";
 import {
   SVGModuleState,
@@ -307,6 +310,87 @@ const slice = createSlice({
                 ).reduce(
                   (acc, [key, proxy]) =>
                     key === id ? acc : { ...acc, [key]: proxy },
+                  {}
+                ),
+              },
+            },
+          },
+        },
+      })
+    );
+
+    builder.addCase(
+      addInjectedElement,
+      (
+        state: SVGModuleState,
+        { payload: { path, instanceName, element } }
+      ) => ({
+        ...state,
+        svgs: {
+          ...state.svgs,
+          [path]: {
+            ...state.svgs[path],
+            instances: {
+              ...state.svgs[path].instances,
+              [instanceName]: {
+                ...state.svgs[path].instances[instanceName],
+                injected: {
+                  ...state.svgs[path].instances[instanceName].injected,
+                  [element.id]: element,
+                },
+              },
+            },
+          },
+        },
+      })
+    );
+    builder.addCase(
+      updateInjectedElement,
+      (
+        state: SVGModuleState,
+        { payload: { path, instanceName, id, changes } }
+      ) => {
+        const existing =
+          state.svgs[path].instances[instanceName].injected?.[id];
+        if (!existing) return state;
+        return {
+          ...state,
+          svgs: {
+            ...state.svgs,
+            [path]: {
+              ...state.svgs[path],
+              instances: {
+                ...state.svgs[path].instances,
+                [instanceName]: {
+                  ...state.svgs[path].instances[instanceName],
+                  injected: {
+                    ...state.svgs[path].instances[instanceName].injected,
+                    [id]: { ...existing, ...changes, id },
+                  },
+                },
+              },
+            },
+          },
+        };
+      }
+    );
+    builder.addCase(
+      deleteInjectedElement,
+      (state: SVGModuleState, { payload: { path, instanceName, id } }) => ({
+        ...state,
+        svgs: {
+          ...state.svgs,
+          [path]: {
+            ...state.svgs[path],
+            instances: {
+              ...state.svgs[path].instances,
+              [instanceName]: {
+                ...state.svgs[path].instances[instanceName],
+                injected: Object.entries(
+                  state.svgs[path].instances[instanceName].injected ?? {}
+                ).reduce(
+                  (acc, [key, el]) =>
+                    key === id ? acc : { ...acc, [key]: el },
                   {}
                 ),
               },

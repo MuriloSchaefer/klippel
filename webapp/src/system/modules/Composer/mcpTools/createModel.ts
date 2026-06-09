@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { fillCreateModelForm } from '../components/CreateModelIconButton/drivers/createModel.puppeteer';
 
@@ -5,12 +6,8 @@ export const createModelTool = {
   name: 'createModel',
   description: 'Create a new model with the given name (and optional ID).',
   inputSchema: {
-    type: 'object' as const,
-    properties: {
-      name: { type: 'string' },
-      id: { type: 'string', description: 'Optional model ID; auto-generated if omitted.' },
-    },
-    required: ['name'],
+    name: z.string(),
+    id: z.string().optional().describe('Optional model ID; auto-generated if omitted.'),
   },
   async execute({ name, id }: { name: string; id?: string }) {
     if (name.length > 30) {

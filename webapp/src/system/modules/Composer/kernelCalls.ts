@@ -18,6 +18,8 @@ import {
   PROCESS_TIME_LIST_CONTEXT_ID,
   SVG_EMPTY_STATE_CONTEXT_ID,
   UPLOAD_SVG_SHORTCUT_ID,
+  LOGO_LIST_CONTEXT_ID,
+  LOGO_PLACEMENTS_CONTEXT_ID,
 } from "./constants";
 import slice from "./store/slice";
 import ModelViewport from "./components/viewports/ModelViewport";
@@ -1057,6 +1059,235 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
         setTimeout(attempt, 0);
       },
       description: 'Move focused graduation down',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoList/focus`,
+      key: 'Ctrl+l',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const accordion = document.querySelector(
+          '[role="accordion-Logos"]'
+        ) as HTMLElement | null;
+        if (!accordion) return;
+        const summary = accordion.querySelector(
+          '[aria-controls="accordion-Logos-content"]'
+        ) as HTMLElement | null;
+        if (!summary) return;
+
+        const isExpanded = () =>
+          summary.getAttribute('aria-expanded') === 'true';
+        const wasExpanded = isExpanded();
+        const rowFocusedInside = !!document.activeElement?.closest(
+          '[role="accordion-Logos"] [data-testid="logo-item"]'
+        );
+
+        if (wasExpanded && rowFocusedInside) {
+          summary.click();
+          return;
+        }
+
+        if (!wasExpanded) summary.click();
+
+        const findFirstRow = () =>
+          accordion.querySelector(
+            '[data-testid="logo-item"]'
+          ) as HTMLElement | null;
+        const findAddBtn = () =>
+          accordion.querySelector('#composer-add-logo') as HTMLElement | null;
+        const findContent = () =>
+          accordion.querySelector(
+            '[data-accordion-content="Logos"]'
+          ) as HTMLElement | null;
+
+        const start = Date.now();
+        const attempt = () => {
+          const first = findFirstRow();
+          if (first) {
+            first.focus();
+            if (document.activeElement === first) return;
+          } else {
+            const addBtn = findAddBtn();
+            if (addBtn) {
+              addBtn.focus();
+              if (document.activeElement === addBtn) return;
+            } else {
+              const content = findContent();
+              if (content) {
+                content.focus();
+                if (document.activeElement === content) return;
+              }
+            }
+          }
+          if (Date.now() - start < 1500) setTimeout(attempt, 50);
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Toggle / focus logo list',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoList/addLogo`,
+      key: 'a',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => document.getElementById('composer-add-logo')?.click(),
+      description: 'Add logo',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoItem/focusNext`,
+      key: 'ArrowDown',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="logo-item"]');
+        if (!current) return;
+        const next = current.nextElementSibling as HTMLElement | null;
+        if (next?.matches('[data-testid="logo-item"]')) next.focus();
+      },
+      description: 'Focus next logo item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoItem/focusPrev`,
+      key: 'ArrowUp',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="logo-item"]');
+        if (!current) return;
+        const prev = current.previousElementSibling as HTMLElement | null;
+        if (prev?.matches('[data-testid="logo-item"]')) prev.focus();
+      },
+      description: 'Focus previous logo item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoItem/editLogo`,
+      key: 'e',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="logo-item"]');
+        const btn = row?.querySelector('[data-testid="logo-item-edit"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Edit focused logo',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoItem/deleteLogo`,
+      key: 'd',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="logo-item"]');
+        const btn = row?.querySelector('[data-testid="logo-item-delete"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Remove focused logo',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoItem/openPlacements`,
+      key: 'p',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="logo-item"]');
+        const btn = row?.querySelector('[data-testid="logo-item-placements"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Open placements pointer for focused logo',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoItem/linkElective`,
+      key: 'w',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="logo-item"]');
+        const btn = row?.querySelector('[data-testid="logo-item-link-elective"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Link focused logo to elective',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoItem/openAudit`,
+      key: 'l',
+      contextId: LOGO_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="logo-item"]');
+        const btn = row?.querySelector('[data-testid="logo-item-audit-log"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Open cost audit for focused logo',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoPlacements/focusNext`,
+      key: 'ArrowDown',
+      contextId: LOGO_PLACEMENTS_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="logo-placement-item"]');
+        if (!current) return;
+        const items = Array.from(
+          document.querySelectorAll<HTMLElement>('[data-testid="logo-placement-item"]')
+        );
+        const idx = items.indexOf(current as HTMLElement);
+        if (idx < 0 || idx >= items.length - 1) return;
+        items[idx + 1].focus();
+      },
+      description: 'Focus next placement',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoPlacements/focusPrev`,
+      key: 'ArrowUp',
+      contextId: LOGO_PLACEMENTS_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="logo-placement-item"]');
+        if (!current) return;
+        const items = Array.from(
+          document.querySelectorAll<HTMLElement>('[data-testid="logo-placement-item"]')
+        );
+        const idx = items.indexOf(current as HTMLElement);
+        if (idx <= 0) return;
+        items[idx - 1].focus();
+      },
+      description: 'Focus previous placement',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoPlacements/addPlacement`,
+      key: 'a',
+      contextId: LOGO_PLACEMENTS_CONTEXT_ID,
+      action: () => {
+        const btn = document.querySelector('[data-testid="logo-placement-add"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Add placement (copy)',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoPlacements/renamePlacement`,
+      key: 'e',
+      contextId: LOGO_PLACEMENTS_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="logo-placement-item"]');
+        const input = row?.querySelector('[data-testid="logo-placement-name"] input') as HTMLInputElement | null;
+        input?.focus();
+        input?.select?.();
+      },
+      description: 'Rename focused placement',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/LogoPlacements/deletePlacement`,
+      key: 'd',
+      contextId: LOGO_PLACEMENTS_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="logo-placement-item"]');
+        const btn = row?.querySelector('[data-testid="logo-placement-delete"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Delete focused placement',
       enabled: true,
     },
   ])

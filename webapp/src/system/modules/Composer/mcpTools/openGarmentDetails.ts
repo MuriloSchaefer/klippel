@@ -11,7 +11,7 @@ export const openGarmentDetailsTool = {
   name: "openGarmentDetails",
   description:
     'Select the garment node and open its details panel via DOM clicks. Ensures the "Detalhes da Peça" accordion is expanded.',
-  inputSchema: { type: "object" as const, properties: {} },
+  inputSchema: {},
   async execute() {
     const page = await getPage();
     await page.bringToFront();

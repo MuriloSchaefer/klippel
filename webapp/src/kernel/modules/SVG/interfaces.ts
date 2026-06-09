@@ -28,14 +28,34 @@ export interface D3Graph<N =D3Node, L=D3Link> {
   }
 
 
+  export type ManipulateMode = "idle" | "drag" | "rotate" | "scale" | "clip";
+
+  export type ManipulateTransform = {
+    x: number;
+    y: number;
+    rotation: number;
+    scale: number;
+  };
+
   export type EditorToolkit = {
     tools: {
-      hightlightedElements: string[]
+      highlightedElements: string[]
       pickElement: {
         type: 'SVGElement';
         enabled: boolean;
         getSelectables: (svgRoot: SVGSVGElement) => SVGElement[]
         callback: (element: SVGElement) => void;
+      };
+      // The svgtoolbox — spatial editing (move/rotate/scale/clip) of an already
+      // injected element. Placement lifecycle (create/rename/delete) is the
+      // host's responsibility, so there is no onCopy/onRemove here.
+      manipulate: {
+        enabled: boolean;
+        targetId?: string;                 // the injected element currently selected
+        mode: ManipulateMode;
+        // move + rotate + VISUAL scale (the toolbox attaches no physical/cost meaning)
+        onTransform: (id: string, t: ManipulateTransform) => void;
+        onClip: (id: string, clipTargetId: string) => void;
       };
     };
   };

@@ -5,7 +5,7 @@ export const openGarmentDetailsShortcutTool = {
   name: 'openGarmentDetailsShortcut',
   description:
     'Select the garment node and open its details panel via the keyboard shortcut Ctrl+Alt+P.',
-  inputSchema: { type: 'object' as const, properties: {} },
+  inputSchema: {},
   async execute() {
     const page = await getPage();
     await page.bringToFront();

@@ -12,3 +12,7 @@ export const PROCESS_LIST_CONTEXT_ID = `${MODULE_NAME}/ProcessList`;
 export const PROCESS_TIME_LIST_CONTEXT_ID = `${MODULE_NAME}/ProcessTimeList`;
 export const SVG_EMPTY_STATE_CONTEXT_ID = `${MODULE_NAME}/SVGEmptyState`;
 export const UPLOAD_SVG_SHORTCUT_ID = `${SVG_EMPTY_STATE_CONTEXT_ID}/uploadSVG`;
+
+export const LOGO_LIST_CONTEXT_ID = `${MODULE_NAME}/LogoList`;
+// Active only while the placements pointer is open (pushed/popped on its mount).
+export const LOGO_PLACEMENTS_CONTEXT_ID = `${MODULE_NAME}/LogoPlacements`;

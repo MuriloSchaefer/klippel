@@ -15,6 +15,9 @@ import {
   addProxy as addProxyAction,
   updateProxy as updateProxyAction,
   deleteProxy as deleteProxyAction,
+  addInjectedElement as addInjectedElementAction,
+  updateInjectedElement as updateInjectedElementAction,
+  deleteInjectedElement as deleteInjectedElementAction,
 } from "@kernel/modules/SVG/store/actions";
 import { selectPart } from "../store/variations/actions";
 import {
@@ -29,7 +32,13 @@ import {
   HasProcessEdge,
   ConsumesEdge,
   ConsumedByEdge,
+  LogoNode,
+  LogoMethod,
+  LogoPlacement,
+  LogoSource,
+  DocumentNode,
 } from "../typings";
+import { UnitValue } from "@system/modules/Converter/typings";
 import { EdgeMap } from "@kernel/modules/Graphs/hooks/useGraph";
 import { IMaterialsModule } from "@system/modules/Materials";
 import { useTheme } from "@mui/material";
@@ -40,6 +49,74 @@ import {
   dropGraduationFromEdge,
 } from "../utils/consumptionPerGrade";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+
+// --- Logo overlay helpers ----------------------------------------------------
+
+const shortHash = () => Math.random().toString(36).slice(2, 8);
+
+const logoSymbolId = (logoId: string) => `logo-sym-${logoId}`;
+const logoContainerId = (logoId: string, placementId: string) =>
+  `logo-${logoId}-${placementId}`;
+// Outer, untransformed wrapper that carries the clip-path. The clip is kept off
+// the transformed container because a `clipPathUnits="userSpaceOnUse"` clip is
+// resolved in the element's *post-transform* user space — so a clip on the
+// transformed <use> would push the (root-space) target geometry through the
+// placement transform and miss the logo entirely (the logo would vanish).
+const logoClipWrapId = (logoId: string, placementId: string) =>
+  `logo-clipwrap-${logoId}-${placementId}`;
+const logoClipId = (placementId: string) => `logo-clip-${placementId}`;
+
+const decodeBase64 = (data: string): string => {
+  try {
+    if (typeof atob !== "undefined") return atob(data);
+    return Buffer.from(data, "base64").toString("binary");
+  } catch {
+    return "";
+  }
+};
+
+// Proxy transform string. Rotation pivot (cx,cy) is appended by the manipulation
+// handles once a bbox is known; the initial form is enough to place the element.
+const buildLogoTransform = (t: LogoPlacement["transform"]): string =>
+  `translate(${t.x},${t.y}) rotate(${t.rotation}) scale(${t.scale})`;
+
+// defs markup for the logo source: the decoded (already-sanitized) SVG for svg
+// sources, or an <image> with a data-URL href for rasters. id is (re)applied at
+// mount by the editor, but set here too for clarity.
+const sourceDefsMarkup = (
+  logoId: string,
+  source: LogoSource,
+  doc: { mime: string; data: string },
+  size?: { width: UnitValue; height: UnitValue },
+): string => {
+  const id = logoSymbolId(logoId);
+  if (source.kind === "raster") {
+    // <image> needs explicit width/height to render; seed from the logo's
+    // physical size (user units). The placement transform scales from there.
+    const w = size?.width.amount || 100;
+    const h = size?.height.amount || 100;
+    return `<image id="${id}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" href="data:${doc.mime};base64,${doc.data}" />`;
+  }
+  const decoded = decodeBase64(doc.data);
+  return decoded || `<g id="${id}"></g>`;
+};
+
+const placementContainerMarkup = (
+  logoId: string,
+  source: LogoSource,
+  placementId: string,
+): string => {
+  const ref = logoSymbolId(logoId);
+  const wrapId = logoClipWrapId(logoId, placementId);
+  const id = logoContainerId(logoId, placementId);
+  // Outer <g> (wrapId) holds the clip-path and stays untransformed; the inner
+  // <use> (id) carries the placement transform. The editor stamps the fragment
+  // root (the <g>) with the injection id, so wrapId is the injection key.
+  return `<g id="${wrapId}"><use id="${id}" href="#${ref}" xlink:href="#${ref}" /></g>`;
+};
+
+const clipPathMarkup = (placementId: string, clipTargetId: string): string =>
+  `<clipPath id="${logoClipId(placementId)}" clipPathUnits="userSpaceOnUse"><use href="#${clipTargetId}" xlink:href="#${clipTargetId}" /></clipPath>`;
 
 export function useVariationActions({ variationId }: { variationId: string }) {
   const theme = useTheme();
@@ -726,6 +803,564 @@ export function useVariationActions({ variationId }: { variationId: string }) {
               graphId: variationId,
               nodeId,
               changes: { ...curr, ...changes },
+            }),
+          );
+          markChanged();
+        },
+
+        // --- Logos ----------------------------------------------------------
+
+        addLogo: (input: {
+          name: string;
+          method: LogoMethod;
+          colors: number;
+          defaultSize: { width: UnitValue; height: UnitValue };
+          costExpression?: string;
+          electiveNodeId?: string;
+          source: { kind: "svg" } | { kind: "raster"; pendingVector?: boolean };
+          document: { data: string; mime: string; filename?: string };
+          garmentId?: string;
+        }): string => {
+          const garmentId = input.garmentId ?? "garment";
+          const logoId = shortHash();
+          const nodeId = `logo-${logoId}`;
+          const documentId = shortHash();
+          const docNodeId = `document-${documentId}`;
+          const kind =
+            input.source.kind === "raster" ? "logo-raster" : "logo-svg";
+          const source: LogoSource =
+            input.source.kind === "raster"
+              ? {
+                  kind: "raster",
+                  documentId,
+                  pendingVector: input.source.pendingVector ?? true,
+                }
+              : { kind: "svg", documentId };
+
+          const logoNode: LogoNode = {
+            id: nodeId,
+            type: "LOGO",
+            label: input.name,
+            logoId,
+            method: input.method,
+            colors: input.colors,
+            defaultSize: input.defaultSize,
+            source,
+            // The main copy is a draggable/resizable overlay (no rotation),
+            // staged on top of the editor. Placements are added separately and
+            // live inside the content SVG.
+            mainCopy: { x: 24, y: 24, width: 160, height: 160 },
+            electiveNodeId: input.electiveNodeId,
+            costExpression: input.costExpression,
+            placements: [],
+            position: { x: 0, y: 0 },
+          };
+
+          dispatch(
+            addNodeAction({
+              graphId: variationId,
+              node: logoNode,
+              edges: {
+                inputs: {
+                  [`${garmentId}-${nodeId}`]: {
+                    id: `${garmentId}-${nodeId}`,
+                    type: "HAS_LOGO",
+                    sourceId: garmentId,
+                    targetId: nodeId,
+                  },
+                },
+                outputs: {
+                  [`${nodeId}-${garmentId}`]: {
+                    id: `${nodeId}-${garmentId}`,
+                    type: "LOGO_OF",
+                    sourceId: nodeId,
+                    targetId: garmentId,
+                  },
+                },
+              },
+            }),
+          );
+
+          const docNode: DocumentNode = {
+            id: docNodeId,
+            type: "DOCUMENT",
+            documentId,
+            kind,
+            mime: input.document.mime,
+            filename: input.document.filename,
+            encoding: "base64",
+            data: input.document.data,
+            position: { x: 0, y: 0 },
+          };
+          dispatch(
+            addNodeAction({
+              graphId: variationId,
+              node: docNode,
+              edges: {
+                inputs: {
+                  [`${nodeId}-${docNodeId}`]: {
+                    id: `${nodeId}-${docNodeId}`,
+                    type: "HAS_DOCUMENT",
+                    sourceId: nodeId,
+                    targetId: docNodeId,
+                  },
+                },
+                outputs: {
+                  [`${docNodeId}-${nodeId}`]: {
+                    id: `${docNodeId}-${nodeId}`,
+                    type: "DOCUMENT_OF",
+                    sourceId: docNodeId,
+                    targetId: nodeId,
+                  },
+                },
+              },
+            }),
+          );
+
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            // Inject only the source <symbol>/<image> into defs; in-content
+            // placements (which <use> it) are added separately. The main copy
+            // renders from the document directly in the DOM overlay.
+            dispatch(
+              addInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                element: {
+                  id: logoSymbolId(logoId),
+                  mount: "defs",
+                  markup: sourceDefsMarkup(
+                    logoId,
+                    source,
+                    input.document,
+                    input.defaultSize,
+                  ),
+                  order: 0,
+                },
+              }),
+            );
+          }
+          markChanged();
+          return nodeId;
+        },
+
+        updateLogoMainCopy: (
+          nodeId: string,
+          mainCopy: { x: number; y: number; width: number; height: number },
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, mainCopy },
+            }),
+          );
+          markChanged();
+        },
+
+        updateLogo: (
+          nodeId: string,
+          changes: Partial<LogoNode> & {
+            document?: { data: string; mime: string; filename?: string };
+          },
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          const { document, ...nodeChanges } = changes;
+          // When the source file is replaced the kind may change (svg↔raster),
+          // so re-derive the symbol from the NEW source, not curr's.
+          const effectiveSource = nodeChanges.source ?? curr.source;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, ...nodeChanges },
+            }),
+          );
+          if (document) {
+            const docNode = Object.values(g.nodes).find(
+              (n): n is DocumentNode =>
+                (n as any).type === "DOCUMENT" &&
+                (n as DocumentNode).documentId === curr.source.documentId,
+            );
+            if (docNode) {
+              dispatch(
+                updateNodeAction({
+                  graphId: variationId,
+                  nodeId: docNode.id,
+                  changes: {
+                    ...docNode,
+                    data: document.data,
+                    mime: document.mime,
+                    filename: document.filename ?? docNode.filename,
+                  },
+                }),
+              );
+            }
+            const svgPath = getSvgPath();
+            if (svgPath) {
+              dispatch(
+                updateInjectedElementAction({
+                  path: svgPath,
+                  instanceName: variationId,
+                  id: logoSymbolId(curr.logoId),
+                  changes: {
+                    markup: sourceDefsMarkup(
+                      curr.logoId,
+                      effectiveSource,
+                      { mime: document.mime, data: document.data },
+                      nodeChanges.defaultSize ?? curr.defaultSize,
+                    ),
+                  },
+                }),
+              );
+            }
+          }
+          markChanged();
+        },
+
+        removeLogo: (nodeId: string) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              deleteInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: logoSymbolId(curr.logoId),
+              }),
+            );
+            for (const p of curr.placements) {
+              dispatch(
+                deleteInjectedElementAction({
+                  path: svgPath,
+                  instanceName: variationId,
+                  id: logoClipWrapId(curr.logoId, p.placementId),
+                }),
+              );
+              dispatch(
+                deleteProxyAction({
+                  path: svgPath,
+                  instanceName: variationId,
+                  id: logoContainerId(curr.logoId, p.placementId),
+                }),
+              );
+              dispatch(
+                deleteProxyAction({
+                  path: svgPath,
+                  instanceName: variationId,
+                  id: logoClipWrapId(curr.logoId, p.placementId),
+                }),
+              );
+              if (p.clipTargetId) {
+                dispatch(
+                  deleteInjectedElementAction({
+                    path: svgPath,
+                    instanceName: variationId,
+                    id: logoClipId(p.placementId),
+                  }),
+                );
+              }
+            }
+          }
+          const docNode = Object.values(g.nodes).find(
+            (n): n is DocumentNode =>
+              (n as any).type === "DOCUMENT" &&
+              (n as DocumentNode).documentId === curr.source.documentId,
+          );
+          if (docNode) {
+            dispatch(removeNodeAction({ graphId: variationId, nodeId: docNode.id }));
+          }
+          dispatch(removeNodeAction({ graphId: variationId, nodeId }));
+          markChanged();
+        },
+
+        addLogoPlacement: (nodeId: string, name?: string): string | undefined => {
+          const g = getGraph();
+          if (!g) return undefined;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return undefined;
+          const placementId = shortHash();
+          const last = curr.placements[curr.placements.length - 1];
+          const offset = last ? 10 : 0;
+          const baseTransform = last?.transform ?? {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            scale: 1,
+          };
+          const placement: LogoPlacement = {
+            placementId,
+            name: name ?? `Cópia ${curr.placements.length + 1}`,
+            size: last?.size ?? curr.defaultSize,
+            transform: {
+              ...baseTransform,
+              x: baseTransform.x + offset,
+              y: baseTransform.y + offset,
+            },
+          };
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, placements: [...curr.placements, placement] },
+            }),
+          );
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              addInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                element: {
+                  // Injection root is the clip wrapper <g>; the transform proxy
+                  // below targets the inner <use> by logoContainerId.
+                  id: logoClipWrapId(curr.logoId, placementId),
+                  mount: "container",
+                  markup: placementContainerMarkup(
+                    curr.logoId,
+                    curr.source,
+                    placementId,
+                  ),
+                  order: curr.placements.length,
+                },
+              }),
+            );
+            dispatch(
+              addProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: logoContainerId(curr.logoId, placementId),
+                styles: {
+                  transform: buildLogoTransform(placement.transform),
+                } as CSSProperties,
+              }),
+            );
+          }
+          markChanged();
+          return placementId;
+        },
+
+        updateLogoPlacement: (
+          nodeId: string,
+          placementId: string,
+          transform: LogoPlacement["transform"],
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: {
+                ...curr,
+                placements: curr.placements.map((p) =>
+                  p.placementId === placementId ? { ...p, transform } : p,
+                ),
+              },
+            }),
+          );
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              updateProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: logoContainerId(curr.logoId, placementId),
+                changes: { transform: buildLogoTransform(transform) } as CSSProperties,
+              }),
+            );
+          }
+          markChanged();
+        },
+
+        resizeLogoPlacement: (
+          nodeId: string,
+          placementId: string,
+          size: { width: UnitValue; height: UnitValue },
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: {
+                ...curr,
+                placements: curr.placements.map((p) =>
+                  p.placementId === placementId ? { ...p, size } : p,
+                ),
+              },
+            }),
+          );
+          markChanged();
+        },
+
+        renameLogoPlacement: (
+          nodeId: string,
+          placementId: string,
+          name: string,
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: {
+                ...curr,
+                placements: curr.placements.map((p) =>
+                  p.placementId === placementId ? { ...p, name } : p,
+                ),
+              },
+            }),
+          );
+          markChanged();
+        },
+
+        clipLogoPlacement: (
+          nodeId: string,
+          placementId: string,
+          clipTargetId: string,
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: {
+                ...curr,
+                placements: curr.placements.map((p) =>
+                  p.placementId === placementId ? { ...p, clipTargetId } : p,
+                ),
+              },
+            }),
+          );
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              addInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                element: {
+                  id: logoClipId(placementId),
+                  mount: "defs",
+                  markup: clipPathMarkup(placementId, clipTargetId),
+                  order: 1,
+                },
+              }),
+            );
+            dispatch(
+              updateProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                // Clip the untransformed wrapper, not the transformed <use>, so
+                // the userSpaceOnUse target geometry stays in root space.
+                id: logoClipWrapId(curr.logoId, placementId),
+                changes: {
+                  "clip-path": `url(#${logoClipId(placementId)})`,
+                } as any,
+              }),
+            );
+            // Mount the placement just above its clip target in paint order so
+            // it sits on the clipped element's layer (below anything drawn after
+            // it), instead of on top of the whole drawing.
+            dispatch(
+              updateInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: logoClipWrapId(curr.logoId, placementId),
+                changes: { anchor: clipTargetId },
+              }),
+            );
+          }
+          markChanged();
+        },
+
+        removeLogoPlacement: (nodeId: string, placementId: string) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          const placement = curr.placements.find(
+            (p) => p.placementId === placementId,
+          );
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: {
+                ...curr,
+                placements: curr.placements.filter(
+                  (p) => p.placementId !== placementId,
+                ),
+              },
+            }),
+          );
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              deleteInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: logoClipWrapId(curr.logoId, placementId),
+              }),
+            );
+            dispatch(
+              deleteProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: logoContainerId(curr.logoId, placementId),
+              }),
+            );
+            dispatch(
+              deleteProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: logoClipWrapId(curr.logoId, placementId),
+              }),
+            );
+            if (placement?.clipTargetId) {
+              dispatch(
+                deleteInjectedElementAction({
+                  path: svgPath,
+                  instanceName: variationId,
+                  id: logoClipId(placementId),
+                }),
+              );
+            }
+          }
+          markChanged();
+        },
+
+        linkLogoElective: (nodeId: string, electiveNodeId: string) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, electiveNodeId },
             }),
           );
           markChanged();

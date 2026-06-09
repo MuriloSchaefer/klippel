@@ -4,11 +4,11 @@
       "command": "npx",
       "args": [
         "tsx",
-        "watch",
-        "/home/schaefer/Documents/personal/klippel/webapp/electron/main/mcp/server.ts"
+        "webapp/electron/main/mcp/server.ts"
       ],
       "env": {
-        "CDP_PORT": "9222"
+        "CDP_PORT": "9222",
+        "TSX_TSCONFIG_PATH": "webapp/tsconfig.json"
       }
     },
     "mui-mcp": {
