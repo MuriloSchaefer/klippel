@@ -24,7 +24,6 @@ import { editElectiveTool } from '@system/modules/Composer/mcpTools/editElective
 import { editElectiveShortcutTool } from '@system/modules/Composer/mcpTools/editElectiveShortcut';
 import { deleteElectiveTool } from '@system/modules/Composer/mcpTools/deleteElective';
 import { deleteElectiveShortcutTool } from '@system/modules/Composer/mcpTools/deleteElectiveShortcut';
-import { openGarmentDetailsTool } from '@system/modules/Composer/mcpTools/openGarmentDetails';
 import { createModelTool } from '@system/modules/Composer/mcpTools/createModel';
 import { openModelTool } from '@system/modules/Composer/mcpTools/openModel';
 import { switchRibbonTabTool } from '@kernel/modules/Layout/mcpTools/switchRibbonTab';
@@ -51,7 +50,6 @@ beforeAll(async () => {
     timeout: 10_000,
   });
   await openModelTool.execute({ modelName: name });
-  await openGarmentDetailsTool.execute();
 }, 60_000);
 
 afterAll(async () => {

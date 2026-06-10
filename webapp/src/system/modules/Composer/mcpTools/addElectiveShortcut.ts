@@ -3,9 +3,6 @@ import { z } from 'zod';
 import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
 import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
-import {
-  ensureGarmentDetailsAccordionExpanded,
-} from '../components/viewports/ModelViewport/DetailPanel/drivers/GarmentDetails.click.puppeteer';
 import { confirmPointerPanelShortcut } from '@kernel/modules/Pointer/components/drivers/PointerContainer.shortcut.puppeteer';
 import {
   setAddElectiveDefaultShortcut,
@@ -33,8 +30,7 @@ export const addElectiveShortcutTool = {
     await page.bringToFront();
 
     await ensureSettingsPanelExpanded(page);
-    await ensureGarmentDetailsAccordionExpanded(page);
-    await expandAccordion(page, 'Eletivos da Peça');
+    await expandAccordion(page, 'Eletivos');
 
     await triggerFocusElectiveList(page);
     await triggerAddElective(page);

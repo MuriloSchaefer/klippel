@@ -47,7 +47,7 @@ export const triggerFocusElectiveList = async (page: Page) => {
   await page.keyboard.up('Alt');
   await page.keyboard.up('Control');
   await page.waitForSelector(
-    '[data-testid="elective-item"]:focus, #composer-add-elective:focus, [data-accordion-content="Eletivos da Peça"]:focus',
+    '[data-testid="elective-item"]:focus, #composer-add-elective:focus, [data-accordion-content="Eletivos"]:focus',
   );
 };
 

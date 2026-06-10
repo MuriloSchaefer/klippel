@@ -38,7 +38,7 @@ import { switchViewTool } from '@system/modules/Composer/mcpTools/switchView';
 import { uploadVariationSVGTool } from '@system/modules/Composer/mcpTools/uploadVariationSVG';
 import { switchRibbonTabTool } from '@kernel/modules/Layout/mcpTools/switchRibbonTab';
 import { setElectiveValue } from '@system/modules/Composer/components/viewports/ElectiveListAccordion/drivers/ElectiveItem.click.puppeteer';
-import { ensureGarmentDetailsAccordionExpanded } from '@system/modules/Composer/components/viewports/ModelViewport/DetailPanel/drivers/GarmentDetails.click.puppeteer';
+import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
 import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
 import { openLogoListAccordion } from '@system/modules/Composer/components/viewports/LogoListAccordion/drivers/AddLogoButton.click.puppeteer';
 import { openLogoCostAudit } from '@system/modules/Composer/components/viewports/LogoListAccordion/drivers/LogoItem.click.puppeteer';
@@ -70,8 +70,8 @@ const waitForRowCost = (page: Page, label: string, want: 'positive' | 'zero') =>
   );
 
 const expandElectivesAccordion = async (p: Page) => {
-  await ensureGarmentDetailsAccordionExpanded(p);
-  await expandAccordion(p, 'Eletivos da Peça');
+  await ensureSettingsPanelExpanded(p);
+  await expandAccordion(p, 'Eletivos');
 };
 
 beforeAll(async () => {

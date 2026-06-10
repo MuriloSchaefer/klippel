@@ -606,11 +606,11 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
       contextId: `${MODULE_NAME}/ModelViewport`,
       action: () => {
         const accordion = document.querySelector(
-          '[role="accordion-Eletivos da Peça"]'
+          '[role="accordion-Eletivos"]'
         ) as HTMLElement | null;
         if (!accordion) return;
         const summary = accordion.querySelector(
-          '[aria-controls="accordion-Eletivos da Peça-content"]'
+          '[aria-controls="accordion-Eletivos-content"]'
         ) as HTMLElement | null;
         if (!summary) return;
 
@@ -618,7 +618,7 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
           summary.getAttribute('aria-expanded') === 'true';
         const wasExpanded = isExpanded();
         const rowFocusedInside = !!document.activeElement?.closest(
-          '[role="accordion-Eletivos da Peça"] [data-testid="elective-item"]'
+          '[role="accordion-Eletivos"] [data-testid="elective-item"]'
         );
 
         if (wasExpanded && rowFocusedInside) {
@@ -638,7 +638,7 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
           ) as HTMLElement | null;
         const findContent = () =>
           accordion.querySelector(
-            '[data-accordion-content="Eletivos da Peça"]'
+            '[data-accordion-content="Eletivos"]'
           ) as HTMLElement | null;
 
         const start = Date.now();

@@ -1,5 +1,6 @@
 /* istanbul ignore file */
 import type { Page } from 'puppeteer-core';
+import { resetUIState } from '@helpers/puppeteer/closeOverlays';
 
 export const ELECTIVE_ITEM_TESTID = 'elective-item';
 export const ELECTIVE_ITEM_EDIT_TESTID = 'elective-item-edit';
@@ -37,10 +38,19 @@ export const setElectiveValue = async (page: Page, label: string, target: boolea
   await page.waitForSelector(target ? `${inputSel}:checked` : `${inputSel}:not(:checked)`);
 };
 
+// A row-action click can be swallowed by a still-mounted Modal portal from a
+// closed PointerContainer (`keepMounted`) — e.g. the add-elective panel that just
+// confirmed. resetUIState clears it; a programmatic click bypasses the layout
+// hit-test so it lands regardless (e2e-tests.md §4).
+const clickRowAction = async (page: Page, sel: string) => {
+  await resetUIState(page);
+  await page.waitForSelector(sel);
+  await page.$eval(sel, (el) => (el as HTMLElement).click());
+};
+
 export const clickEditElective = async (page: Page, label: string) => {
   const sel = `${rowSelector(label)} [data-testid="${ELECTIVE_ITEM_EDIT_TESTID}"]`;
-  await page.waitForSelector(sel);
-  await page.click(sel);
+  await clickRowAction(page, sel);
   await page.waitForSelector(
     `[role="pointer-panel-content"] [data-testid="${EDIT_ELECTIVE_FORM_TESTID}"]`,
   );
@@ -48,8 +58,7 @@ export const clickEditElective = async (page: Page, label: string) => {
 
 export const clickDeleteElective = async (page: Page, label: string) => {
   const sel = `${rowSelector(label)} [data-testid="${ELECTIVE_ITEM_DELETE_TESTID}"]`;
-  await page.waitForSelector(sel);
-  await page.click(sel);
+  await clickRowAction(page, sel);
 };
 
 export const typeEditElectiveName = async (page: Page, name: string) => {

@@ -8,13 +8,11 @@ import { debounce } from "@kernel/utils";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
 import {
-  ELECTIVE_LIST_CONTEXT_ID,
   GRADUATION_LIST_CONTEXT_ID,
   MODULE_NAME,
   PROCESS_LIST_CONTEXT_ID,
   VISUALIZATION_LIST_CONTEXT_ID,
 } from "../../../../constants";
-import ElectiveListAccordion from "../../../viewports/ElectiveListAccordion";
 import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
 import VisualizationListAccordion from "../../VisualizationListAccordion";
 import GraduationListAccordion from "../../../viewports/GraduationListAccordion";
@@ -123,20 +121,6 @@ function GarmentDetails({
           summary="Víncule materiais com objetos na arte."
         >
           <VisualizationListAccordion
-            variationId={variationId}
-            garmentId={selectedPart}
-          />
-        </Accordion>
-      </FocusShortcutProvider>
-      <FocusShortcutProvider contextId={ELECTIVE_LIST_CONTEXT_ID}>
-        <Accordion
-          name="Eletivos da Peça"
-          icon={undefined}
-          shortcutHint={`${MODULE_NAME}/ElectiveList/focus`}
-          summary="Cada eletivo representa uma variação opcional dentro da peça"
-          defaultExpanded
-        >
-          <ElectiveListAccordion
             variationId={variationId}
             garmentId={selectedPart}
           />

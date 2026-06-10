@@ -4,9 +4,6 @@ import { getPage } from '../../../../../electron/main/mcp/puppeteer';
 import { ensureSettingsPanelExpanded } from '@kernel/modules/Layout/components/Panels/drivers/SettingsPanel.click.puppeteer';
 import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
 import {
-  ensureGarmentDetailsAccordionExpanded,
-} from '../components/viewports/ModelViewport/DetailPanel/drivers/GarmentDetails.click.puppeteer';
-import {
   focusElectiveItem,
   triggerDeleteElectiveFromFocused,
 } from '../components/viewports/ElectiveListAccordion/drivers/ElectiveItem.shortcut.puppeteer';
@@ -26,8 +23,7 @@ export const deleteElectiveShortcutTool = {
     await page.bringToFront();
 
     await ensureSettingsPanelExpanded(page);
-    await ensureGarmentDetailsAccordionExpanded(page);
-    await expandAccordion(page, 'Eletivos da Peça');
+    await expandAccordion(page, 'Eletivos');
 
     await focusElectiveItem(page, label);
     await triggerDeleteElectiveFromFocused(page);

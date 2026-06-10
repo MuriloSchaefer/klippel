@@ -1,4 +1,5 @@
 import MaterialListAccordion from "../MaterialListAccordion";
+import ElectiveListAccordion from "../ElectiveListAccordion";
 import LogoListAccordion from "../LogoListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
@@ -8,6 +9,7 @@ import {
   MODULE_NAME,
   PROCESS_TIME_LIST_CONTEXT_ID,
   LOGO_LIST_CONTEXT_ID,
+  ELECTIVE_LIST_CONTEXT_ID,
 } from "../../../constants";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
@@ -19,6 +21,7 @@ import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import GestureSharpIcon from "@mui/icons-material/GestureSharp";
 import DetailPanel from "./DetailPanel";
 import WidgetsSharpIcon from "@mui/icons-material/WidgetsSharp";
+import TuneSharpIcon from "@mui/icons-material/TuneSharp";
 import AccessTimeSharpIcon from "@mui/icons-material/AccessTimeSharp";
 import PaidSharpIcon from "@mui/icons-material/PaidSharp";
 import ProcessTimeAccordion from "../ProcessTimeAccordion";
@@ -91,6 +94,27 @@ function ModelViewport() {
                 <MaterialListAccordion variationId={variationId} />
               </Accordion>
             </FocusShortcutProvider>
+            <FocusShortcutProvider contextId={ELECTIVE_LIST_CONTEXT_ID}>
+              <Accordion
+                shortcutHint={`${MODULE_NAME}/ElectiveList/focus`}
+                name="Eletivos"
+                icon={<TuneSharpIcon />}
+                summary="Cada eletivo representa uma variação opcional da peça"
+                defaultExpanded
+              >
+                <ElectiveListAccordion variationId={variationId} />
+              </Accordion>
+            </FocusShortcutProvider>
+            <FocusShortcutProvider contextId={LOGO_LIST_CONTEXT_ID}>
+              <Accordion
+                shortcutHint={`${MODULE_NAME}/LogoList/focus`}
+                name="Logos"
+                icon={<ImageOutlinedIcon />}
+                summary="Logos (bordado / serigrafia)"
+              >
+                <LogoListAccordion variationId={variationId} />
+              </Accordion>
+            </FocusShortcutProvider>
             <FocusShortcutProvider contextId={PROCESS_TIME_LIST_CONTEXT_ID}>
               <Accordion
                 shortcutHint={`${MODULE_NAME}/ProcessTimeList/focus`}
@@ -108,16 +132,6 @@ function ModelViewport() {
             >
               <ProcessCostAccordion variationId={variationId} />
             </Accordion>
-            <FocusShortcutProvider contextId={LOGO_LIST_CONTEXT_ID}>
-              <Accordion
-                shortcutHint={`${MODULE_NAME}/LogoList/focus`}
-                name="Logos"
-                icon={<ImageOutlinedIcon />}
-                summary="Logos (bordado / serigrafia)"
-              >
-                <LogoListAccordion variationId={variationId} />
-              </Accordion>
-            </FocusShortcutProvider>
           </SettingsPanel>
 
           <DetailsPanel>

@@ -12,12 +12,11 @@ import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { useVariationActions } from "../../../hooks/useVariationActions";
-import { MODULE_NAME } from "../../../constants";
+import { GARMENT_ROOT_ID, MODULE_NAME } from "../../../constants";
 
 export default function AddElectiveButton({
   variationId,
-  garmentId,
-}: Readonly<{ variationId: string; garmentId: string }>) {
+}: Readonly<{ variationId: string }>) {
   const pointerModule = useModule<IPointerModule>("Pointer");
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
@@ -72,7 +71,7 @@ export default function AddElectiveButton({
           disabled={!name.trim()}
           handleConfirm={() => {
             if (!name.trim()) return;
-            actions.addElective(name.trim(), garmentId, defaultValue);
+            actions.addElective(name.trim(), GARMENT_ROOT_ID, defaultValue);
             resetForm();
           }}
         >
