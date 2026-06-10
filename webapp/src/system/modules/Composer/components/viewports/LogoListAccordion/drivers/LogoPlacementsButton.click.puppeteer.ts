@@ -1,5 +1,6 @@
 /* istanbul ignore file */
 import type { Page } from 'puppeteer-core';
+import { resetUIState } from '@helpers/puppeteer/closeOverlays';
 import { logoItemSelector } from './LogoItem.click.puppeteer';
 
 export const LOGO_PLACEMENTS_PANEL_TESTID = 'logo-placements';
@@ -26,10 +27,16 @@ export const countPlacementItems = (page: Page) =>
 export const countPlacementUses = (page: Page) =>
   page.$$eval(PLACEMENT_USE_SELECTOR, (els) => els.length);
 
+/** Open a logo's Placements pointer. A programmatic click bypasses the layout
+ * hit-test, so a still-mounted Modal portal from a closed `PointerContainer`
+ * (`keepMounted`) can't swallow it (e2e-tests.md §4); `resetUIState` first clears
+ * any panel left open by a prior step. */
 export const openLogoPlacements = async (page: Page, logoLabel: string) => {
   const trigger = `${logoItemSelector(logoLabel)} [data-testid="logo-item-placements"]`;
+
+  await resetUIState(page);
   await page.waitForSelector(trigger);
-  await page.click(trigger);
+  await page.$eval(trigger, (el) => (el as HTMLElement).click());
   await page.waitForSelector(panel(''));
 };
 
