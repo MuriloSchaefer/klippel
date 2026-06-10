@@ -2,7 +2,6 @@
 import type { ElementHandle, Page } from 'puppeteer-core';
 import {
   ADD_LOGO_COLORS_TESTID,
-  ADD_LOGO_COST_EXPRESSION_TESTID,
   ADD_LOGO_FILE_INPUT_TESTID,
   ADD_LOGO_FORM_TESTID,
   ADD_LOGO_METHOD_TESTID,
@@ -43,14 +42,6 @@ export const typeAddLogoNameFromFocused = async (page: Page, name: string) => {
 export const setAddLogoColorsFromFocused = async (page: Page, colors: number) => {
   await focusPanelField(page, ADD_LOGO_COLORS_TESTID);
   await clearFocusedAndType(page, String(colors));
-};
-
-export const setAddLogoCostExpressionFromFocused = async (
-  page: Page,
-  expression: string,
-) => {
-  await focusPanelField(page, ADD_LOGO_COST_EXPRESSION_TESTID);
-  await clearFocusedAndType(page, expression);
 };
 
 /** MUI Select is opened with the keyboard, then the option is chosen by value.

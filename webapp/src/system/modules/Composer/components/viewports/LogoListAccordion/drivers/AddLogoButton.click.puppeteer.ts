@@ -13,7 +13,6 @@ export const ADD_LOGO_METHOD_TESTID = 'add-logo-method';
 export const ADD_LOGO_COLORS_TESTID = 'add-logo-colors';
 export const ADD_LOGO_WIDTH_TESTID = 'add-logo-width';
 export const ADD_LOGO_HEIGHT_TESTID = 'add-logo-height';
-export const ADD_LOGO_COST_EXPRESSION_TESTID = 'add-logo-cost-expression';
 export const ADD_LOGO_FILE_INPUT_TESTID = 'add-logo-file-input';
 export const ADD_LOGO_CONFIRM_TESTID = 'add-logo-confirm';
 
@@ -75,9 +74,6 @@ export const typeAddLogoName = (page: Page, name: string) =>
 
 export const setAddLogoColors = (page: Page, colors: number) =>
   clearAndType(page, panelInput(ADD_LOGO_COLORS_TESTID), String(colors));
-
-export const setAddLogoCostExpression = (page: Page, expression: string) =>
-  clearAndType(page, panelInput(ADD_LOGO_COST_EXPRESSION_TESTID), expression);
 
 export const setAddLogoMethod = async (page: Page, method: string) => {
   const selectSel = `[role="pointer-panel-content"] [data-testid="${ADD_LOGO_METHOD_TESTID}"]`;

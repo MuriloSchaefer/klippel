@@ -43,6 +43,7 @@ import {
   addPlacement,
   openLogoPlacements,
   resizePlacement,
+  setPlacementCostExpression,
 } from '@system/modules/Composer/components/viewports/LogoListAccordion/drivers/LogoPlacementsButton.click.puppeteer';
 import { openLogoCostAudit } from '@system/modules/Composer/components/viewports/LogoListAccordion/drivers/LogoItem.click.puppeteer';
 
@@ -83,14 +84,17 @@ const setupModelWithSvg = async () => {
 };
 
 // Add a placement sized w x h (cm) at `index` within the open placements pointer.
+// Pricing is per placement, so the cost expression is set here too.
 const addSizedPlacement = async (
   index: number,
   w: number,
   h: number,
+  costExpression: string,
 ) => {
   await addPlacement(page!);
   await resizePlacement(page!, index, 'width', w);
   await resizePlacement(page!, index, 'height', h);
+  await setPlacementCostExpression(page!, index, costExpression);
 };
 
 beforeAll(async () => {
@@ -122,14 +126,13 @@ describe('logo cost (E2E)', () => {
     await addLogoTool.execute({
       name: logoLabel,
       method: 'embroidery',
-      costExpression: 'width * height',
       sourceFixturePath: LOGO_FIXTURE_PATH,
     });
     await page!.waitForSelector(`[data-testid="logo-item"][data-logo-label="${logoLabel}"]`);
 
     await openLogoPlacements(page!, logoLabel);
-    await addSizedPlacement(0, 10, 10); // 100
-    await addSizedPlacement(1, 5, 4); // 20
+    await addSizedPlacement(0, 10, 10, 'width * height'); // 100
+    await addSizedPlacement(1, 5, 4, 'width * height'); // 20
     await waitForRowCost(page!, logoLabel, 120);
 
     // Audit lists both placements + a total.
@@ -162,12 +165,11 @@ describe('logo cost (E2E)', () => {
       await addLogoTool.execute({
         name: label,
         method,
-        costExpression: 'width * height * methodFactor',
         sourceFixturePath: LOGO_FIXTURE_PATH,
       });
       await page!.waitForSelector(`[data-testid="logo-item"][data-logo-label="${label}"]`);
       await openLogoPlacements(page!, label);
-      await addSizedPlacement(0, 10, 10);
+      await addSizedPlacement(0, 10, 10, 'width * height * methodFactor');
       await resetUIState(page!);
     }
 

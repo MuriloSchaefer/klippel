@@ -90,7 +90,6 @@ export default function LogoEditButton({
   const [heightValue, setHeightValue] = useState<UnitValue>(
     node.defaultSize.height,
   );
-  const [costExpression, setCostExpression] = useState(node.costExpression ?? "");
 
   // Optional source-file replacement (left empty unless the user picks a new file).
   const [fileName, setFileName] = useState("");
@@ -211,17 +210,6 @@ export default function LogoEditButton({
             </Box>
           </Box>
 
-          <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <TextField
-              size="small"
-              label="Expressão de custo"
-              value={costExpression}
-              data-testid="logo-edit-cost-expression"
-              onChange={(e) => setCostExpression(e.target.value)}
-              helperText="Variáveis: colors, width, height, methodFactor, gradesTotal"
-            />
-          </FormControl>
-
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Button
               data-testid="logo-edit-file"
@@ -301,7 +289,6 @@ export default function LogoEditButton({
             actions.updateLogo(node.id, {
               method,
               colors,
-              costExpression,
               defaultSize: { width: widthValue, height: heightValue },
               ...docChanges,
             });

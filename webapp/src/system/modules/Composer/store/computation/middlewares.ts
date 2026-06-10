@@ -146,14 +146,14 @@ computationMiddlewares.startListening({
     );
     const logoUpdates: Array<{ nodeId: string; changes: object }> = [];
     for (const logoNode of logoNodes) {
-      const { cost, audit } = computeLogoCost({
+      const { cost, total, audit } = computeLogoCost({
         logoNodeId: logoNode.id,
         graphState,
         conversionGraphState,
       });
       logoUpdates.push({
         nodeId: logoNode.id,
-        changes: { computedCost: cost, costAudit: audit },
+        changes: { computedCost: cost, computedTotal: total, costAudit: audit },
       });
     }
 

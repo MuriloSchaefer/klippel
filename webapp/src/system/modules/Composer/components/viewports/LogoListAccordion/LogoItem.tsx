@@ -35,6 +35,7 @@ function LogoItem({
   const rowRef = useRef<HTMLLIElement | null>(null);
 
   const cost = node.computedCost?.quotient.amount ?? 0;
+  const garmentTotal = node.computedTotal?.quotient.amount ?? 0;
   const firstSize = node.placements[0]?.size ?? node.defaultSize;
 
   return (
@@ -87,7 +88,8 @@ function LogoItem({
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
           <Typography variant="caption" color="text.secondary" data-testid="logo-item-cost">
-            Custo: {cost.toFixed(2)} ({node.placements.length} posições)
+            Custo: {cost.toFixed(2)}/un · Total: {garmentTotal.toFixed(2)} (
+            {node.placements.length} posições)
           </Typography>
           {/* Cost audit — kept next to the cost it explains */}
           <PointerContainer

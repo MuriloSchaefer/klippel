@@ -7,7 +7,6 @@ import {
   openAddLogoPanel,
   openLogoListAccordion,
   setAddLogoColors,
-  setAddLogoCostExpression,
   setAddLogoMethod,
   setAddLogoSize,
   typeAddLogoName,
@@ -21,14 +20,13 @@ type AddLogoInput = {
   colors?: number;
   width?: number;
   height?: number;
-  costExpression?: string;
   sourceFixturePath: string;
 };
 
 export const addLogoTool = {
   name: 'addLogo',
   description:
-    'Add an SVG-source logo to the active Composer variation via the Logos accordion. The source file must be a sanitizable .svg on disk; it is embedded as a DOCUMENT node and injected as a <symbol>. Method is embroidery | silkscreen; colors is 1–10. (Raster sources are not supported by this tool.)',
+    'Add an SVG-source logo to the active Composer variation via the Logos accordion. The source file must be a sanitizable .svg on disk; it is embedded as a DOCUMENT node and injected as a <symbol>. Method is embroidery | silkscreen; colors is 1–10. Cost is priced per placement (set via addLogoPlacement), not on the logo. (Raster sources are not supported by this tool.)',
   inputSchema: {
     name: z.string().describe('Unique label for the logo node (shown in the Logos list).'),
     method: z
@@ -51,12 +49,6 @@ export const addLogoTool = {
       .positive()
       .optional()
       .describe('Default placement height in cm. Defaults to the form value (8).'),
-    costExpression: z
-      .string()
-      .optional()
-      .describe(
-        'Cost expression over { colors, width, height, methodFactor, gradesTotal }. Defaults to the form value.',
-      ),
     sourceFixturePath: z
       .string()
       .describe('Absolute path to a .svg logo source file on the host filesystem.'),
@@ -67,7 +59,6 @@ export const addLogoTool = {
     colors,
     width,
     height,
-    costExpression,
     sourceFixturePath,
   }: AddLogoInput) {
     validateSVGFilePath(sourceFixturePath);
@@ -82,7 +73,6 @@ export const addLogoTool = {
     if (colors !== undefined) await setAddLogoColors(page, colors);
     if (width !== undefined) await setAddLogoSize(page, 'width', width);
     if (height !== undefined) await setAddLogoSize(page, 'height', height);
-    if (costExpression !== undefined) await setAddLogoCostExpression(page, costExpression);
 
     await uploadAddLogoFile(page, sourceFixturePath);
     await confirmAddLogo(page);

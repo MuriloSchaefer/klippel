@@ -33,10 +33,18 @@ export default function LogoCostAuditContent({
               data-placement-name={p.name}
               sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
             >
-              <Box>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography variant="body2">{p.name}</Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                   {p.size.width.amount}×{p.size.height.amount} {p.size.width.unit}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  data-testid="logo-cost-audit-placement-expression"
+                  sx={{ fontFamily: "monospace", wordBreak: "break-all" }}
+                >
+                  {p.expression || "—"}
                 </Typography>
               </Box>
               <Typography variant="body2">{p.cost.toFixed(2)}</Typography>
@@ -44,9 +52,20 @@ export default function LogoCostAuditContent({
           ))}
           <Divider sx={{ my: 0.5 }} />
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="subtitle2">Total</Typography>
-            <Typography variant="subtitle2" data-testid="logo-cost-audit-total">
+            <Typography variant="body2">Custo por unidade</Typography>
+            <Typography variant="body2" data-testid="logo-cost-audit-total">
               {audit.total.toFixed(2)}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="subtitle2">
+              Total ({audit.gradesTotal} un.)
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              data-testid="logo-cost-audit-garment-total"
+            >
+              {audit.garmentTotal.toFixed(2)}
             </Typography>
           </Box>
         </Box>

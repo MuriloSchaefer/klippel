@@ -237,6 +237,7 @@ export type LogoPlacement = {
     name: string;                        // user-facing, e.g. "Manga direita"
     master?: boolean;                    // marks the auto-created placement; descriptive only — NOT delete-protected
     size: { width: UnitValue; height: UnitValue }; // PHYSICAL size of THIS placement; drives its cost
+    costExpression?: string;             // numeric expression over { colors, width, height, methodFactor, gradesTotal }; priced PER placement
     transform: { x: number; y: number; rotation: number; scale: number }; // position + rotation (deg) + VISUAL scale
     clipTargetId?: string;               // id of the SVG element to clip into
 }
@@ -265,7 +266,8 @@ export type LogoCostAudit = {
     gradesTotal: number;
     gradesBreakdown: { graduationId: string; label: string; amount: number }[];
     placements: LogoPlacementCostAudit[];
-    total: number;
+    total: number;                       // per-unit cost (Σ placement costs)
+    garmentTotal: number;                // per-unit cost × gradesTotal (whole-garment cost)
 }
 
 // The "main copy": a draggable/resizable overlay on top of the editor (DOM
@@ -288,8 +290,8 @@ export type LogoNode = Node & {
     source: LogoSource;
     mainCopy?: LogoMainCopy;             // overlay staging copy (drag/resize, no rotation)
     electiveNodeId?: string;             // optional elective gate (same field as ProcessNode)
-    costExpression?: string;             // numeric expression over { colors, width, height, methodFactor, gradesTotal }
-    computedCost?: CompoundValue;        // written back by the middleware's bulk LOGO loop
+    computedCost?: CompoundValue;        // per-unit cost; written back by the middleware's bulk LOGO loop
+    computedTotal?: CompoundValue;       // whole-garment cost (per-unit × gradesTotal); written back by the bulk LOGO loop
     costAudit?: LogoCostAudit;
     placements: LogoPlacement[];         // in-content placements (scale/move/rotate/clip); may be empty
 }

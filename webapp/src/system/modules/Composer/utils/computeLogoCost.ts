@@ -1,4 +1,3 @@
-import { compile } from "jse-eval";
 import type { GraphState } from "@kernel/modules/Graphs/store/state";
 import type {
   CompoundValue,
@@ -6,9 +5,13 @@ import type {
   ConversionNodes,
   ConvertionEdges,
 } from "@system/modules/Converter/typings";
-// Importing convert also runs Converter's top-level registerPlugin (e.g. sqrt),
-// so any op the material/process cost expressions support is available here too.
+// Importing convert also runs Converter's top-level registerPlugin (e.g. sqrt)
+// and the safeExpression hardening, so logo cost expressions share the exact
+// same audited capability set as material/process expressions and conversions.
 import { convert } from "@system/modules/Converter/utils/convert";
+// The RCE-hardened compiler — neuters member/call/prototype access and exposes
+// only a curated numeric-function allow-list. See safeExpression.ts.
+import { safeCompile } from "@system/modules/Converter/utils/safeExpression";
 import type {
   LogoNode,
   ElectiveNode,
@@ -38,14 +41,6 @@ export function methodFactor(method: LogoMethod): number {
 // separate future change, so the unit strings need not exist in the graph.
 function moneyCost(amount: number): CompoundValue {
   return { quotient: { unit: "BRL", amount }, dividend: { unit: "un", amount: 1 } };
-}
-
-function safeCompile(expression: string): ((ctx: { [k: string]: number }) => unknown) | undefined {
-  try {
-    return compile(expression);
-  } catch {
-    return undefined;
-  }
 }
 
 // Normalise a UnitValue to `targetUnit` via the Converter, recording the step in
@@ -80,10 +75,14 @@ export function computeLogoCost({
   logoNodeId: string;
   graphState: GraphState;
   conversionGraphState: GraphState<ConversionNodes, ConvertionEdges>;
-}): { cost: CompoundValue | undefined; audit: LogoCostAudit | undefined } {
+}): {
+  cost: CompoundValue | undefined;
+  total: CompoundValue | undefined;
+  audit: LogoCostAudit | undefined;
+} {
   const logoNode = graphState.nodes[logoNodeId] as LogoNode | undefined;
   if (!logoNode || logoNode.type !== "LOGO") {
-    return { cost: undefined, audit: undefined };
+    return { cost: undefined, total: undefined, audit: undefined };
   }
 
   const computedAt = new Date().toISOString();
@@ -108,6 +107,7 @@ export function computeLogoCost({
     if (elective && elective.value === false) {
       return {
         cost: moneyCost(0),
+        total: moneyCost(0),
         audit: {
           computedAt,
           skipped: true,
@@ -117,13 +117,11 @@ export function computeLogoCost({
           gradesBreakdown,
           placements: [],
           total: 0,
+          garmentTotal: 0,
         },
       };
     }
   }
-
-  const expression = logoNode.costExpression;
-  const fn = expression ? safeCompile(expression) : undefined;
 
   const placements: LogoPlacementCostAudit[] = [];
   let total = 0;
@@ -140,6 +138,9 @@ export function computeLogoCost({
       methodFactor: mFactor,
       gradesTotal,
     };
+    // Each placement carries its own expression; compile per placement.
+    const expression = placement.costExpression;
+    const fn = safeCompile(expression);
     let cost = 0;
     if (fn) {
       try {
@@ -162,8 +163,13 @@ export function computeLogoCost({
     });
   }
 
+  // Per-unit cost (sum of placement costs) → whole-garment cost by multiplying
+  // by the summed graduation amounts, mirroring materials' totalAggregate.
+  const garmentTotal = total * gradesTotal;
+
   return {
     cost: moneyCost(total),
+    total: moneyCost(garmentTotal),
     audit: {
       computedAt,
       skipped: false,
@@ -172,6 +178,7 @@ export function computeLogoCost({
       gradesBreakdown,
       placements,
       total,
+      garmentTotal,
     },
   };
 }

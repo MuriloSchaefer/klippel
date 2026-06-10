@@ -77,9 +77,6 @@ export default function AddLogoButton({
     unit: DEFAULT_UNIT,
     amount: 8,
   });
-  const [costExpression, setCostExpression] = useState(
-    "colors * width * height * methodFactor",
-  );
   const [fileName, setFileName] = useState("");
   const [fileKind, setFileKind] = useState<"svg" | "raster" | "">("");
   const [fileData, setFileData] = useState("");
@@ -99,7 +96,6 @@ export default function AddLogoButton({
     setColors(1);
     setWidthValue({ unit: DEFAULT_UNIT, amount: 8 });
     setHeightValue({ unit: DEFAULT_UNIT, amount: 8 });
-    setCostExpression("colors * width * height * methodFactor");
     setFileName("");
     setFileKind("");
     setFileData("");
@@ -207,16 +203,9 @@ export default function AddLogoButton({
             </Box>
           </Box>
 
-          <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <TextField
-              data-testid="add-logo-cost-expression"
-              label="Expressão de custo"
-              value={costExpression}
-              onChange={(e) => setCostExpression(e.target.value)}
-              size="small"
-              helperText="Variáveis: colors, width, height, methodFactor, gradesTotal"
-            />
-          </FormControl>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+            O custo é definido por posição, na lista de posições do logo.
+          </Typography>
 
           <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1 }}>
             <Button
@@ -281,7 +270,6 @@ export default function AddLogoButton({
                 width: widthValue,
                 height: heightValue,
               },
-              costExpression,
               source:
                 fileKind === "raster"
                   ? { kind: "raster", pendingVector: true }

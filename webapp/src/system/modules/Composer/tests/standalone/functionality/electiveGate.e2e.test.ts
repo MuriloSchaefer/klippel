@@ -110,16 +110,22 @@ describe('logo elective gate (E2E)', () => {
     await uploadVariationSVGTool.execute({ filePath: FIXTURE_PATH });
     await page!.waitForSelector('#svg-editor');
 
-    // Logo with the default expression (colors*width*height*methodFactor) and one
-    // placement at the default 8x8 cm / embroidery → cost 1*8*8*1 = 64.
+    // Logo with one priced placement at the default 8x8 cm / embroidery →
+    // cost 1*8*8*1 = 64. Pricing is per placement, so the expression goes there.
     await addLogoTool.execute({
       name: logoLabel,
       method: 'embroidery',
       sourceFixturePath: LOGO_FIXTURE_PATH,
     });
     await page!.waitForSelector(`[data-testid="logo-item"][data-logo-label="${logoLabel}"]`);
-    await addLogoPlacementTool.execute({ logoLabel });
+    await addLogoPlacementTool.execute({
+      logoLabel,
+      costExpression: 'colors * width * height * methodFactor',
+    });
     await waitForRowCost(page!, logoLabel, 'positive');
+    // The placements pointer panel is left open with focus in the cost-expression
+    // input; clear it so the add-elective panel opens cleanly.
+    await resetUIState(page!);
 
     // Elective ON, then gate the logo on it — cost stays > 0.
     await addElectiveTool.execute({ name: electiveLabel, isDefault: true });

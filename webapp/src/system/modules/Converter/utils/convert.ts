@@ -2,6 +2,10 @@ import type { ConversionGraph, CompoundNode, UnitNode, Value, ConvertsToEdge } f
 import dfs from "@kernel/modules/Graphs/searchAlgs/dfs";
 import { isNumber, isString } from "lodash";
 import { compile, registerPlugin } from "jse-eval";
+// Side-effect import: hardens the shared jse-eval evaluator table (neuters
+// member/call/prototype access, installs the curated function allow-list) for
+// every compile in the app, including the unit conversions below.
+import "./safeExpression";
 
 registerPlugin({
   name: "Square root",

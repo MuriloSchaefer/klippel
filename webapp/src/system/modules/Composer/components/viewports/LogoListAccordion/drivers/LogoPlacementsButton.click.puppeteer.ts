@@ -9,6 +9,7 @@ export const LOGO_PLACEMENT_DELETE_TESTID = 'logo-placement-delete';
 export const LOGO_PLACEMENT_ADD_TESTID = 'logo-placement-add';
 export const LOGO_PLACEMENT_WIDTH_TESTID = 'logo-placement-width';
 export const LOGO_PLACEMENT_HEIGHT_TESTID = 'logo-placement-height';
+export const LOGO_PLACEMENT_COST_EXPRESSION_TESTID = 'logo-placement-cost-expression';
 
 const panel = (sub: string) =>
   `[role="pointer-panel-content"] [data-testid="${LOGO_PLACEMENTS_PANEL_TESTID}"] ${sub}`;
@@ -84,6 +85,30 @@ export const resizePlacement = async (
   await page.keyboard.up('Control');
   await page.keyboard.press('Delete');
   await page.type(sel, String(amount));
+};
+
+/** Set the cost expression on the placement at `index`. */
+export const setPlacementCostExpression = async (
+  page: Page,
+  index: number,
+  expression: string,
+) => {
+  const sel = placementInput(index, LOGO_PLACEMENT_COST_EXPRESSION_TESTID);
+  await page.waitForSelector(sel);
+  await page.click(sel);
+  await page.keyboard.down('Control');
+  await page.keyboard.press('a');
+  await page.keyboard.up('Control');
+  await page.keyboard.press('Delete');
+  await page.type(sel, expression);
+  // The input mirrors the placement expression; wait for the value to settle.
+  await page.waitForFunction(
+    (s: string, v: string) =>
+      (document.querySelector(s) as HTMLInputElement | null)?.value === v,
+    {},
+    sel,
+    expression,
+  );
 };
 
 export const readPlacementName = async (page: Page, index: number): Promise<string> => {

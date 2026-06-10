@@ -815,7 +815,6 @@ export function useVariationActions({ variationId }: { variationId: string }) {
           method: LogoMethod;
           colors: number;
           defaultSize: { width: UnitValue; height: UnitValue };
-          costExpression?: string;
           electiveNodeId?: string;
           source: { kind: "svg" } | { kind: "raster"; pendingVector?: boolean };
           document: { data: string; mime: string; filename?: string };
@@ -851,7 +850,6 @@ export function useVariationActions({ variationId }: { variationId: string }) {
             // live inside the content SVG.
             mainCopy: { x: 24, y: 24, width: 160, height: 160 },
             electiveNodeId: input.electiveNodeId,
-            costExpression: input.costExpression,
             placements: [],
             position: { x: 0, y: 0 },
           };
@@ -1202,6 +1200,30 @@ export function useVariationActions({ variationId }: { variationId: string }) {
                 ...curr,
                 placements: curr.placements.map((p) =>
                   p.placementId === placementId ? { ...p, size } : p,
+                ),
+              },
+            }),
+          );
+          markChanged();
+        },
+
+        setLogoPlacementCostExpression: (
+          nodeId: string,
+          placementId: string,
+          costExpression: string,
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as LogoNode | undefined;
+          if (!curr || curr.type !== "LOGO") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: {
+                ...curr,
+                placements: curr.placements.map((p) =>
+                  p.placementId === placementId ? { ...p, costExpression } : p,
                 ),
               },
             }),

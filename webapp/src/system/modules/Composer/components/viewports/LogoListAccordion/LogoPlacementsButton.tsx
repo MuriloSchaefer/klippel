@@ -166,6 +166,22 @@ export default function LogoPlacementsButton({
                     {unitMenuItems}
                   </UnitAmountSelector>
                 </Box>
+
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Expressão de custo"
+                  value={p.costExpression ?? ""}
+                  data-testid="logo-placement-cost-expression"
+                  onChange={(e) =>
+                    actions.setLogoPlacementCostExpression(
+                      node.id,
+                      p.placementId,
+                      e.target.value,
+                    )
+                  }
+                  helperText="Variáveis: colors, width, height, methodFactor, gradesTotal"
+                />
               </Box>
             ))}
 

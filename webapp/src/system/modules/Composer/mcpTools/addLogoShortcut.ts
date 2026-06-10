@@ -7,7 +7,6 @@ import { expandAccordion } from '@kernel/modules/Layout/components/Panels/driver
 import { confirmPointerPanelShortcut } from '@kernel/modules/Pointer/components/drivers/PointerContainer.shortcut.puppeteer';
 import {
   setAddLogoColorsFromFocused,
-  setAddLogoCostExpressionFromFocused,
   setAddLogoMethodFromKeyboard,
   triggerAddLogo,
   typeAddLogoNameFromFocused,
@@ -20,26 +19,23 @@ type AddLogoShortcutInput = {
   name: string;
   method: 'embroidery' | 'silkscreen';
   colors?: number;
-  costExpression?: string;
   sourceFixturePath: string;
 };
 
 export const addLogoShortcutTool = {
   name: 'addLogoShortcut',
   description:
-    'Add an SVG-source logo via keyboard: Ctrl+l focuses the Logos list, "a" opens the add panel, the form is filled and confirmed by shortcut. Method is embroidery | silkscreen; colors is 1–10.',
+    'Add an SVG-source logo via keyboard: Ctrl+l focuses the Logos list, "a" opens the add panel, the form is filled and confirmed by shortcut. Method is embroidery | silkscreen; colors is 1–10. Cost is priced per placement (set via addLogoPlacement), not on the logo.',
   inputSchema: {
     name: z.string(),
     method: z.enum(['embroidery', 'silkscreen']),
     colors: z.number().int().min(1).max(10).optional(),
-    costExpression: z.string().optional(),
     sourceFixturePath: z.string(),
   },
   async execute({
     name,
     method,
     colors,
-    costExpression,
     sourceFixturePath,
   }: AddLogoShortcutInput) {
     validateSVGFilePath(sourceFixturePath);
@@ -55,8 +51,6 @@ export const addLogoShortcutTool = {
     await typeAddLogoNameFromFocused(page, name);
     await setAddLogoMethodFromKeyboard(page, method);
     if (colors !== undefined) await setAddLogoColorsFromFocused(page, colors);
-    if (costExpression !== undefined)
-      await setAddLogoCostExpressionFromFocused(page, costExpression);
 
     await uploadAddLogoFileShortcut(page, sourceFixturePath);
     await confirmPointerPanelShortcut(page);
