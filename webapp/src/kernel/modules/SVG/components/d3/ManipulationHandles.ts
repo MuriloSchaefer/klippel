@@ -65,16 +65,18 @@ const screenCenter = (el: SVGGraphicsElement) => {
 type LocalBox = { x: number; y: number; width: number; height: number };
 
 /**
- * For a logo placement `<use>` of a *cropped* symbol, the selection box is the
- * crop rect, not `getBBox()`. The editor's `<use>` renders the symbol's raw
- * content and ignores its root viewBox, so a cropped placement clips visually
- * (via the symbol's `logo-crop-…` clip-path) while `getBBox()` still reports the
- * full, pre-crop geometry — which would draw an oversized, wrong-shaped outline.
- * The cropped symbol's root width/height equal the crop rect (origin 0,0), so we
- * use those when the crop clip is present. Returns null for everything else
- * (plain elements, uncropped logos) so they keep using `getBBox()`.
+ * For a logo placement `<use>` of a symbol root, the selection box is the
+ * symbol's own viewport (its declared width/height at origin 0,0) — not
+ * `getBBox()`. A `<use>` of an `<svg>` clips its shadow content to that
+ * viewport, but `getBBox()` reports the *unclipped* geometry, so artwork that
+ * overflows its own viewBox (common in Inkscape exports) would draw an
+ * oversized outline in the wrong ratio. The viewport is also what the logo
+ * preview measures (`naturalWidth`/`naturalHeight` of the same document), so
+ * using it keeps placement and preview on one ratio. This subsumes the cropped
+ * case: a cropped symbol's root width/height equal the crop rect. Returns null
+ * for everything else (plain elements) so they keep using `getBBox()`.
  */
-const croppedUseBox = (
+const symbolViewportBox = (
   root: SVGSVGElement,
   el: SVGGraphicsElement,
 ): LocalBox | null => {
@@ -82,9 +84,11 @@ const croppedUseBox = (
   const href = el.getAttribute("href") || el.getAttribute("xlink:href") || "";
   if (!href.startsWith("#")) return null;
   const sym = findById(root, href.slice(1));
-  if (!sym || !sym.querySelector('[id^="logo-crop-"]')) return null;
-  const width = parseFloat(sym.getAttribute("width") || "");
-  const height = parseFloat(sym.getAttribute("height") || "");
+  if (!sym || sym.tagName.toLowerCase() !== "svg") return null;
+  // Attribute values may carry units (e.g. "700mm"); the resolved user-space
+  // size lives on the SVGSVGElement's animated width/height.
+  const width = (sym as SVGSVGElement).width?.baseVal?.value;
+  const height = (sym as SVGSVGElement).height?.baseVal?.value;
   if (!(width > 0) || !(height > 0)) return null;
   return { x: 0, y: 0, width, height };
 };
@@ -120,9 +124,9 @@ export default function renderManipulationHandles(
   if (!target || typeof target.getBBox !== "function") return;
 
   let bbox: LocalBox;
-  const cropBox = croppedUseBox(svgRoot, target);
-  if (cropBox) {
-    bbox = cropBox;
+  const viewportBox = symbolViewportBox(svgRoot, target);
+  if (viewportBox) {
+    bbox = viewportBox;
   } else {
     try {
       bbox = target.getBBox();
@@ -259,11 +263,23 @@ export default function renderManipulationHandles(
       );
   }
 
-  // Scale handle (bottom-right): screen-distance ratio from the center.
+  // Scale handle (bottom-right): screen-distance ratio from the *anchor* — the
+  // local origin, which is the fixed point of `scale(s)` in the emitted
+  // transform. Distance from it is exactly proportional to s (the surrounding
+  // rotate/translate are rigid), so d1/d0 is the exact scale ratio and dragging
+  // toward the anchor shrinks smoothly all the way down. Measuring from the
+  // element's *rendered* center instead would put the anchor off the outline
+  // whenever the artwork overflows its viewport, which makes downscaling fight
+  // the pointer.
   if (showHandle("scale")) {
-    let center = { x: 0, y: 0 };
+    let anchor = { x: 0, y: 0 };
     let d0 = 1;
     let scale0 = 1;
+    // Never shrink past a grabbable size: the handle has to stay hittable, and
+    // an absolute floor is meaningless when symbols range from 100 to 2645 user
+    // units. Expressed in screen pixels of the selection box.
+    const MIN_BOX_PX = 6;
+    let minScale = 0;
     group
       .append("rect")
       .attr("x", bbox.x + bbox.width - hr)
@@ -276,13 +292,23 @@ export default function renderManipulationHandles(
         "pointerdown",
         beginDrag(
           (start) => {
-            center = screenCenter(target);
-            d0 = Math.hypot(start.x - center.x, start.y - center.y) || 1;
+            const ctm = target.getScreenCTM();
+            const o = ctm
+              ? new DOMPoint(0, 0).matrixTransform(ctm)
+              : screenCenter(target);
+            anchor = { x: o.x, y: o.y };
+            d0 = Math.hypot(start.x - anchor.x, start.y - anchor.y) || 1;
             scale0 = current.scale;
+            // screenScale already folds in current.scale, so divide it out to
+            // get the box's screen size at scale 1.
+            const boxPxAtScale1 =
+              (Math.max(bbox.width, bbox.height) * screenScale) /
+              (current.scale || 1);
+            minScale = boxPxAtScale1 > 0 ? MIN_BOX_PX / boxPxAtScale1 : 0;
           },
           (e) => {
-            const d1 = Math.hypot(e.clientX - center.x, e.clientY - center.y);
-            current.scale = Math.max(0.02, scale0 * (d1 / d0));
+            const d1 = Math.hypot(e.clientX - anchor.x, e.clientY - anchor.y);
+            current.scale = Math.max(minScale, scale0 * (d1 / d0));
             applyLive(current);
           },
         ),

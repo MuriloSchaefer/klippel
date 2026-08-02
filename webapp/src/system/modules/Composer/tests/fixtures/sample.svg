@@ -11,4 +11,9 @@
   <circle id="circle-1" cx="60" cy="60" r="8" fill="#f1c40f"/>
   <circle id="circle-2" cx="140" cy="60" r="8" fill="#9b59b6"/>
   <circle id="circle-3" cx="100" cy="140" r="10" fill="#e67e22"/>
+
+  <!-- Far corner, outside rect-border: a pick target that stays clear of a
+       logo placement dropped at the origin (placements default to the size of
+       the logo's preview overlay, which covers most of this drawing). -->
+  <circle id="circle-4" cx="190" cy="190" r="6" fill="#16a085"/>
 </svg>

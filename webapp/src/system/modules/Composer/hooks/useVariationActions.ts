@@ -116,6 +116,36 @@ const placementContainerMarkup = (
   return `<g id="${wrapId}"><use id="${id}" href="#${ref}" xlink:href="#${ref}" /></g>`;
 };
 
+/**
+ * Scale that makes a fresh placement land at the same on-screen size as the
+ * logo's main-copy preview. The preview is a DOM overlay measured in editor
+ * pixels; a placement lives in the content SVG's user space, so the conversion
+ * factor is the mount point's screen CTM. Both sides measure the logo by its
+ * own declared viewport (the preview via the image's natural size, the
+ * placement via the symbol root's width/height), so matching width also matches
+ * height — the logo's own ratio is preserved either way.
+ *
+ * Returns undefined when the editor isn't mounted or the symbol has no
+ * intrinsic size; callers fall back to scale 1.
+ */
+const previewParityScale = (
+  logoId: string,
+  mainCopy?: { width: number; height: number },
+): number | undefined => {
+  if (typeof document === "undefined" || !mainCopy?.width) return undefined;
+  const sym = document.getElementById(
+    logoSymbolId(logoId),
+  ) as SVGSVGElement | null;
+  const content = document.querySelector<SVGSVGElement>(
+    '#svg-editor [role="container"] > svg',
+  );
+  if (!sym || !content) return undefined;
+  const intrinsicWidth = sym.width?.baseVal?.value;
+  const pxPerUnit = content.getScreenCTM()?.a;
+  if (!(intrinsicWidth > 0) || !pxPerUnit) return undefined;
+  return mainCopy.width / (intrinsicWidth * pxPerUnit);
+};
+
 const clipPathMarkup = (placementId: string, clipTargetId: string): string =>
   `<clipPath id="${logoClipId(placementId)}" clipPathUnits="userSpaceOnUse"><use href="#${clipTargetId}" xlink:href="#${clipTargetId}" /></clipPath>`;
 
@@ -1163,11 +1193,14 @@ export function useVariationActions({ variationId }: { variationId: string }) {
           const placementId = shortHash();
           const last = curr.placements[curr.placements.length - 1];
           const offset = last ? 10 : 0;
+          // First placement: size it to the preview. Later ones inherit the
+          // previous placement's transform (offset below) so a series stays
+          // consistent with whatever the user scaled to.
           const baseTransform = last?.transform ?? {
             x: 0,
             y: 0,
             rotation: 0,
-            scale: 1,
+            scale: previewParityScale(curr.logoId, curr.mainCopy) ?? 1,
           };
           const placement: LogoPlacement = {
             placementId,

@@ -116,17 +116,18 @@ describe('placement manipulation via svgtoolbox (E2E)', () => {
 
   it('clips a placement into another SVG element', async () => {
     await setupSelectedPlacement('manip-clip');
-    // circle-2 sits at (140,60) — outside the placement's 0–100 box, so it is
-    // not under the (transparent) move handle.
-    await clipSelectedPlacementInto(page!, 'circle-2');
+    // circle-4 sits at (190,190) — outside the placement's box (a fresh
+    // placement is sized to the logo's preview, which spans most of the
+    // drawing), so it is not under the (transparent) move handle.
+    await clipSelectedPlacementInto(page!, 'circle-4');
 
     // A clipPath is injected, referencing the picked target.
     await page!.waitForSelector('#svg-editor [id^="logo-clip-"]');
     const clipRefsTarget = await page!.$eval(
       '#svg-editor [id^="logo-clip-"] use',
       (el) =>
-        el.getAttribute('href') === '#circle-2' ||
-        el.getAttribute('xlink:href') === '#circle-2',
+        el.getAttribute('href') === '#circle-4' ||
+        el.getAttribute('xlink:href') === '#circle-4',
     );
     expect(clipRefsTarget).toBe(true);
 
