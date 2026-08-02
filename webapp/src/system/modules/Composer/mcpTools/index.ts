@@ -73,6 +73,14 @@ import { deleteLogoTool } from './deleteLogo';
 import { deleteLogoShortcutTool } from './deleteLogoShortcut';
 import { linkLogoElectiveTool } from './linkLogoElective';
 import { linkLogoElectiveShortcutTool } from './linkLogoElectiveShortcut';
+import { addAnnotationTool } from './addAnnotation';
+import { addAnnotationShortcutTool } from './addAnnotationShortcut';
+import { editAnnotationTool } from './editAnnotation';
+import { editAnnotationShortcutTool } from './editAnnotationShortcut';
+import { linkAnnotationElectiveTool } from './linkAnnotationElective';
+import { linkAnnotationElectiveShortcutTool } from './linkAnnotationElectiveShortcut';
+import { deleteAnnotationTool } from './deleteAnnotation';
+import { deleteAnnotationShortcutTool } from './deleteAnnotationShortcut';
 
 const TOOLS = [
   openModelTool,
@@ -148,6 +156,14 @@ const TOOLS = [
   deleteLogoShortcutTool,
   linkLogoElectiveTool,
   linkLogoElectiveShortcutTool,
+  addAnnotationTool,
+  addAnnotationShortcutTool,
+  editAnnotationTool,
+  editAnnotationShortcutTool,
+  linkAnnotationElectiveTool,
+  linkAnnotationElectiveShortcutTool,
+  deleteAnnotationTool,
+  deleteAnnotationShortcutTool,
 ];
 
 export function registerMcpTools(server: McpServer) {

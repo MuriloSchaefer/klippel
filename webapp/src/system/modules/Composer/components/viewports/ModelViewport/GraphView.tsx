@@ -1,4 +1,5 @@
 import {  useRef, useLayoutEffect } from "react";
+import { useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
 import { IGraphModule } from "@kernel/modules/Graphs";
 import { ILayoutModule } from "@kernel/modules/Layout";
@@ -31,6 +32,7 @@ export default function GraphView({ variationId }: Readonly<{ variationId: strin
     d3Components: { Grid },
   } = useModule<ISVGModule>("SVG");
 
+  const theme = useTheme();
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dimensions = useResizeObserver(wrapperRef);
@@ -68,7 +70,7 @@ export default function GraphView({ variationId }: Readonly<{ variationId: strin
           "garment", // starting node id
           (node) => { // process each node
             console.log("Processing node:", node);
-            D3GarmentNode(nodesGroup, node as GarmentNode, graph);
+            D3GarmentNode(nodesGroup, node as GarmentNode, graph, theme);
             return true
           },
           (node) => false, // stop condition never met. Traverse all nodes

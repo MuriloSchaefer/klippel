@@ -8,6 +8,7 @@ import { debounce } from "@kernel/utils";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import InfoSharpIcon from "@mui/icons-material/InfoSharp";
 import {
+  ANNOTATION_LIST_CONTEXT_ID,
   GRADUATION_LIST_CONTEXT_ID,
   MODULE_NAME,
   PROCESS_LIST_CONTEXT_ID,
@@ -16,6 +17,7 @@ import {
 import ProcessListAccordion from "../../../viewports/ProcessListAccordion";
 import VisualizationListAccordion from "../../VisualizationListAccordion";
 import GraduationListAccordion from "../../../viewports/GraduationListAccordion";
+import AnnotationListAccordion from "../../../viewports/AnnotationListAccordion";
 
 function GarmentDetails({
   variationId,
@@ -26,6 +28,7 @@ function GarmentDetails({
 }>) {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const { Accordion } = layoutModule.components;
+  const { focusFirstRow } = layoutModule.utils;
 
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
@@ -69,6 +72,9 @@ function GarmentDetails({
           </Typography>
         }
         defaultExpanded
+        focusOnOpen={(content) =>
+          content?.querySelector<HTMLElement>("#garment-name")?.focus()
+        }
       >
         <FormControl sx={{ m: 1, width: "100%" }} fullWidth size="small">
           <InputLabel id={`label`}>Nome da Peça</InputLabel>
@@ -106,6 +112,7 @@ function GarmentDetails({
               Graduações vinculadas diretamente à peça
             </Typography>
           }
+          focusOnOpen={focusFirstRow}
         >
           <GraduationListAccordion
             variationId={variationId}
@@ -119,6 +126,7 @@ function GarmentDetails({
           icon={undefined}
           shortcutHint={`${MODULE_NAME}/VisualizationList/focus`}
           summary="Víncule materiais com objetos na arte."
+          focusOnOpen={focusFirstRow}
         >
           <VisualizationListAccordion
             variationId={variationId}
@@ -133,10 +141,25 @@ function GarmentDetails({
           shortcutHint={`${MODULE_NAME}/ProcessList/focus`}
           summary="Processos associados à peça (tempo e custo)"
           defaultExpanded
+          focusOnOpen={focusFirstRow}
         >
           <ProcessListAccordion
             variationId={variationId}
             parentId={selectedPart}
+          />
+        </Accordion>
+      </FocusShortcutProvider>
+      <FocusShortcutProvider contextId={ANNOTATION_LIST_CONTEXT_ID}>
+        <Accordion
+          name="Anotações"
+          icon={undefined}
+          shortcutHint={`${MODULE_NAME}/AnnotationList/focus`}
+          summary="Notas de texto fixadas no desenho"
+          focusOnOpen={focusFirstRow}
+        >
+          <AnnotationListAccordion
+            variationId={variationId}
+            garmentId={selectedPart}
           />
         </Accordion>
       </FocusShortcutProvider>

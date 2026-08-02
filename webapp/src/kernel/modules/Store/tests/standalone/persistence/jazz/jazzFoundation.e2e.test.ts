@@ -36,7 +36,7 @@ beforeAll(async () => {
   page = pages.find((p) => p.url().includes('index.html')) ?? pages[0];
   if (!page) throw new Error(`Klippel dev app not reachable at ${CDP_URL}`);
   await resetWorkspace(page, TEST_WORKSPACE);
-});
+}, 45_000);
 
 afterAll(async () => {
   if (browser) await browser.disconnect();

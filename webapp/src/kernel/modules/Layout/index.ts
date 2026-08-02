@@ -7,7 +7,7 @@ import useRibbonMenuManager from "./hooks/useRibbonMenuManager";
 import useViewportManager from "./hooks/useViewportManager";
 import SettingsPanel from "./components/Panels/SettingsPanel";
 import DetailsPanel from "./components/Panels/DetailsPanel";
-import { Accordion } from "./components/Panels/Accordion";
+import { Accordion, focusFirstRow } from "./components/Panels/Accordion";
 import usePanelsManager from "./hooks/usePanelsManager";
 import { getViewportGroups, getViewportState, selectActiveViewport } from "./store/viewports/selectors";
 import ViewportNotificationsTray from "./components/SystemTray/ViewportNotificationsTray";
@@ -42,6 +42,9 @@ export interface ILayoutModule extends IModule {
   },
   contexts: {
     CRUDGridContext: typeof CRUDGridContext,
+  },
+  utils: {
+    focusFirstRow: typeof focusFirstRow,
   },
   hooks: {
     useLayoutManager: typeof useLayoutManager
@@ -87,6 +90,7 @@ const LayoutModule: ILayoutModule = {
     RibbonSection,
   },
   contexts: {CRUDGridContext},
+  utils: {focusFirstRow},
   hooks: {
     useLayoutManager,
     useRibbonMenuManager,

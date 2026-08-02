@@ -1,5 +1,12 @@
 import { Selection, axisBottom, axisRight, scaleLinear, select } from "d3";
-import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { Store } from "@kernel/modules/Store";
@@ -115,12 +122,51 @@ export const useSVGEditor = ({
       .parseFromString(svgState.content, "image/svg+xml")
       .querySelector("svg");
 
+    // The art is a nested <svg>, which clips its content to its own viewport by
+    // default (UA `overflow:hidden`). Injected elements (logo placements,
+    // annotations) dragged past the original art bounds would vanish. Letting
+    // the nested viewport overflow keeps them visible at any zoom/pan without
+    // having to resize the viewBox per frame.
+    if (svgRoot) {
+      svgRoot.setAttribute("overflow", "visible");
+      svgRoot.style.overflow = "visible";
+    }
+
     return svgRoot;
   }, [svgState?.content]);
 
   const {
     state: { tools },
+    cancelManipulate,
   } = useContext(EditorToolkitContext);
+
+  // Click on empty canvas exits manipulate mode (deselect). d3 zoom shares the
+  // svg, so a pan moves the pointer — we only treat a near-stationary
+  // pointerdown→up as a deselect click. Handle interactions stopPropagation on
+  // pointerdown, so clicking the selection chrome never reaches here; only bare
+  // background/art clicks (outside the selection box) deselect. Skipped while a
+  // clip-target pick is active so that pick can consume the click.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !tools.manipulate.enabled || tools.pickElement.enabled) return;
+    let downAt: { x: number; y: number } | null = null;
+    const onDown = (e: PointerEvent) => {
+      downAt = { x: e.clientX, y: e.clientY };
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!downAt) return;
+      const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+      downAt = null;
+      if (moved > 4) return; // a pan/drag, not a click
+      cancelManipulate();
+    };
+    svg.addEventListener("pointerdown", onDown);
+    svg.addEventListener("pointerup", onUp);
+    return () => {
+      svg.removeEventListener("pointerdown", onDown);
+      svg.removeEventListener("pointerup", onUp);
+    };
+  }, [tools.manipulate.enabled, tools.pickElement.enabled, cancelManipulate]);
 
   const container = useD3Container().width(width).height(height);
 
@@ -139,6 +185,7 @@ export const useSVGEditor = ({
     tools.manipulate.enabled,
     tools.manipulate.targetId,
     tools.manipulate.mode,
+    tools.manipulate.handles,
     svgState?.proxies,
     svgState?.injected,
   ]);
@@ -433,6 +480,7 @@ export const useSVGEditor = ({
           ? tools.manipulate.targetId
           : undefined,
         mode: tools.manipulate.mode,
+        handles: tools.manipulate.handles,
         onTransform: tools.manipulate.onTransform,
         color: theme.palette.secondary.main,
       });

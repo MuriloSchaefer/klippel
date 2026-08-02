@@ -31,11 +31,29 @@ export const typeAddVisualizationNameFromFocused = async (
   name: string,
 ) => {
   await focusFormField(page, ADD_VISUALIZATION_NAME_TESTID);
-  await page.keyboard.down('Control');
-  await page.keyboard.press('a');
-  await page.keyboard.up('Control');
-  await page.keyboard.press('Delete');
-  await page.keyboard.type(name);
+  // Set the value in one native-setter + input event instead of per-key typing;
+  // this controlled input drops characters under load (see the click driver's
+  // typeAddVisualizationName). Inlined here so the shortcut path stays independent
+  // of the click driver's typing helper.
+  await page.evaluate(
+    (id: string, value: string) => {
+      const input = document.querySelector<
+        HTMLInputElement | HTMLTextAreaElement
+      >(
+        `[role="pointer-panel-content"] [data-testid="${id}"] input, [role="pointer-panel-content"] [data-testid="${id}"] textarea`,
+      );
+      if (!input) return;
+      const proto =
+        input instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : HTMLInputElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')!.set!;
+      setter.call(input, value);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    },
+    ADD_VISUALIZATION_NAME_TESTID,
+    name,
+  );
 };
 
 export const selectAddVisualizationMaterialByKeyboard = async (

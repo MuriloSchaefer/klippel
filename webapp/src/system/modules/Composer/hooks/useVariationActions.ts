@@ -37,11 +37,12 @@ import {
   LogoPlacement,
   LogoSource,
   DocumentNode,
+  AnnotationNode,
 } from "../typings";
 import { UnitValue } from "@system/modules/Converter/typings";
 import { EdgeMap } from "@kernel/modules/Graphs/hooks/useGraph";
 import { IMaterialsModule } from "@system/modules/Materials";
-import { useTheme } from "@mui/material";
+import { useTheme, type Theme } from "@mui/material";
 import { CompoundValue } from "@system/modules/Converter/typings";
 import {
   recomputeAllGradeDeltas,
@@ -117,6 +118,78 @@ const placementContainerMarkup = (
 
 const clipPathMarkup = (placementId: string, clipTargetId: string): string =>
   `<clipPath id="${logoClipId(placementId)}" clipPathUnits="userSpaceOnUse"><use href="#${clipTargetId}" xlink:href="#${clipTargetId}" /></clipPath>`;
+
+// --- Annotation helpers ------------------------------------------------------
+
+const annotationGroupId = (annotationId: string) => `annotation-${annotationId}`;
+const annotationTextId = (annotationId: string) =>
+  `annotation-text-${annotationId}`;
+const annotationLineId = (annotationId: string) =>
+  `annotation-line-${annotationId}`;
+const annotationTargetId = (annotationId: string) =>
+  `annotation-target-${annotationId}`;
+
+// Escape user text before it is inlined into the injected SVG markup (and thus
+// into exported SVG files): prevents breaking the document or markup injection.
+const escapeXml = (s: string): string =>
+  s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const annotationTransformStr = (
+  t: AnnotationNode["transform"],
+): string => `translate(${t.x},${t.y}) scale(${t.scale})`;
+
+// Leader line runs from the target point to the label origin. Applied as a
+// proxy (SVG presentation attributes), so cast at the dispatch site.
+const annotationLineStyles = (
+  target: AnnotationNode["target"],
+  transform: AnnotationNode["transform"],
+) => ({
+  x1: String(target.x),
+  y1: String(target.y),
+  x2: String(transform.x),
+  y2: String(transform.y),
+});
+
+const annotationTargetStyles = (target: AnnotationNode["target"]) => ({
+  cx: String(target.x),
+  cy: String(target.y),
+});
+
+// One <tspan> per line; SVG <text> does not wrap. Empty body still renders an
+// (empty) text element so the manipulation handles have a bbox to grab.
+const annotationTspans = (text: string): string => {
+  const lines = (text || " ").split("\n");
+  return lines
+    .map(
+      (line, i) =>
+        `<tspan x="0" dy="${i === 0 ? "0" : "1.2em"}">${escapeXml(line) || " "}</tspan>`,
+    )
+    .join("");
+};
+
+// Static structure for the annotation group. Geometry (text transform, line
+// endpoints, target position) is applied via proxies so it survives a markup
+// re-inject (which happens when the text body changes).
+const annotationGroupMarkup = (node: AnnotationNode, theme: Theme): string => {
+  const tid = annotationTextId(node.annotationId);
+  const lid = annotationLineId(node.annotationId);
+  const cid = annotationTargetId(node.annotationId);
+  // Annotation chrome follows the theme (never a literal color): primary for the
+  // ink, the surface color for the target dot's contrast ring.
+  const ink = theme.palette.primary.main;
+  const ring = theme.palette.background.paper;
+  return (
+    `<g>` +
+    `<line id="${lid}" stroke="${ink}" stroke-width="1" vector-effect="non-scaling-stroke" />` +
+    `<circle id="${cid}" r="4" fill="${ink}" stroke="${ring}" stroke-width="1" style="cursor:move" />` +
+    `<text id="${tid}" font-size="14" fill="${ink}" style="white-space:pre">${annotationTspans(node.text)}</text>` +
+    `</g>`
+  );
+};
 
 export function useVariationActions({ variationId }: { variationId: string }) {
   const theme = useTheme();
@@ -1385,6 +1458,294 @@ export function useVariationActions({ variationId }: { variationId: string }) {
               changes: { ...curr, electiveNodeId },
             }),
           );
+          markChanged();
+        },
+
+        // --- Annotations ----------------------------------------------------
+
+        addAnnotation: (input: {
+          garmentId?: string;
+          label?: string;
+          text?: string;
+        }): string => {
+          const garmentId = input.garmentId ?? "garment";
+          const annotationId = shortHash();
+          const nodeId = annotationGroupId(annotationId);
+          const g = getGraph();
+          const count = Object.values(g?.nodes ?? {}).filter(
+            (n): n is AnnotationNode => (n as any).type === "ANNOTATION",
+          ).length;
+          // Stagger defaults so successive annotations don't stack exactly.
+          const off = count * 16;
+          const target = { x: 120 + off, y: 120 + off };
+          const transform = { x: 200 + off, y: 90 + off, scale: 1 };
+
+          const node: AnnotationNode = {
+            id: nodeId,
+            type: "ANNOTATION",
+            label: input.label ?? `Anotação ${count + 1}`,
+            annotationId,
+            text: input.text ?? "Nova anotação",
+            target,
+            transform,
+            position: { x: 0, y: 0 },
+          };
+
+          dispatch(
+            addNodeAction({
+              graphId: variationId,
+              node,
+              edges: {
+                inputs: {
+                  [`${garmentId}-${nodeId}`]: {
+                    id: `${garmentId}-${nodeId}`,
+                    type: "HAS_ANNOTATION",
+                    sourceId: garmentId,
+                    targetId: nodeId,
+                  },
+                },
+                outputs: {
+                  [`${nodeId}-${garmentId}`]: {
+                    id: `${nodeId}-${garmentId}`,
+                    type: "ANNOTATION_OF",
+                    sourceId: nodeId,
+                    targetId: garmentId,
+                  },
+                },
+              },
+            }),
+          );
+
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              addInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                element: {
+                  id: annotationGroupId(annotationId),
+                  mount: "container",
+                  markup: annotationGroupMarkup(node, themeRef.current),
+                  order: count,
+                },
+              }),
+            );
+            dispatch(
+              addProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationTextId(annotationId),
+                styles: {
+                  transform: annotationTransformStr(transform),
+                } as CSSProperties,
+              }),
+            );
+            dispatch(
+              addProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationLineId(annotationId),
+                styles: annotationLineStyles(target, transform) as any,
+              }),
+            );
+            dispatch(
+              addProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationTargetId(annotationId),
+                styles: annotationTargetStyles(target) as any,
+              }),
+            );
+          }
+          markChanged();
+          return nodeId;
+        },
+
+        renameAnnotation: (nodeId: string, label: string) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as AnnotationNode | undefined;
+          if (!curr || curr.type !== "ANNOTATION") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, label },
+            }),
+          );
+          markChanged();
+        },
+
+        updateAnnotationText: (nodeId: string, text: string) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as AnnotationNode | undefined;
+          if (!curr || curr.type !== "ANNOTATION") return;
+          const next = { ...curr, text };
+          dispatch(
+            updateNodeAction({ graphId: variationId, nodeId, changes: next }),
+          );
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            // Text lives in the markup (not a proxy), so re-inject the group; the
+            // geometry proxies re-apply on the same render pass.
+            dispatch(
+              updateInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationGroupId(curr.annotationId),
+                changes: { markup: annotationGroupMarkup(next, themeRef.current) },
+              }),
+            );
+          }
+          markChanged();
+        },
+
+        // Label move/scale, committed from the manipulation handles.
+        updateAnnotationTransform: (
+          nodeId: string,
+          transform: AnnotationNode["transform"],
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as AnnotationNode | undefined;
+          if (!curr || curr.type !== "ANNOTATION") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, transform },
+            }),
+          );
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              updateProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationTextId(curr.annotationId),
+                changes: {
+                  transform: annotationTransformStr(transform),
+                } as CSSProperties,
+              }),
+            );
+            // Leader line label-end follows the label origin.
+            dispatch(
+              updateProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationLineId(curr.annotationId),
+                changes: annotationLineStyles(curr.target, transform) as any,
+              }),
+            );
+          }
+          markChanged();
+        },
+
+        // Target-point drag, committed from the overlay.
+        updateAnnotationTarget: (
+          nodeId: string,
+          target: AnnotationNode["target"],
+        ) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as AnnotationNode | undefined;
+          if (!curr || curr.type !== "ANNOTATION") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, target },
+            }),
+          );
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            dispatch(
+              updateProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationTargetId(curr.annotationId),
+                changes: annotationTargetStyles(target) as any,
+              }),
+            );
+            dispatch(
+              updateProxyAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationLineId(curr.annotationId),
+                changes: annotationLineStyles(target, curr.transform) as any,
+              }),
+            );
+          }
+          markChanged();
+        },
+
+        // Visibility gate driven by the elective. Kept separate from the node so
+        // the overlay can reconcile it reactively (annotations have no cost
+        // middleware to ride along with, unlike logos).
+        setAnnotationHidden: (nodeId: string, hidden: boolean) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as AnnotationNode | undefined;
+          if (!curr || curr.type !== "ANNOTATION") return;
+          const svgPath = getSvgPath();
+          if (!svgPath) return;
+          dispatch(
+            updateProxyAction({
+              path: svgPath,
+              instanceName: variationId,
+              id: annotationGroupId(curr.annotationId),
+              changes: { display: hidden ? "none" : "inline" } as any,
+            }),
+          );
+        },
+
+        linkAnnotationElective: (nodeId: string, electiveNodeId: string) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as AnnotationNode | undefined;
+          if (!curr || curr.type !== "ANNOTATION") return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, electiveNodeId },
+            }),
+          );
+          markChanged();
+        },
+
+        removeAnnotation: (nodeId: string) => {
+          const g = getGraph();
+          if (!g) return;
+          const curr = g.nodes[nodeId] as AnnotationNode | undefined;
+          if (!curr || curr.type !== "ANNOTATION") return;
+          dispatch(removeNodeAction({ graphId: variationId, nodeId }));
+          const svgPath = getSvgPath();
+          if (svgPath) {
+            const aId = curr.annotationId;
+            dispatch(
+              deleteInjectedElementAction({
+                path: svgPath,
+                instanceName: variationId,
+                id: annotationGroupId(aId),
+              }),
+            );
+            for (const id of [
+              annotationTextId(aId),
+              annotationLineId(aId),
+              annotationTargetId(aId),
+              annotationGroupId(aId),
+            ]) {
+              dispatch(
+                deleteProxyAction({
+                  path: svgPath,
+                  instanceName: variationId,
+                  id,
+                }),
+              );
+            }
+          }
           markChanged();
         },
       },

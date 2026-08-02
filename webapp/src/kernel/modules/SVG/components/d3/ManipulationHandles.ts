@@ -1,13 +1,23 @@
 import { Selection } from "d3";
-import { ManipulateMode, ManipulateTransform } from "../../interfaces";
+import {
+  ManipulateHandle,
+  ManipulateMode,
+  ManipulateTransform,
+} from "../../interfaces";
 
 export type ManipulationHandlesProps = {
   svgRoot: SVGSVGElement | null;
   targetId?: string;
   mode: ManipulateMode;
   onTransform: (id: string, t: ManipulateTransform) => void;
-  /** Stroke/fill for the selection chrome (outline + handles). */
-  color?: string;
+  /** Which handles to render; undefined → all (move + rotate + scale). */
+  handles?: ManipulateHandle[];
+  /**
+   * Stroke/fill for the selection chrome (outline + handles). Required: this
+   * module renders outside React, so the caller must hand it a theme color —
+   * there is no literal fallback.
+   */
+  color: string;
 };
 
 /**
@@ -97,11 +107,14 @@ export default function renderManipulationHandles(
     targetId,
     mode: _mode,
     onTransform,
-    color = "#1976d2",
+    handles,
+    color,
   }: ManipulationHandlesProps,
 ) {
   selection.selectChildren("*").remove();
   if (!svgRoot || !targetId) return;
+  // undefined → render the full set; otherwise only the listed handles.
+  const showHandle = (h: ManipulateHandle) => !handles || handles.includes(h);
 
   const target = findById(svgRoot, targetId);
   if (!target || typeof target.getBBox !== "function") return;
@@ -189,34 +202,36 @@ export default function renderManipulationHandles(
 
   // Move: convert the incremental screen delta into the target parent's user
   // space so the translate magnitude is correct despite the nested-svg scaling.
-  const parent = target.parentNode as SVGGraphicsElement | null;
-  group
-    .append("rect")
-    .attr("x", bbox.x)
-    .attr("y", bbox.y)
-    .attr("width", bbox.width)
-    .attr("height", bbox.height)
-    .attr("fill", "transparent")
-    .style("cursor", "move")
-    .on(
-      "pointerdown",
-      beginDrag(
-        () => {},
-        (e, start) => {
-          const inv = parent?.getScreenCTM?.()?.inverse();
-          const dxs = e.clientX - start.x;
-          const dys = e.clientY - start.y;
-          current.x += inv ? inv.a * dxs + inv.c * dys : dxs;
-          current.y += inv ? inv.b * dxs + inv.d * dys : dys;
-          start.x = e.clientX;
-          start.y = e.clientY;
-          applyLive(current);
-        },
-      ),
-    );
+  if (showHandle("move")) {
+    const parent = target.parentNode as SVGGraphicsElement | null;
+    group
+      .append("rect")
+      .attr("x", bbox.x)
+      .attr("y", bbox.y)
+      .attr("width", bbox.width)
+      .attr("height", bbox.height)
+      .attr("fill", "transparent")
+      .style("cursor", "move")
+      .on(
+        "pointerdown",
+        beginDrag(
+          () => {},
+          (e, start) => {
+            const inv = parent?.getScreenCTM?.()?.inverse();
+            const dxs = e.clientX - start.x;
+            const dys = e.clientY - start.y;
+            current.x += inv ? inv.a * dxs + inv.c * dys : dxs;
+            current.y += inv ? inv.b * dxs + inv.d * dys : dys;
+            start.x = e.clientX;
+            start.y = e.clientY;
+            applyLive(current);
+          },
+        ),
+      );
+  }
 
   // Rotate handle (top-right): angle delta around the element's screen center.
-  {
+  if (showHandle("rotate")) {
     let center = { x: 0, y: 0 };
     let a0 = 0;
     let rot0 = 0;
@@ -245,7 +260,7 @@ export default function renderManipulationHandles(
   }
 
   // Scale handle (bottom-right): screen-distance ratio from the center.
-  {
+  if (showHandle("scale")) {
     let center = { x: 0, y: 0 };
     let d0 = 1;
     let scale0 = 1;

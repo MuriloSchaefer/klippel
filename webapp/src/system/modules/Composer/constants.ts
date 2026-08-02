@@ -21,3 +21,5 @@ export const UPLOAD_SVG_SHORTCUT_ID = `${SVG_EMPTY_STATE_CONTEXT_ID}/uploadSVG`;
 export const LOGO_LIST_CONTEXT_ID = `${MODULE_NAME}/LogoList`;
 // Active only while the placements pointer is open (pushed/popped on its mount).
 export const LOGO_PLACEMENTS_CONTEXT_ID = `${MODULE_NAME}/LogoPlacements`;
+
+export const ANNOTATION_LIST_CONTEXT_ID = `${MODULE_NAME}/AnnotationList`;

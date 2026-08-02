@@ -1,9 +1,10 @@
 import React from "react";
-import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, IconButton, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import {
   RotateRightOutlined,
   AspectRatioOutlined,
   ContentCutOutlined,
+  CloseOutlined,
 } from "@mui/icons-material";
 import useModule from "@kernel/hooks/useModule";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
@@ -28,7 +29,7 @@ import {
 function SVGToolbox() {
   const keyboard = useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint, ShortcutProvider } = keyboard.components;
-  const { state, setManipulateMode } = useSVGEditorToolkit();
+  const { state, setManipulateMode, cancelManipulate } = useSVGEditorToolkit();
   const { enabled, mode } = state.tools.manipulate;
 
   if (!enabled) return null;
@@ -38,19 +39,25 @@ function SVGToolbox() {
 
   return (
     <ShortcutProvider contextId={SVG_TOOLBOX_CONTEXT_ID}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: 8,
+          left: 8,
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          bgcolor: "background.paper",
+          boxShadow: 3,
+          borderRadius: 1,
+        }}
+      >
       <ToggleButtonGroup
         size="small"
         exclusive
         value={mode === "idle" ? null : mode}
         data-testid="svgtoolbox"
         aria-label="ferramentas de posição"
-        sx={{
-          position: "absolute",
-          top: 8,
-          left: 8,
-          bgcolor: "background.paper",
-          boxShadow: 3,
-        }}
       >
         <ShortcutHint
           placement="bottom-center"
@@ -92,6 +99,16 @@ function SVGToolbox() {
           </ToggleButton>
         </ShortcutHint>
       </ToggleButtonGroup>
+      <IconButton
+        size="small"
+        data-testid="svgtoolbox-deselect"
+        aria-label="deselect-placement"
+        title="Sair da edição"
+        onClick={cancelManipulate}
+      >
+        <CloseOutlined fontSize="small" />
+      </IconButton>
+      </Box>
     </ShortcutProvider>
   );
 }

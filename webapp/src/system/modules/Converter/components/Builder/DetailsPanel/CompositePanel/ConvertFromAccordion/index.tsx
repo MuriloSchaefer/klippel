@@ -18,11 +18,13 @@ const ConvertFromAccordion = () => {
   const unit = units[manager.state];
 
   const { Accordion } = layoutModule.components;
+  const { focusFirstRow } = layoutModule.utils;
   return (
     <Accordion
       name="Converte de"
       icon={<CallReceivedSharpIcon />}
       summary={`Quais unidades podem ser convertidas em ${unit.name}`}
+      focusOnOpen={focusFirstRow}
     >
       <AddConversionButton to={unit.id} />
       <ConversionList  unitId={unit.id} type="inputs"/>

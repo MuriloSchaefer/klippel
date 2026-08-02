@@ -30,6 +30,11 @@ export interface D3Graph<N =D3Node, L=D3Link> {
 
   export type ManipulateMode = "idle" | "drag" | "rotate" | "scale" | "clip";
 
+  // Which selection handles to render. Omitting the prop renders all of them, so
+  // existing callers (logo placements) are unaffected; a caller wanting e.g.
+  // move + scale only (annotations) passes ["move", "scale"].
+  export type ManipulateHandle = "move" | "rotate" | "scale";
+
   export type ManipulateTransform = {
     x: number;
     y: number;
@@ -53,6 +58,8 @@ export interface D3Graph<N =D3Node, L=D3Link> {
         enabled: boolean;
         targetId?: string;                 // the injected element currently selected
         mode: ManipulateMode;
+        // Which handles to show; undefined → all (move + rotate + scale).
+        handles?: ManipulateHandle[];
         // move + rotate + VISUAL scale (the toolbox attaches no physical/cost meaning)
         onTransform: (id: string, t: ManipulateTransform) => void;
         onClip: (id: string, clipTargetId: string) => void;

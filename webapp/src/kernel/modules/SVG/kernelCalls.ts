@@ -73,5 +73,12 @@ export function postBootInitialization({
       description: "Clip into element",
       enabled: true,
     },
+    // No Escape binding for deselect: Escape is the canonical "dismiss" key and
+    // the Pointer module already owns its precedence (open listbox → blur input →
+    // close container). Because the shortcut resolver picks the top active
+    // context's binding exclusively, a toolbox Escape shortcut — pushed on top of
+    // an open pointer panel when a placement is selected — would swallow the
+    // panel's own close. Deselect stays available via the toolbar X button and by
+    // clicking empty canvas.
   ]);
 }

@@ -5,7 +5,7 @@ import RotateLeftSharpIcon from "@mui/icons-material/RotateLeftSharp";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import useModule from "@kernel/hooks/useModule";
-import { ILayoutModule } from "@kernel/modules/Layout";
+import type { ILayoutModule } from "@kernel/modules/Layout";
 import ScaleSelector from "../../../ScaleSelector";
 import { useCallback, useEffect, useState } from "react";
 import { IGraphModule } from "@kernel/modules/Graphs";
@@ -25,6 +25,7 @@ export type PropertiesAccordionProps = {
 const PropertiesAccordion = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const { Accordion } = layoutModule.components;
+  const { focusFirstRow } = layoutModule.utils;
 
   const graphModule = useModule<IGraphModule>("Graph");
 
@@ -65,6 +66,7 @@ const PropertiesAccordion = () => {
       icon={<SettingsIcon />}
       summary={`Propriedades da unidade`}
       sx={{flexGrow: 1}}
+      focusOnOpen={focusFirstRow}
     >
       <Paper
         variant="outlined"

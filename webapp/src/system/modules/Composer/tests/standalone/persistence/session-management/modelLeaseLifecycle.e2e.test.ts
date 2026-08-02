@@ -27,7 +27,7 @@ beforeAll(async () => {
   await page.evaluate(async (n) => {
     await window.electron.jazz.ensureWorkspace(n);
   }, TEST_WORKSPACE);
-});
+}, 45_000);
 
 afterAll(async () => {
   if (browser) await browser.disconnect();

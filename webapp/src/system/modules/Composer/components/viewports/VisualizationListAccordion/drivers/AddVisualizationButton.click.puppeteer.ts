@@ -57,12 +57,26 @@ export const openAddVisualizationPanel = async (page: Page) => {
 export const typeAddVisualizationName = async (page: Page, name: string) => {
   const sel = formInputSelector(ADD_VISUALIZATION_NAME_TESTID);
   await page.waitForSelector(sel);
-  await page.click(sel);
-  await page.keyboard.down('Control');
-  await page.keyboard.press('a');
-  await page.keyboard.up('Control');
-  await page.keyboard.press('Delete');
-  await page.type(sel, name);
+  // Set the whole value in one native-setter + input event, not per-key typing.
+  // The name field re-renders as a controlled input; simulated fast typing
+  // intermittently drops characters under load, producing a differently-labelled
+  // row that the post-confirm `waitForVisualizationItem(name)` never finds. One
+  // input event fires a single onChange with the complete value. (Ctrl+A
+  // select-all is also unreliable inside this panel's focus context.)
+  await page.$eval(
+    sel,
+    (el, value) => {
+      const input = el as HTMLInputElement | HTMLTextAreaElement;
+      const proto =
+        input instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : HTMLInputElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')!.set!;
+      setter.call(input, value);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    },
+    name,
+  );
 };
 
 export const selectAddVisualizationMaterial = async (

@@ -20,6 +20,7 @@ import {
   UPLOAD_SVG_SHORTCUT_ID,
   LOGO_LIST_CONTEXT_ID,
   LOGO_PLACEMENTS_CONTEXT_ID,
+  ANNOTATION_LIST_CONTEXT_ID,
 } from "./constants";
 import slice from "./store/slice";
 import ModelViewport from "./components/viewports/ModelViewport";
@@ -1288,6 +1289,143 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
         btn?.click();
       },
       description: 'Delete focused placement',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/AnnotationList/focus`,
+      key: 'Ctrl+Alt+a',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const accordion = document.querySelector(
+          '[role="accordion-Anotações"]'
+        ) as HTMLElement | null;
+        if (!accordion) return;
+        const summary = accordion.querySelector(
+          '[aria-controls="accordion-Anotações-content"]'
+        ) as HTMLElement | null;
+        if (!summary) return;
+
+        const isExpanded = () =>
+          summary.getAttribute('aria-expanded') === 'true';
+        const wasExpanded = isExpanded();
+        const rowFocusedInside = !!document.activeElement?.closest(
+          '[role="accordion-Anotações"] [data-testid="annotation-item"]'
+        );
+
+        if (wasExpanded && rowFocusedInside) {
+          summary.click();
+          return;
+        }
+
+        if (!wasExpanded) summary.click();
+
+        const findFirstRow = () =>
+          accordion.querySelector(
+            '[data-testid="annotation-item"]'
+          ) as HTMLElement | null;
+        const findAddBtn = () =>
+          accordion.querySelector(
+            '#composer-add-annotation'
+          ) as HTMLElement | null;
+        const findContent = () =>
+          accordion.querySelector(
+            '[data-accordion-content="Anotações"]'
+          ) as HTMLElement | null;
+
+        const start = Date.now();
+        const attempt = () => {
+          const first = findFirstRow();
+          if (first) {
+            first.focus();
+            if (document.activeElement === first) return;
+          } else {
+            const addBtn = findAddBtn();
+            if (addBtn) {
+              addBtn.focus();
+              if (document.activeElement === addBtn) return;
+            } else {
+              const content = findContent();
+              if (content) {
+                content.focus();
+                if (document.activeElement === content) return;
+              }
+            }
+          }
+          if (Date.now() - start < 1500) setTimeout(attempt, 50);
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Toggle / focus annotation list',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/AnnotationList/addAnnotation`,
+      key: 'a',
+      contextId: ANNOTATION_LIST_CONTEXT_ID,
+      action: () => document.getElementById('composer-add-annotation')?.click(),
+      description: 'Add annotation',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/AnnotationItem/focusNext`,
+      key: 'ArrowDown',
+      contextId: ANNOTATION_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="annotation-item"]');
+        if (!current) return;
+        const next = current.nextElementSibling as HTMLElement | null;
+        if (next?.matches('[data-testid="annotation-item"]')) next.focus();
+      },
+      description: 'Focus next annotation item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/AnnotationItem/focusPrev`,
+      key: 'ArrowUp',
+      contextId: ANNOTATION_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="annotation-item"]');
+        if (!current) return;
+        const prev = current.previousElementSibling as HTMLElement | null;
+        if (prev?.matches('[data-testid="annotation-item"]')) prev.focus();
+      },
+      description: 'Focus previous annotation item',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/AnnotationItem/editInDrawing`,
+      key: 'm',
+      contextId: ANNOTATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="annotation-item"]');
+        const btn = row?.querySelector('[data-testid="annotation-item-select"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Edit focused annotation in the drawing',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/AnnotationItem/linkElective`,
+      key: 'w',
+      contextId: ANNOTATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="annotation-item"]');
+        const btn = row?.querySelector('[data-testid="annotation-item-link-elective"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Link focused annotation to elective',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/AnnotationItem/delete`,
+      key: 'd',
+      contextId: ANNOTATION_LIST_CONTEXT_ID,
+      action: () => {
+        const row = document.activeElement?.closest('[data-testid="annotation-item"]');
+        const btn = row?.querySelector('[data-testid="annotation-item-delete"]') as HTMLButtonElement | null;
+        btn?.click();
+      },
+      description: 'Remove focused annotation',
       enabled: true,
     },
   ])

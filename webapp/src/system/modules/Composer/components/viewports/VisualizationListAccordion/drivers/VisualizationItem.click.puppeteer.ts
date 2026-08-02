@@ -49,12 +49,22 @@ export const clickDeleteVisualization = async (page: Page, label: string) => {
 export const typeEditVisualizationName = async (page: Page, name: string) => {
   const sel = editFormInputSelector(EDIT_VISUALIZATION_NAME_TESTID);
   await page.waitForSelector(sel);
-  await page.click(sel);
-  await page.keyboard.down('Control');
-  await page.keyboard.press('a');
-  await page.keyboard.up('Control');
-  await page.keyboard.press('Delete');
-  await page.type(sel, name);
+  // One native-setter + input event instead of per-key typing — see the note in
+  // typeAddVisualizationName (controlled input drops characters under load).
+  await page.$eval(
+    sel,
+    (el, value) => {
+      const input = el as HTMLInputElement | HTMLTextAreaElement;
+      const proto =
+        input instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : HTMLInputElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')!.set!;
+      setter.call(input, value);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    },
+    name,
+  );
 };
 
 export const selectEditVisualizationMaterial = async (

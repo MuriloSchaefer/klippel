@@ -40,6 +40,7 @@ function ModelViewport() {
   const { ShortcutProvider, FocusShortcutProvider, ShortcutHint } =
     keyboardShortcuts.components;
   const { SettingsPanel, Accordion, DetailsPanel } = layoutModule.components;
+  const { focusFirstRow } = layoutModule.utils;
 
   const { useActiveViewport, useViewportManager } = layoutModule.hooks;
   const { SVGEditorToolkit } = svgModule.components;
@@ -81,6 +82,7 @@ function ModelViewport() {
               name="Composição"
               icon={<AccountTreeSharpIcon />}
               summary="composição da peça"
+              focusOnOpen={focusFirstRow}
             >
               <CompositionTree variationId={variationId} />
             </Accordion>
@@ -90,6 +92,7 @@ function ModelViewport() {
                 name="Materiais"
                 icon={<WidgetsSharpIcon />}
                 summary="Materiais referenciados na composição"
+                focusOnOpen={focusFirstRow}
               >
                 <MaterialListAccordion variationId={variationId} />
               </Accordion>
@@ -101,6 +104,7 @@ function ModelViewport() {
                 icon={<TuneSharpIcon />}
                 summary="Cada eletivo representa uma variação opcional da peça"
                 defaultExpanded
+                focusOnOpen={focusFirstRow}
               >
                 <ElectiveListAccordion variationId={variationId} />
               </Accordion>
@@ -111,6 +115,7 @@ function ModelViewport() {
                 name="Logos"
                 icon={<ImageOutlinedIcon />}
                 summary="Logos (bordado / serigrafia)"
+                focusOnOpen={focusFirstRow}
               >
                 <LogoListAccordion variationId={variationId} />
               </Accordion>
@@ -121,6 +126,7 @@ function ModelViewport() {
                 name="Tempo"
                 icon={<AccessTimeSharpIcon />}
                 summary="Resumo de tempo por processo"
+                focusOnOpen={focusFirstRow}
               >
                 <ProcessTimeAccordion variationId={variationId} />
               </Accordion>
@@ -129,6 +135,7 @@ function ModelViewport() {
               name="Custo"
               icon={<PaidSharpIcon />}
               summary="Resumo de custo por processo"
+              focusOnOpen={focusFirstRow}
             >
               <ProcessCostAccordion variationId={variationId} />
             </Accordion>

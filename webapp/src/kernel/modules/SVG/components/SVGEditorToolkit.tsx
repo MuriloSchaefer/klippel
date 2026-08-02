@@ -1,5 +1,10 @@
 import React, { createContext, useEffect, useMemo, useState } from "react";
-import { EditorToolkit, ManipulateMode, ManipulateTransform } from "../interfaces";
+import {
+  EditorToolkit,
+  ManipulateHandle,
+  ManipulateMode,
+  ManipulateTransform,
+} from "../interfaces";
 
 export type EditorToolkitType = {
   state: EditorToolkit;
@@ -18,6 +23,7 @@ export type EditorToolkitType = {
       onTransform?: (id: string, t: ManipulateTransform) => void;
       onClip?: (id: string, clipTargetId: string) => void;
       getSelectables?: (svgRoot: SVGSVGElement) => SVGElement[];
+      handles?: ManipulateHandle[];
     }
   ) => void;
   setManipulateMode: (mode: ManipulateMode) => void;
@@ -41,6 +47,7 @@ const INITIAL_VALUE: EditorToolkitType = {
         enabled: false,
         targetId: undefined,
         mode: "idle",
+        handles: undefined,
         onTransform: noopTransform,
         onClip: noopClip,
       },
@@ -139,6 +146,7 @@ export const Provider = ({
               enabled: true,
               targetId: id,
               mode: "idle",
+              handles: handlers?.handles,
               onTransform: handlers?.onTransform ?? state.tools.manipulate.onTransform,
               onClip: handlers?.onClip ?? state.tools.manipulate.onClip,
             },

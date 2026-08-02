@@ -19,12 +19,14 @@ const ConvertToAccordion = () => {
   const unit = units[manager.state];
 
   const { Accordion } = layoutModule.components;
+  const { focusFirstRow } = layoutModule.utils;
   return (
     <Accordion
       name="Converte para"
       icon={<CallReceivedSharpIcon sx={{transform: 'rotate(180)'}}/>}
       summary={`${unit.name} pode ser convertida em`}
       sx={{flexGrow: 1}}
+      focusOnOpen={focusFirstRow}
     >
 
     <List sx={{ width: "100%" }} role="converts-to-list">

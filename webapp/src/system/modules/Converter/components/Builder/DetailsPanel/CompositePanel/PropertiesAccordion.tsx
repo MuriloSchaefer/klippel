@@ -28,6 +28,7 @@ export type PropertiesAccordionProps = {
 const PropertiesAccordion = () => {
   const layoutModule = useModule<ILayoutModule>("Layout");
   const { Accordion } = layoutModule.components;
+  const { focusFirstRow } = layoutModule.utils;
 
   const graphModule = useModule<IGraphModule>("Graph");
 
@@ -67,6 +68,7 @@ const PropertiesAccordion = () => {
       name="Propriedades"
       icon={<SettingsIcon />}
       summary={`Propriedades da unidade`}
+      focusOnOpen={focusFirstRow}
     >
       <Paper
         variant="outlined"

@@ -38,8 +38,7 @@ export default function LogoPlacementsButton({
   const converterModule = useModule<IConverterModule>("Converter");
   const svgModule = useModule<ISVGModule>("SVG");
   const { PointerContainer } = pointerModule.components;
-  const { ShortcutHint, FocusShortcutProvider } =
-    keyboardShortcutsModule.components;
+  const { ShortcutHint, ShortcutProvider } = keyboardShortcutsModule.components;
   const { UnitAmountSelector } = converterModule.components;
   const lengthUnits = converterModule.hooks.useUnits(LENGTH_UNIT_IDS);
   const svgToolkit = svgModule.hooks.useSVGEditorToolkit();
@@ -72,7 +71,14 @@ export default function LogoPlacementsButton({
   return (
     <PointerContainer
       component={
-        <FocusShortcutProvider contextId={LOGO_PLACEMENTS_CONTEXT_ID}>
+        // ShortcutProvider (mount-based), not FocusShortcutProvider: the panel is
+        // a modal popover that mounts only while open, and it should own the
+        // placement bindings (a/d/e) the whole time it is up — shadowing the
+        // logo-list context, which also binds `a`. With the focus-based provider,
+        // an *empty* panel never received focus inside it (PointerContainer only
+        // auto-focuses inputs), so the context was never pushed and `a` fell
+        // through to the logo-list "add logo" binding instead of adding a placement.
+        <ShortcutProvider contextId={LOGO_PLACEMENTS_CONTEXT_ID}>
           <Box data-testid="logo-placements" sx={{ p: 2, minWidth: 360 }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               Posições
@@ -202,7 +208,7 @@ export default function LogoPlacementsButton({
               </ShortcutHint>
             </Button>
           </Box>
-        </FocusShortcutProvider>
+        </ShortcutProvider>
       }
       actions={[]}
     >

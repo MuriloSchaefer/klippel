@@ -296,6 +296,21 @@ export type LogoNode = Node & {
     placements: LogoPlacement[];         // in-content placements (scale/move/rotate/clip); may be empty
 }
 
+// --- Annotations (text notes pinned to the drawing) -------------------------
+
+// A free-text note rendered inside the editor SVG (user-space, so it zooms/pans
+// and is included in SVG exports). A leader line connects a draggable target
+// point on the drawing to the label. Purely informational — no cost.
+export type AnnotationNode = Node & {
+    type: "ANNOTATION";
+    label: string;                 // short title shown in the accordion row
+    annotationId: string;          // small hash
+    text: string;                  // plain-text body; rendered as SVG <text>/<tspan>
+    target: { x: number; y: number };               // leader origin, SVG user-space
+    transform: { x: number; y: number; scale: number }; // label position + scale (no rotation)
+    electiveNodeId?: string;       // optional elective gate (same field/pattern as LogoNode)
+}
+
 // Generic blob storage node. Holds draw-view SVGs, plotter files, orders,
 // receipts, etc. — this change implements only the minimum needed for logos
 // while leaving the type open to other kinds.
@@ -351,6 +366,12 @@ export type HasLogoEdge = Edge & {
 }
 export type LogoOfEdge = Edge & {
     type: "LOGO_OF";
+}
+export type HasAnnotationEdge = Edge & {
+    type: "HAS_ANNOTATION";
+}
+export type AnnotationOfEdge = Edge & {
+    type: "ANNOTATION_OF";
 }
 export type HasDocumentEdge = Edge & {
     type: "HAS_DOCUMENT";

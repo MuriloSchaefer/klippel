@@ -6,6 +6,7 @@ import React, { useMemo, useRef } from "react";
 import { debounce } from "@kernel/utils";
 import { zoomIdentity, zoomTransform, ZoomTransform } from "d3";
 import LogoMainCopyOverlay from "./LogoMainCopyOverlay";
+import AnnotationOverlay from "./AnnotationOverlay";
 
 export default function SVGModelViewport({
   variationId,
@@ -92,6 +93,7 @@ export default function SVGModelViewport({
       <SVGToolbox />
       <svg ref={editor.svgRef} id={`svg-editor`} width="100%" height="100%" />
       <LogoMainCopyOverlay variationId={variationId} />
+      <AnnotationOverlay variationId={variationId} />
     </div>
   );
 }
