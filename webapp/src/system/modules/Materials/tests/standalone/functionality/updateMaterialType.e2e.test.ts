@@ -88,6 +88,11 @@ const expectTypeAtVersion = async (
   p: Page,
   typeName: string,
   latestSchema: string,
+  /**
+   * When given, also select the type so the form prefills from the
+   * latest schema, and assert the consumption-unit mirror matches.
+   */
+  consumptionUnit?: string,
 ) => {
   await p.keyboard.press("Escape").catch(() => {});
   await p.click(UPDATE_MATERIAL_TYPE_TRIGGER);
@@ -96,7 +101,18 @@ const expectTypeAtVersion = async (
   await p.waitForSelector(
     `ul[role="listbox"] li[role="option"][data-value="${typeName}"][data-latest-schema="${latestSchema}"]`,
   );
-  await p.keyboard.press("Escape"); // close the listbox
+
+  if (consumptionUnit === undefined) {
+    await p.keyboard.press("Escape"); // close the listbox
+  } else {
+    await p.click(
+      `ul[role="listbox"] li[role="option"][data-value="${typeName}"]`,
+    );
+    await p.waitForSelector(
+      `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-consumption-unit"][data-unit="${consumptionUnit}"]`,
+    );
+  }
+
   await p.keyboard.press("Escape"); // close the panel
 };
 
@@ -143,6 +159,24 @@ describe("updateMaterialType via click (E2E)", () => {
     });
 
     await expectTypeAtVersion(page!, TYPE_NAME, "0.0.2");
+  }, 120_000);
+
+  it("carries a newly-set consumption unit into the successor version", async () => {
+    // The base type was seeded without one, so this also proves the
+    // blank baseline: 0.0.2 above still has no consumption unit.
+    await expectTypeAtVersion(page!, TYPE_NAME, "0.0.2", "");
+
+    await updateMaterialTypeTool.execute({
+      typeName: TYPE_NAME,
+      version: "0.0.3",
+      consumptionUnit: "metros5",
+      attributes: [
+        { name: "nome", kind: "string" },
+        { name: "peso", kind: "number" },
+      ],
+    });
+
+    await expectTypeAtVersion(page!, TYPE_NAME, "0.0.3", "metros5");
   }, 120_000);
 });
 

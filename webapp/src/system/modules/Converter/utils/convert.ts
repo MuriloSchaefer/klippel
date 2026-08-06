@@ -70,11 +70,18 @@ export function convert(
   const { path } = dfs(
     conversionGraph,
     fromNode.id,
-    (node, g, currFindings, visitedNodes, lastNode) => {
+    (node, g, currFindings, visitedNodes, lastNode, parentNode) => {
       if (node.id === fromNode!.id) return true;
+      // `parentNode` is the node that pushed `lastNode`, which is also
+      // what `path` is rebuilt from — so the edge validated here is the
+      // edge the execution loop below will actually evaluate. Inferring
+      // the predecessor from `visitedNodes` instead (as this did) only
+      // works when the target sits on the first branch the LIFO stack
+      // explores; on any other branch the lookup finds nothing and a
+      // perfectly reachable unit is reported as unconvertible.
       const transformation = Object.values(g.edges).find(
         (e): e is ConvertsToEdge =>
-          e.sourceId === visitedNodes.at(-2)?.id &&
+          e.sourceId === parentNode &&
           e.targetId === lastNode &&
           e.type === "CONVERTS_TO"
       );

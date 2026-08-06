@@ -11,6 +11,7 @@ import useMaterialTypes from "../../../hooks/useMaterialTypes";
 import DeleteMaterialButton from "./DeleteMaterialButton";
 import UpdateMaterialButton from "./UpdateMaterialButton";
 import type { MaterialState } from "../../../store/materials/state";
+import { resolveTypeSchema } from "../../../store/materialTypes/resolveTypeSchema";
 
 // Module-level so its identity never changes — an unstable `getRowId`
 // makes DataGrid rebuild its entire row-id map and re-render every row.
@@ -194,6 +195,18 @@ const TableView: React.FC<Props> = ({ materials, onDelete }) => {
         headerName: "Unidade",
         width: 110,
         valueGetter: (_value, row: any) => row.stock?.unit ?? "",
+      },
+      {
+        // Read-only mirror of the type schema's `consumptionUnit` —
+        // the target unit Composer converts usage into. Blank when the
+        // schema declares none, in which case usage lands in the stock
+        // unit above.
+        field: "consumptionUnit",
+        headerName: "Un. consumo",
+        width: 120,
+        valueGetter: (_value, row: any) =>
+          resolveTypeSchema(materialTypes?.[row.type], row.schemaVersion)
+            ?.consumptionUnit ?? "",
       },
       {
         field: "actions",

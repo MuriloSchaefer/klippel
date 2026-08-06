@@ -41,6 +41,12 @@ export const updateMaterialTypeShortcutTool = {
     principal: z.string().optional().describe("Principal selector attribute."),
     extra: z.string().optional().describe("Extra selector attribute."),
     stockUnit: z.string().optional().describe("Stock unit code."),
+    consumptionUnit: z
+      .string()
+      .optional()
+      .describe(
+        "Target unit code for usage calculations; falls back to the stock unit when unset.",
+      ),
     attributes: z
       .array(
         z.object({
@@ -57,6 +63,7 @@ export const updateMaterialTypeShortcutTool = {
     principal?: string;
     extra?: string;
     stockUnit?: string;
+    consumptionUnit?: string;
     attributes?: Array<{ name: string; kind: (typeof ATTR_KINDS)[number] }>;
   }) {
     const page = await getPage();

@@ -27,7 +27,8 @@ export default function MaterialCostAuditContent({
     if (material.stock?.unit) ids.add(material.stock.unit);
     if (cost?.quotient.unit) ids.add(cost.quotient.unit);
     if (cost?.dividend.unit) ids.add(cost.dividend.unit);
-    
+    if (node.costAudit?.targetUnit) ids.add(node.costAudit.targetUnit);
+
     // Add units from material attributes
     if (material.attributes) {
       Object.values(material.attributes).forEach((value: any) => {
@@ -59,11 +60,15 @@ export default function MaterialCostAuditContent({
       });
     });
     return Array.from(ids);
-  }, [material.stock?.unit, material.attributes, cost, steps]);
+  }, [material.stock?.unit, material.attributes, cost, steps, node.costAudit?.targetUnit]);
 
   const units = useUnits(allUnitIds);
 
+  const targetUnit = node.costAudit?.targetUnit;
+  const stockEquivalent = node.costAudit?.stockEquivalent;
+
   const stockAbbreviation = material.stock && units?.[material.stock.unit]?.abbreviation;
+  const targetAbbreviation = targetUnit && units?.[targetUnit]?.abbreviation;
   const costAbbreviation = cost && units?.[cost.quotient.unit]?.abbreviation;
   const dividendAbbreviation = cost && units?.[cost.dividend.unit]?.abbreviation;
 
@@ -93,6 +98,42 @@ export default function MaterialCostAuditContent({
           </>
         )}
       </Typography>
+
+      {/*
+        The unit every CONSUMES edge was converted into. Only worth
+        stating when it isn't the stock unit — otherwise it repeats the
+        line above.
+      */}
+      {targetUnit && targetUnit !== material.stock?.unit && (
+        <Typography
+          variant="body2"
+          data-testid="material-cost-audit-target-unit"
+          data-target-unit={targetUnit}
+          sx={{ mb: 2 }}
+        >
+          Unidade de consumo: {targetAbbreviation || targetUnit}
+          {stockEquivalent?.error ? (
+            <Box component="span" sx={{ color: theme.palette.warning.main }}>
+              {" "}— sem conversão de volta para {stockAbbreviation || material.stock?.unit}:{" "}
+              {stockEquivalent.error}
+            </Box>
+          ) : (
+            stockEquivalent && (
+              <>
+                {" "}(≈ {stockEquivalent.cost.toFixed(3)}{" "}
+                {stockAbbreviation || stockEquivalent.unit} por unidade
+                {stockEquivalent.total !== undefined && (
+                  <>
+                    , {stockEquivalent.total.toFixed(3)}{" "}
+                    {stockAbbreviation || stockEquivalent.unit} no total
+                  </>
+                )}
+                )
+              </>
+            )
+          )}
+        </Typography>
+      )}
 
       {/* Material Attributes Section */}
       {material.attributes && Object.keys(material.attributes).length > 0 && (

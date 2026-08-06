@@ -86,6 +86,7 @@ const UpdateMaterialTypeSection: React.FC = () => {
   const [principal, setPrincipal] = useState("nome");
   const [extra, setExtra] = useState("cor");
   const [stockUnit, setStockUnit] = useState("");
+  const [consumptionUnit, setConsumptionUnit] = useState("");
   const [attrs, setAttrs] = useState<AttrRow[]>([]);
 
   // Pre-fill from the selected type's latest schema. Re-runs whenever
@@ -98,6 +99,7 @@ const UpdateMaterialTypeSection: React.FC = () => {
       setPrincipal("nome");
       setExtra("cor");
       setStockUnit("");
+      setConsumptionUnit("");
       setAttrs([]);
       return;
     }
@@ -109,6 +111,7 @@ const UpdateMaterialTypeSection: React.FC = () => {
     setPrincipal(latest.selector?.principal ?? "nome");
     setExtra(latest.selector?.extra ?? "cor");
     setStockUnit(latest.stockUnit ?? "");
+    setConsumptionUnit(latest.consumptionUnit ?? "");
     setAttrs(
       Object.entries(latest.attributes ?? {}).map(([name, kind]) => ({
         rowId: rowId(),
@@ -167,6 +170,7 @@ const UpdateMaterialTypeSection: React.FC = () => {
       attributes,
       selector: { principal, extra },
       stockUnit: stockUnit || undefined,
+      consumptionUnit: consumptionUnit || undefined,
     };
     dispatch(
       registerMaterialTypeVersion({
@@ -184,6 +188,7 @@ const UpdateMaterialTypeSection: React.FC = () => {
     principal,
     extra,
     stockUnit,
+    consumptionUnit,
     attrs,
     materialTypes,
     reset,
@@ -266,10 +271,33 @@ const UpdateMaterialTypeSection: React.FC = () => {
                 </Typography>
                 <UnitSelector
                   data-testid="update-material-type-stock-unit"
+                  data-unit={stockUnit}
                   value={stockUnit}
                   onChange={(e) => setStockUnit(String(e.target.value))}
                 />
               </Box>
+              {/*
+                Target unit for usage calculations. Left blank, Composer
+                converts consumption into the stock unit — the behaviour
+                that predates this field.
+              */}
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <Typography variant="caption" sx={{ minWidth: 110 }}>
+                  Unidade de consumo
+                </Typography>
+                <UnitSelector
+                  data-testid="update-material-type-consumption-unit"
+                  // Mirror of the selected id, so e2e can wait on
+                  // `[data-unit="metros5"]` instead of reading MUI's
+                  // hidden input (e2e-tests.md §2).
+                  data-unit={consumptionUnit}
+                  value={consumptionUnit}
+                  onChange={(e) => setConsumptionUnit(String(e.target.value))}
+                />
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                Em branco: usa a unidade de estoque.
+              </Typography>
 
               <Box
                 sx={{

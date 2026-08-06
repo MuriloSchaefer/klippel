@@ -964,6 +964,20 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       sourceId: "metros5",
       targetId: "kilogramas6",
     },
+    // Per-piece materials (linha, botão, agulha…) are stocked in
+    // `unitario18` but consumed in a length. Dividing by the material's
+    // `rendimento` (yield, e.g. 400 m per cone) turns a consumed length
+    // into a number of pieces, which is what lets the cost audit show a
+    // stock equivalent for them. Mirrors `m / un-[conv]->Kg / un`, which
+    // does the same for fabric at the compound level.
+    "metros5-[conv]->unitario18": {
+      type: "CONVERTS_TO",
+      conversionType: "expression",
+      expression: "quantidade / (rendimentoQuociente / rendimentoDividendo)",
+      id: "metros5-[conv]->unitario18",
+      sourceId: "metros5",
+      targetId: "unitario18",
+    },
     "metrosquadrados17-[conv]->kilometrosquadrados8": {
       type: "CONVERTS_TO",
       conversionType: "expression",
@@ -1262,6 +1276,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
       outputs: [
         "metros5 -> comprimento6",
         "metros5-[conv]->kilogramas6",
+        "metros5-[conv]->unitario18",
         "metros5-[conv]->centimetros7",
         "metros5-[conv]->milimetros9",
         "metros5-[conv]->kilometros8",
@@ -1364,6 +1379,7 @@ const graph: GraphState<ConversionNodes, ConvertionEdges> = {
         "un / d->unitario18",
         "un / sem->unitario18",
         "un / mes->unitario18",
+        "metros5-[conv]->unitario18",
       ],
       outputs: [],
     },

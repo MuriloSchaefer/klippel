@@ -104,7 +104,18 @@ export default function ShowMaterial({
             sx={{ ml: 0.5 }}
           >
             Custo por unidade:{" "}
-            <span data-testid="material-cost-info">
+            {/*
+              `data-cost-unit` mirrors the unit usage is reported in —
+              the type's consumption unit, or the stock unit when it
+              declares none. Lets e2e wait on a selector instead of
+              polling the rendered text (e2e-tests.md §2). The
+              computation middleware is debounced, so the attribute
+              flipping is the signal that a recompute landed.
+            */}
+            <span
+              data-testid="material-cost-info"
+              data-cost-unit={node.computedCost?.quotient.unit ?? ""}
+            >
               <ErrorBoundary fallbackRender={fallbackRenderLabelOnly}>
                 {material ? (
                   <MaterialCostInfo

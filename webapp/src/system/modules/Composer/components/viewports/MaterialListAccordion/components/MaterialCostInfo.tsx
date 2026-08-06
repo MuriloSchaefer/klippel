@@ -68,6 +68,18 @@ export default function MaterialCostInfo({
     { amount: totalUsage, unit: cost.quotient.unit }
   );
 
+  // When usage is measured in a consumption unit that isn't the stock
+  // unit, the figures above can't be compared to "Em estoque". Trail
+  // the stock-unit equivalent so both readings are on screen.
+  const stockEquivalent =
+    node.computedStockEquivalentTotal ?? node.computedStockEquivalentCost;
+  const scaledStockEquivalent =
+    stockEquivalent &&
+    converterModule.utils.formatScaledResult(
+      converter?.state,
+      stockEquivalent.quotient
+    );
+
   return (
     <>
       {scaledCost.amount.toFixed(3)} {scaledCost.abbreviation} / {dividendAbbreviation}
@@ -78,6 +90,14 @@ export default function MaterialCostInfo({
           {scaledTotal.amount.toFixed(3)} {scaledTotal.abbreviation} ({totalGarments}{" "}
           {dividendAbbreviation})
         </>
+      )}
+      {scaledStockEquivalent && (
+        <span data-testid="material-cost-stock-equivalent">
+          {" ≈ "}
+          {scaledStockEquivalent.amount.toFixed(3)}{" "}
+          {scaledStockEquivalent.abbreviation}
+          {node.computedStockEquivalentTotal ? " em estoque" : " em estoque / un"}
+        </span>
       )}
     </>
   );

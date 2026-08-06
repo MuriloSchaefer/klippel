@@ -82,6 +82,7 @@ const MaterialTypesSection: React.FC = () => {
   const [principal, setPrincipal] = useState("nome");
   const [extra, setExtra] = useState("cor");
   const [stockUnit, setStockUnit] = useState("");
+  const [consumptionUnit, setConsumptionUnit] = useState("");
   const [attrs, setAttrs] = useState<AttrRow[]>([
     { rowId: "attr-row-default-1", name: "nome", kind: "string" },
   ]);
@@ -92,6 +93,7 @@ const MaterialTypesSection: React.FC = () => {
     setPrincipal("nome");
     setExtra("cor");
     setStockUnit("");
+    setConsumptionUnit("");
     setAttrs([{ rowId: "attr-row-default-1", name: "nome", kind: "string" }]);
   }, []);
 
@@ -130,6 +132,7 @@ const MaterialTypesSection: React.FC = () => {
       attributes,
       selector: { principal, extra },
       stockUnit: stockUnit || undefined,
+      consumptionUnit: consumptionUnit || undefined,
     };
     const predecessor = materialTypes?.[trimmed]?.latestSchema;
     dispatch(
@@ -148,6 +151,7 @@ const MaterialTypesSection: React.FC = () => {
     principal,
     extra,
     stockUnit,
+    consumptionUnit,
     attrs,
     materialTypes,
     reset,
@@ -218,6 +222,24 @@ const MaterialTypesSection: React.FC = () => {
               onChange={(e) => setStockUnit(String(e.target.value))}
             />
           </Box>
+          {/*
+            Target unit for usage calculations. Left blank, Composer
+            converts consumption into the stock unit — the behaviour
+            that predates this field.
+          */}
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Typography variant="caption" sx={{ minWidth: 110 }}>
+              Unidade de consumo
+            </Typography>
+            <UnitSelector
+              data-testid="add-material-type-consumption-unit"
+              value={consumptionUnit}
+              onChange={(e) => setConsumptionUnit(String(e.target.value))}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            Em branco: usa a unidade de estoque.
+          </Typography>
 
           <Box
             sx={{

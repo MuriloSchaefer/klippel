@@ -36,3 +36,19 @@ export const readMaterialCostInfoText = async (
   await page.waitForSelector(sel);
   return page.$eval(sel, (el) => (el as HTMLElement).innerText);
 };
+
+/**
+ * Wait until the material row reports usage in `unitId` — the unit the
+ * computation middleware converted every CONSUMES edge into. Waiting on
+ * the `data-cost-unit` mirror rather than the rendered text absorbs the
+ * middleware's debounce without a sleep.
+ */
+export const waitForMaterialCostUnit = async (
+  page: Page,
+  label: string,
+  unitId: string,
+): Promise<void> => {
+  await page.waitForSelector(
+    `${rowSelector(label)} [data-testid="${MATERIAL_COST_INFO_TESTID}"][data-cost-unit="${unitId}"]`,
+  );
+};

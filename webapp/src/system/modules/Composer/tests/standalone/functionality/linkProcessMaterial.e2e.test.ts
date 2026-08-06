@@ -39,8 +39,18 @@ import { openModelTool } from '@system/modules/Composer/mcpTools/openModel';
 import { switchRibbonTabTool } from '@kernel/modules/Layout/mcpTools/switchRibbonTab';
 import {
   readMaterialCostInfoText,
+  waitForMaterialCostUnit,
 } from '@system/modules/Composer/components/viewports/MaterialListAccordion/components/drivers/ShowMaterial.click.puppeteer';
 import { expandAccordion } from '@kernel/modules/Layout/components/Panels/drivers/Accordion.click.puppeteer';
+import { updateMaterialTypeTool } from '@system/modules/Materials/mcpTools/updateMaterialType';
+
+/**
+ * Fixture facts (`public/materials/materials.xlsx`): material id 1 is a
+ * `malha` stocked in `kilogramas6`, and the `malha` type at 0.0.1
+ * declares no consumption unit — so usage falls back to the stock unit.
+ */
+const MALHA_STOCK_UNIT = 'kilogramas6';
+const METRES = 'metros5';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
@@ -97,6 +107,43 @@ describe('linkProcessMaterial via click (E2E)', () => {
     await deleteProcessTool.execute({ label: processLabel });
     await deleteMaterialTool.execute({ label: materialLabel });
   }, 45_000);
+});
+
+describe('material type consumption unit (E2E)', () => {
+  it('targets the type consumption unit instead of the stock unit', async () => {
+    const materialLabel = `mat-cu-${uniqueSuffix()}`;
+    const processLabel = `pr-cu-${uniqueSuffix()}`;
+
+    await addMaterialTool.execute({
+      label: materialLabel,
+      type: 'malha',
+      materialId: 1,
+    });
+    await addProcessTool.execute({ name: processLabel });
+    await linkProcessMaterialTool.execute({ processLabel, materialLabel });
+
+    // Baseline: no consumption unit declared, so usage lands in the
+    // material's stock unit.
+    await expandAccordion(page!, 'Materiais');
+    await waitForMaterialCostUnit(page!, materialLabel, MALHA_STOCK_UNIT);
+
+    // Declare one on the type. It is a type-level preference read from
+    // the latest schema, so the already-linked material — pinned to
+    // 0.0.1 — must pick it up without being re-saved.
+    await switchRibbonTabTool.execute({ label: 'Materiais' });
+    await updateMaterialTypeTool.execute({
+      typeName: 'malha',
+      version: '0.0.2',
+      consumptionUnit: METRES,
+    });
+    await switchRibbonTabTool.execute({ label: 'Compositor' });
+
+    await expandAccordion(page!, 'Materiais');
+    await waitForMaterialCostUnit(page!, materialLabel, METRES);
+
+    await deleteProcessTool.execute({ label: processLabel }).catch(() => {});
+    await deleteMaterialTool.execute({ label: materialLabel }).catch(() => {});
+  }, 90_000);
 });
 
 describe('linkProcessMaterial via shortcut (E2E)', () => {

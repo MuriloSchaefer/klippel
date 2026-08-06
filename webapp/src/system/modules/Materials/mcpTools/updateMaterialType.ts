@@ -26,7 +26,7 @@ const ATTR_KINDS = [
 export const updateMaterialTypeTool = {
   name: "updateMaterialType",
   description:
-    "Register a new version of an existing material type through the real UI (click to open 'Editar tipo de material', pick the type, edit, confirm). Supply {typeName} and the fields to change: {version} (the new successor version), {principal}/{extra}, {stockUnit}, and the full {attributes} list (it replaces the current set).",
+    "Register a new version of an existing material type through the real UI (click to open 'Editar tipo de material', pick the type, edit, confirm). Supply {typeName} and the fields to change: {version} (the new successor version), {principal}/{extra}, {stockUnit}, {consumptionUnit}, and the full {attributes} list (it replaces the current set).",
   inputSchema: {
     typeName: z
       .string()
@@ -38,6 +38,12 @@ export const updateMaterialTypeTool = {
     principal: z.string().optional().describe("Principal selector attribute."),
     extra: z.string().optional().describe("Extra selector attribute."),
     stockUnit: z.string().optional().describe("Stock unit code."),
+    consumptionUnit: z
+      .string()
+      .optional()
+      .describe(
+        "Target unit code for usage calculations; falls back to the stock unit when unset.",
+      ),
     attributes: z
       .array(
         z.object({
@@ -54,6 +60,7 @@ export const updateMaterialTypeTool = {
     principal?: string;
     extra?: string;
     stockUnit?: string;
+    consumptionUnit?: string;
     attributes?: Array<{ name: string; kind: (typeof ATTR_KINDS)[number] }>;
   }) {
     const page = await getPage();

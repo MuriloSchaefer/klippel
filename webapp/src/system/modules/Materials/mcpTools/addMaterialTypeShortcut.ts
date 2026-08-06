@@ -47,6 +47,12 @@ export const addMaterialTypeShortcutTool = {
       .string()
       .optional()
       .describe("Stock unit code; empty/omitted leaves it unset."),
+    consumptionUnit: z
+      .string()
+      .optional()
+      .describe(
+        "Target unit code for usage calculations; empty/omitted falls back to the stock unit.",
+      ),
     attributes: z
       .array(
         z.object({
@@ -63,6 +69,7 @@ export const addMaterialTypeShortcutTool = {
     principal?: string;
     extra?: string;
     stockUnit?: string;
+    consumptionUnit?: string;
     attributes?: Array<{ name: string; kind: (typeof ATTR_KINDS)[number] }>;
   }) {
     const page = await getPage();

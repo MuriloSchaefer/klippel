@@ -17,6 +17,17 @@ export interface MaterialTypeSchema {
      * the user can still set it manually.
      */
     stockUnit?: string
+    /**
+     * Target unit (`UnitNode.id` from the conversion graph) for usage
+     * calculations on materials of this type — what Composer converts
+     * every `CONSUMES` edge into when computing usage per unit. Stock
+     * is measured in what the material is bought/stored in (kg of
+     * malha); consumption is often naturally expressed in something
+     * else (metres per garment). Optional: when absent, consumers fall
+     * back to `stockUnit` / the material's `stock.unit`, which is the
+     * behaviour that predates this field.
+     */
+    consumptionUnit?: string
 }
 export interface SchemaMap {
     [version: string]: MaterialTypeSchema

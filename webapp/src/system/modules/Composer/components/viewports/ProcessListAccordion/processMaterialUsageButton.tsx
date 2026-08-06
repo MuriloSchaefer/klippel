@@ -37,6 +37,7 @@ import { debounce } from "@kernel/utils";
 
 import type { IMaterialsModule } from "@system/modules/Materials";
 import type { MaterialState } from "@system/modules/Materials/store/materials/state";
+import { resolveTypeSchema } from "@system/modules/Materials/store/materialTypes/resolveTypeSchema";
 import {
   ConsumesEdge,
   GraduationNode,
@@ -267,6 +268,15 @@ const ConsumesEdgeRow = React.memo(function ConsumesEdgeRow({
 // ProcessMaterialUsageButton
 // ---------------------------------------------------------------------------
 
+/**
+ * Last-resort seed for a new consumption row, used when the selected
+ * material's type declares neither a consumption nor a stock unit.
+ */
+const defaultConsumption = (): CompoundValue => ({
+  quotient: { amount: 1, unit: "kilogramas6" },
+  dividend: { amount: 1, unit: "unitario18" },
+});
+
 export default function ProcessMaterialUsageButton({
   variationId,
   processNodeId,
@@ -289,9 +299,10 @@ export default function ProcessMaterialUsageButton({
   const { MaterialSelector } = materialsModule.components;
   const { useAppSelector } = storeModule.hooks;
 
-  const { useMaterials } = materialsModule.hooks;
+  const { useMaterials, useMaterialTypes } = materialsModule.hooks;
 
   const materials = useMaterials();
+  const materialTypes = useMaterialTypes();
   const { actions } = useVariationActions({ variationId });
 
   const [newForm, setNewForm] = useState<{
@@ -299,10 +310,7 @@ export default function ProcessMaterialUsageButton({
     amount: CompoundValue;
   }>({
     materialNodeId: undefined,
-    amount: {
-      quotient: { amount: 1, unit: "kilogramas6" },
-      dividend: { amount: 1, unit: "unitario18" },
-    },
+    amount: defaultConsumption(),
   });
 
   // Fix 3: custom equality guards — only re-render when fields used in the UI change,
@@ -384,6 +392,34 @@ export default function ProcessMaterialUsageButton({
         })()
       : undefined;
 
+  // Unit the selected material's usage is measured in — the type
+  // schema's `consumptionUnit`, falling back to its stock unit. Seeding
+  // the form with it means the user types a number in the unit the
+  // result is reported in, instead of one that gets silently converted.
+  const selectedConsumptionUnit = useMemo(() => {
+    if (!selectedNodeMaterial) return undefined;
+    const schema = resolveTypeSchema(
+      materialTypes?.[selectedNodeMaterial.type],
+      selectedNodeMaterial.schemaVersion,
+    );
+    return schema?.consumptionUnit || selectedNodeMaterial.stock?.unit || undefined;
+  }, [selectedNodeMaterial, materialTypes]);
+
+  useEffect(() => {
+    if (!selectedConsumptionUnit) return;
+    setNewForm((curr) =>
+      curr.amount.quotient.unit === selectedConsumptionUnit
+        ? curr
+        : {
+            ...curr,
+            amount: {
+              ...curr.amount,
+              quotient: { ...curr.amount.quotient, unit: selectedConsumptionUnit },
+            },
+          },
+    );
+  }, [selectedConsumptionUnit]);
+
   const handleAddNewRecord = useCallback(() => {
     if (!newForm.materialNodeId)
       throw Error("Material nao encontrado no modelo. Adicione-o antes");
@@ -394,10 +430,7 @@ export default function ProcessMaterialUsageButton({
     );
     setNewForm({
       materialNodeId: undefined,
-      amount: {
-        quotient: { amount: 1, unit: "kilogramas6" },
-        dividend: { amount: 1, unit: "unitario18" },
-      },
+      amount: defaultConsumption(),
     });
   }, [newForm.materialNodeId, newForm.amount, processNodeId, actions]);
 

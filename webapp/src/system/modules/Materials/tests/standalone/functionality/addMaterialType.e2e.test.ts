@@ -71,6 +71,14 @@ const expectTypeListed = async (
   p: Page,
   typeName: string,
   latestSchema: string,
+  /**
+   * When given, also select the type and assert the Editar form
+   * prefills this consumption unit — the observable proof that
+   * `consumptionUnit` round-tripped into the registered schema.
+   * Pass `""` to assert the field came back blank (schema declares
+   * none, so usage falls back to the stock unit).
+   */
+  consumptionUnit?: string,
 ) => {
   await p.keyboard.press("Escape").catch(() => {});
   await p.click(UPDATE_MATERIAL_TYPE_TRIGGER);
@@ -79,7 +87,20 @@ const expectTypeListed = async (
   await p.waitForSelector(
     `ul[role="listbox"] li[role="option"][data-value="${typeName}"][data-latest-schema="${latestSchema}"]`,
   );
-  await p.keyboard.press("Escape"); // close the listbox
+
+  if (consumptionUnit === undefined) {
+    await p.keyboard.press("Escape"); // close the listbox
+  } else {
+    // Selecting the option prefills the form from the type's latest
+    // schema, so the mirror below reflects what was persisted.
+    await p.click(
+      `ul[role="listbox"] li[role="option"][data-value="${typeName}"]`,
+    );
+    await p.waitForSelector(
+      `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-consumption-unit"][data-unit="${consumptionUnit}"]`,
+    );
+  }
+
   await p.keyboard.press("Escape"); // close the panel
 };
 
@@ -104,6 +125,8 @@ beforeEach(async () => {
 describe("addMaterialType via click (E2E)", () => {
   const WORKSPACE = "e2e-add-material-type-click";
   const TYPE_NAME = `tipo-click-${Math.floor(Math.random() * 1e6)}`;
+  const TYPE_NAME_CONSUMPTION = `tipo-consumo-${Math.floor(Math.random() * 1e6)}`;
+  const TYPE_NAME_NO_CONSUMPTION = `tipo-sem-consumo-${Math.floor(Math.random() * 1e6)}`;
 
   beforeAll(async () => {
     await seedWorkspace(page!, WORKSPACE);
@@ -124,6 +147,33 @@ describe("addMaterialType via click (E2E)", () => {
     });
 
     await expectTypeListed(page!, TYPE_NAME, "0.0.1");
+  }, 90_000);
+
+  it("persists a consumption unit distinct from the stock unit", async () => {
+    await addMaterialTypeTool.execute({
+      name: TYPE_NAME_CONSUMPTION,
+      version: "0.0.1",
+      principal: "nome",
+      extra: "peso",
+      stockUnit: "kilogramas6",
+      consumptionUnit: "metros5",
+      attributes: [{ name: "nome", kind: "string" }],
+    });
+
+    await expectTypeListed(page!, TYPE_NAME_CONSUMPTION, "0.0.1", "metros5");
+  }, 90_000);
+
+  it("leaves the consumption unit blank when none is given", async () => {
+    await addMaterialTypeTool.execute({
+      name: TYPE_NAME_NO_CONSUMPTION,
+      version: "0.0.1",
+      principal: "nome",
+      extra: "peso",
+      stockUnit: "kilogramas6",
+      attributes: [{ name: "nome", kind: "string" }],
+    });
+
+    await expectTypeListed(page!, TYPE_NAME_NO_CONSUMPTION, "0.0.1", "");
   }, 90_000);
 });
 

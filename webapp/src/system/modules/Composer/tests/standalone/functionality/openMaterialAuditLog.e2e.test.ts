@@ -39,6 +39,8 @@ import { openGarmentDetailsTool } from '@system/modules/Composer/mcpTools/openGa
 import { createModelTool } from '@system/modules/Composer/mcpTools/createModel';
 import { openModelTool } from '@system/modules/Composer/mcpTools/openModel';
 import { switchRibbonTabTool } from '@kernel/modules/Layout/mcpTools/switchRibbonTab';
+import { updateMaterialTypeTool } from '@system/modules/Materials/mcpTools/updateMaterialType';
+import { waitForMaterialCostUnit } from '@system/modules/Composer/components/viewports/MaterialListAccordion/components/drivers/ShowMaterial.click.puppeteer';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
 
@@ -234,4 +236,59 @@ describe('openMaterialAuditLog via shortcut (E2E)', () => {
       await deleteGraduationShortcutTool.execute({ label: gradLarge }).catch(() => {});
     }
   }, 60_000);
+});
+
+/**
+ * Runs last: it registers a new `malha` schema version, and the
+ * consumption unit is read from the type's *latest* schema, so every
+ * material of that type in this workspace reports usage in metres from
+ * here on. Earlier describes assert on the raw edge amount, which this
+ * does not touch, but keeping it last avoids any ordering surprise.
+ */
+describe('material audit reports the consumption unit (E2E)', () => {
+  it('names the consumption unit as the conversion target', async () => {
+    const suffix = uniqueSuffix();
+    const materialLabel = `mat-cu-${suffix}`;
+    const processLabel = `pr-cu-${suffix}`;
+
+    try {
+      await addMaterialTool.execute({
+        label: materialLabel,
+        type: 'malha',
+        materialId: 1,
+      });
+      await addProcessTool.execute({ name: processLabel });
+      await linkProcessMaterialTool.execute({
+        processLabel,
+        materialLabel,
+        consumption: {
+          quotient: { amount: 3, unit: 'kilogramas6' },
+          dividend: { amount: 1, unit: 'unitario18' },
+        },
+      });
+
+      await switchRibbonTabTool.execute({ label: 'Materiais' });
+      await updateMaterialTypeTool.execute({
+        typeName: 'malha',
+        version: '0.0.2',
+        consumptionUnit: 'metros5',
+      });
+      await switchRibbonTabTool.execute({ label: 'Compositor' });
+
+      // The computation middleware is debounced — wait for the row's
+      // unit mirror to flip before reading the audit it feeds.
+      await waitForMaterialCostUnit(page!, materialLabel, 'metros5');
+
+      const result = await openMaterialAuditLogTool.execute({ materialLabel });
+      const payload = JSON.parse(result.content[0].text);
+      expect(payload.success).toBe(true);
+      // The audit only prints this line when the target differs from
+      // the stock unit — which is exactly the case under test.
+      expect(payload.auditText).toContain('Unidade de consumo');
+    } finally {
+      await closeOpenOverlays(page!);
+      await deleteProcessTool.execute({ label: processLabel }).catch(() => {});
+      await deleteMaterialTool.execute({ label: materialLabel }).catch(() => {});
+    }
+  }, 90_000);
 });

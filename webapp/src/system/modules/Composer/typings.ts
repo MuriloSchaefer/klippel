@@ -127,6 +127,25 @@ export type CostAudit = {
   computedAt: string;
   materialAttributes: AttributeAudit[];
   steps: ProcessStepAudit[];
+  /**
+   * Unit every `CONSUMES` edge was converted into — the material type
+   * schema's `consumptionUnit`, or the stock unit when the schema
+   * declares none. Optional for audits recorded before this field.
+   */
+  targetUnit?: string;
+  /**
+   * The same totals expressed in the stock unit, so usage stays
+   * comparable to what is physically in stock. Only present when the
+   * target unit differs from the stock unit. `error` is set (and the
+   * amounts absent/zero) when no conversion path exists — e.g. metres
+   * to kg on a material with no gramatura attribute.
+   */
+  stockEquivalent?: {
+    unit: string;
+    cost: number;
+    total?: number;
+    error?: string;
+  };
 };
 
 export type PlannedConversionStep = {
@@ -178,6 +197,13 @@ export type MaterialNode = Node & {
     typeRestrictions: string[];
     computedCost?: CompoundValue;
     computedTotal?: CompoundValue; // grade-aware aggregated total (Σ_g graduation.amount × consumption_g)
+    // `computedCost`/`computedTotal` expressed in the material's stock
+    // unit. Only set when the type schema declares a `consumptionUnit`
+    // that differs from the stock unit, and the conversion back
+    // succeeds — the comparison reads ("Em estoque" vs total usage)
+    // hang off these.
+    computedStockEquivalentCost?: CompoundValue;
+    computedStockEquivalentTotal?: CompoundValue;
     costAudit?: CostAudit;
 }
 

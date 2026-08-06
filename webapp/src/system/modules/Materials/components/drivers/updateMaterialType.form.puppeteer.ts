@@ -16,6 +16,7 @@ const VERSION_INPUT = `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-materi
 const PRINCIPAL_INPUT = `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-principal"] input`;
 const EXTRA_INPUT = `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-extra"] input`;
 const STOCK_UNIT_SELECTOR = `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-stock-unit"] [role="combobox"]`;
+const CONSUMPTION_UNIT_SELECTOR = `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-consumption-unit"] [role="combobox"]`;
 const ADD_ATTR_BTN = `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-attr-add"]`;
 const ATTR_NAME = (i: number) =>
   `${UPDATE_MATERIAL_TYPE_PANEL} [data-testid="update-material-type-attr-name-${i}"] input`;
@@ -43,6 +44,7 @@ export interface UpdateMaterialTypeInput {
   principal?: string;
   extra?: string;
   stockUnit?: string;
+  consumptionUnit?: string;
   attributes?: AttrInput[];
 }
 
@@ -77,6 +79,10 @@ export const fillUpdateMaterialTypeForm = async (
   if (input.stockUnit !== undefined) {
     await page.click(STOCK_UNIT_SELECTOR);
     await clickOptionByDataValue(page, input.stockUnit);
+  }
+  if (input.consumptionUnit !== undefined) {
+    await page.click(CONSUMPTION_UNIT_SELECTOR);
+    await clickOptionByDataValue(page, input.consumptionUnit);
   }
 
   if (input.attributes !== undefined) {

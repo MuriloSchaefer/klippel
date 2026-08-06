@@ -9,7 +9,19 @@ export const dfs = (
     graph: GraphSearch,
     currFindings: Node[],
     visitedNodes: Node[],
-    lastNode: string
+    lastNode: string,
+    /**
+     * The node that pushed `lastNode` onto the stack — its predecessor
+     * in the search tree, and the same one `path` is reconstructed
+     * from. `undefined` for the start node.
+     *
+     * Callers that need the edge leading into `lastNode` must use this
+     * rather than inferring the predecessor from `visitedNodes`: with a
+     * LIFO stack, the previously-visited node is the predecessor only
+     * when the branch happens to be explored first. Anything else
+     * silently rejects reachable nodes.
+     */
+    parentNode?: string
   ) => boolean,
   stopCriteria: (
     node: Node,
@@ -35,7 +47,7 @@ export const dfs = (
     lastNode = visiting
     const node = graph.nodes[visiting];
     visited.push(node);
-    const match = validate(node, graph, findings, visited, lastNode);
+    const match = validate(node, graph, findings, visited, lastNode, parentMap[visiting]);
     if (match) {
       findings.push(node);
 
