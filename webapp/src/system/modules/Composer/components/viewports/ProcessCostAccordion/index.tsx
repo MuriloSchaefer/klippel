@@ -1,94 +1,123 @@
-import React, { useMemo } from "react";
-import { Box, List, ListItem, Typography, useTheme } from "@mui/material";
+import React from "react";
+import { Box, Divider, List, ListItem, Typography, useTheme } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
-import { Store } from "@kernel/modules/Store";
-import { shallowEqual } from "react-redux";
 import { IConverterModule } from "@system/modules/Converter";
-import { ProcessNode } from "../../../typings";
+import useVariationUnitCost from "../../../hooks/useVariationUnitCost";
+import type { CostRow } from "../../../utils/variationUnitCost";
 
+/**
+ * Cost per produced unit: process labour, material consumption priced at each
+ * material's `preco`, and logo application. All three groups are listed with
+ * their own subtotal so the total is auditable — a garment quote that hides the
+ * fabric, or the embroidery, is not a quote.
+ */
 function ProcessCostAccordion({
   variationId,
 }: Readonly<{ variationId: string }>) {
   const theme = useTheme();
-  const storeModule = useModule<Store>("Store");
-  const { useAppSelector } = storeModule.hooks;
 
   const converterModule = useModule<IConverterModule>("Converter");
-  const converter = converterModule.hooks.useConverter();
   const useUnits = converterModule.hooks.useUnits;
-
-  const processNodes = useAppSelector(
-    (s: any): ProcessNode[] => {
-      const nodes = s.Graph?.graphs?.[variationId]?.nodes;
-      if (!nodes) return [];
-      return (Object.values(nodes) as any[]).filter(
-        (n) => n.type === "PROCESS",
-      ) as ProcessNode[];
-    },
-    shallowEqual,
-  );
 
   const units = useUnits(["reais11", "unitario18", "minutos249"] as string[]);
 
-  const perProcessAndTotal = useMemo(() => {
-    let totalMoneyPerUnit = 0;
-    const rows = processNodes.map((p) => {
-      let moneyPerUnit: number | undefined = undefined;
-      const minutesPerUnit = p.computedTimePerUnit?.amount;
-      try {
-        if (converter && p.costMoney) {
-          const perUnit = converter.convert(p.costMoney, {
-            quotient: "reais11",
-            dividend: "unitario18",
-          });
-          if (perUnit) {
-            if ("quotient" in perUnit) {
-              const q = perUnit.quotient.amount;
-              const d = perUnit.dividend.amount || 1;
-              moneyPerUnit = q / d;
-            } else if ("amount" in perUnit) {
-              moneyPerUnit = perUnit.amount;
-            }
-          }
-
-          if (moneyPerUnit === undefined && minutesPerUnit !== undefined) {
-            const perMinute = converter.convert(p.costMoney, {
-              quotient: "reais11",
-              dividend: "minutos249",
-            });
-            if (perMinute) {
-              if ("quotient" in perMinute) {
-                const q = perMinute.quotient.amount;
-                const d = perMinute.dividend.amount || 1;
-                moneyPerUnit = (q / d) * minutesPerUnit;
-              } else if ("amount" in perMinute) {
-                moneyPerUnit = perMinute.amount * minutesPerUnit;
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("money conversion failed", e);
-      }
-
-      if (moneyPerUnit) totalMoneyPerUnit += moneyPerUnit;
-
-      return { id: p.id, label: p.label, moneyPerUnit };
-    });
-
-    return { rows, totalMoneyPerUnit };
-  }, [processNodes, converter]);
+  // Shared with Orders, which snapshots the same total onto a budget line.
+  const cost = useVariationUnitCost(variationId);
 
   const moneyAbbr = units?.["reais11"]?.abbreviation || "R$";
   const unitAbbr = units?.["unitario18"]?.abbreviation || "un";
+
+  const money = (value: number) => `${value.toFixed(2)} ${moneyAbbr}`;
+
+  const renderRow = (kind: "process" | "material" | "logo") => (r: CostRow) => (
+    <ListItem
+      id={`${kind}-cost-accordion-item-${r.id}`}
+      data-testid={`${kind}-cost-row`}
+      data-cost-label={r.label}
+      data-cost-money={r.moneyPerUnit !== undefined ? r.moneyPerUnit.toFixed(2) : ""}
+      data-cost-disabled={r.disabledByElective ? "true" : undefined}
+      key={r.id}
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        p: 1,
+        // Struck through, not hidden: the step still belongs to the variation,
+        // it just is not being performed in this configuration.
+        opacity: r.disabledByElective ? 0.6 : 1,
+        textDecoration: r.disabledByElective ? "line-through" : "none",
+      }}
+      aria-label={`${
+        kind === "process" ? "Processo" : kind === "material" ? "Material" : "Logo"
+      } ${r.label}. Custo por unidade: ${
+        r.moneyPerUnit !== undefined ? money(r.moneyPerUnit) : "não definido"
+      }`}
+    >
+      <Box>
+        <Typography id={`${kind}-cost-accordion-item-label-${r.id}`}>
+          {r.label}
+        </Typography>
+        <Typography
+          id={`${kind}-cost-accordion-item-cost-${r.id}`}
+          variant="caption"
+          color={theme.palette.text.secondary}
+          aria-label={`Custo por unidade: ${
+            r.moneyPerUnit !== undefined
+              ? `${money(r.moneyPerUnit)} por ${unitAbbr}`
+              : "não definido"
+          }`}
+        >
+          {r.moneyPerUnit !== undefined ? (
+            <>
+              custo por unidade: {money(r.moneyPerUnit)} / {unitAbbr}
+            </>
+          ) : (
+            // Say *why* it is unpriced — "não definido" alone sends the user
+            // hunting through the material and the process alike.
+            `custo por unidade: não definido${
+              r.unpricedReason ? ` (${r.unpricedReason})` : ""
+            }`
+          )}
+        </Typography>
+      </Box>
+    </ListItem>
+  );
+
+  const subtotal = (
+    id: string,
+    label: string,
+    value: number,
+  ) => (
+    <ListItem
+      id={id}
+      data-testid={id}
+      data-cost-money={value.toFixed(2)}
+      sx={{ display: "flex", justifyContent: "space-between", p: 1 }}
+      aria-label={`${label}. Custo por unidade: ${money(value)}`}
+    >
+      <Typography variant="body2" color={theme.palette.text.secondary}>
+        {label}
+      </Typography>
+      <Typography variant="body2" color={theme.palette.text.secondary}>
+        {money(value)} / {unitAbbr}
+      </Typography>
+    </ListItem>
+  );
+
+  const isEmpty =
+    cost.rows.length === 0 &&
+    cost.materialRows.length === 0 &&
+    cost.logoRows.length === 0;
 
   return (
     <List
       sx={{ p: 0, mt: 2 }}
       id="process-cost-accordion"
-      aria-label="Lista de processos e custo"
+      data-cost-total={cost.totalMoneyPerUnit.toFixed(2)}
+      aria-label="Lista de processos, materiais, logos e custo"
     >
-      {perProcessAndTotal.rows.length === 0 ? (
+      {isEmpty ? (
         <ListItem
           id="process-cost-accordion-empty"
           aria-label="Nenhum processo foi adicionado à variação"
@@ -97,68 +126,75 @@ function ProcessCostAccordion({
             Nenhum processo adicionado
           </Typography>
         </ListItem>
-      ) : (
-        perProcessAndTotal.rows.map((r) => (
-          <ListItem
-            id={`process-cost-accordion-item-${r.id}`}
-            key={r.id}
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              flexDirection: "column",
-              p: 1,
-            }}
-            aria-label={`Processo ${r.label}. Custo por unidade: ${
-              r.moneyPerUnit !== undefined
-                ? `${r.moneyPerUnit.toFixed(2)} ${moneyAbbr}`
-                : "não definido"
-            }`}
-          >
-            <Box>
-              <Typography id={`process-cost-accordion-item-label-${r.id}`}>
-                {r.label}
-              </Typography>
-              <Typography
-                id={`process-cost-accordion-item-cost-${r.id}`}
-                variant="caption"
-                color={theme.palette.text.secondary}
-                aria-label={`Custo por unidade: ${
-                  r.moneyPerUnit !== undefined
-                    ? `${r.moneyPerUnit.toFixed(2)} ${moneyAbbr} por ${unitAbbr}`
-                    : "não definido"
-                }`}
-              >
-                {r.moneyPerUnit !== undefined ? (
-                  <>
-                    custo por unidade: {r.moneyPerUnit.toFixed(2)} {moneyAbbr} /{" "}
-                    {unitAbbr}
-                  </>
-                ) : (
-                  "custo por unidade: não definido"
-                )}
-              </Typography>
-            </Box>
+      ) : null}
+
+      {cost.rows.length > 0 ? (
+        <>
+          <ListItem sx={{ px: 1, pt: 1, pb: 0 }}>
+            <Typography variant="overline" color={theme.palette.text.secondary}>
+              Processos
+            </Typography>
           </ListItem>
-        ))
-      )}
-      {perProcessAndTotal.rows.length > 0 ? (
+          {cost.rows.map(renderRow("process"))}
+          {subtotal(
+            "process-cost-accordion-subtotal",
+            "Subtotal processos",
+            cost.processMoneyPerUnit,
+          )}
+        </>
+      ) : null}
+
+      {cost.materialRows.length > 0 ? (
+        <>
+          <Divider component="li" />
+          <ListItem sx={{ px: 1, pt: 1, pb: 0 }}>
+            <Typography variant="overline" color={theme.palette.text.secondary}>
+              Materiais
+            </Typography>
+          </ListItem>
+          {cost.materialRows.map(renderRow("material"))}
+          {subtotal(
+            "material-cost-accordion-subtotal",
+            "Subtotal materiais",
+            cost.materialMoneyPerUnit,
+          )}
+        </>
+      ) : null}
+
+      {cost.logoRows.length > 0 ? (
+        <>
+          <Divider component="li" />
+          <ListItem sx={{ px: 1, pt: 1, pb: 0 }}>
+            <Typography variant="overline" color={theme.palette.text.secondary}>
+              Logos
+            </Typography>
+          </ListItem>
+          {cost.logoRows.map(renderRow("logo"))}
+          {subtotal(
+            "logo-cost-accordion-subtotal",
+            "Subtotal logos",
+            cost.logoMoneyPerUnit,
+          )}
+        </>
+      ) : null}
+
+      {!isEmpty ? (
         <ListItem
           id="process-cost-accordion-total"
           sx={{ display: "flex", justifyContent: "space-between", p: 1 }}
-          aria-label={`Total. Custo por unidade: ${perProcessAndTotal.totalMoneyPerUnit.toFixed(
-            2
-          )} ${moneyAbbr}`}
+          aria-label={`Total. Custo por unidade: ${money(
+            cost.totalMoneyPerUnit,
+          )}`}
         >
           <Typography sx={{ fontWeight: 600 }}>Total</Typography>
           <Typography
             id="process-cost-accordion-total-cost"
             sx={{ fontWeight: 600 }}
-            aria-label={`Custo total por unidade: ${perProcessAndTotal.totalMoneyPerUnit.toFixed(
-              2
-            )} ${moneyAbbr} por ${unitAbbr}`}
+            aria-label={`Custo total por unidade: ${money(
+              cost.totalMoneyPerUnit,
+            )} por ${unitAbbr}`}
           >
-            custo por unidade: {perProcessAndTotal.totalMoneyPerUnit.toFixed(2)}{" "}
-            {moneyAbbr} / {unitAbbr}
+            custo por unidade: {money(cost.totalMoneyPerUnit)} / {unitAbbr}
           </Typography>
         </ListItem>
       ) : null}

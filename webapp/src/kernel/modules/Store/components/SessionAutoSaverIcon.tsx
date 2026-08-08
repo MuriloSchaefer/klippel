@@ -24,30 +24,49 @@ function SessionAutoSaverIcon({ interval }: Readonly<{ interval?: number }>) {
     setAnchorEl(event.currentTarget);
     setShowPopover((v) => !v);
   };
+  // Set, don't toggle: `onClose` and the ClickAwayListener can both fire for
+  // one dismissal, and two toggles would reopen the popover.
   const handleClose = () => {
     setAnchorEl(null);
-    setShowPopover((v) => !v);
+    setShowPopover(false);
   };
 
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const [showPopover, setShowPopover] = useState(false);
+  // Surfaced as `data-session-saved-at` so a caller (and e2e) can tell that the
+  // snapshot finished landing on disk, not merely that the click happened.
+  const [savedAt, setSavedAt] = useState<number | undefined>();
+  const [saving, setSaving] = useState(false);
   return (
     <>
-      <IconButton size="small" component="span" onClick={handleClick}>
+      <IconButton
+        size="small"
+        component="span"
+        aria-label="session-autosaver"
+        data-testid="session-autosaver"
+        onClick={handleClick}
+      >
         <SaveSharpIcon color="primary" />
       </IconButton>
 
       <Popover
         open={showPopover}
         anchorEl={anchorEl}
+        // Without this the popover could not be dismissed with Escape at all.
+        onClose={handleClose}
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "left",
         }}
       >
         <ClickAwayListener onClickAway={handleClose}>
-          <Box sx={{ padding: 5, alignContent: "center" }}>
+          <Box
+            data-testid="session-autosaver-panel"
+            data-session-saved-at={savedAt}
+            data-session-saving={saving}
+            sx={{ padding: 5, alignContent: "center" }}
+          >
             {interval ? (
               <Typography>
                 Salvamento de sessão automático a cada{" "}
@@ -62,9 +81,22 @@ function SessionAutoSaverIcon({ interval }: Readonly<{ interval?: number }>) {
               <ListItem
                 sx={{ display: "flex", gap: 3, justifyContent: "center" }}
               >
-                <Button color="primary" onClick={()=>{
-                  storage.saveSession()
-                }}>
+                <Button
+                  color="primary"
+                  id="save-session-now"
+                  data-testid="save-session-now"
+                  aria-label="save-session-now"
+                  disabled={saving}
+                  onClick={async () => {
+                    setSaving(true);
+                    try {
+                      await storage.saveSession();
+                      setSavedAt(Date.now());
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
                   Salvar agora
                 </Button>
                 <Button

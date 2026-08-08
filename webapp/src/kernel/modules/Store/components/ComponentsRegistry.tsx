@@ -29,11 +29,21 @@ export const ComponentsRegistryProvider = ({
       [currentRegistries]
     );
   
+    // All mutators go through functional updates: two calls in the same tick
+    // (e.g. a module creating a registry and then filling it in one
+    // `startModule`) would otherwise both compute from the same stale
+    // `currentRegistries`, and the second would silently undo the first.
     function createRegistry(name: string) {
-      setRegistries({ ...currentRegistries, [name]: {} });
+      setRegistries((curr) => (name in curr ? curr : { ...curr, [name]: {} }));
     }
     function createRegistries(registries: ComponentRegistries) {
-      setRegistries({ ...currentRegistries, ...registries });
+      setRegistries((curr) =>
+        Object.entries(registries).reduce(
+          (acc, [name, components]) =>
+            name in acc ? acc : { ...acc, [name]: components },
+          curr
+        )
+      );
     }
     function getComponent<T = any>(
       registryName: string,
@@ -49,13 +59,18 @@ export const ComponentsRegistryProvider = ({
     function registerComponents<T = any>(
       components: {[registry: string]: {[name: string]: ComponentType<T>}}
     ) {
-      const curr = currentRegistries
-      const newValues = Object.entries(components).reduce((curr, [registry, comp]) => {
-        if (registry in curr) return {...curr, [registry]: {...curr[registry], ...comp}}
-        return curr 
-      }, curr)
-
-      setRegistries(newValues);
+      setRegistries((curr) =>
+        Object.entries(components).reduce(
+          // Create the registry when it does not exist yet. Dropping the write
+          // silently (the previous behaviour) made a registration that ran
+          // before its `createRegistry` disappear with no error.
+          (acc, [registry, comp]) => ({
+            ...acc,
+            [registry]: { ...(acc[registry] ?? {}), ...comp },
+          }),
+          curr
+        )
+      );
     }
   
     return (

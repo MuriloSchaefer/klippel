@@ -10,6 +10,10 @@ import { ProcessNode } from "../../../typings";
 import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 import { snapCostTime } from "../../../utils/snapCostTime";
+import {
+  COST_TIME_REQUIRED_MESSAGE,
+  hasValidCostTime,
+} from "../../../utils/processCostTime";
 
 export default function ProcessEditButton({
   variationId,
@@ -65,7 +69,16 @@ export default function ProcessEditButton({
             sx={{ width: "100%", flexGrow: 1 }}
           />
           <Box data-testid="edit-process-cost-time">
-            <Typography>Tempo necessário</Typography>
+            <Typography>Tempo necessário *</Typography>
+            {!hasValidCostTime(form.costTime) && (
+              <Typography
+                data-testid="edit-process-cost-time-error"
+                variant="caption"
+                color="error"
+              >
+                {COST_TIME_REQUIRED_MESSAGE}
+              </Typography>
+            )}
             <CompoundSelector
               filterDividends={(u, s) =>
                 u.id === "unitario18" || s?.id === "temporal247"
@@ -99,10 +112,11 @@ export default function ProcessEditButton({
         <ConfirmAndCloseButton
           key="confirm"
           data-testid="edit-process-confirm"
-          disabled={!form.name.trim()}
+          disabled={!form.name.trim() || !hasValidCostTime(form.costTime)}
           handleConfirm={() => {
             if (!processNode.id) return;
-            if (!form.name.trim()) return;
+            // Time is required (see `hasValidCostTime`); money is not.
+            if (!form.name.trim() || !hasValidCostTime(form.costTime)) return;
             actions.updateProcess(processNode.id, {
               label: form.name.trim(),
               costTime: form.costTime,

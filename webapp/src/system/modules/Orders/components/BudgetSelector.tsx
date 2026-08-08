@@ -7,42 +7,49 @@ import Select, { SelectProps } from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
 
 import { listBudgets } from "../store/budgets/selectors";
-import { ILayoutModule } from "@kernel/modules/Layout";
+import { safeBudgetColor } from "../utils/color";
 
 export default function BudgetSelector(props: SelectProps<string>) {
   const storeModule = useModule<Store>("Store");
-  const layoutModule = useModule<ILayoutModule>("Layout");
   const { useAppSelector } = storeModule.hooks;
-  const { getViewportGroups } = layoutModule.store.selectors;
 
   const budgets = useAppSelector(listBudgets());
-  const vpGroups = useAppSelector(getViewportGroups);
+  const selected = budgets.find((budget) => budget.id === props.value);
 
   return (
     <Select
       {...props}
+      id={props.id ?? "budget-selector"}
+      data-testid="budget-selector"
+      // Mirrors on the Select root (where `data-testid` also lands) so e2e can
+      // wait on the *chosen* budget by name rather than reading the combobox's
+      // rendered text (e2e-tests.md §2). `inputProps` would put these on the
+      // hidden native input instead.
+      data-budget-value={selected?.label}
+      data-budget-count={budgets.length}
       sx={{ width: "200px", ...props.sx }}
       autoWidth
       inputProps={{ sx: { display: "flex", gap: 1 } }}
     >
-      {Object.values(budgets ?? {}).map((budget) => (
+      {budgets.map((budget) => (
         <MenuItem
           key={budget.id}
           value={budget.id}
+          data-testid={`budget-option-${budget.id}`}
+          data-budget-option-label={budget.label}
           sx={{ display: "flex", gap: 1 }}
         >
           <Box
             sx={{
               width: "20px",
               height: "20px",
-              backgroundColor: vpGroups[budget.viewportGroup].color,
+              // Read off the budget, not off the viewport group: the group's
+              // session JSON may not have rehydrated yet, and the old lookup
+              // threw when it hadn't.
+              backgroundColor: safeBudgetColor(budget.color),
             }}
           />
-          <Typography
-          // secondary={secondary ? "Secondary text" : null}
-          >
-            {budget.label}
-          </Typography>
+          <Typography>{budget.label}</Typography>
         </MenuItem>
       ))}
     </Select>

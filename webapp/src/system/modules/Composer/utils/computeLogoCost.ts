@@ -36,11 +36,18 @@ export function methodFactor(method: LogoMethod): number {
   return METHOD_FACTORS[method] ?? 1;
 }
 
-// Money cost as a CompoundValue (cost-per-piece). Units are descriptive labels
-// only — garment-total aggregation that would consume/convert them is a
-// separate future change, so the unit strings need not exist in the graph.
+// Money cost as a CompoundValue (cost-per-piece), in the conversion graph's
+// real unit ids rather than descriptive labels.
+//
+// These used to be `"BRL"` / `"un"`, with a note that the aggregation which
+// would consume them was "a separate future change". That change is here: the
+// variation cost total now sums logos alongside processes and materials, and
+// it can only do that if the units are the same ones everything else speaks.
 function moneyCost(amount: number): CompoundValue {
-  return { quotient: { unit: "BRL", amount }, dividend: { unit: "un", amount: 1 } };
+  return {
+    quotient: { unit: "reais11", amount },
+    dividend: { unit: "unitario18", amount: 1 },
+  };
 }
 
 // Normalise a UnitValue to `targetUnit` via the Converter, recording the step in

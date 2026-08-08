@@ -11,6 +11,7 @@ import {
   LOGO_LIST_CONTEXT_ID,
   ELECTIVE_LIST_CONTEXT_ID,
 } from "../../../constants";
+import SettingsPanelExtensions from "./SettingsPanelExtensions";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import CompositionTree from "../CompositionTree/CompositionTree";
@@ -49,6 +50,7 @@ function ModelViewport() {
   const vpManager = useViewportManager();
 
   const variationId = activeVP.extra.variationId as string;
+  const modelId = activeVP.extra.id as string;
 
   const view = useMemo(() => {
     switch (activeVP.extra.view) {
@@ -139,6 +141,10 @@ function ModelViewport() {
             >
               <ProcessCostAccordion variationId={variationId} />
             </Accordion>
+            <SettingsPanelExtensions
+              variationId={variationId}
+              modelId={modelId}
+            />
           </SettingsPanel>
 
           <DetailsPanel>

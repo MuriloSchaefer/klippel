@@ -230,7 +230,15 @@ export type ProcessNode = Node & {
     label: string;
     processId: string; // small hash id
     costMoney?: CompoundValue; // monetary cost as CompoundValue (use Converter CompoundValue)
-    costTime?: CompoundValue; // compound time value (quotient/dividend from Converter)
+    /**
+     * Compound time value (quotient/dividend from Converter). **Required** —
+     * every process takes time, and the whole time/cost chain depends on it:
+     * `computedTimePerUnit` is derived from it, and a process priced per minute
+     * cannot be converted to money without it.
+     *
+     * Money stays optional (a step can be unpriced), time does not.
+     */
+    costTime: CompoundValue;
     electiveNodeId?: string; // optional reference to an elective node - if set, process only applies when elective.value is true
     computedTimePerUnit?: { amount: number; unit: string };
     timeAudit?: ProcessTimeAudit;

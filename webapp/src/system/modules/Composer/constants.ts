@@ -6,6 +6,16 @@ export const MODULE_VERSION = '0.0.1'
 // sub-part electives are not yet designed.
 export const GARMENT_ROOT_ID = "garment";
 
+/**
+ * Component registry namespace for accordions other modules want to mount in
+ * the ModelViewport settings panel, after Composer's own ones. Composer cannot
+ * import those modules — they depend on Composer, not the other way round — so
+ * they register into this instead. Same shape as Layout's `systemTray`.
+ *
+ * Entries receive `{ variationId, modelId }` and own their `<Accordion>`.
+ */
+export const MODEL_VIEWPORT_SETTINGS_REGISTRY_NAME = "composerModelViewportSettings";
+
 export const MODEL_SELECTION_MODAL_CONTEXT_ID = `${MODULE_NAME}/ModelSelectionModal`;
 export const CONFIRM_MODEL_SELECTION_SHORTCUT_ID = `${MODEL_SELECTION_MODAL_CONTEXT_ID}/confirm`;
 

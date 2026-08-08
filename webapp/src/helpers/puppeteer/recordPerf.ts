@@ -22,8 +22,10 @@ const RESULTS_FILE = join(
 export type PerfRecord = {
   /** Surface under test, e.g. "cold-open", "list", "search", "convergence". */
   surface: string;
-  /** Material count tier. */
+  /** Cardinality tier — count of whatever `unit` names. */
   cardinality: number;
+  /** What `cardinality` counts. Defaults to "materials" for existing suites. */
+  unit?: string;
   /** Peer count (1 for standalone). */
   peers: number;
   /** What was measured, e.g. "ms". */
@@ -70,15 +72,16 @@ export const expectWithinBudget = (
   const within = record.value <= budget;
   const value = Math.round(record.value);
   // eslint-disable-next-line no-console
+  const unit = record.unit ?? "materials";
   console.log(
-    `[perf] ${record.surface} @ ${record.cardinality} materials / ` +
+    `[perf] ${record.surface} @ ${record.cardinality} ${unit} / ` +
       `${record.peers} peer(s): ${value}${record.metric} ` +
       `(budget ${budget}${record.metric}) — ${within ? "OK" : "OVER"}`,
   );
   if (!within) {
     throw new Error(
       `Perf budget exceeded for ${record.surface} @ ${record.cardinality} ` +
-        `materials / ${record.peers} peer(s): ${value}${record.metric} ` +
+        `${unit} / ${record.peers} peer(s): ${value}${record.metric} ` +
         `> ${budget}${record.metric}`,
     );
   }

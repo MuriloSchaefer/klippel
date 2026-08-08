@@ -28,6 +28,8 @@ This skill is a pointer + decision aid. The canon is the doc.
 - Folder: `<module>/tests/<scope>/performance/`. One file, one surface.
 - Inherits every e2e rule: no fixed timeouts, `data-*` mirrors for waits, `resetWorkspace`/`resetUIState` isolation.
 - Commit the **manifest + generator + content hash**, never the built workspace bytes.
+- **Know which surfaces actually touch disk.** For slices persisted as session JSON, `.session/` is written only by the whole-session save (§12) — so `create` / `add` / `delete` measure state + render, *not* I/O. Measure the save as its own surface, driven through the UI with `saveSessionViaUI`, and say in the file header which surfaces are I/O. A perf test that assumes a mutation persisted is measuring the wrong thing.
+- Out-of-band seeding (writing `.session/` files directly from node) is fixture construction and stays allowed — it belongs in `helpers/puppeteer/`, never in production code.
 - Generator (`generateMaterialsCatalog.ts`) is pure + PRNG-seeded and emits index-derived ids, planted probes, the index sidecar, and a realistic edge graph. No `page` dependency.
 - `seedSyntheticMaterials.ts` is the only seeding entry point a perf test calls; it asserts `seeded === true` and waits on the count mirror.
 

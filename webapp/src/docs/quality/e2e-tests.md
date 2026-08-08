@@ -142,6 +142,7 @@ Before opening a PR:
 - [ ] The MCP tool file imports drivers; it contains no inline browser callbacks.
 - [ ] If shortcut: the file does not import any `*.click.puppeteer.ts` driver.
 - [ ] Every new keyboard shortcut ships with a visible `ShortcutHint`.
+- [ ] Nothing in the production code path writes `.session/` outside the whole-session save (§12); a test needing persisted state saves via `saveSessionViaUI`.
 
 ---
 
@@ -186,7 +187,43 @@ A perf test must **derive** its target a priori, never scan the catalog to find 
 
 - `webapp/src/helpers/puppeteer/generateMaterialsCatalog.ts` — pure, PRNG-seeded `(opts) => SeedCatalogInput`. Emits index-derived ids, planted probes, the index sidecar, and a realistic `conformsTo` / `manufacturedBy` edge graph with representative blob/`composition` sizes. No `page` dependency.
 - `webapp/src/helpers/puppeteer/seedSyntheticMaterials.ts` — drives the tier-appropriate seed path, asserts `seeded === true`, and waits on the count mirror. This is the only seeding entry point a perf test calls.
-- Standalone tests: `catalogColdOpen` (S1), `listInteraction` (S2/S3). Collaborative: `catalogConvergence` (S6), parameterized over peer count.
+- `webapp/src/helpers/puppeteer/generateBudgetsCatalog.ts` — the same contract for budgets: pure, PRNG-seeded, index-derived ids (`budget-{seed}-{i}`, `Orçamento {i}`), a planted `__probe_budget__` / `__probe_item__` pair, and an index sidecar.
+- `webapp/src/helpers/puppeteer/seedSyntheticBudgets.ts` — budget seeding and teardown. Two paths, per §11.2: `seedBudgetsViaStore` (dispatch through the live store — this *is* the write surface, use up to `LIVE_DISPATCH_MAX`) and `seedBudgetsToDisk` (write the `.session/Orders/budgets/*.json` out of band, then rehydrate). Also `clearBudgets` for isolation and `waitForBudgetCountInStore` for the rehydrate wait.
+- Standalone tests: `catalogColdOpen` (S1), `listInteraction` (S2/S3), `budgetScale` (budget/item cardinality). Collaborative: `catalogConvergence` (S6), parameterized over peer count.
+
+### 11.6 Slices persisted as session JSON
+
+Redux slices that persist to `.session/<Module>/` (rather than through Jazz) get the tiering above with a few module-specific notes. Read §12 first — those slices only reach disk on a whole-session save, which changes what a "write surface" even is:
+
+- **Mutations are not I/O.** `create` / `add` / `delete` measure state + render. The disk surface is the session save; give it its own `it` and drive it through `saveSessionViaUI`.
+
+- **Measure the rehydrate path with `switchWorkspaceLive`, not `softResetWorkspace`.** The latter `rmSync`s the target workspace before switching, which deletes the very fixture the rehydrator is meant to read. `switchWorkspaceLive` dispatches the same `selectWorkspace` command and nothing else.
+- **The dispatch returns before async rehydrators finish**, and the surface completes with no viewport (and therefore no `data-*` mirror) mounted. This is a legitimate `waitForFunction` case under §3 — read the store via `__klippelStore__`.
+- **Isolation must clear the slice, not the viewport.** Workspace-wide state created by one `it` is still there for the next one even after `resetUIState`.
+
+---
+
+## 12. Session data is a point-in-time snapshot
+
+`.session/` is **not** a running log of state changes. It is a snapshot of the moment the user last saved, and the app must be able to be closed without saving and come back exactly as it was left at that save.
+
+This is a product rule, not a storage detail, and it constrains both production code and tests.
+
+### 12.1 Never write `.session/` outside a whole-session save
+
+- **Reducers must not persist.** A reducer that calls a `persist*` helper is both impure and a snapshot write. (Two real cases fixed under `2026-08-06-56f6e4`: the Layout `switchTheme` reducer and the budgets/groups slices.)
+- **Mutation middlewares must not persist.** `createX` / `updateX` / `deleteX` effects change Redux state and emit events; they do not touch disk. It is tempting to "persist immediately so nothing is lost" — that is exactly what breaks the guarantee, because it moves the snapshot to a moment the user never chose.
+- **The only writer is the module's `saveSession` path**, registered with `storage.registerSessionSaveListener`. A module whose state must survive a restart has to be on that list, or nothing is ever written.
+- **The save reconciles; it does not merely append.** Write every live entity *and prune the files of entities that no longer exist*. Without the prune, anything deleted since the last save reappears on the next rehydrate. See `Orders/store/session.ts` (`persistOrdersSession`) and `Layout/.../groups/slice.ts` (`pruneVPGroupFiles`).
+- **Session-save listeners may be async, and the save awaits them.** `storage.saveSession()` resolves only once every registered writer has settled, so callers can know the snapshot is on disk.
+
+### 12.2 Tests save the way a user does
+
+- A test that needs state on disk **saves it through the UI** — `saveSessionViaUI` from `kernel/modules/Store/components/drivers/SessionAutoSaver.click.puppeteer.ts`, which opens the system-tray saver and clicks "Salvar agora". Do not dispatch `saveSession`, and do not assume a mutation persisted itself.
+- Wait for the save to land on `[data-testid="session-autosaver-panel"][data-session-saved-at]`, not on the click. Reloading before that races the write.
+- **A reload without a save is a valid assertion**: "created but not saved leaves nothing on disk" is part of the contract and deserves a test, as does "deleted after save does not come back".
+- Out-of-band fixture seeding (writing `.session/` files directly from node to set up a large workspace) is still fine — that is building a fixture, not the app persisting itself. Keep it in `helpers/puppeteer/`, never in production code.
+- Perf suites must not treat mutations as write surfaces. Measure the session save as its own surface (`budget-session-save`), and say plainly in the header which surfaces touch disk.
 
 ---
 

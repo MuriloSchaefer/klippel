@@ -10,6 +10,7 @@ import {
   addToGroup,
   addedToGroup,
   removeFromGroup,
+  removedFromGroup,
   setExtrasViewport,
   ExtrasViewportSet,
   setViewportHasChanged,
@@ -68,8 +69,21 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: removeFromGroup,
   effect: async ({ payload }, listenerApi) => {
-    const { dispatch } = listenerApi;
-    dispatch(removeFromGroup(payload)); // dispatch event
+    const { dispatch, getOriginalState } = listenerApi;
+    // Was re-dispatching the *command*, which re-entered this listener until the
+    // stack blew. Emit the event instead, and read the group from the
+    // pre-reducer state — by now `group` has already been cleared.
+    const {
+      Layout: {
+        viewportManager: { viewports },
+      },
+    } = getOriginalState() as { Layout: LayoutState };
+    dispatch(
+      removedFromGroup({
+        viewportName: payload.viewportName,
+        groupName: viewports[payload.viewportName]?.group ?? "",
+      }),
+    ); // dispatch event
   },
 });
 

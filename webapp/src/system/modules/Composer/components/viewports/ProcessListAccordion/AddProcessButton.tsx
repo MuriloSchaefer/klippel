@@ -8,6 +8,10 @@ import { CompoundValue } from "@system/modules/Converter/typings";
 import { useVariationActions } from "../../../hooks/useVariationActions";
 import { MODULE_NAME } from "../../../constants";
 import { snapCostTime } from "../../../utils/snapCostTime";
+import {
+  COST_TIME_REQUIRED_MESSAGE,
+  hasValidCostTime,
+} from "../../../utils/processCostTime";
 
 export default function AddProcessButton({
   variationId,
@@ -71,7 +75,16 @@ export default function AddProcessButton({
             sx={{ width: "100%", flexGrow: 1 }}
           />
           <Box data-testid="add-process-cost-time">
-            <Typography>Tempo necessário</Typography>
+            <Typography>Tempo necessário *</Typography>
+            {!hasValidCostTime(form.costTime) && (
+              <Typography
+                data-testid="add-process-cost-time-error"
+                variant="caption"
+                color="error"
+              >
+                {COST_TIME_REQUIRED_MESSAGE}
+              </Typography>
+            )}
             <CompoundSelector
               filterDividends={(u, s) =>
                 u.id === "unitario18" || s?.id === "temporal247"
@@ -105,9 +118,10 @@ export default function AddProcessButton({
         <ConfirmAndCloseButton
           key="confirm"
           data-testid="add-process-confirm"
-          disabled={!form.name.trim()}
+          disabled={!form.name.trim() || !hasValidCostTime(form.costTime)}
           handleConfirm={() => {
-            if (!form.name.trim()) return;
+            // Time is required (see `hasValidCostTime`); money is not.
+            if (!form.name.trim() || !hasValidCostTime(form.costTime)) return;
             actions.addProcess(form);
             resetForm();
           }}

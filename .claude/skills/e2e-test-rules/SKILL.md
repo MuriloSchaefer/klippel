@@ -25,6 +25,7 @@ The full, normative rule set lives at [webapp/src/docs/quality/e2e-tests.md](../
 - Shortcut variants must not import any `*.click.puppeteer.ts` driver.
 - Every shortcut ships with a visible `ShortcutHint` (per project CLAUDE.md).
 - Prefer `:focus` / `:checked` / `[aria-*]` / `:not(:disabled)` selectors over `waitForFunction` polling DOM state.
+- **`.session/` is a point-in-time snapshot (§12).** Nothing writes it outside the whole-session save — not reducers, not mutation middlewares. A test that needs state on disk saves it *through the UI* with `saveSessionViaUI`, then waits on `[data-session-saved-at]`. Never dispatch `saveSession`, and never assume a mutation persisted itself.
 
 ## When to update the doc
 

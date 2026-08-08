@@ -15,6 +15,7 @@ import {
 import useModule from "@kernel/hooks/useModule";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { IConverterModule } from "@system/modules/Converter";
+import type { CompoundValue } from "@system/modules/Converter/typings";
 import { IMaterialsModule } from "@system/modules/Materials";
 import { Store } from "@kernel/modules/Store";
 import { shallowEqual } from "react-redux";
@@ -104,6 +105,26 @@ function ProcessItem({
   const materials = useMaterials();
   const materialTypes = useMaterialTypes();
 
+  /**
+   * Render a compound as "4 un / 1 min", tolerating what may legitimately be
+   * missing: a process can have no `costTime` or no `costMoney` (an unpriced
+   * step is a real state — the Custo accordion reports it as "não definido"),
+   * and a unit may not be in the conversion graph yet. This used to read
+   * `units![node.costTime!.quotient.unit].abbreviation`, whose non-null
+   * assertions undid the optional chaining one line above and crashed the whole
+   * process list on the first process without a cost.
+   */
+  const formatCompound = useCallback(
+    (value?: CompoundValue) => {
+      if (!value?.quotient || !value?.dividend) return "não definido";
+      const abbr = (unit: string) => units?.[unit]?.abbreviation ?? unit;
+      return `${value.quotient.amount} ${abbr(value.quotient.unit)} / ${
+        value.dividend.amount
+      } ${abbr(value.dividend.unit)}`;
+    },
+    [units],
+  );
+
   const [isFocused, setIsFocused] = useState(false);
   const rowRef = useRef<HTMLDivElement | null>(null);
   const refocusAfterEditRef = useRef(false);
@@ -173,20 +194,14 @@ function ProcessItem({
         <Box sx={{ display: "flex", gap: 2 }}>
           <Box sx={{ display: "flex", gap: 1 }}>
             <AccessTimeSharp />
-            <Typography>
-              {node.costTime?.quotient.amount}{" "}
-              {units![node.costTime!.quotient.unit].abbreviation} /
-              {node.costTime?.dividend.amount}{" "}
-              {units![node.costTime!.dividend.unit].abbreviation}
+            <Typography data-testid="process-item-time">
+              {formatCompound(node.costTime)}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 1 }}>
             <AttachMoneySharp />
-            <Typography>
-              {node.costMoney?.quotient.amount}{" "}
-              {units![node.costMoney!.quotient.unit].abbreviation} /
-              {node.costMoney?.dividend.amount}{" "}
-              {units![node.costMoney!.dividend.unit].abbreviation}
+            <Typography data-testid="process-item-money">
+              {formatCompound(node.costMoney)}
             </Typography>
           </Box>
         </Box>
@@ -228,12 +243,7 @@ function ProcessItem({
                           : extraAttr}
                         )
                       </Typography>
-                      <Typography>
-                        {mc.amount.quotient.amount}{" "}
-                        {units![mc.amount.quotient.unit].abbreviation} /
-                        {mc.amount.dividend.amount}{" "}
-                        {units![mc.amount.dividend.unit].abbreviation}
-                      </Typography>
+                      <Typography>{formatCompound(mc.amount)}</Typography>
                     </Box>
                   }
                 />

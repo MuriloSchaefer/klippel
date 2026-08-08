@@ -41,25 +41,26 @@ ipcRenderer.on("exists-error", (event, errMessage) => {
   console.error("Error checking path: " + errMessage);
 });
 
-const saveSessionListeners = new Set<() => void>();
+const saveSessionListeners = new Set<() => void | Promise<void>>();
+
+// Await every listener so a caller can tell when the snapshot is actually on
+// disk. Session data only ever moves here — individual mutations must not write
+// to `.session/`, or the snapshot stops representing a point in time.
+const runSaveSessionListeners = async () => {
+  await Promise.all(Array.from(saveSessionListeners, (listener) => listener()));
+};
+
 ipcRenderer.on("save-session", (event) => {
   console.debug("Trigger save session");
-  console.log(saveSessionListeners)
-  saveSessionListeners.forEach((listener) => {
-    listener();
-  });
+  void runSaveSessionListeners();
 });
 
 
 export default {
-  registerSessionSaveListener: (listener: () => void) => {
+  registerSessionSaveListener: (listener: () => void | Promise<void>) => {
     saveSessionListeners.add(listener);
   },
-  saveSession: ()=>{
-    saveSessionListeners.forEach((listener) => {
-      listener();
-    });
-  },
+  saveSession: runSaveSessionListeners,
   getAutoSaverInterval: async () => {
     return ipcRenderer.invoke('session-auto-saver-interval')
   },

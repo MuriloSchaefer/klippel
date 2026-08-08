@@ -21,6 +21,7 @@ import {
   LOGO_LIST_CONTEXT_ID,
   LOGO_PLACEMENTS_CONTEXT_ID,
   ANNOTATION_LIST_CONTEXT_ID,
+  MODEL_VIEWPORT_SETTINGS_REGISTRY_NAME,
 } from "./constants";
 import slice from "./store/slice";
 import ModelViewport from "./components/viewports/ModelViewport";
@@ -51,7 +52,12 @@ export function startModule({
         // Composer: React.memo(Composerviewport),
         // DebuggerViewport: DebuggerViewport
         ModelViewport: ModelViewport
-      }
+      },
+      // Opened empty for later-loading modules (Orders) to register into.
+      // `registerComponents` creates a missing registry, so no separate
+      // `createRegistries` call is needed — and must not be made: it would run
+      // in the same tick as this one.
+      [MODEL_VIEWPORT_SETTINGS_REGISTRY_NAME]: {},
   });
   ribbonMenuManager.functions.addNewTab({
     label: "Compositor",

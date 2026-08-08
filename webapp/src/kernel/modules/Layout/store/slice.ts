@@ -92,14 +92,15 @@ const slice = createSlice({
         ...state,
         theme: payload.theme,
       }));
+      // Pure: switching the theme changes state only. It used to call
+      // `persistTheme` here, writing `.session/Layout/theme.json` from inside a
+      // reducer on every toggle — both impure and a session write outside the
+      // whole-session save. The `localStorage` mirror it also did is already
+      // handled by the `switchTheme` effect in `store/middlewares.ts`, and the
+      // session file is written by the `saveSession` sweep.
       builder.addCase(
         switchTheme,
-        (state: LayoutState, { payload: { theme } }) => {
-          return {
-            ...state,
-            ...persistTheme({theme})
-          };
-        }
+        (state: LayoutState, { payload: { theme } }) => ({ ...state, theme }),
       )
         
       builder.addDefaultCase((state, action)=>({

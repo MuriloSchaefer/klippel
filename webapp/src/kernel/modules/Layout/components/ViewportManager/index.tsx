@@ -120,6 +120,9 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
                     value={vp.name}
                     key={`${vp.name}-tab`}
                     id={vp.name}
+                    // Every tab carries an accessible name, grouped or not —
+                    // the grouped branch appends its group label to this.
+                    aria-label={vp.title}
                     sx={{ width: "fit-content", p: 1 }}
                     onClick={(e: MouseEvent) => selectViewport(vp.name)}
                     label={
@@ -175,16 +178,24 @@ const ViewportManagerContent = ({ sx, ...props }: BoxProps) => {
               });
             return groupedViewports.map((vp) => {
               const vpIndex = allViewports.findIndex((v) => v.name === vp.name);
+              // A viewport can outlive its group (deleted budget, or session
+              // JSON that has not rehydrated yet). Render it as an ordinary
+              // ungrouped tab rather than throwing and taking the tab bar with it.
+              const group = vp.group ? groups[vp.group] : undefined;
               return (
                 <Tab
                   value={vp.name}
                   key={`${vp.name}-tab`}
                   id={vp.name}
+                  data-group={group?.name}
+                  aria-label={
+                    group?.label ? `${vp.title} — ${group.label}` : vp.title
+                  }
                   sx={{
                     width: "fit-content",
                     p: 1,
-                    borderTop: 2,
-                    borderColor: groups[vp.group!].color, // CHORE: remove ! mark
+                    borderTop: group ? 2 : 0,
+                    borderColor: group?.color,
                   }}
                   onClick={() => selectViewport(vp.name)}
                   label={

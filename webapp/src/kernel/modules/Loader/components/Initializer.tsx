@@ -14,6 +14,7 @@ import KeyboardShortcuts from "@kernel/modules/KeyboardShortcuts";
 import converterModule from "@system/modules/Converter";
 import materialsModule from "@system/modules/Materials";
 import composerModule from "@system/modules/Composer";
+import ordersModule from "@system/modules/Orders";
 
 import module from "..";
 import { GRAPH_NAME, MODULE_NAME } from "../constants";
@@ -78,7 +79,9 @@ const Initializer = ({
       [converterModule.name]: converterModule,
       [materialsModule.name]: materialsModule,
       [composerModule.name]: composerModule,
-      // [ordersModule.name]: ordersModule
+      // After Composer: Orders registers its accordion into the settings-panel
+      // registry Composer opens in its own startModule.
+      [ordersModule.name]: ordersModule,
     },
   };
 

@@ -4,8 +4,14 @@ import type { GlobOptions } from "glob";
 
 export type SessionStorageApi = {
   // listeners
-  registerSessionSaveListener: (listener: () => void) => void;
-  saveSession: () => void;
+  /**
+   * Register a whole-session writer. A listener may return a promise; the
+   * session save resolves only once every listener has settled, so callers can
+   * know the snapshot is fully on disk.
+   */
+  registerSessionSaveListener: (listener: () => void | Promise<void>) => void;
+  /** Run every registered writer. Resolves when the snapshot is on disk. */
+  saveSession: () => Promise<void>;
   getAutoSaverInterval: () => Promise<number | undefined>;
   pauseAutoSessionSaver: () => void;
   resumeAutoSessionSaver: (interval?: number) => void;

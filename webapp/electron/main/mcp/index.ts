@@ -21,7 +21,7 @@ import { toggleDetailsPanelShortcutTool } from '../../../src/kernel/modules/Layo
 import { expandAccordionTool } from '../../../src/kernel/modules/Layout/mcpTools/expandAccordion';
 import { registerMcpTools as registerComposerTools } from '../../../src/system/modules/Composer/mcpTools';
 import { registerMcpTools as registerMaterialsTools } from '../../../src/system/modules/Materials/mcpTools';
-import { createBudgetTool } from '../../../src/system/modules/Orders/mcpTools/createBudget';
+import { registerMcpTools as registerOrdersTools } from '../../../src/system/modules/Orders/mcpTools';
 
 export async function startMcpServer() {
   const server = new McpServer({ name: 'klippel', version: '1.0.0' });
@@ -54,7 +54,8 @@ export async function startMcpServer() {
   // Register Materials module tools
   registerMaterialsTools(server);
 
-  server.registerTool(createBudgetTool.name, { description: createBudgetTool.description, inputSchema: { label: z.string() } }, ({ label }) => createBudgetTool.execute({ label }));
+  // Register Orders module tools
+  registerOrdersTools(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

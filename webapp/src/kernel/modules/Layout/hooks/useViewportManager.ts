@@ -6,9 +6,9 @@ import { Manager } from "@kernel/modules/base"
 import { Store } from "@kernel/modules/Store"
 
 import {ViewportType} from '../components/ViewportManager/ViewportTypeProvider'
-import { addToGroup, addViewport, closeViewport, renameViewport, selectViewport, setExtrasViewport, setViewportHasChanged } from "../store/viewports/actions"
+import { addToGroup, addViewport, closeViewport, removeFromGroup, renameViewport, selectViewport, setExtrasViewport, setViewportHasChanged } from "../store/viewports/actions"
 import { VIEWPORT_TYPE_REGISTRY_NAME } from "../constants"
-import { createGroup } from "../store/viewports/groups/actions"
+import { createGroup, deleteGroup } from "../store/viewports/groups/actions"
 
 
 export interface ViewportManager extends Manager {
@@ -22,10 +22,15 @@ export interface ViewportManager extends Manager {
         setExtras(name: string, extras: any): void
         setHasChanged(name: string, hasChanged: boolean): void;
 
-        createGroup(name: string, color: string): void;
+        createGroup(name: string, color: string, label?: string): void;
         addToGroup(viewportName: string, groupName: string): void;
-        // removeFromGroup(viewportName: string): void;
-        // deleteGroup(name: string): void;
+        removeFromGroup(viewportName: string): void;
+        /**
+         * Drops the group itself. Deliberately does *not* clear `group` on its
+         * member viewports — callers sequence `removeFromGroup` per member
+         * first, so the two stay orthogonal.
+         */
+        deleteGroup(name: string): void;
     }
 }
 
@@ -72,11 +77,17 @@ export function useViewportManager():ViewportManager{
             },
 
 
-            createGroup(viewportName, color){
-                dispatch(createGroup({name: viewportName, color}))
+            createGroup(name, color, label){
+                dispatch(createGroup({name, color, label}))
             },
             addToGroup(viewportName, groupName){
                 dispatch(addToGroup({viewportName, groupName}))
+            },
+            removeFromGroup(viewportName){
+                dispatch(removeFromGroup({viewportName}))
+            },
+            deleteGroup(name){
+                dispatch(deleteGroup({name}))
             },
             setHasChanged(name, hasChanged){
                 dispatch(setViewportHasChanged({name, hasChanged}))
