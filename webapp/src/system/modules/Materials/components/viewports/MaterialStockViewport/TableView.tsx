@@ -12,6 +12,7 @@ import DeleteMaterialButton from "./DeleteMaterialButton";
 import UpdateMaterialButton from "./UpdateMaterialButton";
 import type { MaterialState } from "../../../store/materials/state";
 import { resolveTypeSchema } from "../../../store/materialTypes/resolveTypeSchema";
+import type { MaterialTypesState } from "../../../store/materialTypes/state";
 
 // Module-level so its identity never changes — an unstable `getRowId`
 // makes DataGrid rebuild its entire row-id map and re-render every row.
@@ -30,13 +31,41 @@ type ExtraPart = { text: string; swatch?: string };
 const HEX_RE = /^#?[0-9a-fA-F]{3,8}$/;
 const isHex = (v: unknown): v is string =>
   typeof v === "string" && HEX_RE.test(v);
-const extraParts = (attributes: unknown): ExtraPart[] => {
+/**
+ * Name of the attribute a type nominates as its `extra` selector — the one
+ * that distinguishes two rows of the same product (colour, size). It gets
+ * its own column, so it must not be repeated in the Extra chips.
+ *
+ * Deliberately resolves the **pinned** schema first, which is the opposite
+ * precedence to `resolveTypeSchema` (latest-wins). That helper answers a
+ * question about type-level *settings* — how the type is measured — where
+ * the newest preference should apply catalog-wide. This one answers which
+ * **attribute key to read off a specific material**, and a material's
+ * `attributes` conform to the version it pinned. If a successor schema
+ * renames the selector, older rows still carry the old key, so reading
+ * them through the latest schema would silently blank their colour.
+ */
+const selectorExtraKey = (
+  materialTypes: MaterialTypesState | undefined,
+  row: { type?: string; schemaVersion?: string },
+): string => {
+  const t = materialTypes?.[row.type ?? ""];
+  const pinned = row.schemaVersion ? t?.schemas?.[row.schemaVersion] : undefined;
+  const schema = pinned ?? resolveTypeSchema(t, row.schemaVersion);
+  return schema?.selector?.extra || "cor";
+};
+
+const extraParts = (
+  attributes: unknown,
+  excludeKey?: string,
+): ExtraPart[] => {
   const attrs = (attributes ?? {}) as Record<string, unknown>;
   const principal = attrs.nome ?? attrs.categoria;
   const parts: ExtraPart[] = [];
   for (const [k, v] of Object.entries(attrs)) {
     if (v === principal) continue;
     if (k === "nome") continue;
+    if (excludeKey && k === excludeKey) continue;
     if (v == null) continue;
     if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
       parts.push({ text: String(v) });
@@ -62,6 +91,9 @@ const extraParts = (attributes: unknown): ExtraPart[] => {
       }
     }
   }
+  // Swatches first: a colour is the fastest thing to scan for, and when the
+  // cell has to clip it must not be what falls off the edge.
+  parts.sort((a, b) => Number(Boolean(b.swatch)) - Number(Boolean(a.swatch)));
   return parts;
 };
 
@@ -131,13 +163,67 @@ const TableView: React.FC<Props> = ({ materials, onDelete }) => {
           row.attributes?.nome ?? row.attributes?.categoria ?? "",
       },
       {
+        field: "selectorExtra",
+        headerName: "Cor",
+        width: 150,
+        sortable: true,
+        valueGetter: (_value, row: any) => {
+          const v = row.attributes?.[selectorExtraKey(materialTypes, row)];
+          if (v && typeof v === "object") return (v as any).label ?? (v as any).hex ?? "";
+          return v == null ? "" : String(v);
+        },
+        renderCell: (params) => {
+          const row = params.row as any;
+          const v = row.attributes?.[selectorExtraKey(materialTypes, row)];
+          if (v == null) return null;
+          const o = (typeof v === "object" ? v : {}) as Record<string, unknown>;
+          const hex = isHex(o.hex)
+            ? String(o.hex).startsWith("#")
+              ? String(o.hex)
+              : `#${o.hex}`
+            : undefined;
+          const label =
+            typeof o.label === "string" && o.label
+              ? o.label
+              : hex ?? (typeof v === "object" ? "" : String(v));
+          if (!label && !hex) return null;
+          return (
+            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+              {hex && (
+                <Box
+                  component="span"
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 0.5,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    backgroundColor: hex,
+                    flex: "0 0 auto",
+                  }}
+                />
+              )}
+              <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {label}
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
         field: "extra",
         headerName: "Extra",
         flex: 1,
         sortable: false,
-        valueGetter: (_value, row: any) => extraParts(row.attributes).map((p) => p.text).join(" · "),
+        valueGetter: (_value, row: any) =>
+          extraParts(row.attributes, selectorExtraKey(materialTypes, row))
+            .map((p) => p.text)
+            .join(" · "),
         renderCell: (params) => {
-          const parts = extraParts((params.row as any).attributes);
+          const parts = extraParts(
+            (params.row as any).attributes,
+            selectorExtraKey(materialTypes, params.row as any),
+          );
           if (parts.length === 0) return null;
           return (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>

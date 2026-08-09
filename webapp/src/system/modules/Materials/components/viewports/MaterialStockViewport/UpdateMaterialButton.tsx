@@ -60,6 +60,8 @@ const UpdateMaterialButton: React.FC<{
   );
   const [industry, setIndustry] = useState(material.industry ?? "");
   const [externalId, setExternalId] = useState(material.externalId ?? "");
+  const [externalURL, setExternalURL] = useState(material.externalURL ?? "");
+  const [imageURL, setImageURL] = useState(material.imageURL ?? "");
   const [attrValues, setAttrValues] = useState<Record<string, unknown>>(
     () => ({ ...(material.attributes ?? {}) }),
   );
@@ -68,6 +70,8 @@ const UpdateMaterialButton: React.FC<{
     setStockAmount(String(material.stock?.amount ?? 0));
     setIndustry(material.industry ?? "");
     setExternalId(material.externalId ?? "");
+    setExternalURL(material.externalURL ?? "");
+    setImageURL(material.imageURL ?? "");
     setAttrValues({ ...(material.attributes ?? {}) });
   }, [material]);
 
@@ -87,6 +91,8 @@ const UpdateMaterialButton: React.FC<{
           },
           schemaVersion: material.schemaVersion,
           externalId: externalId.trim() || undefined,
+          externalURL: externalURL.trim() || undefined,
+          imageURL: imageURL.trim() || undefined,
           updatedAt: Date.now(),
         },
         // Industry edge: "" deletes it, a value sets it. `sellerIds` is
@@ -94,7 +100,17 @@ const UpdateMaterialButton: React.FC<{
         industryId: industry.trim(),
       }),
     );
-  }, [dispatch, id, attrValues, stockAmount, industry, externalId, material]);
+  }, [
+    dispatch,
+    id,
+    attrValues,
+    stockAmount,
+    industry,
+    externalId,
+    externalURL,
+    imageURL,
+    material,
+  ]);
 
   return (
     <PointerContainer
@@ -161,6 +177,44 @@ const UpdateMaterialButton: React.FC<{
               onChange={(e) => setExternalId(e.target.value)}
             />
           </FormControl>
+
+          <FormControl fullWidth size="small">
+            <TextField
+              data-testid={`update-material-external-url-${id}`}
+              label="Link do fornecedor"
+              size="small"
+              value={externalURL}
+              onChange={(e) => setExternalURL(e.target.value)}
+            />
+          </FormControl>
+
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Box
+              component="img"
+              data-testid={`update-material-image-preview-${id}`}
+              src={imageURL || undefined}
+              alt=""
+              sx={{
+                width: 40,
+                height: 40,
+                objectFit: "cover",
+                borderRadius: 0.5,
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "action.hover",
+                display: imageURL ? "block" : "none",
+              }}
+            />
+            <FormControl fullWidth size="small">
+              <TextField
+                data-testid={`update-material-image-url-${id}`}
+                label="Imagem (URL)"
+                size="small"
+                value={imageURL}
+                onChange={(e) => setImageURL(e.target.value)}
+              />
+            </FormControl>
+          </Box>
 
           <Box
             sx={{

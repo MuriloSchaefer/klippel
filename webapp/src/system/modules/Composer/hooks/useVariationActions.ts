@@ -50,71 +50,20 @@ import {
   dropGraduationFromEdge,
 } from "../utils/consumptionPerGrade";
 import { GraphState } from "@kernel/modules/Graphs/store/state";
+import {
+  buildLogoTransform,
+  clipPathMarkup,
+  logoClipId,
+  logoClipWrapId,
+  logoContainerId,
+  logoSymbolId,
+  placementContainerMarkup,
+  sourceDefsMarkup,
+} from "../utils/logoInjection";
 
 // --- Logo overlay helpers ----------------------------------------------------
 
 const shortHash = () => Math.random().toString(36).slice(2, 8);
-
-const logoSymbolId = (logoId: string) => `logo-sym-${logoId}`;
-const logoContainerId = (logoId: string, placementId: string) =>
-  `logo-${logoId}-${placementId}`;
-// Outer, untransformed wrapper that carries the clip-path. The clip is kept off
-// the transformed container because a `clipPathUnits="userSpaceOnUse"` clip is
-// resolved in the element's *post-transform* user space — so a clip on the
-// transformed <use> would push the (root-space) target geometry through the
-// placement transform and miss the logo entirely (the logo would vanish).
-const logoClipWrapId = (logoId: string, placementId: string) =>
-  `logo-clipwrap-${logoId}-${placementId}`;
-const logoClipId = (placementId: string) => `logo-clip-${placementId}`;
-
-const decodeBase64 = (data: string): string => {
-  try {
-    if (typeof atob !== "undefined") return atob(data);
-    return Buffer.from(data, "base64").toString("binary");
-  } catch {
-    return "";
-  }
-};
-
-// Proxy transform string. Rotation pivot (cx,cy) is appended by the manipulation
-// handles once a bbox is known; the initial form is enough to place the element.
-const buildLogoTransform = (t: LogoPlacement["transform"]): string =>
-  `translate(${t.x},${t.y}) rotate(${t.rotation}) scale(${t.scale})`;
-
-// defs markup for the logo source: the decoded (already-sanitized) SVG for svg
-// sources, or an <image> with a data-URL href for rasters. id is (re)applied at
-// mount by the editor, but set here too for clarity.
-const sourceDefsMarkup = (
-  logoId: string,
-  source: LogoSource,
-  doc: { mime: string; data: string },
-  size?: { width: UnitValue; height: UnitValue },
-): string => {
-  const id = logoSymbolId(logoId);
-  if (source.kind === "raster") {
-    // <image> needs explicit width/height to render; seed from the logo's
-    // physical size (user units). The placement transform scales from there.
-    const w = size?.width.amount || 100;
-    const h = size?.height.amount || 100;
-    return `<image id="${id}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" href="data:${doc.mime};base64,${doc.data}" />`;
-  }
-  const decoded = decodeBase64(doc.data);
-  return decoded || `<g id="${id}"></g>`;
-};
-
-const placementContainerMarkup = (
-  logoId: string,
-  source: LogoSource,
-  placementId: string,
-): string => {
-  const ref = logoSymbolId(logoId);
-  const wrapId = logoClipWrapId(logoId, placementId);
-  const id = logoContainerId(logoId, placementId);
-  // Outer <g> (wrapId) holds the clip-path and stays untransformed; the inner
-  // <use> (id) carries the placement transform. The editor stamps the fragment
-  // root (the <g>) with the injection id, so wrapId is the injection key.
-  return `<g id="${wrapId}"><use id="${id}" href="#${ref}" xlink:href="#${ref}" /></g>`;
-};
 
 /**
  * Scale that makes a fresh placement land at the same on-screen size as the
@@ -146,8 +95,45 @@ const previewParityScale = (
   return mainCopy.width / (intrinsicWidth * pxPerUnit);
 };
 
-const clipPathMarkup = (placementId: string, clipTargetId: string): string =>
-  `<clipPath id="${logoClipId(placementId)}" clipPathUnits="userSpaceOnUse"><use href="#${clipTargetId}" xlink:href="#${clipTargetId}" /></clipPath>`;
+/**
+ * Re-express a placement's translate so anchoring it does not move it.
+ *
+ * Clipping mounts the placement next to its clip target, which usually means a
+ * different parent — and a parent carries its own transform. Catalog artwork is
+ * full of them (Inkscape wraps whole drawings in groups like
+ * `translate(-12098,-6096)`), so a translate authored against the old parent is
+ * read in a coordinate system thousands of units away: the logo leaves the
+ * artboard, and with it the clip region, which reads as the placement vanishing
+ * the instant it is clipped.
+ *
+ * Returns the same point mapped through `oldParent → newParent`, so the logo
+ * stays where the user put it. Falls back to the original when the matrices are
+ * unavailable (element not mounted) — worst case is the previous behaviour.
+ */
+const translateForNewParent = (
+  wrapId: string,
+  clipTargetId: string,
+  t: LogoPlacement["transform"],
+): { x: number; y: number } => {
+  if (typeof document === "undefined") return { x: t.x, y: t.y };
+  const wrap = document.getElementById(wrapId);
+  const target = document.getElementById(clipTargetId) as SVGGraphicsElement | null;
+  const oldParent = wrap?.parentNode as SVGGraphicsElement | null;
+  const newParent = target?.parentNode as SVGGraphicsElement | null;
+  if (!oldParent?.getScreenCTM || !newParent?.getScreenCTM) {
+    return { x: t.x, y: t.y };
+  }
+  if (oldParent === newParent) return { x: t.x, y: t.y };
+  const from = oldParent.getScreenCTM();
+  const to = newParent.getScreenCTM();
+  const ownerSVG = target?.ownerSVGElement;
+  if (!from || !to || !ownerSVG) return { x: t.x, y: t.y };
+  const point = ownerSVG.createSVGPoint();
+  point.x = t.x;
+  point.y = t.y;
+  const mapped = point.matrixTransform(to.inverse().multiply(from));
+  return { x: mapped.x, y: mapped.y };
+};
 
 // --- Annotation helpers ------------------------------------------------------
 
@@ -1230,11 +1216,7 @@ export function useVariationActions({ variationId }: { variationId: string }) {
                   // below targets the inner <use> by logoContainerId.
                   id: logoClipWrapId(curr.logoId, placementId),
                   mount: "container",
-                  markup: placementContainerMarkup(
-                    curr.logoId,
-                    curr.source,
-                    placementId,
-                  ),
+                  markup: placementContainerMarkup(curr.logoId, placementId),
                   order: curr.placements.length,
                 },
               }),
@@ -1370,6 +1352,19 @@ export function useVariationActions({ variationId }: { variationId: string }) {
           if (!g) return;
           const curr = g.nodes[nodeId] as LogoNode | undefined;
           if (!curr || curr.type !== "LOGO") return;
+          const placement = curr.placements.find(
+            (p) => p.placementId === placementId,
+          );
+          const wrapId = logoClipWrapId(curr.logoId, placementId);
+          // Measured before anything is dispatched — the compensation needs the
+          // placement's *current* parent, which the anchor below replaces.
+          const moved = placement
+            ? translateForNewParent(wrapId, clipTargetId, placement.transform)
+            : undefined;
+          const transform =
+            placement && moved
+              ? { ...placement.transform, x: moved.x, y: moved.y }
+              : placement?.transform;
           dispatch(
             updateNodeAction({
               graphId: variationId,
@@ -1377,13 +1372,25 @@ export function useVariationActions({ variationId }: { variationId: string }) {
               changes: {
                 ...curr,
                 placements: curr.placements.map((p) =>
-                  p.placementId === placementId ? { ...p, clipTargetId } : p,
+                  p.placementId === placementId
+                    ? { ...p, clipTargetId, ...(transform ? { transform } : {}) }
+                    : p,
                 ),
               },
             }),
           );
           const svgPath = getSvgPath();
           if (svgPath) {
+            if (transform) {
+              dispatch(
+                updateProxyAction({
+                  path: svgPath,
+                  instanceName: variationId,
+                  id: logoContainerId(curr.logoId, placementId),
+                  changes: { transform: buildLogoTransform(transform) } as any,
+                }),
+              );
+            }
             dispatch(
               addInjectedElementAction({
                 path: svgPath,

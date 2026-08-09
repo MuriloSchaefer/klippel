@@ -7,6 +7,7 @@ import { debounce } from "@kernel/utils";
 import { zoomIdentity, zoomTransform, ZoomTransform } from "d3";
 import LogoMainCopyOverlay from "./LogoMainCopyOverlay";
 import AnnotationOverlay from "./AnnotationOverlay";
+import useVariationRehydration from "../../../../hooks/useVariationRehydration";
 
 export default function SVGModelViewport({
   variationId,
@@ -23,6 +24,11 @@ export default function SVGModelViewport({
   const svgPath = useAppSelector(
     (s: { Composer: ComposerModuleState }) => s.Composer?.variations?.[variationId]?.svg,
   ) as string;
+
+  // Rebuild the derived SVG layer (logo symbol + placements, visualization
+  // colours) for a variation loaded from storage — the creating actions only
+  // ever wrote it for the session that ran them.
+  useVariationRehydration({ variationId, svgPath });
 
   const svg = useSVG(svgPath, variationId);
   const editor = useSVGEditor({

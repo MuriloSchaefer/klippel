@@ -41,12 +41,27 @@ export function parseTransform(
   return out;
 }
 
-/** Build the transform string emitted to the proxy, pivoting rotation on (cx,cy). */
+/**
+ * Build the transform string emitted to the proxy, pivoting rotation on the
+ * element's visual centre.
+ *
+ * `(cx,cy)` arrives in the element's **own** geometry units — half its bbox /
+ * symbol viewport. The pivot, though, is consumed by `rotate()`, which sits
+ * *before* `scale()` in the chain and therefore reads its arguments in the
+ * already-translated but not-yet-scaled space. A point at `c` in the element's
+ * units appears at `s·c` there, so passing `c` unscaled pivots on a point off
+ * by a factor of `1/s` — with the scales a logo placement uses (~0.12) that is
+ * several times the artwork away, and rotating swings the logo out of view.
+ *
+ * Scaling the pivot by `t.scale` is what puts it back on the centre.
+ */
 export function buildTransform(
   t: ManipulateTransform,
   center: { cx: number; cy: number },
 ): string {
-  return `translate(${t.x},${t.y}) rotate(${t.rotation} ${center.cx} ${center.cy}) scale(${t.scale})`;
+  const pivotX = center.cx * t.scale;
+  const pivotY = center.cy * t.scale;
+  return `translate(${t.x},${t.y}) rotate(${t.rotation} ${pivotX} ${pivotY}) scale(${t.scale})`;
 }
 
 const findById = (

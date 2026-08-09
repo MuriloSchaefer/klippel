@@ -53,6 +53,8 @@ const AddMaterialSection: React.FC = () => {
   const [stockUnit, setStockUnit] = useState("");
   const [industry, setIndustry] = useState("");
   const [externalId, setExternalId] = useState("");
+  const [externalURL, setExternalURL] = useState("");
+  const [imageURL, setImageURL] = useState("");
   const [attrValues, setAttrValues] = useState<Record<string, unknown>>({});
 
   const selectedSchema = useMemo(() => {
@@ -80,6 +82,8 @@ const AddMaterialSection: React.FC = () => {
     setStockUnit("");
     setIndustry("");
     setExternalId("");
+    setExternalURL("");
+    setImageURL("");
     setAttrValues({});
   }, []);
 
@@ -107,6 +111,8 @@ const AddMaterialSection: React.FC = () => {
           updatedAt: Date.now(),
           position: { x: 0, y: 0 },
           externalId: externalId.trim() || undefined,
+          externalURL: externalURL.trim() || undefined,
+          imageURL: imageURL.trim() || undefined,
         },
         industryId: industry.trim() || undefined,
         sellerIds: [],
@@ -122,6 +128,8 @@ const AddMaterialSection: React.FC = () => {
     stockUnit,
     industry,
     externalId,
+    externalURL,
+    imageURL,
     attrValues,
     materialTypes,
     reset,
@@ -218,6 +226,51 @@ const AddMaterialSection: React.FC = () => {
               helperText="Usado pelo Composer para agrupar variações (cores/tamanhos) do mesmo produto."
             />
           </FormControl>
+
+          <FormControl fullWidth size="small">
+            <TextField
+              data-testid="add-material-external-url"
+              label="Link do fornecedor (opcional)"
+              size="small"
+              value={externalURL}
+              onChange={(e) => setExternalURL(e.target.value)}
+              helperText="Página do produto no site do fornecedor."
+            />
+          </FormControl>
+
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            {/*
+              Preview renders straight from the typed URL — no upload, no
+              local copy. The catalog stores a reference, so a supplier
+              swapping the photo is reflected without a re-import.
+            */}
+            <Box
+              component="img"
+              data-testid="add-material-image-preview"
+              src={imageURL || undefined}
+              alt=""
+              sx={{
+                width: 40,
+                height: 40,
+                objectFit: "cover",
+                borderRadius: 0.5,
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "action.hover",
+                display: imageURL ? "block" : "none",
+              }}
+            />
+            <FormControl fullWidth size="small">
+              <TextField
+                data-testid="add-material-image-url"
+                label="Imagem (URL, opcional)"
+                size="small"
+                value={imageURL}
+                onChange={(e) => setImageURL(e.target.value)}
+                helperText="Foto do produto ou amostra da cor."
+              />
+            </FormControl>
+          </Box>
 
           {type && (
             <Box

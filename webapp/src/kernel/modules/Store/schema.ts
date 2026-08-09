@@ -110,6 +110,10 @@ export const MaterialCoMap = co.map({
   caracteristics: co.optional(AttributeRecord),
   externalId: z.optional(z.string()),
   externalURL: z.optional(z.string()),
+  // Single supplier image (product photo / swatch). One field rather than a
+  // list because `co.list` would make it a separate CRDT node for something
+  // that is always replaced wholesale, never edited concurrently.
+  imageURL: z.optional(z.string()),
   description: z.optional(z.string()),
   schemaVersion: z.string(),
   updatedAt: z.number(),

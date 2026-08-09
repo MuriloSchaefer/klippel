@@ -40,6 +40,35 @@ function parseInjectedFragment(
   return ownerDocument.importNode(first, true) as Element;
 }
 
+// Marker classes stamped on elements this editor mounts on top of the artwork.
+// They are the presentation layer, owned by `svgState.injected` — never part of
+// the stored document.
+const INJECTED_MARKERS = ".svg-injected-container, .injected-def";
+
+/**
+ * Drop the editor's own injections from a document.
+ *
+ * The presentation layer is derived state: every render re-mounts it from
+ * `svgState.injected`, and removing an entry there is the only way it goes
+ * away. So a copy of it that reaches `content` is unreachable — it renders
+ * forever, and a later injection of the same entry mounts *beside* it instead
+ * of replacing it.
+ *
+ * That is exactly what a clip pick used to do. The picker stamps an id and
+ * calls `transform`, which serialized the rendered copy — placements included,
+ * and captured *before* `onClip` set the clip proxy. The stored document grew
+ * an unclipped duplicate of every placement, appended at root level (so painted
+ * over the whole drawing), which no `deleteInjectedElement` could reach: the
+ * logo looked unclipped, and it survived deleting the placement.
+ *
+ * Applied on the way in as well as on the way out, so documents already
+ * carrying baked-in copies heal on load.
+ */
+function stripInjectedLayer<T extends Element>(root: T): T {
+  root.querySelectorAll(INJECTED_MARKERS).forEach((el) => el.remove());
+  return root;
+}
+
 // Cheap djb2 digest of an injected fragment's markup. Used to key the defs join
 // so a *changed* markup (e.g. a re-cropped logo <symbol>) forces an exit+enter
 // re-parse instead of d3's no-op update — the DOM `id` is reapplied on enter, so
@@ -135,6 +164,10 @@ export const useSVGEditor = ({
     if (svgRoot) {
       svgRoot.setAttribute("overflow", "visible");
       svgRoot.style.overflow = "visible";
+      // Heal documents saved before `transform` stripped the presentation
+      // layer: any injected element baked into `content` is a duplicate of one
+      // this render is about to mount from `svgState.injected`.
+      stripInjectedLayer(svgRoot);
     }
 
     return svgRoot;
@@ -524,19 +557,22 @@ export const useSVGEditor = ({
    * stamping an id on the node it picked) is looking at what is on screen, and
    * serializing the pristine parse instead would drop that edit.
    *
-   * Note what this does *not* mean. The copy carries this render's whole
-   * presentation layer — injected containers, proxy attributes, the picker's
-   * hatch highlight — and `transform` serializes all of it into the stored
-   * content. The picker is the only caller, and it fires from a click, i.e.
-   * after the passes above have run on that same copy. This is unchanged from
-   * when the passes mutated the parse in place (the old `transform` serialized
-   * `parsedSVG` with the same paint on it), so it is a standing limitation, not
-   * something the copy introduced — but it is the reason a second caller must
-   * not be added here without first stripping the presentation layer.
+   * The copy carries this render's whole presentation layer, so what gets
+   * stored is serialized from a *stripped clone*: injected containers and defs
+   * belong to `svgState.injected` and must never round-trip through `content`
+   * (see `stripInjectedLayer`). The clone also keeps `fn`'s edit — the picker's
+   * stamped id lives on an original art element — while leaving the on-screen
+   * copy untouched, since this render still needs it.
+   *
+   * Still not stripped: proxy attributes and the picker's hatch highlight, which
+   * overwrite attributes on the artwork itself rather than adding elements, so
+   * there is no marker to remove them by. They remain a standing limitation.
    */
   function transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement) {
     const target = renderedSVGRef.current ?? parsedSVG;
-    const serialized = new XMLSerializer().serializeToString(fn(target));
+    const edited = fn(target);
+    const clean = stripInjectedLayer(edited.cloneNode(true) as SVGSVGElement);
+    const serialized = new XMLSerializer().serializeToString(clean);
     dispatch(updateSVG({ path: svgPath, instanceName, document: serialized }));
   }
   return {

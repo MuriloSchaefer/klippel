@@ -37,6 +37,8 @@ export interface MaterialDTO {
   caracteristics?: AttributeMap;
   externalId?: string;
   externalURL?: string;
+  /** Supplier product photo / colour swatch. */
+  imageURL?: string;
   description?: string;
   schemaVersion: string;
   updatedAt: number;

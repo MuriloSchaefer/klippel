@@ -13,7 +13,11 @@ import {
   fillAddMaterialForm,
 } from "./addMaterial.form.puppeteer";
 
-export type { AddMaterialInput } from "./addMaterial.form.puppeteer";
+export type {
+  AddMaterialInput,
+  AttributeValue,
+  ColorAttributeValue,
+} from "./addMaterial.form.puppeteer";
 export {
   fillAddMaterialForm,
   confirmAddMaterial,

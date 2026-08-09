@@ -8,8 +8,10 @@ import { updateMaterialTypeTool } from "./updateMaterialType";
 import { updateMaterialTypeShortcutTool } from "./updateMaterialTypeShortcut";
 import { importCatalogTool } from "./importCatalog";
 import { importCatalogShortcutTool } from "./importCatalogShortcut";
+import { insertMaterialToStockTool } from "./insertMaterialToStock";
 
 const TOOLS = [
+  insertMaterialToStockTool,
   searchMaterialsTool,
   searchMaterialsShortcutTool,
   addMaterialTypeTool,

@@ -178,6 +178,19 @@ async function createWindow(): Promise<BrowserWindow> {
     await closeActiveWorkspace();
   })
 
+  // F12 always toggles DevTools. `optimizer.watchWindowShortcuts` only wires
+  // this up when `is.dev`, so packaged/preview builds have no way in. Handled
+  // on `before-input-event`, which runs in the main process ahead of the
+  // renderer, so the app's KeyboardShortcuts listener can never swallow it —
+  // and `preventDefault` keeps the key from reaching the page at all.
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.type !== "keyDown" || input.code !== "F12") return;
+    event.preventDefault();
+    const { webContents } = mainWindow;
+    if (webContents.isDevToolsOpened()) webContents.closeDevTools();
+    else webContents.openDevTools({ mode: "detach" });
+  });
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
     return { action: "deny" };

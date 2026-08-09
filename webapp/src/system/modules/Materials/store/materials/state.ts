@@ -16,6 +16,8 @@ export interface MaterialState{
     industry: string,
     externalId: string,
     externalURL?: string,
+    /** Supplier product photo / colour swatch. */
+    imageURL?: string,
     images?: string[],
     description?: string,
     attributes: {

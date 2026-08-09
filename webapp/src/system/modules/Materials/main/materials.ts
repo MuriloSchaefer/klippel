@@ -418,6 +418,7 @@ function materialCoMapToDto(co: AnyRecord): MaterialDTO {
     caracteristics?: AnyRecord | null;
     externalId?: string;
     externalURL?: string;
+    imageURL?: string;
     description?: string;
     schemaVersion: string;
     updatedAt: number;
@@ -439,6 +440,7 @@ function materialCoMapToDto(co: AnyRecord): MaterialDTO {
       : undefined,
     externalId: m.externalId,
     externalURL: m.externalURL,
+    imageURL: m.imageURL,
     description: m.description,
     schemaVersion: m.schemaVersion,
     updatedAt: m.updatedAt,
@@ -543,6 +545,7 @@ function createMaterialCoValue(dto: MaterialDTO, owner: Owner) {
         : undefined,
       externalId: dto.externalId,
       externalURL: dto.externalURL,
+      imageURL: dto.imageURL,
       description: dto.description,
       schemaVersion: dto.schemaVersion,
       updatedAt: dto.updatedAt || Date.now(),
@@ -754,6 +757,8 @@ export async function updateMaterial(input: UpdateMaterialInput): Promise<void> 
     material.$jazz.set("externalId", patch.externalId);
   if (patch.externalURL !== undefined)
     material.$jazz.set("externalURL", patch.externalURL);
+  if (patch.imageURL !== undefined)
+    material.$jazz.set("imageURL", patch.imageURL);
   if (patch.description !== undefined)
     material.$jazz.set("description", patch.description);
   if (patch.schemaVersion !== undefined)

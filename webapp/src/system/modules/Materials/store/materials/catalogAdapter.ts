@@ -85,6 +85,7 @@ export function materialDtoToState(
     industry: industryFor(dto.id, edges),
     externalId: dto.externalId ?? "",
     externalURL: dto.externalURL,
+    imageURL: dto.imageURL,
     description: dto.description,
     attributes: decodeAttributeMap(dto.attributes) as MaterialState["attributes"],
     caracteristics: dto.caracteristics
@@ -124,6 +125,7 @@ export function materialStateToDto(state: MaterialState): MaterialDTO {
       : undefined,
     externalId: state.externalId,
     externalURL: state.externalURL,
+    imageURL: state.imageURL,
     description: state.description,
     schemaVersion: state.schemaVersion,
     updatedAt: Date.now(),
