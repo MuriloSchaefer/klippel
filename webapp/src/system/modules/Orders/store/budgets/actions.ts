@@ -16,9 +16,6 @@ export const addItemToBudget = createAction<{budgetId: string, item: BudgetItemS
 export const removeItemFromBudget = createAction<{budgetId: string, itemId: string}>(
     `[${MODULE_NAME}:Budgets:${ACTION_TYPES.COMMAND}] Remove item from budget`
 );
-export const setItemAmount = createAction<{budgetId: string, itemId: string, amount: number}>(
-    `[${MODULE_NAME}:Budgets:${ACTION_TYPES.COMMAND}] Set item amount`
-);
 
 // events
 export const budgetCreated = createAction<{id: string}>(
@@ -32,7 +29,4 @@ export const itemAddedToBudget = createAction<{budgetId: string, itemId: string}
 )
 export const itemRemovedFromBudget = createAction<{budgetId: string, itemId: string}>(
     `[${MODULE_NAME}:Budgets:${ACTION_TYPES.EVENT}] Item removed from budget`
-)
-export const itemAmountSet = createAction<{budgetId: string, itemId: string, amount: number}>(
-    `[${MODULE_NAME}:Budgets:${ACTION_TYPES.EVENT}] Item amount set`
 )

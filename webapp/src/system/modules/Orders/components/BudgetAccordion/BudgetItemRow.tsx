@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 
 import Box from "@mui/material/Box";
 import ListItem from "@mui/material/ListItem";
@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 
 import { BudgetItemState } from "../../store/state";
 import { formatDays, formatMinutesFallback } from "../../utils/duration";
+import { budgetItemAmount } from "../../utils/quantity";
 
 export type BudgetItemRowProps = Readonly<{
   item: BudgetItemState;
@@ -22,30 +23,30 @@ export type BudgetItemRowProps = Readonly<{
    */
   minutesToDays: (minutes: number) => number | undefined;
   onSelect: (viewportName: string) => void;
-  onAmountChange: (itemId: string, amount: number) => void;
 }>;
 
 const formatMoney = (value: number) => value.toFixed(2);
 
 /**
- * One budget line: name, amount, total cost (`unitCost × amount`) and
+ * One budget line: name, quantity, total cost (`unitCost × amount`) and
  * production time (`unitMinutes × amount`, converted to days).
  *
- * The amount is editable inline — a read-only amount would be stuck at the 1 it
- * is created with, which makes both totals meaningless. `unitCost` and
- * `unitMinutes` are the snapshots taken when the item was added; when either is
- * absent the line says so ("não precificado" / "não calculada") rather than
- * showing 0, so an unpriced or untimed piece is never mistaken for a free or
- * instantaneous one.
+ * The quantity is read-only and comes from the item's grade curve
+ * (`budgetItemAmount`) — a run of garments is graded, so there is nothing to
+ * type here. `unitCost` and `unitMinutes` are the snapshots taken when the item
+ * was added; when either is absent the line says so ("não precificado" /
+ * "não calculada") rather than showing 0, so an unpriced or untimed piece is
+ * never mistaken for a free or instantaneous one.
  *
  * The `data-budget-item-total-minutes` mirror stays in **minutes** — the raw
  * figure, independent of how a day is defined — so tests assert the number, not
  * the presentation.
  *
- * Kept deliberately cheap: a native `input` rather than a MUI `TextField`, and
- * no ripple on the row button. A budget renders every line at once (no
- * virtualization), and `TextField` per row cost ~6x on the
- * `budget-items-render` perf surface at 1 000 items.
+ * Kept deliberately cheap: no ripple on the row button, and every line renders
+ * at once (no virtualization). An earlier revision put a MUI `TextField` per row
+ * for the editable amount, which cost ~6x on the `budget-items-render` perf
+ * surface at 1 000 items; the quantity being derived removes the input
+ * altogether.
  */
 function BudgetItemRow({
   item,
@@ -55,26 +56,8 @@ function BudgetItemRow({
   dayAbbr,
   minutesToDays,
   onSelect,
-  onAmountChange,
 }: BudgetItemRowProps) {
-  // Local draft so the field can be cleared mid-edit without the store seeing
-  // an empty amount.
-  const [draft, setDraft] = useState(String(item.amount ?? 1));
-  useEffect(() => setDraft(String(item.amount ?? 1)), [item.amount]);
-
-  const commit = useCallback(
-    (raw: string) => {
-      const parsed = Number.parseInt(raw, 10);
-      if (Number.isNaN(parsed) || parsed < 0) {
-        setDraft(String(item.amount ?? 1));
-        return;
-      }
-      if (parsed !== item.amount) onAmountChange(item.itemId, parsed);
-    },
-    [item.amount, item.itemId, onAmountChange],
-  );
-
-  const amount = item.amount ?? 1;
+  const amount = budgetItemAmount(item);
   const total = item.unitCost !== undefined ? item.unitCost * amount : undefined;
   // Production time for the whole line, not per piece — what a budget is
   // actually planned against.
@@ -91,14 +74,12 @@ function BudgetItemRow({
         ? formatDays(totalDays, dayAbbr)
         : formatMinutesFallback(totalMinutes);
 
-  // Where the quantity came from. Shown only while it still matches the curve:
-  // once someone overrides the amount by hand, claiming a grade breakdown that
-  // no longer adds up would be worse than showing none.
+  // Where the quantity came from. It always adds up to `amount` now — the
+  // amount *is* this sum — so the breakdown shows whenever there is a curve.
   const gradesTotal = item.grades?.reduce((sum, g) => sum + g.amount, 0);
-  const gradeCurve =
-    item.grades && gradesTotal === amount
-      ? item.grades.map((g) => `${g.label} ${g.amount}`).join(" · ")
-      : undefined;
+  const gradeCurve = item.grades?.length
+    ? item.grades.map((g) => `${g.label} ${g.amount}`).join(" · ")
+    : undefined;
 
   return (
     <ListItem
@@ -161,35 +142,20 @@ function BudgetItemRow({
         </Box>
       </ListItemButton>
 
-      <Box
-        component="input"
+      <Typography
         id={`budget-item-amount-${item.itemId}`}
         data-testid="budget-item-amount"
         aria-label={`Quantidade de ${item.label}`}
-        type="number"
-        min={0}
-        value={draft}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setDraft(e.target.value)
-        }
-        onBlur={(e: React.FocusEvent<HTMLInputElement>) => commit(e.target.value)}
-        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-        }}
+        variant="body2"
         sx={{
-          width: "6ch",
+          minWidth: "4ch",
           flexShrink: 0,
-          p: 0.5,
-          bgcolor: "transparent",
-          color: "text.primary",
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 1,
-          font: "inherit",
-          fontSize: "0.875rem",
-          "&:focus": { outline: "2px solid", outlineColor: "primary.main" },
+          textAlign: "right",
+          fontVariantNumeric: "tabular-nums",
         }}
-      />
+      >
+        {amount}
+      </Typography>
     </ListItem>
   );
 }

@@ -9,8 +9,6 @@ export type BudgetItemState = {
     modelId: string;
     label: string;
     addedAt: number;
-    /** How many of this piece the budget is for. Defaults to 1 when added. */
-    amount: number;
     /**
      * Cost per produced unit, snapshotted from the variation's processes when
      * the item was added (Composer's `useVariationUnitCost`).
@@ -28,9 +26,15 @@ export type BudgetItemState = {
      */
     unitMinutes?: number;
     /**
-     * The size curve this quantity came from, snapshotted with the rest. A
-     * budget line's `amount` is the sum of these — a run of garments is graded,
-     * not a single number someone typed.
+     * The size curve, snapshotted with the rest — and the **only** source of
+     * the line's quantity: a run of garments is graded, not a single number
+     * someone typed. Read it through `budgetItemAmount` (`utils/quantity.ts`),
+     * which sums it and falls back to 1 so an ungraded piece stays quotable.
+     *
+     * There is deliberately no `amount` field. One existed, editable inline,
+     * and it could be set to a number the curve did not add up to — leaving two
+     * disagreeing answers to "how many garments is this line for", with the
+     * displayed grade breakdown suppressed whenever they diverged.
      */
     grades?: { label: string; amount: number }[];
     /** When `unitCost`/`unitMinutes` were captured, so a stale quote shows. */

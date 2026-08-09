@@ -63,6 +63,13 @@ function ProcessTimeAccordion({
     shallowEqual,
   );
 
+  /**
+   * No elective gate here on purpose: `computeProcessTime` already returns no
+   * time for a process whose elective is off, so a suppressed step contributes
+   * `?? 0` and its row reads "tempo não definido". Re-checking the elective in
+   * this sum would duplicate a decision that belongs to the computation, and
+   * would quietly disagree with it if the two ever drifted.
+   */
   const totalMinutesPerUnit = processNodes.reduce(
     (sum, p) => sum + (p.computedTimePerUnit?.amount ?? 0),
     0
@@ -81,6 +88,12 @@ function ProcessTimeAccordion({
       sx={{ p: 0, mt: 2 }}
       id="process-time-accordion"
       data-testid="process-time-accordion"
+      // Numeric mirrors of the three figures this accordion derives, so a test
+      // asserts them as selectors instead of parsing the rendered caption
+      // (e2e-tests.md §2).
+      data-time-minutes-per-unit={totalMinutesPerUnit.toFixed(2)}
+      data-time-garments={totalGarments}
+      data-time-total-minutes={totalMinutesAllGrades.toFixed(2)}
       aria-label="Lista de processos e tempo"
       tabIndex={-1}
     >
@@ -115,6 +128,12 @@ function ProcessTimeAccordion({
               data-process-id={p.id}
               data-process-label={p.label}
               data-process-time-status={isFresh ? "computed" : "pending"}
+              // Mirrors the figure the row renders, so a test asserts the number
+              // rather than parsing the caption (e2e-tests.md §2). Empty while it
+              // is still `pending`, matching what the row shows.
+              data-process-minutes={
+                minutesPerUnit !== undefined ? minutesPerUnit.toFixed(2) : ""
+              }
               tabIndex={0}
               sx={{
                 display: "flex",

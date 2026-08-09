@@ -26,8 +26,12 @@ import {
   addItemsViaStore,
   clearBudgets,
 } from "@helpers/puppeteer/seedSyntheticBudgets";
-import { generateBudgetsCatalog } from "@helpers/puppeteer/generateBudgetsCatalog";
+import {
+  generateBudgetsCatalog,
+  gradesSummingTo,
+} from "@helpers/puppeteer/generateBudgetsCatalog";
 import { readItemTotal } from "@system/modules/Orders/components/BudgetAccordion/drivers/BudgetAccordion.click.puppeteer";
+import { waitForItemAmount } from "@system/modules/Orders/components/BudgetAccordion/drivers/BudgetAccordion.waits.puppeteer";
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
@@ -48,7 +52,6 @@ import { createBudgetShortcutTool } from "@system/modules/Orders/mcpTools/create
 import { addToBudgetTool } from "@system/modules/Orders/mcpTools/addToBudget";
 import { addToBudgetShortcutTool } from "@system/modules/Orders/mcpTools/addToBudgetShortcut";
 import { removeFromBudgetTool } from "@system/modules/Orders/mcpTools/removeFromBudget";
-import { setBudgetItemAmountTool } from "@system/modules/Orders/mcpTools/setBudgetItemAmount";
 import { deleteBudgetTool } from "@system/modules/Orders/mcpTools/deleteBudget";
 import { createModelTool } from "@system/modules/Composer/mcpTools/createModel";
 import { openModelTool } from "@system/modules/Composer/mcpTools/openModel";
@@ -59,6 +62,19 @@ const ACCORDION = "Orçamento";
 const ROOT = '[data-testid="budget-accordion"]';
 
 const uniqueSuffix = () => `${Math.floor(Math.random() * 1e6)}`.slice(0, 5);
+
+/**
+ * How many garments a curve calls for.
+ *
+ * Deliberately computed here rather than through the production
+ * `budgetItemAmount`: a test that asserts the app's arithmetic with the app's own
+ * helper only proves the helper agrees with itself. (It also keeps a production
+ * module out of the jest process, where an e2e run instruments it but exercises
+ * only the paths the test happens to pass — which drags the coverage gate down
+ * for no signal.)
+ */
+const curveTotal = (item: { grades?: { amount: number }[] }) =>
+  item.grades?.reduce((sum, g) => sum + g.amount, 0) || 1;
 
 /** Accordion is showing the "not in a budget" branch. */
 const actionsBranch = "#budget-actions";
@@ -209,7 +225,7 @@ describe("budgets via click (E2E)", () => {
     await clearAllBudgets();
   }, 120_000);
 
-  it("shows each item's name, amount and total cost, and recomputes on amount change", async () => {
+  it("takes each item's quantity from its grade curve, and shows the curve", async () => {
     const model = `Budget Amount ${uniqueSuffix()}`;
     const label = `orc-amt-${uniqueSuffix()}`;
 
@@ -217,10 +233,15 @@ describe("budgets via click (E2E)", () => {
     await createBudgetTool.execute({ label });
     await page!.waitForSelector(itemRow(model));
 
-    // Name and amount are on the row; a fresh line is one piece.
+    // This model has no graduations, so there is no curve to sum — an ungraded
+    // piece falls back to one garment rather than to nothing, and shows no
+    // breakdown because there is none to show.
     await page!.waitForSelector(
       `${itemRow(model)}[data-budget-item-amount="1"]`,
     );
+    expect(
+      await page!.$(`${itemRow(model)} [data-testid="budget-item-grades"]`),
+    ).toBeNull();
 
     // This model has no priced process, so the line is explicitly *unpriced*
     // rather than shown as zero — a piece with no cost must never read as free.
@@ -240,17 +261,39 @@ describe("budgets via click (E2E)", () => {
     );
     expect(timeCaption).toContain("não calculada");
 
-    // Changing the amount is what makes the total meaningful, so it is part of
-    // the contract, not just display.
-    await setBudgetItemAmountTool.execute({ label: model, amount: 4 });
-    await page!.waitForSelector(
-      `${itemRow(model)}[data-budget-item-amount="4"]`,
+    // A graded line, by contrast, is for however many garments its curve calls
+    // for — the quantity is the sum, never a number typed on the row.
+    const budgetId = await page!.$eval(
+      ROOT,
+      (el) => (el as HTMLElement).dataset.budgetId ?? "",
+    );
+    const graded = generateBudgetsCatalog({
+      count: 1,
+      itemsPerBudget: 1,
+      seed: "graded",
+    }).budgets[0].items;
+    const gradedItem = Object.values(graded)[0];
+    const curve = gradesSummingTo(4);
+    await addItemsViaStore(page!, budgetId, {
+      [gradedItem.itemId]: { ...gradedItem, grades: curve },
+    });
+    await page!.waitForSelector(itemCount(2));
+
+    await waitForItemAmount(page!, gradedItem.label, 4);
+    const gradeCaption = await page!.$eval(
+      `${itemRow(gradedItem.label)} [data-testid="budget-item-grades"]`,
+      (el) => (el as HTMLElement).innerText,
+    );
+    // The breakdown is shown in full, and it is the same numbers the quantity
+    // was summed from — the two cannot disagree.
+    curve.forEach((grade) =>
+      expect(gradeCaption).toContain(`${grade.label} ${grade.amount}`),
     );
 
     await clearAllBudgets();
   }, 90_000);
 
-  it("totals a priced line as unit cost × amount", async () => {
+  it("totals a priced line as unit cost × the quantity its curve sums to", async () => {
     // Priced lines need a variation with a costed process, which the seeded
     // catalog provides directly: the planted probe is 3 × 12.50 = 37.50.
     const model = `Budget Priced ${uniqueSuffix()}`;
@@ -272,9 +315,11 @@ describe("budgets via click (E2E)", () => {
     await addItemsViaStore(page!, budgetId, priced);
     await page!.waitForSelector(itemCount(2));
 
-    // amount 1 × unitCost 10.00 for the index-0 generated item.
+    // The quantity is the curve's sum — 1 × unitCost 10.00 for the index-0
+    // generated item.
     const seeded = Object.values(priced)[0];
-    const expected = (seeded.unitCost! * seeded.amount).toFixed(2);
+    const seededAmount = curveTotal(seeded);
+    const expected = (seeded.unitCost! * seededAmount).toFixed(2);
     await page!.waitForSelector(
       `[data-testid="budget-item"][data-budget-item-id="${seeded.itemId}"][data-budget-item-total="${expected}"]`,
     );
@@ -283,22 +328,31 @@ describe("budgets via click (E2E)", () => {
     await page!.waitForSelector(
       `[data-testid="budget-item"][data-budget-item-id="${seeded.itemId}"]` +
         `[data-budget-item-total-minutes="${(
-          seeded.unitMinutes! * seeded.amount
+          seeded.unitMinutes! * seededAmount
         ).toFixed(2)}"]`,
     );
 
-    // Doubling the amount doubles both totals — the row recomputes from the
-    // snapshotted unit cost and unit time.
-    await setBudgetItemAmountTool.execute({
-      label: seeded.label,
-      amount: seeded.amount * 2,
+    // A line whose curve calls for twice as many garments totals twice as much,
+    // from the same snapshotted unit cost and unit time. The curve is the only
+    // way to say "twice as many" — there is no amount to override.
+    const doubledItem = {
+      ...seeded,
+      itemId: `${seeded.modelId}-dbl01`,
+      label: `${seeded.label} dobrada`,
+      grades: gradesSummingTo(seededAmount * 2),
+    };
+    await addItemsViaStore(page!, budgetId, {
+      [doubledItem.itemId]: doubledItem,
     });
-    const doubled = (seeded.unitCost! * seeded.amount * 2).toFixed(2);
-    expect(await readItemTotal(page!, seeded.label)).toBe(doubled);
+    await page!.waitForSelector(itemCount(3));
+
+    await waitForItemAmount(page!, doubledItem.label, seededAmount * 2);
+    const doubled = (seeded.unitCost! * seededAmount * 2).toFixed(2);
+    expect(await readItemTotal(page!, doubledItem.label)).toBe(doubled);
     await page!.waitForSelector(
-      `[data-testid="budget-item"][data-budget-item-id="${seeded.itemId}"]` +
+      `[data-testid="budget-item"][data-budget-item-id="${doubledItem.itemId}"]` +
         `[data-budget-item-total-minutes="${(
-          seeded.unitMinutes! * seeded.amount * 2
+          seeded.unitMinutes! * seededAmount * 2
         ).toFixed(2)}"]`,
     );
 

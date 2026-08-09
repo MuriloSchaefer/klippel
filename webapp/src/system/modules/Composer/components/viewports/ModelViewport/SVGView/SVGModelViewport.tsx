@@ -91,7 +91,20 @@ export default function SVGModelViewport({
       style={{ height: "100%", width: "100%", minWidth: 500, position: "relative" }}
     >
       <SVGToolbox />
-      <svg ref={editor.svgRef} id={`svg-editor`} width="100%" height="100%" />
+      {/*
+        `data-variation-id` mirrors which variation this editor is rendering.
+        Every tab's editor carries the same `#svg-editor` id, so without it a
+        test (or a driver) asserting on the rendered SVG cannot tell whose
+        drawing it is looking at — which is exactly the confusion that let one
+        tab's proxies show up in another's viewport.
+      */}
+      <svg
+        ref={editor.svgRef}
+        id={`svg-editor`}
+        data-variation-id={variationId}
+        width="100%"
+        height="100%"
+      />
       <LogoMainCopyOverlay variationId={variationId} />
       <AnnotationOverlay variationId={variationId} />
     </div>

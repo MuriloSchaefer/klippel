@@ -116,6 +116,11 @@ export const useSVGEditor = ({
   );
   const dispatch = useAppDispatch();
 
+  // The source document, kept **pristine**: `renderPreview` paints onto a copy
+  // of it and never on this, which is what keeps one instance's proxies out of
+  // another's rendering even though two variations of the same model hold equal
+  // content strings (and therefore share this cache entry under `Object.is`).
+  // Keyed on the instance as well, so that sharing never becomes load-bearing.
   const parsedSVG = useMemo(() => {
     if (!svgState?.content) return undefined;
     const svgRoot = new DOMParser()
@@ -133,7 +138,7 @@ export const useSVGEditor = ({
     }
 
     return svgRoot;
-  }, [svgState?.content]);
+  }, [svgState?.content, svgPath, instanceName]);
 
   const {
     state: { tools },
@@ -211,6 +216,14 @@ export const useSVGEditor = ({
   const [zoomTransform, setZoomTransform] = useState(undefined);
   const [pickingElements, setPickingElements] = useState<PickingElements>([]);
 
+  /**
+   * The document the last `renderPreview` actually mounted — a copy of
+   * `parsedSVG`, carrying this render's injections and proxies. `transform`
+   * serializes *this*, not the pristine parse, so a tool that writes into the
+   * drawing (the element picker assigning an id) persists what the user sees.
+   */
+  const renderedSVGRef = useRef<SVGSVGElement | null>(null);
+
   function renderPreview(
     root: Selection<SVGSVGElement, any, SVGSVGElement, any>,
     selection: Selection<SVGGElement, any, SVGSVGElement, any>,
@@ -227,50 +240,64 @@ export const useSVGEditor = ({
       return;
     }
 
-    // Mount injected "container" elements into parsedSVG (the queried subtree)
-    // BEFORE the proxy pass, so the proxy loop can reach them by id and apply
-    // their transform/clip. Idempotent: clear prior injections first, then
-    // re-mount from state, so repeated renderPreview calls don't accumulate.
-    parsedSVG
-      .querySelectorAll(".svg-injected-container")
-      .forEach((n) => n.remove());
+    /**
+     * Render from a fresh copy of the source document, never from the source
+     * itself.
+     *
+     * Proxies, highlights and injections are a presentation layer written on top
+     * of the artwork as attributes. Applying them to a long-lived document makes
+     * every pass depend on the ones before it: a proxy that is removed leaves its
+     * colour behind, and — with `parsedSVG` memoised on the content string, which
+     * two variations of one model share — a second instance inherits the first's
+     * paint. Starting from a copy makes each render a pure function of state, so
+     * "what is no longer proxied" needs no bookkeeping to undo.
+     *
+     * `cloneNode` is the cheap half of what this function already does: the
+     * preview subtree is wiped and re-appended on every call regardless, and a
+     * native deep clone costs far less than the re-parse it replaces.
+     */
+    const doc = parsedSVG.cloneNode(true) as SVGSVGElement;
+    renderedSVGRef.current = doc;
+
+    // Mount injected "container" elements into the copy BEFORE the proxy pass,
+    // so the proxy loop can reach them by id and apply their transform/clip.
+    // Nothing to clear first — the copy carries no earlier render's injections.
     const containerEntries = Object.values(svgState?.injected ?? {})
       .filter((e) => e.mount === "container")
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     containerEntries.forEach((entry) => {
-      const imported = parseInjectedFragment(
-        entry.markup,
-        parsedSVG.ownerDocument,
-      );
+      const imported = parseInjectedFragment(entry.markup, doc.ownerDocument);
       if (!imported) return;
       imported.setAttribute("id", entry.id);
       imported.classList.add("svg-injected-container");
       // With an anchor, mount the element immediately after the anchor (exact-id
       // lookup) so a clipped placement paints just above its clip target; else
       // append at the end of the content (paints on top of the whole drawing).
-      const anchorEl = entry.anchor
-        ? parsedSVG.getElementById(entry.anchor)
-        : null;
+      const anchorEl = entry.anchor ? doc.getElementById(entry.anchor) : null;
       if (anchorEl?.parentNode) {
         anchorEl.parentNode.insertBefore(imported, anchorEl.nextSibling);
       } else {
-        parsedSVG.appendChild(imported);
+        doc.appendChild(imported);
       }
     });
 
     // attach proxies
     const proxies = Object.entries(svgState?.proxies ?? {});
     proxies.forEach(([id, attributes]) => {
-      const elem = parsedSVG.getElementById(id);
+      const elem = doc.getElementById(id);
+      if (!elem) return;
       Object.entries(attributes).forEach(([attr, value]) => {
-        elem?.setAttribute(attr, value as string);
-        const styles = elem?.getAttribute("style");
+        elem.setAttribute(attr, value as string);
+        // An inline `style` declaration would win over the attribute, so drop
+        // the property being proxied from it. Only this copy is edited, so the
+        // source document keeps its own `style` for the next render.
+        const styles = elem.getAttribute("style");
         if (styles) {
           const newStyle = styles
             .split(";")
             .filter((s) => !s.includes(attr))
             .join(";");
-          if (newStyle) elem?.setAttribute("style", newStyle);
+          if (newStyle) elem.setAttribute("style", newStyle);
         }
       });
     });
@@ -278,7 +305,7 @@ export const useSVGEditor = ({
     // highlighted elements
     if (tools.highlightedElements) {
       tools.highlightedElements.forEach((id) => {
-        const e = parsedSVG.getElementById(id);
+        const e = doc.getElementById(id);
         if (e) {
           e.setAttribute("fill", "url(#pick-hatch-pattern)");
         }
@@ -287,7 +314,9 @@ export const useSVGEditor = ({
 
     // attach tool listeners
     if (tools.pickElement.enabled && tools.pickElement.type === "SVGElement") {
-      let elements = tools.pickElement.getSelectables(parsedSVG);
+      // Selectables come from the rendered copy, so the listeners below attach
+      // to the very nodes on screen — the source document is not in the DOM.
+      let elements = tools.pickElement.getSelectables(doc);
       const pickingElementsTemp: PickingElements = [];
       elements.map((element: SVGElement) => {
         const styles = element.getAttribute("style");
@@ -368,7 +397,7 @@ export const useSVGEditor = ({
             let iden = element.getAttribute("id") || randomString(10);
             if (!element.getAttribute("id")) element.setAttribute("id", iden);
             tools.pickElement.callback(element);
-            transform(() => parsedSVG);
+            transform(() => doc);
           },
         };
 
@@ -388,7 +417,7 @@ export const useSVGEditor = ({
         });
       }
     }
-    editorContainer.node()?.append(beforeInjection(parsedSVG));
+    editorContainer.node()?.append(beforeInjection(doc));
   }
 
   container.content([
@@ -487,8 +516,27 @@ export const useSVGEditor = ({
     },
   ]);
 
+  /**
+   * Persist a transformation of the drawing.
+   *
+   * Operates on the **rendered** copy, falling back to the source parse before
+   * the first render: a caller that edits the document (the element picker
+   * stamping an id on the node it picked) is looking at what is on screen, and
+   * serializing the pristine parse instead would drop that edit.
+   *
+   * Note what this does *not* mean. The copy carries this render's whole
+   * presentation layer — injected containers, proxy attributes, the picker's
+   * hatch highlight — and `transform` serializes all of it into the stored
+   * content. The picker is the only caller, and it fires from a click, i.e.
+   * after the passes above have run on that same copy. This is unchanged from
+   * when the passes mutated the parse in place (the old `transform` serialized
+   * `parsedSVG` with the same paint on it), so it is a standing limitation, not
+   * something the copy introduced — but it is the reason a second caller must
+   * not be added here without first stripping the presentation layer.
+   */
   function transform(fn: (svg?: SVGSVGElement | null) => SVGSVGElement) {
-    const serialized = new XMLSerializer().serializeToString(fn(parsedSVG));
+    const target = renderedSVGRef.current ?? parsedSVG;
+    const serialized = new XMLSerializer().serializeToString(fn(target));
     dispatch(updateSVG({ path: svgPath, instanceName, document: serialized }));
   }
   return {

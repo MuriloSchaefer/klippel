@@ -32,6 +32,13 @@ export default async (): Promise<Config> => {
     },
     coverageReporters: ['json', 'lcov', 'text', 'clover'],
     modulePathIgnorePatterns: ['<rootDir>/out/', '<rootDir>/dist/'],
+    // `scripts/` holds workspace *seeders*, not tests. They run under jest only
+    // because they serialize functions into the page and esbuild's `__name`
+    // injection breaks that (see `scripts/seed/costSample.seed.ts`), and they
+    // reset a workspace — so a plain `npm run test:e2e` must never collect one.
+    // `npm run seed:cost-sample` reaches its seeder by overriding `testMatch`
+    // and this list on the command line.
+    testPathIgnorePatterns: ['/node_modules/', '<rootDir>/scripts/'],
     coveragePathIgnorePatterns: [
         '/node_modules/',
         '\\.puppeteer\\.ts$',

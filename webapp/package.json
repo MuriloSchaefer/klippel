@@ -66,7 +66,7 @@
     "make": "electron-vite build && electron-forge make",
     "publish": "electron-forge publish",
     "package:tests": "node scripts/build-test-bundle.mjs",
-    "seed:cost-sample": "unset ELECTRON_RUN_AS_NODE; SEED_SAMPLE=1 ENV_NAME=\"${ENV_NAME:-benchmark}\" KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 jest --testPathPatterns scripts/seed/costSample",
+    "seed:cost-sample": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 jest --testPathIgnorePatterns /node_modules/ --testMatch '<rootDir>/scripts/seed/costSample.seed.ts'",
     "test:e2e": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 jest",
     "test:e2e:headless": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 KLIPPEL_USE_XVFB=1 jest",
     "test:e2e:collaborative": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_DEV_LOG=1 jest --testPathPatterns tests/collaborative/",
@@ -75,6 +75,8 @@
     "test:e2e:perf:headless": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" BASE_WORKSPACE=\"${BASE_WORKSPACE:-empty}\" KLIPPEL_DEV_LOG=1 KLIPPEL_USE_XVFB=1 jest --testPathPatterns tests/standalone/performance/",
     "test:e2e:collaborative:perf": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_DEV_LOG=1 jest --testPathPatterns tests/collaborative/performance/",
     "test:e2e:collaborative:perf:headless": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_USE_XVFB=1 jest --testPathPatterns tests/collaborative/performance/",
+    "test:repeat": "node scripts/devtools/repeat-tests.mjs",
+    "test:analyze": "node scripts/devtools/analyze-test-results.mjs",
     "rebuild:native": "node -e \"require('@electron/rebuild').rebuild({buildPath:process.cwd(),electronVersion:require('./node_modules/electron/package.json').version,onlyModules:['better-sqlite3'],force:true}).then(()=>console.log('done')).catch(e=>{console.error(e);process.exit(1)})\""
   },
   "repository": {

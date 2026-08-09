@@ -7,7 +7,7 @@
  *
  *   1. A budget created but not saved leaves no trace on disk.
  *   2. Saving through the UI ("Salvar agora") writes it, and it survives a
- *      reload with its items, amounts and colour intact.
+ *      reload with its items, their grade curves and its colour intact.
  *   3. A budget deleted after being saved does not come back — the save
  *      reconciles, it does not merely add.
  *
@@ -24,7 +24,14 @@ import {
   resetWorkspace,
 } from "@helpers/puppeteer/resetWorkspace";
 import { resetUIState } from "@helpers/puppeteer/closeOverlays";
-import { clearBudgets } from "@helpers/puppeteer/seedSyntheticBudgets";
+import {
+  addItemsViaStore,
+  clearBudgets,
+} from "@helpers/puppeteer/seedSyntheticBudgets";
+import {
+  generateBudgetsCatalog,
+  gradesSummingTo,
+} from "@helpers/puppeteer/generateBudgetsCatalog";
 import { saveSessionViaUI } from "@kernel/modules/Store/components/drivers/SessionAutoSaver.click.puppeteer";
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
@@ -55,7 +62,6 @@ jest.mock("../../../../../../../../electron/main/mcp/puppeteer", () => ({
 
 import { createBudgetTool } from "@system/modules/Orders/mcpTools/createBudget";
 import { deleteBudgetTool } from "@system/modules/Orders/mcpTools/deleteBudget";
-import { setBudgetItemAmountTool } from "@system/modules/Orders/mcpTools/setBudgetItemAmount";
 import { createModelTool } from "@system/modules/Composer/mcpTools/createModel";
 import { openModelTool } from "@system/modules/Composer/mcpTools/openModel";
 import { switchRibbonTabTool } from "@kernel/modules/Layout/mcpTools/switchRibbonTab";
@@ -125,13 +131,30 @@ describe("budget session snapshot (E2E)", () => {
     expect(persistedFiles()).toHaveLength(0);
   }, 90_000);
 
-  it("persists a saved budget across a reload, with its amount and colour", async () => {
+  it("persists a saved budget across a reload, with its grade curve and colour", async () => {
     const model = `Session Saved ${uniqueSuffix()}`;
     const label = `orc-saved-${uniqueSuffix()}`;
 
     await openFreshModel(model);
     await createBudgetTool.execute({ label, color: "#7b1fa2" });
-    await setBudgetItemAmountTool.execute({ label: model, amount: 7 });
+
+    // The line's quantity lives in its grade curve, so that is what has to
+    // survive the round-trip. A fresh model has no graduations, so seed a
+    // graded line rather than asserting the ungraded fallback of 1 — the
+    // fallback would pass even if the curve were dropped on the way to disk.
+    const budgetId = await page!.$eval(
+      ROOT,
+      (el) => (el as HTMLElement).dataset.budgetId ?? "",
+    );
+    const seeded = Object.values(
+      generateBudgetsCatalog({ count: 1, itemsPerBudget: 1, seed: "session" })
+        .budgets[0].items,
+    )[0];
+    const curve = gradesSummingTo(7);
+    await addItemsViaStore(page!, budgetId, {
+      [seeded.itemId]: { ...seeded, grades: curve },
+    });
+    await page!.waitForSelector(itemCount(2));
 
     await saveSessionViaUI(page!);
     expect(persistedFiles()).toHaveLength(1);
@@ -160,13 +183,22 @@ describe("budget session snapshot (E2E)", () => {
       return {
         label: budget?.label,
         color: budget?.color,
-        amounts: Object.values(budget?.items ?? {}).map((i: any) => i.amount),
+        // `?? null` on the way out: an ungraded line has no `grades` at all, and
+        // `undefined` inside an array is not representable in the JSON puppeteer
+        // serializes the result through — it would arrive as `null` anyway. Being
+        // explicit keeps the expectation below honest about what crosses the wire.
+        grades: Object.values(budget?.items ?? {}).map(
+          (i: any) => i.grades ?? null,
+        ),
       };
     });
 
     expect(restored.label).toBe(label);
     expect(restored.color).toBe("#7b1fa2");
-    expect(restored.amounts).toEqual([7]);
+    // Two lines: the seeded graded one keeps its curve, and the ungraded model
+    // the budget was created with has none — which is how an ungraded piece
+    // persists, and why its quantity falls back to 1 on the way back in.
+    expect(restored.grades).toEqual(expect.arrayContaining([curve, null]));
   }, 120_000);
 
   it("does not resurrect a budget deleted after it was saved", async () => {

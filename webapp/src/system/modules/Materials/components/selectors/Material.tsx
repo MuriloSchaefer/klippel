@@ -14,6 +14,7 @@ import { Store } from "@kernel/modules/Store";
 import { selectMaterials } from "../../store/materials/selectors";
 import { MaterialState } from "../../store/materials/state";
 import { selectMaterialType } from "../../store/materialTypes/selectors";
+import { resolveTypeSchema } from "../../store/materialTypes/resolveTypeSchema";
 import ColorItem from "./ColorItem";
 
 const MaterialSelector = ({
@@ -45,8 +46,14 @@ const MaterialSelector = ({
   );
   const materials = (useAppSelector(materialsSelector) ?? {}) as Record<string, MaterialState>;
 
-  const schemaObj = materialType!.schemas[materialType!.latestSchema];
-  const selector = schemaObj.selector;
+  // A type can legitimately be absent: on a first-ever workspace open there is
+  // no `.session/Materials/materialTypes` cache to rehydrate from, so the slice
+  // is empty until `materialsCatalogLoaded` resolves — and a peer can sync a
+  // material ahead of its type (see `resolveTypeSchema`). Render nothing rather
+  // than asserting; the selector re-renders as soon as the type lands.
+  // The early return has to wait until every hook below has run, so the schema
+  // stays optional all the way down instead of bailing out here.
+  const selector = resolveTypeSchema(materialType)?.selector;
 
   // adapt entries to be able to split into 2 selectors.
   // all entries are grouped per industry and external Id
@@ -57,7 +64,9 @@ const MaterialSelector = ({
     };
   } = useMemo(
     () =>
-      Object.values(materials).reduce<{
+      !selector
+        ? {}
+        : Object.values(materials).reduce<{
         [industry: string]: {
           [externalId: string]: { label: string; extra: MaterialState[] };
         };
@@ -114,6 +123,11 @@ const MaterialSelector = ({
     },
     [materials]
   );
+
+  // Type not resolved yet (cold open with no cache, or a material synced ahead
+  // of its type) — there is no schema to drive the two pickers from, and this
+  // re-renders the moment the type lands.
+  if (!selector) return null;
 
   return (
     <Box

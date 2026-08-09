@@ -55,6 +55,8 @@ Rules:
 - Selectors that target a row by its domain identity use a `data-<entity>-label` mirror, e.g. `[data-testid="material-item"][data-material-label="X"]`. Add the mirror to the component if it is missing — do not query by visible text.
 - When a wait predicate cannot be expressed as a selector against existing DOM, **add a mirror attribute to the component** rather than polling state from inside `waitForFunction`. Examples in this repo: `data-process-time-status="computed|pending"` on ProcessTime rows, `data-elective-label` on the ProcessItem elective chip.
 - Use `:focus`, `:checked`, `:not(:disabled)`, `[aria-expanded="true"]` and friends to express state in a selector — these compose cleanly with `page.waitForSelector`.
+- **When an `id` is reused across instances, the selector must also name the instance.** Only the active viewport renders, so several tabs' components share one `id` — `#svg-editor` is the same in every `ModelViewport`. A selector that stops at the shared id cannot tell "this tab renders X" from "some tab does", which is exactly the confusion behind `svgTabIsolation.e2e.test.ts`: an instance mirror (`data-variation-id`) plus a `[role="viewport-content"]` scope turns it back into an assertion. Add the mirror to the component per the rule above.
+- **Assert rendered output when the bug is in rendering.** A leak of one instance's paint into another's is invisible to a state-level check — the store was correct for both instances throughout. Assert the attribute on the element in the mounted viewport, not the value in Redux.
 
 ## 3. Waits — no fixed timeouts
 
@@ -126,7 +128,7 @@ Document and skip the case rather than working around it:
 
 - Visual diffs (theme, layout, color) — there is no screenshot harness.
 - Animations and transitions — assert the post-transition state via attribute, not via timing.
-- Cross-tab/window behavior — every test runs against a single renderer page.
+- Cross-**browser**-tab / multi-window behavior — every test runs against a single renderer page. In-app *viewport* tabs are a different thing: they live in that one page and are testable, including switching between them (`switchViewport`) and asserting that each renders its own state — see `Composer/tests/standalone/integrity/svgTabIsolation.e2e.test.ts`.
 
 ## 10. Authoring checklist
 
@@ -227,6 +229,51 @@ This is a product rule, not a storage detail, and it constrains both production 
 
 ---
 
+## 13. Workspace seeders are not tests
+
+A **seeder** builds a demo or benchmark workspace by driving the running app —
+`webapp/scripts/seed/*.seed.ts`. It exists so a human (or an agent) can get a
+realistic workspace in one command, not to assert anything about the product.
+
+It runs *under jest* only because of the harness it needs: it drives puppeteer
+through the same MCP tools and drivers the tests use, serializing functions into
+the page. `tsx`/esbuild's `__name` injection breaks those serialized functions —
+the same breakage istanbul's `cov_*` causes in MCP tool files (§6). Jest's swc
+transform does not, and that stack is already proven.
+
+Rules:
+
+- **A seeder must never be collected by the suite.** It resets a workspace,
+  which would pull the ground out from under whatever else is running.
+  `jest.config.ts` ignores `<rootDir>/scripts/` via `testPathIgnorePatterns`,
+  and the file is named `*.seed.ts` — **not** `*.test.ts`, which the default
+  `testMatch` would collect regardless.
+- **It lives under `webapp/scripts/seed/`, never under a module's `tests/`.**
+  The `tests/` tree is categorized by failure mode (§1); a seeder guards against
+  none.
+- **It is reached by an npm script that overrides `testMatch` and
+  `testPathIgnorePatterns` on the command line** (`npm run seed:cost-sample`),
+  so it runs when someone asks for it by name and never as a side effect of
+  `npm run test:e2e`. A seeder added without its script is unreachable.
+- **Keep only a smoke `expect` in the seeder** — enough that a broken seed fails
+  loudly instead of leaving a plausible-looking workspace behind.
+- **The arithmetic a seeder prints belongs in an `integrity` test.** Pair every
+  seeder with one that builds the same sample from the same
+  `helpers/puppeteer/` generators and asserts the app's figures against the
+  generator's `expected*` oracle. `scripts/seed/costSample.seed.ts` is paired
+  with `Composer/tests/standalone/integrity/costSampleAudits.e2e.test.ts`.
+  - The oracle must compute from the sample's **declared inputs**, not restate
+    what the app does. If it merely re-implements the aggregation, the two agree
+    by construction and the test proves nothing.
+  - Seed the sharp case deliberately. In the cost sample that is an elective
+    that is **off**, gating both a process and a logo: a regression that
+    silently includes them still produces plausible-looking numbers, which is
+    exactly why the oracle filters them and the test compares against it.
+- **Generators stay pure** and shared with the perf harness (§11.5): no `page`
+  dependency, seeded PRNG, index-derived ids, exported `expected*` functions.
+
+---
+
 ## Reference
 
 - `webapp/src/helpers/puppeteer/closeOverlays.ts` — `closeOpenOverlays`, `resetUIState`.
@@ -236,3 +283,7 @@ This is a product rule, not a storage detail, and it constrains both production 
 - `webapp/src/docs/mcp-tool-reuse.md` — paired tool patterns.
 - `webapp/src/system/modules/Composer/docs/changes/2026-05-15-e32e37-replace-test-timeouts-with-waits.md` — rationale for the no-fixed-timeouts rule.
 - `webapp/src/docs/analysis/performance-tests.md` — performance-suite options analysis (fixtures vs. seeding vs. hybrid), tiering, and data-addressability rationale behind Section 11.
+- `webapp/src/helpers/puppeteer/generateCostSample.ts` — the cost sample's declared inputs and its `expected*` oracle (Section 13).
+- `webapp/src/helpers/puppeteer/seedCostSample.ts` — drives that sample into the running app; shared by the seeder and the integrity test.
+- `webapp/scripts/seed/costSample.seed.ts` — the seeder itself, run via `npm run seed:cost-sample`.
+- `webapp/src/kernel/modules/Layout/docs/changes/2026-08-08-086940-viewport-tab-instance-isolation.md` — why viewport tabs are independent instances, and why a selector must name the instance (Section 2).

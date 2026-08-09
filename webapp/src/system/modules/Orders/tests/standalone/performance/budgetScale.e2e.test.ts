@@ -55,8 +55,9 @@
  * columns first shipped a MUI `TextField` per row, which took
  * `budget-items-render` to 29.7 s at 1 000 items — a 6x regression no
  * functionality test would have noticed. The row was rebuilt on a native
- * `input` with `React.memo` and no ripple. If these tiers ever become
- * realistic, virtualize the list.
+ * `input` with `React.memo` and no ripple, and the input has since gone
+ * entirely: the quantity is derived from the line's grade curve, so the row
+ * renders it as text. If these tiers ever become realistic, virtualize the list.
  */
 import puppeteer, { Browser, Page } from "puppeteer-core";
 import {

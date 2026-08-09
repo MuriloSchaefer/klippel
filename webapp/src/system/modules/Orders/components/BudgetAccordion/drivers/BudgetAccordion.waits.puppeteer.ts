@@ -47,7 +47,10 @@ export const waitForBudgetCount = async (page: Page, n: number) => {
 export const itemRowSelector = (label: string) =>
   `[data-testid="budget-item"][data-budget-item-label="${label}"]`;
 
-/** Wait until the row for `label` shows `amount`. */
+/**
+ * Wait until the row for `label` shows `amount` garments — the sum of its grade
+ * curve, which is the only place a line's quantity comes from.
+ */
 export const waitForItemAmount = async (
   page: Page,
   label: string,

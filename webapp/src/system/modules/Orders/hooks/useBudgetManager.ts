@@ -11,7 +11,6 @@ import {
   createBudget,
   deleteBudget,
   removeItemFromBudget,
-  setItemAmount,
 } from "../store/budgets/actions";
 import { BudgetItemState } from "../store/state";
 
@@ -22,7 +21,6 @@ type BudgetManager = {
   addToBudget: (budgetId: string) => string;
   removeFromBudget: (budgetId: string, itemId: string) => void;
   deleteBudget: (budgetId: string) => void;
-  setAmount: (budgetId: string, itemId: string, amount: number) => void;
 };
 
 /**
@@ -54,7 +52,7 @@ export default function useBudgetManager(): BudgetManager {
   // Same numbers the Custo and Tempo accordions show. Captured at add time
   // because the variation graph only exists while its viewport is open, and a
   // budget has to price — and time — lines whose viewports are closed.
-  const { totalMoneyPerUnit, totalMinutesPerUnit, grades, totalGarments } =
+  const { totalMoneyPerUnit, totalMinutesPerUnit, grades } =
     useVariationUnitCost(variationId);
 
   const buildItem = (): BudgetItemState => {
@@ -64,10 +62,9 @@ export default function useBudgetManager(): BudgetManager {
       modelId,
       label: modelName,
       addedAt: Date.now(),
-      // Quantity comes from the size curve: the line is for however many
-      // garments the variation is graded for. Falls back to 1 when the
-      // variation has no grades yet, so an ungraded piece is still quotable.
-      amount: totalGarments > 0 ? totalGarments : 1,
+      // The size curve is the line's quantity — see `utils/quantity.ts`. No
+      // separate amount is stored, so there is nothing to fall out of step
+      // with the curve.
       grades: grades.length > 0 ? grades : undefined,
       unitCost: totalMoneyPerUnit > 0 ? totalMoneyPerUnit : undefined,
       unitMinutes: totalMinutesPerUnit > 0 ? totalMinutesPerUnit : undefined,
@@ -122,9 +119,6 @@ export default function useBudgetManager(): BudgetManager {
       viewportManager.functions.setExtras(activeViewport, {
         ..._.omit(activeVP.extra, ["budgetId", "budgetItemId"]),
       });
-    },
-    setAmount(budgetId, itemId, amount) {
-      dispatch(setItemAmount({ budgetId, itemId, amount }));
     },
     deleteBudget(budgetId) {
       // Group unwinding and file deletion happen in the budgets middleware,

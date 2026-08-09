@@ -21,8 +21,19 @@
  * the same breakage istanbul's `cov_*` causes in MCP tool files. Jest's swc
  * transform does not, and this stack is already proven under it.
  *
- * Guarded by `SEED_SAMPLE=1` so an ordinary `npm run test:e2e` skips it — it
- * rewrites a workspace and is not an assertion about the product.
+ * It is **not** part of the test suite: it resets a workspace, which would pull
+ * the ground out from under whatever else is running. `jest.config.ts` ignores
+ * `scripts/` outright, and `npm run seed:cost-sample` overrides `testMatch` to
+ * reach this file — so it runs when someone asks for it by name, and never as a
+ * side effect of `npm run test:e2e`. Hence the `.seed.ts` name: anything matching
+ * `*.test.ts` is collected by the suite's default pattern.
+ *
+ * The maths it prints are asserted for real in
+ * `Composer/tests/standalone/integrity/costSampleAudits.e2e.test.ts`, which
+ * builds the same sample from the same helpers and checks the cost rows,
+ * subtotals and per-material audits against `generateCostSample`'s expectations.
+ * The few `expect`s kept here are a smoke check, so a broken seed fails loudly
+ * instead of leaving a plausible-looking demo workspace behind.
  */
 import puppeteer, { Browser, Page } from "puppeteer-core";
 
@@ -77,11 +88,8 @@ import { createBudgetTool } from "@system/modules/Orders/mcpTools/createBudget";
 
 
 const brl = (n: number) => `R$ ${n.toFixed(2)}`;
-const enabled = process.env.SEED_SAMPLE === "1";
-const run = enabled ? describe : describe.skip;
 
 beforeAll(async () => {
-  if (!enabled) return;
   browser = await puppeteer.connect({
     browserURL: CDP_URL,
     defaultViewport: null,
@@ -95,7 +103,7 @@ afterAll(async () => {
   if (browser) await browser.disconnect();
 });
 
-run("seed: cost sample", () => {
+describe("seed: cost sample", () => {
   it("builds the sample in the running app", async () => {
     // eslint-disable-next-line no-console
     const log = (m: string) => console.log(`[sample] ${m}`);

@@ -22,11 +22,15 @@ export type SyntheticBudgetItem = {
   modelId: string;
   label: string;
   addedAt: number;
-  /** Quantity for the line — index-derived so runs are comparable. */
-  amount: number;
-  /** Snapshotted cost per produced unit; total = `unitCost * amount`. */
+  /**
+   * The line's size curve — index-derived so runs are comparable. It is also
+   * the line's *quantity*: production sums it (`budgetItemAmount`), there is no
+   * separate amount field.
+   */
+  grades: { label: string; amount: number }[];
+  /** Snapshotted cost per produced unit; total = `unitCost * sum(grades)`. */
   unitCost?: number;
-  /** Snapshotted production minutes per unit; total = `unitMinutes * amount`. */
+  /** Snapshotted production minutes per unit; total = `unitMinutes * sum(grades)`. */
   unitMinutes?: number;
   costCapturedAt?: number;
 };
@@ -99,6 +103,26 @@ const hash5 = (rand: () => number) =>
     .padStart(5, "0")
     .slice(0, 5);
 
+/**
+ * A curve whose amounts add up to `total`, spread over as many of the standard
+ * sizes as it takes. The quantity of a generated line is this sum — the same
+ * relationship production has, so a seeded row and a real one are read the same
+ * way.
+ */
+const SIZE_LABELS = ["PP", "P", "M", "G", "GG"] as const;
+
+export const gradesSummingTo = (
+  total: number,
+): { label: string; amount: number }[] => {
+  const sizes = Math.max(1, Math.min(total, SIZE_LABELS.length));
+  return Array.from({ length: sizes }, (_unused, i) => ({
+    label: SIZE_LABELS[i],
+    // The last size soaks up the remainder, so the curve always sums to
+    // `total` however many sizes it is spread over.
+    amount: i === sizes - 1 ? total - (sizes - 1) : 1,
+  }));
+};
+
 export type GenerateBudgetsOptions = {
   /** Budgets to generate, excluding the planted probe budget. */
   count: number;
@@ -133,8 +157,8 @@ export const generateBudgetsCatalog = ({
         label: `Peça ${budgetIndex}.${j}`,
         addedAt: now + budgetIndex * 1000 + j,
         // Index-derived rather than random so a row's total is reproducible:
-        // amounts cycle 1..5, unit cost is a stable function of the index.
-        amount: (j % 5) + 1,
+        // curves sum to 1..5, unit cost is a stable function of the index.
+        grades: gradesSummingTo((j % 5) + 1),
         unitCost: Number((10 + (j % 20) * 1.5).toFixed(2)),
         unitMinutes: 5 + (j % 12),
         costCapturedAt: now,
@@ -149,7 +173,7 @@ export const generateBudgetsCatalog = ({
         label: BUDGET_PROBE_TOKENS.item,
         addedAt: now,
         // Fixed so a test can assert an exact total: 3 × 12.50 = 37.50.
-        amount: 3,
+        grades: gradesSummingTo(3),
         unitCost: 12.5,
         unitMinutes: 20,
         costCapturedAt: now,

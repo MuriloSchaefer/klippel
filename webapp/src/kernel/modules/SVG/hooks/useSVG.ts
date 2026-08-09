@@ -58,7 +58,10 @@ const useSVG = (path: string, instanceName: string): SVG | undefined => {
       .querySelector("svg");
 
     return svgRoot;
-  }, [state?.content]);
+    // Instance-keyed as well as content-keyed: two instances of the same artwork
+    // hold equal content strings, and `DOMroot` is handed out for mutation, so
+    // content alone would share one document between them.
+  }, [state?.content, path, instanceName]);
 
   if (!state || !parsedSVG) return; // TODO: add error handling
 

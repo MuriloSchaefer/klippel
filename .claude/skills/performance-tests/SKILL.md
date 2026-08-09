@@ -49,4 +49,6 @@ New tier, new failure mode, or a new shared primitive → update `e2e-tests.md` 
 ## Related
 
 - [e2e-test-rules](../e2e-test-rules/SKILL.md) — the base e2e rules every perf test also follows.
+- [session-persistence](../session-persistence/SKILL.md) — §11.6 depends on it: for session-JSON slices, mutations are not I/O and the save is the write surface.
+- [workspace-seeders](../workspace-seeders/SKILL.md) — shares the pure `generate*` helpers listed in §11.5.
 - [debug-traces](../debug-traces/SKILL.md) — for diagnosing *why* a measured render is slow once a budget fails.

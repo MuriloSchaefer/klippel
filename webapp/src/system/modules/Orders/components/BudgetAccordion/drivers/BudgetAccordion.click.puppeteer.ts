@@ -12,7 +12,6 @@ import {
   DELETE_BUDGET_TESTID,
   REMOVE_FROM_BUDGET_TESTID,
   itemRowSelector,
-  waitForItemAmount,
 } from './BudgetAccordion.waits.puppeteer';
 
 export * from './BudgetAccordion.waits.puppeteer';
@@ -100,29 +99,6 @@ export const selectBudgetByLabel = async (page: Page, label: string) => {
   // is torn down it swallows the hit-test, so a following confirm click never
   // reaches the button — wait it out rather than clicking into a backdrop.
   await page.waitForSelector('[role="listbox"]', { hidden: true });
-};
-
-/**
- * Set a budget line's amount. The field commits on blur, so the driver types
- * and then presses Enter (which blurs) rather than relying on `change`.
- */
-export const setItemAmount = async (
-  page: Page,
-  label: string,
-  amount: number,
-) => {
-  // The amount field is a native `input` carrying the testid itself (the MUI
-  // TextField wrapper was dropped for render cost), so there is no inner input.
-  const sel = `${itemRowSelector(label)} [data-testid="budget-item-amount"]`;
-  await page.waitForSelector(sel);
-  await page.click(sel);
-  await page.keyboard.down('Control');
-  await page.keyboard.press('a');
-  await page.keyboard.up('Control');
-  await page.keyboard.press('Delete');
-  await page.type(sel, String(amount));
-  await page.keyboard.press('Enter');
-  await waitForItemAmount(page, label, amount);
 };
 
 export const clickRemoveFromBudget = async (page: Page) => {

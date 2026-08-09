@@ -49,6 +49,29 @@ Single-shot change, no phases. Validation checklist:
 
 ## Status notes
 
+**Partly reversed 2026-08-08 — `materialTypes` caches to `.session/` again.** The
+empty `initialState` left a window in which a material was in the slice with no
+type to describe it: `materialTypes` had no rehydrator, so its only populators
+were the async `materialsCatalogLoaded` and `materialTypeVersionRegistered`.
+`MaterialSelector` resolves `materialTypes[material.type]` during render and
+crashed on it (`Cannot read properties of undefined (reading 'schemas')`) on cold
+open, on workspace switch (rehydrators run *before* `workspaceSelected` fires the
+catalog load), and on peer refresh. Restored for **types only**:
+`persistMaterialType` / `pruneMaterialTypeFiles` / `materialTypesRehydrated` in
+[`store/materialTypes/slice.ts`](../../store/materialTypes/slice.ts), a single
+reconciling writer in [`store/session.ts`](../../store/session.ts), and its
+`registerSessionSaveListener` registration in
+[`kernelCalls.ts`](../../kernelCalls.ts). Materials, industries and sellers stay
+Jazz-only — the ghost-row races described above come from *rows* going stale,
+whereas type schemas are additive (versions are appended, never deleted), so a
+stale type is superseded by the catalog load rather than contradicting it. The
+`materialTypesRehydrated` case merges instead of replacing, for the same reason
+`materialsCatalogLoaded` does: replacing with an empty payload on a switch into
+an uncached workspace would reopen the window. `MaterialSelector` also stops
+asserting the type is present, since the first-ever open of a workspace has no
+cache to rehydrate from. Full write-up:
+[`2026-08-08-9f0048-material-types-session-cache.md`](./2026-08-08-9f0048-material-types-session-cache.md).
+
 Implemented 2026-05-24. Deleted `store/actions.ts` and `store/middlewares.ts`; trimmed `store/slice.ts`, `store/materials/slice.ts`, `store/materialTypes/slice.ts`, and `kernelCalls.ts` per the Change section. `npx tsc --noEmit -p tsconfig.json` reports no new errors (only the pre-existing `cojson/crypto/WasmCrypto` moduleResolution warning in `electron/main/jazz.ts`). Manual verification of the cold-open and two-peer collaborative drivers still pending.
 
 Out of scope and intentionally **not** removed in this change:

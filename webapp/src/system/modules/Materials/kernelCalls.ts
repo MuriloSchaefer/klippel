@@ -11,13 +11,25 @@ import MaterialStockViewport from "./components/viewports/MaterialStockViewport"
 import materialsMiddlewares from "./store/materials/middlewares";
 
 import { loadMaterialsCatalog } from "./store/materials/actions";
+import { sessionSaver } from "./store/session";
 
 export function startModule({
   dispatch,
   managers: { storeManager, componentRegistryManager, ribbonMenuManager },
+  storage,
 }: StartModuleProps) {
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
   storeManager.functions.registerMiddleware(materialsMiddlewares);
+
+  // Session writer — caches `materialTypes` so a cold renderer has the type
+  // schemas before the first surface that reads them paints. Single writer for
+  // the module (per repo `CLAUDE.md`); see `store/session.ts`.
+  const store = storeManager.functions.getStore();
+  storage.registerSessionSaveListener(
+    store
+      ? sessionSaver(store)
+      : () => console.log("Missing store. skipping session save!"),
+  );
 
   // Catalog load is driven by `workspaceSelected` (see
   // `store/materials/middlewares.ts`). Dispatching at module-start

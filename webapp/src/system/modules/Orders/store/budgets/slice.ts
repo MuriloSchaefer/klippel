@@ -1,11 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { BudgetsManagerState, BudgetState } from "../state";
+import { BudgetItemState, BudgetsManagerState, BudgetState } from "../state";
 import {
   addItemToBudget,
   createBudget,
   deleteBudget,
   removeItemFromBudget,
-  setItemAmount,
 } from "./actions";
 import { PathLike } from "fs";
 
@@ -62,15 +61,18 @@ const restoreBudgetsSession = async (
       { encoding: "utf-8" },
     );
     const content = JSON.parse(fileContent) as BudgetState;
-    // `items` and per-item `amount` both post-date budgets already on disk;
-    // normalise on the way in so nothing downstream has to guard for them.
-    const items = Object.entries(content.items ?? {}).reduce(
-      (acc, [id, item]) => ({
-        ...acc,
-        [id]: { ...item, amount: item.amount ?? 1 },
-      }),
-      {},
-    );
+    // `items` post-dates budgets already on disk; normalise on the way in so
+    // nothing downstream has to guard for it.
+    //
+    // A pre-`grades` snapshot may still carry the old hand-editable `amount`.
+    // It is dropped, not honoured: the quantity now comes from the curve and
+    // nothing else, so such a line reads as its grades (or 1 when it has none).
+    const items = Object.entries(content.items ?? {}).reduce((acc, [id, item]) => {
+      const { amount: _legacyAmount, ...rest } = item as BudgetItemState & {
+        amount?: number;
+      };
+      return { ...acc, [id]: rest };
+    }, {});
     return { ...(await acc), [content.id]: { ...content, items } };
   }, {});
   return budgets as BudgetsManagerState;
@@ -110,26 +112,6 @@ const slice = createSlice({
         [budget.id]: {
           ...budget,
           items: { ...budget.items, [payload.item.itemId]: payload.item },
-        },
-      };
-    });
-    builder.addCase(setItemAmount, (state, { payload }) => {
-      const budget = state[payload.budgetId];
-      const item = budget?.items?.[payload.itemId];
-      if (!budget || !item) return state;
-      return {
-        ...state,
-        [budget.id]: {
-          ...budget,
-          items: {
-            ...budget.items,
-            // Guard the reducer rather than the input field alone: amounts also
-            // arrive from restored JSON and from the MCP tool.
-            [item.itemId]: {
-              ...item,
-              amount: Math.max(0, Math.floor(payload.amount) || 0),
-            },
-          },
         },
       };
     });

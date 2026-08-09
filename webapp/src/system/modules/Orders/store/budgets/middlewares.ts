@@ -11,10 +11,8 @@ import {
   createBudget,
   deleteBudget,
   itemAddedToBudget,
-  itemAmountSet,
   itemRemovedFromBudget,
   removeItemFromBudget,
-  setItemAmount,
 } from "./actions";
 import { OrdersModuleState } from "../state";
 
@@ -51,14 +49,6 @@ middlewares.startListening({
   effect: async ({ payload }, listenerApi) => {
     const { dispatch } = listenerApi;
     dispatch(itemRemovedFromBudget(payload));
-  },
-});
-
-middlewares.startListening({
-  actionCreator: setItemAmount,
-  effect: async ({ payload }, listenerApi) => {
-    const { dispatch } = listenerApi;
-    dispatch(itemAmountSet(payload));
   },
 });
 

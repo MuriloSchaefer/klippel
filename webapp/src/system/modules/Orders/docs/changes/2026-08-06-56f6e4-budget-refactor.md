@@ -183,8 +183,8 @@ export type BudgetItemState = {
   modelId: string;
   label: string;    // model name captured at add time
   addedAt: number;
-  amount: number;         // quantity: the sum of the grade amounts on add
-  grades?: { label: string; amount: number }[]; // the size curve it came from
+  grades?: { label: string; amount: number }[]; // the size curve — and the
+                          // line's quantity, summed by `utils/quantity.ts`
   unitCost?: number;      // cost per produced unit, snapshotted on add
   unitMinutes?: number;   // production minutes per unit, snapshotted on add
   costCapturedAt?: number;
@@ -325,22 +325,21 @@ In a budget:
   `id="budget-header"`, `data-budget-id`.
 - `List` of sibling items, `id="budget-item-list"`. Each row
   (`BudgetItemRow`, `id="budget-item-${itemId}"`, `tabindex="0"` so
-  `focusFirstRow` works) shows **name, amount and total cost**; clicking it
+  `focusFirstRow` works) shows **name, quantity and total cost**; clicking it
   selects that item's viewport if open.
-  - *amount* — editable inline, `data-testid="budget-item-amount"`. Read-only
-    would pin every line at the 1 it is created with and make the total
-    meaningless, so editing is part of the feature, not an extra.
-  - *total cost* — `unitCost × amount`. When `unitCost` is absent the line
+  - *quantity* — **the sum of the variation's grade amounts** (`GRADUATION`
+    nodes), read-only, `data-testid="budget-item-amount"`: a production run is
+    graded, so the line is for however many garments the size curve calls for,
+    never a number typed in. Derived on render by `utils/quantity.ts`
+    `budgetItemAmount`, which falls back to 1 when the variation has no grades
+    so an ungraded piece is still quotable. The curve is snapshotted with the
+    line and shown beneath it
+    ("grade: PP 20 · P 60 · M 90 · G 60 · GG 20") — always, since the quantity
+    *is* that sum and the two cannot disagree.
+  - *total cost* — `unitCost × quantity`. When `unitCost` is absent the line
     reads **"não precificado"**, never `0.00`: a piece nobody has priced must
     not be indistinguishable from a free one.
-  - *amount* — **the sum of the variation's grade amounts** (`GRADUATION`
-    nodes), not a number typed in: a production run is graded, so the line is
-    for however many garments the size curve calls for. Falls back to 1 when
-    the variation has no grades, so an ungraded piece is still quotable. The
-    curve is snapshotted with the line and shown beneath it
-    ("grade: PP 20 · P 60 · M 90 · G 60 · GG 20") — but only while it still
-    sums to the amount, since a hand override would make the breakdown a lie.
-  - *production time* — `unitMinutes × amount`, shown in **days**.
+  - *production time* — `unitMinutes × quantity`, shown in **days**.
     Snapshotted from the variation's summed `computedTimePerUnit` for the same
     reason as the cost, and absent when the piece has no process, in which case
     the line says "produção: não calculada".
@@ -435,11 +434,12 @@ keyboard variants, all passing. Covers:
 3. A second model added to the same budget → 2 items, both tabs grouped.
 4. **Re-opening a model does not join the budget** (§5); adding it explicitly
    then yields a second, distinct line for the same model.
-5. Each row shows name + amount (1 on add) + total cost + production time; an
+5. Each row shows name + quantity + total cost + production time; an
    unpriced/untimed line reads "não precificado" / "não calculada" rather than
-   0, and the amount is editable.
-6. A priced line totals `unitCost × amount` and `unitMinutes × amount`, and
-   doubling the amount doubles both.
+   0. The quantity comes from the grade curve: an ungraded line falls back to 1
+   and shows no breakdown, a graded one sums its curve and shows it in full.
+6. A priced line totals `unitCost × quantity` and `unitMinutes × quantity`, and
+   a line whose curve calls for twice as many garments totals twice as much.
 7. `Remover do orçamento` → back to the create/add branch, tab leaves the group.
 8. `Deletar orçamento` → group dissolved, budget gone from the store, model
    still open.
@@ -461,7 +461,7 @@ one left by a failing `it` would still be in the next one's selector
 
 1. A budget created but not saved leaves **nothing** on disk.
 2. Saving via "Salvar agora" persists it; it survives a reload with its items,
-   amounts and colour.
+   their grade curves and its colour.
 3. A budget deleted after being saved does not resurrect — the save prunes.
 4. An unsaved budget does not sneak into a snapshot taken for a saved sibling.
 
@@ -494,7 +494,7 @@ grows superlinearly (639 → 2820 → 6046 ms for 100 → 500 → 1000 items) be
 Acceptable for realistic budget sizes; the fix, if it ever bites, is to debounce
 the persist or add a bulk action.
 
-**The suite has already paid for itself.** Adding the amount + total-cost
+**The suite has already paid for itself.** Adding the quantity + total-cost
 columns first shipped a MUI `TextField` per row, which took
 `budget-items-render` from 4.9 s to **29.7 s** at 1 000 items — a 6× regression
 no functionality test would have noticed. `BudgetItemRow` was rebuilt on a
@@ -503,6 +503,23 @@ the pre-column baseline is the honest cost of two more fields per line. A budget
 renders every line at once; virtualize if these tiers ever become realistic.
 
 ## Status notes
+
+**Amended 2026-08-08 — the hand-editable `amount` is gone; quantity comes only
+from the grade curve.** §6 originally specified the quantity twice: once as an
+inline-editable field and once as the sum of the variation's grades. Both
+shipped, which left two answers to "how many garments is this line for" and a
+grade breakdown that was suppressed whenever they disagreed. `amount` is removed
+from `BudgetItemState`; `utils/quantity.ts` `budgetItemAmount` sums `grades` on
+render (falling back to 1 for an ungraded piece, as before), and the row shows
+the quantity as read-only text. Removed with it: the `setItemAmount` /
+`itemAmountSet` action pair and its reducer case and listener,
+`useBudgetManager.setAmount`, the `setBudgetItemAmount` MCP tool and its
+`setItemAmount` click driver. `waitForItemAmount` stays — it now waits on a
+derived quantity. `generateBudgetsCatalog` emits `grades` (via the new
+`gradesSummingTo`) instead of `amount`, so a seeded line is read exactly like a
+real one. A pre-`grades` snapshot's `amount` is dropped on rehydrate rather than
+honoured, so a budget saved with a hand-typed quantity reads as its curve, or as
+1 when it has none.
 
 `implemented`, verified by driving the running app: create (name + colour),
 add-to, remove-from, delete, tab-group colouring, persistence across a reload,
@@ -550,10 +567,9 @@ Open questions:
    reads as two identical entries. Needs either a per-variation name or a
    disambiguating suffix — deferred, since naming variations is its own
    decision.
-2. **Quantities.** A real *orçamento* line usually carries a quantity and a
-   unit price; `ProcessCostAccordion` already computes cost per unit. This
-   change deliberately models membership only. Adding `quantity` to
-   `BudgetItemState` later is additive.
+2. **Quantities.** Resolved: a line's quantity is the sum of its grade curve
+   (`utils/quantity.ts`), and `unitCost`/`unitMinutes` multiply by it. See the
+   status note on removing the hand-editable `amount`.
 3. **Budget-level cost roll-up.** Natural follow-up: sum
    `ProcessCostAccordion`'s per-item total across a budget's items. Out of
    scope here — it needs the graph of every item loaded, not just the open one.

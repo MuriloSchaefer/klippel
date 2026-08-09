@@ -66,11 +66,6 @@ export default function BudgetDetails({ budget, itemId }: BudgetDetailsProps) {
     if (itemId) manager.removeFromBudget(budget.id, itemId);
   }, [budget.id, itemId, manager]);
 
-  const handleAmountChange = useCallback(
-    (id: string, amount: number) => manager.setAmount(budget.id, id, amount),
-    [budget.id, manager],
-  );
-
   // Costs are snapshotted in reais (`reais11`); show the unit's own
   // abbreviation so the label follows the Converter's configuration.
   const units = useUnits([MINUTE_UNIT, DAY_UNIT, "reais11"] as string[]);
@@ -151,7 +146,6 @@ export default function BudgetDetails({ budget, itemId }: BudgetDetailsProps) {
             onSelect={(name) =>
               viewportManager.functions.selectViewport(name)
             }
-            onAmountChange={handleAmountChange}
           />
         ))}
       </List>
