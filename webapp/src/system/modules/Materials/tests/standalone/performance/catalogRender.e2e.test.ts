@@ -21,7 +21,19 @@
  * Results print one `[perf] …` line per surface and are appended to
  * `.tests-executions/perf-results.jsonl` for trending (§11.1).
  *
- * Budgets are PLACEHOLDERS pending calibration on reference hardware.
+ * A fourth, narrower number is derived from the same seed: **apply** —
+ * `render` minus the bulk-write cost, i.e. catalog-load IPC + Redux
+ * re-derivation + grid render with the fixture write taken out. `render`
+ * is dominated by `seed-write` (which is fixture construction, not a
+ * product surface), so `apply` is the one that actually tracks this
+ * module's cost. It grows with the tier — the catalog-load IPC clones the
+ * whole snapshot and the adapter walks it — but with a small constant
+ * (272 / 454 / 609 ms at 103 / 503 / 1003 rows on the reference machine),
+ * where the pre-fix path was quadratic.
+ *
+ * Budgets are calibrated from a reference run on this repo's dev machine
+ * (see docs/analysis/materials-catalog-lag-analysis.md) with headroom for
+ * a loaded CI box; the recorded jsonl trend is the real signal (§11.1).
  * Scope: standalone, ≤ 1k live-IPC tier. 10k/100k need out-of-band
  * direct-SQLite seeding (§11.2). NOTE: the MUI DataGrid paginates at 100
  * rows/page, so the scroll sweep exercises page-1 virtualization, not
@@ -61,13 +73,24 @@ const SCROLL_STEPS = 30;
 const TIERS: ReadonlyArray<{
   count: number;
   renderBudgetMs: number;
+  applyBudgetMs: number;
   searchBudgetMs: number;
   scrollBudgetMs: number;
 }> = [
-  { count: 100, renderBudgetMs: 1_500, searchBudgetMs: 1_500, scrollBudgetMs: 3_000 },
-  { count: 500, renderBudgetMs: 4_500, searchBudgetMs: 2_500, scrollBudgetMs: 3_000 },
-  { count: 1_000, renderBudgetMs: 10_000, searchBudgetMs: 4_000, scrollBudgetMs: 4_000 },
-  // { count: 10_000, renderBudgetMs: 20_000, searchBudgetMs: 5_000, scrollBudgetMs: 5_000 }, // FREEZES
+  // `render` scales with the tier because the bulk seed write does, and
+  // `apply` grows sub-linearly with it (it clones and walks the snapshot).
+  // `search` and `scroll` are flat on purpose: search rebuilt its haystacks
+  // per keystroke before (analysis doc F7) and the grid is virtualized, so a
+  // tier-dependent number in either is the regression signal.
+  { count: 100, renderBudgetMs: 1_500, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 2_500 },
+  { count: 500, renderBudgetMs: 4_500, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 2_500 },
+  { count: 1_000, renderBudgetMs: 9_000, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 2_500 },
+  // 10k is still out of reach here, but no longer because the renderer
+  // freezes — that was the quadratic adapter + full-reload-per-tick path
+  // (analysis doc F1/F2), both fixed. What blocks it now is seeding: the
+  // live `seed` IPC caps at LIVE_SEED_MAX, so this tier needs the
+  // materialize-once + `cpSync` base from §11.2, which does not exist yet.
+  // { count: 10_000, renderBudgetMs: 20_000, applyBudgetMs: 1_500, searchBudgetMs: 2_500, scrollBudgetMs: 3_000 },
 ];
 
 let browser: Browser | null = null;
@@ -127,7 +150,7 @@ beforeEach(async () => {
 
 describe.each(TIERS)(
   "MaterialStock viewport — $count materials (perf)",
-  ({ count, renderBudgetMs, searchBudgetMs, scrollBudgetMs }) => {
+  ({ count, renderBudgetMs, applyBudgetMs, searchBudgetMs, scrollBudgetMs }) => {
     const WORKSPACE = `perf-viewport-${count}`;
     const total = count + PROBES;
 
@@ -169,6 +192,18 @@ describe.each(TIERS)(
       expectWithinBudget(
         { surface: "render", cardinality: total, peers: 1, metric: "ms", value: totalMs },
         renderBudgetMs,
+      );
+      // The product surface inside `render`: everything after the fixture
+      // write — catalog-load IPC, Redux re-derivation, grid render.
+      expectWithinBudget(
+        {
+          surface: "apply",
+          cardinality: total,
+          peers: 1,
+          metric: "ms",
+          value: totalMs - seedMs,
+        },
+        applyBudgetMs,
       );
 
       // O(1) addressability (§11.3/§11.4): a planted probe and a derived

@@ -8,12 +8,13 @@ import {
   deleteMaterial,
   loadMaterials,
   loadMaterialsCatalog,
+  loadMaterialsCatalogDelta,
   materialAdded,
   materialDeleted,
+  materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
   materialStockUpdated,
   materialTypeVersionRegistered,
-  materialUpdated,
   registerMaterialTypeVersion,
   updateMaterial,
   updateMaterialStock,
@@ -47,6 +48,32 @@ middlewares.startListening({
     if (!api) return;
     const snapshot = await api.load();
     dispatch(materialsCatalogLoaded(snapshot));
+  },
+});
+
+// Change ticks answer with a delta, not a reload. Main keeps a per-renderer
+// shadow of the catalog and returns only what moved since this renderer last
+// asked; `{ full }` comes back when there is no usable "since" (first tick,
+// workspace switch), and is applied exactly like a snapshot load.
+//
+// The full reload used to run on every tick: whole-catalog projection, multi-MB
+// structured clone, and a full re-derive in the reducer — per edit, per
+// renderer. During an xlsx import that never drained, because chunk writes tick
+// faster than the rebuild completes
+// (docs/analysis/materials-catalog-lag-analysis.md, F2).
+middlewares.startListening({
+  actionCreator: loadMaterialsCatalogDelta,
+  effect: async (_action, { dispatch }) => {
+    const api = materialsApi();
+    if (!api) return;
+    if (typeof api.loadDelta !== "function") {
+      // Preload predates the delta channel (stale dev build). Fall back rather
+      // than going deaf to catalog changes.
+      dispatch(loadMaterialsCatalog());
+      return;
+    }
+    const delta = await api.loadDelta();
+    dispatch(materialsCatalogDeltaLoaded(delta));
   },
 });
 
@@ -129,22 +156,17 @@ middlewares.startListening({
 
 middlewares.startListening({
   actionCreator: updateMaterial,
-  effect: async ({ payload }, { dispatch, getState }) => {
+  effect: async ({ payload }, { dispatch }) => {
     const api = materialsApi();
     if (!api) return;
     await api.updateMaterial(payload);
-    // Re-read the affected material from the catalog so suppliers /
-    // industry edges resolve correctly.
-    const snapshot = await api.load();
-    const dto = snapshot.materials[payload.id];
-    if (!dto) return;
-    const edges = Object.values(snapshot.edges);
-    dispatch(
-      materialUpdated({
-        id: payload.id,
-        material: materialDtoToState(dto, edges as any),
-      }),
-    );
+    // Re-read through the delta channel rather than re-fetching the whole
+    // catalog for one row. The delta carries this material *and* its current
+    // edges, so suppliers / industry still resolve correctly — and because
+    // computing it advances this renderer's shadow, the catalog tick the write
+    // provokes arrives empty instead of re-applying the same change a second
+    // time (docs/analysis/materials-catalog-lag-analysis.md, F2).
+    dispatch(loadMaterialsCatalogDelta());
   },
 });
 

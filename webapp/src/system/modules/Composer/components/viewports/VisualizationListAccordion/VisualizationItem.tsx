@@ -37,10 +37,7 @@ function VisualizationItem({
         | undefined,
   );
   const materialId = materialNode?.materialId;
-  const materials = materialsModule.hooks.useMaterials(
-    materialId !== undefined ? [materialId] : [],
-  );
-  const material = materialId !== undefined ? materials?.[materialId] : undefined;
+  const material = materialsModule.hooks.useMaterial(materialId);
   const materialTypes = materialsModule.hooks.useMaterialTypes();
   const materialType = material ? materialTypes[material.type] : undefined;
   const schema =

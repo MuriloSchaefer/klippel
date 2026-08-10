@@ -1,6 +1,7 @@
 import { registerMainModule } from "../../../../../electron/main/modules";
 import {
   loadMaterialsCatalog,
+  computeCatalogDelta,
   getMaterial,
   seedCatalogIfEmpty,
   addMaterial,
@@ -9,6 +10,7 @@ import {
   deleteMaterial,
   registerMaterialTypeVersion,
   onCatalogChange,
+  dropCatalogShadow,
   dropCatalogSubscription,
   materialsCatalogResolve,
 } from "./materials";
@@ -96,6 +98,18 @@ registerMainModule({
         throw new Error(`loadMaterialsCatalog failed: ${message}`);
       }
     });
+    // Delta read — the normal answer to a `jazz-materials:changed` tick.
+    // Keyed on `event.sender.id` so each renderer gets its own "since",
+    // and one renderer consuming a delta can't starve another.
+    ipcMain.handle("jazz-materials-load-delta", async (event) => {
+      try {
+        return await computeCatalogDelta(String(event.sender.id));
+      } catch (err) {
+        console.error("[jazz-materials-load-delta] threw", err);
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(`computeCatalogDelta failed: ${message}`);
+      }
+    });
     ipcMain.handle(
       "jazz-materials-get",
       async (_event, id: string) => getMaterial(id),
@@ -136,6 +150,11 @@ registerMainModule({
     const materialsListeners = new Map<number, () => void>();
     ipcMain.handle("jazz-materials:subscribe", (event) => {
       const wcId = event.sender.id;
+      // A (re)subscribe means this renderer started over — a fresh boot, or a
+      // reload, which keeps the same `webContents.id` but empties Redux. Drop
+      // its delta shadow so the next tick answers with a full snapshot instead
+      // of "nothing changed since you last asked".
+      dropCatalogShadow(String(wcId));
       materialsListeners.get(wcId)?.();
       const off = onCatalogChange(() => {
         if (event.sender.isDestroyed()) return;

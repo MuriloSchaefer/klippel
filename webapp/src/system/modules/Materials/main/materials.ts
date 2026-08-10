@@ -59,6 +59,7 @@ import type {
   AddMaterialInput,
   AttributeDTO,
   AttributeMap,
+  CatalogDelta,
   CatalogSnapshot,
   EdgeDTO,
   MaterialDTO,
@@ -149,12 +150,11 @@ let notifyDebounceTimer: NodeJS.Timeout | null = null;
  * Single deep-resolve shape for the materials catalog. Shared by every
  * caller that needs the full graph in memory:
  *   1. `requireCatalog`'s `MaterialCatalogCoMap.load`.
- *   2. The live `MaterialCatalogCoMap.subscribe` that powers the change
- *      fan-out (see `ensureCatalogSubscription`).
- *   3. The kernel's join / enable-sync preload, via the
+ *   2. The kernel's join / enable-sync preload, via the
  *      `Materials` module config's `syncPreloadResolve` (`./index.ts`).
  *
- * Exported so those three call sites can't drift.
+ * Exported so those call sites can't drift. The live change subscription
+ * deliberately uses the shallower `materialsCatalogChangeResolve` below.
  */
 export const materialsCatalogResolve = {
   materials: {
@@ -168,6 +168,29 @@ export const materialsCatalogResolve = {
     },
     $onError: "catch" as const,
   },
+  materialTypes: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  industries: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  sellers: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  edges: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+} as const;
+
+/**
+ * Resolve shape for the **live change subscription** only.
+ *
+ * The subscription's job is to answer one question — did anything move? — and
+ * that is decidable from the material CoMaps themselves: every mutator bumps
+ * `updatedAt` on the material (see `updateMaterial`, `updateMaterialStock`,
+ * `addMaterial`), and a peer's write carries the same field over sync. Holding
+ * the attribute / composition / caracteristics sub-CoMaps open as well made
+ * every catalog change re-validate the whole deep subtree for no added signal
+ * (docs/analysis/materials-catalog-lag-analysis.md, F8).
+ *
+ * The deep shape is still used where the *content* is needed:
+ * `requireCatalog`'s load — which `computeCatalogDelta` and
+ * `loadMaterialsCatalog` both go through — and the sync preload.
+ */
+export const materialsCatalogChangeResolve = {
+  materials: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
   materialTypes: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
   industries: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
   sellers: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
@@ -195,10 +218,10 @@ function ensureCatalogSubscription(catalogId: string): void {
     unsubscribeFromCatalog = (MaterialCatalogCoMap as unknown as {
       subscribe: (
         id: string,
-        options: { resolve: typeof materialsCatalogResolve },
+        options: { resolve: typeof materialsCatalogChangeResolve },
         listener: () => void,
       ) => () => void;
-    }).subscribe(catalogId, { resolve: materialsCatalogResolve }, () =>
+    }).subscribe(catalogId, { resolve: materialsCatalogChangeResolve }, () =>
       notifyCatalogChange(),
     );
     subscribedCatalogId = catalogId;
@@ -218,6 +241,9 @@ export function dropCatalogSubscription(): void {
   unsubscribeFromCatalog?.();
   unsubscribeFromCatalog = null;
   subscribedCatalogId = null;
+  // Shadows are diffed against a specific catalog; keeping them across a
+  // workspace switch would produce a delta between two unrelated catalogs.
+  dropCatalogShadows();
 }
 
 export function onCatalogChange(listener: CatalogChangeListener): () => void {
@@ -505,6 +531,218 @@ export async function loadMaterialsCatalog(): Promise<CatalogSnapshot> {
     snapshot.edges[k] = edgeCoMapToDto(v);
   }
   return snapshot;
+}
+
+// ---- change deltas ---------------------------------------------------
+//
+// A catalog tick used to mean "re-fetch everything": each renderer answered
+// `jazz-materials:changed` with a full `loadMaterialsCatalog`, paying a whole-
+// catalog projection, a multi-MB structured clone, and a full re-derivation in
+// the reducer — for a one-field edit. During an xlsx import, where chunk writes
+// tick faster than the rebuild completes, that never drained
+// (docs/analysis/materials-catalog-lag-analysis.md, F2).
+//
+// Instead we keep a per-client *shadow* of cheap signatures and diff against it.
+// The shadow is per client (renderer webContents), not global, because each
+// client must be told about a change exactly once: a single shared shadow would
+// let whichever renderer asked first consume the delta and leave the others
+// stale.
+
+interface CatalogShadow {
+  catalogId: string;
+  /** id → `updatedAt`. Every mutator bumps it, so it is a sound change key. */
+  materials: Map<string, number>;
+  /** id → `type|sourceId|targetId`; edges have no timestamp of their own. */
+  edges: Map<string, string>;
+  materialTypes: Map<string, string>;
+  industries: Map<string, number>;
+  sellers: Map<string, number>;
+}
+
+const catalogShadows = new Map<string, CatalogShadow>();
+
+/**
+ * Forget every client's shadow. Called when the catalog subscription is
+ * dropped (workspace close/switch) so the next tick re-syncs from a full
+ * snapshot rather than diffing against another workspace's catalog.
+ */
+export function dropCatalogShadows(): void {
+  catalogShadows.clear();
+}
+
+/**
+ * Forget one client's shadow, so its next delta is a full snapshot.
+ *
+ * Called when a renderer (re)subscribes. This matters because the shadow
+ * advances when main *computes* a delta, not when the renderer *applies* it —
+ * so anything that discards renderer state without discarding the shadow
+ * leaves main believing that client is up to date when it holds nothing.
+ * A reload is exactly that case: `webContents.id` survives it, but Redux does
+ * not. Re-subscribing is the renderer's own signal that it started over.
+ */
+export function dropCatalogShadow(clientId: string): void {
+  catalogShadows.delete(clientId);
+}
+
+const edgeSignature = (e: EdgeDTO): string =>
+  `${e.type}|${e.sourceId}|${e.targetId}`;
+
+function shadowFromSnapshot(
+  catalogId: string,
+  snapshot: CatalogSnapshot,
+): CatalogShadow {
+  return {
+    catalogId,
+    materials: new Map(
+      Object.entries(snapshot.materials).map(([k, v]) => [k, v.updatedAt]),
+    ),
+    edges: new Map(
+      Object.entries(snapshot.edges).map(([k, v]) => [k, edgeSignature(v)]),
+    ),
+    materialTypes: new Map(
+      Object.entries(snapshot.materialTypes).map(([k, v]) => [k, v.schemaJson]),
+    ),
+    industries: new Map(
+      Object.entries(snapshot.industries).map(([k, v]) => [k, v.updatedAt]),
+    ),
+    sellers: new Map(
+      Object.entries(snapshot.sellers).map(([k, v]) => [k, v.updatedAt]),
+    ),
+  };
+}
+
+/**
+ * What changed for `clientId` since it last asked.
+ *
+ * Returns `{ full }` when there is no usable "since" — first call for this
+ * client, or a different catalog than the one the shadow was built against.
+ * Otherwise returns only the rows that moved, plus every current edge belonging
+ * to a changed material (a material's `suppliers`/`industry` are derived from
+ * its whole edge set, so a partial set would silently drop relations).
+ *
+ * Cost is O(catalog) in *signature reads* — a number and three strings per
+ * entry — but O(changed) in the expensive parts: attribute projection and the
+ * structured clone across IPC.
+ */
+export async function computeCatalogDelta(
+  clientId: string,
+): Promise<CatalogDelta> {
+  const { catalog } = await requireCatalog();
+  const catalogId = (catalog as unknown as { $jazz?: { id?: string } }).$jazz
+    ?.id ?? "unknown";
+
+  const previous = catalogShadows.get(clientId);
+  if (!previous || previous.catalogId !== catalogId) {
+    const full = await loadMaterialsCatalog();
+    catalogShadows.set(clientId, shadowFromSnapshot(catalogId, full));
+    trace("computeCatalogDelta: full snapshot", {
+      clientId,
+      catalogId,
+      materials: Object.keys(full.materials).length,
+    });
+    return { full };
+  }
+
+  const delta: CatalogDelta = {};
+  const nextShadow: CatalogShadow = {
+    catalogId,
+    materials: new Map(),
+    edges: new Map(),
+    materialTypes: new Map(),
+    industries: new Map(),
+    sellers: new Map(),
+  };
+
+  // Materials whose own row moved, plus those whose edges did — both need a
+  // re-projected DTO downstream.
+  const affected = new Set<string>();
+  const materialCoMaps = new Map<string, AnyRecord>();
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.materials)) {
+    materialCoMaps.set(k, v);
+    const updatedAt = Number(
+      (v as unknown as { updatedAt?: number }).updatedAt ?? 0,
+    );
+    nextShadow.materials.set(k, updatedAt);
+    if (previous.materials.get(k) !== updatedAt) affected.add(k);
+  }
+  const removedMaterials = [...previous.materials.keys()].filter(
+    (id) => !nextShadow.materials.has(id),
+  );
+
+  const edgeDtos = new Map<string, EdgeDTO>();
+  const changedEdges: { [id: string]: EdgeDTO } = {};
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.edges)) {
+    const dto = edgeCoMapToDto(v);
+    edgeDtos.set(k, dto);
+    const signature = edgeSignature(dto);
+    nextShadow.edges.set(k, signature);
+    if (previous.edges.get(k) !== signature) {
+      changedEdges[k] = dto;
+      affected.add(dto.sourceId);
+    }
+  }
+  const removedEdges = [...previous.edges.keys()].filter(
+    (id) => !nextShadow.edges.has(id),
+  );
+  for (const id of removedEdges) {
+    // The edge is gone, but the material it hung off still has to be
+    // re-projected without it. Its sourceId is recoverable from the shadow's
+    // signature (`type|sourceId|targetId`).
+    const sourceId = previous.edges.get(id)?.split("|")[1];
+    if (sourceId && nextShadow.materials.has(sourceId)) affected.add(sourceId);
+  }
+
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.materialTypes)) {
+    const dto = typeCoMapToDto(v);
+    nextShadow.materialTypes.set(k, dto.schemaJson);
+    if (previous.materialTypes.get(k) !== dto.schemaJson) {
+      (delta.materialTypes ??= {})[k] = dto;
+    }
+  }
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.industries)) {
+    const dto = orgCoMapToDto(v);
+    nextShadow.industries.set(k, dto.updatedAt);
+    if (previous.industries.get(k) !== dto.updatedAt) {
+      (delta.industries ??= {})[k] = dto;
+    }
+  }
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.sellers)) {
+    const dto = orgCoMapToDto(v);
+    nextShadow.sellers.set(k, dto.updatedAt);
+    if (previous.sellers.get(k) !== dto.updatedAt) {
+      (delta.sellers ??= {})[k] = dto;
+    }
+  }
+
+  if (affected.size) {
+    const materials: { [id: string]: MaterialDTO } = {};
+    for (const id of affected) {
+      const co = materialCoMaps.get(id);
+      if (co) materials[id] = materialCoMapToDto(co);
+    }
+    if (Object.keys(materials).length) delta.materials = materials;
+
+    // Every *current* edge of an affected material, not only the changed ones.
+    const edges: { [id: string]: EdgeDTO } = { ...changedEdges };
+    for (const [id, dto] of edgeDtos) {
+      if (affected.has(dto.sourceId)) edges[id] = dto;
+    }
+    if (Object.keys(edges).length) delta.edges = edges;
+  } else if (Object.keys(changedEdges).length) {
+    delta.edges = changedEdges;
+  }
+
+  if (removedMaterials.length) delta.removedMaterials = removedMaterials;
+  if (removedEdges.length) delta.removedEdges = removedEdges;
+
+  catalogShadows.set(clientId, nextShadow);
+  trace("computeCatalogDelta", {
+    clientId,
+    changedMaterials: Object.keys(delta.materials ?? {}).length,
+    removedMaterials: removedMaterials.length,
+    changedEdges: Object.keys(delta.edges ?? {}).length,
+  });
+  return delta;
 }
 
 /**

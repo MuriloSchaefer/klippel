@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Chip,
@@ -102,7 +102,17 @@ function ProcessItem({
   );
 
   const units = useUnits();
-  const materials = useMaterials();
+  // Only the materials this process actually consumes. Subscribing to the
+  // whole catalog here re-rendered *every* process row on every catalog tick
+  // (docs/analysis/materials-catalog-lag-analysis.md, F3).
+  const consumedMaterialIds = useMemo(
+    () =>
+      materialsConsumptions
+        .map((mc) => graphMaterialNodes[mc.targetId]?.materialId)
+        .filter((id): id is string => Boolean(id)),
+    [materialsConsumptions, graphMaterialNodes],
+  );
+  const materials = useMaterials(consumedMaterialIds);
   const materialTypes = useMaterialTypes();
 
   /**

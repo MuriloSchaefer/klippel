@@ -7,6 +7,7 @@ import type {
 } from "../../src/system/modules/Composer/typings";
 import type {
   AddMaterialInput,
+  CatalogDelta,
   CatalogSnapshot,
   MaterialDTO,
   MaterialTypeVersionDTO,
@@ -129,6 +130,14 @@ export const jazzApi = {
     load: (): Promise<CatalogSnapshot> =>
       ipcRenderer.invoke("jazz-materials-load"),
     /**
+     * What changed since *this renderer* last asked — the normal response to
+     * an `onChanged` tick. Resolves `{ full }` on the first call and after a
+     * workspace switch, otherwise only the moved rows. Prefer this over
+     * `load()`, which re-projects and re-clones the entire catalog per call.
+     */
+    loadDelta: (): Promise<CatalogDelta> =>
+      ipcRenderer.invoke("jazz-materials-load-delta"),
+    /**
      * Resolve a single material by id, O(1) — the scale-safe read for
      * perf assertions (never full-snapshot `load()` at 10k/100k).
      * Resolves `null` when absent. See e2e-tests.md §11.4.
@@ -154,7 +163,8 @@ export const jazzApi = {
      * whenever a local mutator or a remote peer changes the
      * `MaterialCatalogCoMap`; the listener is called with no
      * arguments and is expected to re-fetch via
-     * `jazz.materials.load()`. Returns an unsubscribe thunk.
+     * `jazz.materials.loadDelta()` (`load()` re-reads the whole catalog and
+     * does not scale — see the analysis doc). Returns an unsubscribe thunk.
      */
     onChanged: (listener: () => void): (() => void) => {
       const handler = () => listener();

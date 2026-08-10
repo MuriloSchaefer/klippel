@@ -79,6 +79,36 @@ export interface CatalogSnapshot {
   edges: { [id: string]: EdgeDTO };
 }
 
+/**
+ * What changed in the catalog since a given client last asked.
+ *
+ * Catalog mutations used to fan out as "something changed", and every
+ * renderer answered by re-fetching and re-deriving the entire catalog —
+ * O(catalog) per edit, per renderer, on the main thread
+ * (`docs/analysis/materials-catalog-lag-analysis.md`, F2). A delta carries only
+ * the rows that moved.
+ *
+ * `full` is the escape hatch: on the first tick for a client, after a workspace
+ * switch, or whenever the shadow that backs the diff is missing, there is no
+ * meaningful "since", so the whole snapshot is sent and the client replaces its
+ * state wholesale. Exactly one of `full` / the per-section fields is populated.
+ *
+ * `edges` is not merely the edges that changed: it carries **every** current
+ * edge whose `sourceId` is one of the changed materials, because a material's
+ * `suppliers` / `industry` are derived from that whole set, not from the
+ * individual edge that moved.
+ */
+export interface CatalogDelta {
+  full?: CatalogSnapshot;
+  materials?: { [id: string]: MaterialDTO };
+  removedMaterials?: string[];
+  edges?: { [id: string]: EdgeDTO };
+  removedEdges?: string[];
+  materialTypes?: { [id: string]: MaterialTypeVersionDTO };
+  industries?: { [id: string]: OrgNodeDTO };
+  sellers?: { [id: string]: OrgNodeDTO };
+}
+
 export interface AddMaterialInput {
   material: MaterialDTO;
   industryId?: string;

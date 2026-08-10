@@ -3,13 +3,14 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   materialAdded,
   materialDeleted,
+  materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
   materialsLoaded,
   materialStockUpdated,
   materialUpdated,
 } from "./actions";
 import type { MaterialsState } from "./state";
-import { catalogToMaterialsState } from "./catalogAdapter";
+import { applyCatalogDelta, catalogToMaterialsState } from "./catalogAdapter";
 
 const slice = createSlice({
   name: "materialsSlice",
@@ -22,6 +23,11 @@ const slice = createSlice({
     }));
     builder.addCase(materialsCatalogLoaded, (_state, { payload }) =>
       catalogToMaterialsState(payload),
+    );
+    // The normal path once a workspace is open: re-derive only the rows that
+    // moved. Returns the same state reference when nothing did.
+    builder.addCase(materialsCatalogDeltaLoaded, (state, { payload }) =>
+      applyCatalogDelta(state, payload),
     );
     builder.addCase(materialAdded, (state, { payload }) => ({
       ...state,

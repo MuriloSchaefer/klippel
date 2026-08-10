@@ -11,7 +11,10 @@ import { SelectChangeEvent } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
 import { Store } from "@kernel/modules/Store";
 
-import { selectMaterials } from "../../store/materials/selectors";
+import {
+  selectMaterial,
+  selectMaterialsByType,
+} from "../../store/materials/selectors";
 import { MaterialState } from "../../store/materials/state";
 import { selectMaterialType } from "../../store/materialTypes/selectors";
 import { resolveTypeSchema } from "../../store/materialTypes/resolveTypeSchema";
@@ -34,17 +37,17 @@ const MaterialSelector = ({
   const { useAppSelector } = storeModule.hooks;
 
   const materialType = useAppSelector(selectMaterialType(type));
-  const noFilter = useCallback((option: MaterialState) => true, []);
-  const materialsSelector = useMemo(
-    () => selectMaterials((materials) =>
-      Object.values(materials)
-        .filter((mat) => mat.type === type)
-        .filter(filter ?? noFilter)
-        .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {} as Record<string, MaterialState>)
-    ),
-    [type, filter, noFilter]
+
+  // Two stages on purpose. The type projection is a Redux selector cached on
+  // `type` (a stable string), so it recomputes only when the catalog changes.
+  // `filter` is typically an inline lambda from the parent — folding it into
+  // the selector, as this did before, rebuilt the selector on every render and
+  // defeated its memo, re-projecting the whole catalog each time.
+  const ofType = useAppSelector(selectMaterialsByType(type));
+  const materials = useMemo(
+    () => (filter ? ofType.filter(filter) : ofType),
+    [ofType, filter],
   );
-  const materials = (useAppSelector(materialsSelector) ?? {}) as Record<string, MaterialState>;
 
   // A type can legitimately be absent: on a first-ever workspace open there is
   // no `.session/Materials/materialTypes` cache to rehydrate from, so the slice
@@ -62,55 +65,41 @@ const MaterialSelector = ({
     [industry: string]: {
       [externalId: string]: { label: string; extra: MaterialState[] };
     };
-  } = useMemo(
-    () =>
-      !selector
-        ? {}
-        : Object.values(materials).reduce<{
-        [industry: string]: {
-          [externalId: string]: { label: string; extra: MaterialState[] };
+  } = useMemo(() => {
+    // Built by mutating a local accumulator. The previous spread-per-item
+    // reduce allocated a fresh copy of the whole tree for every material —
+    // O(k²), measured at 148 ms for a single type's rows in a 10k catalog.
+    // The result is freshly created here and never handed back to Redux, so
+    // mutating it while building is not observable.
+    const groups: {
+      [industry: string]: {
+        [externalId: string]: { label: string; extra: MaterialState[] };
+      };
+    } = {};
+    if (!selector) return groups;
+    for (const material of materials) {
+      const byExternalId = (groups[material.industry] ||= {});
+      const group = byExternalId[material.externalId];
+      if (group) group.extra.push(material);
+      else
+        byExternalId[material.externalId] = {
+          label: material.attributes[selector.principal],
+          extra: [material],
         };
-      }>((acc, curr) => {
-        if (acc[curr.industry]) {
-          if (acc[curr.industry][curr.externalId])
-            return {
-              ...acc,
-              [curr.industry]: {
-                ...acc[curr.industry],
-                [curr.externalId]: {
-                  ...acc[curr.industry][curr.externalId],
-                  extra: [...acc[curr.industry][curr.externalId].extra, curr],
-                },
-              },
-            };
-          else
-            return {
-              ...acc,
-              [curr.industry]: {
-                ...acc[curr.industry],
-                [curr.externalId]: {
-                  label: curr.attributes[selector.principal],
-                  extra: [curr],
-                },
-              },
-            };
-        }
-        return {
-          ...acc,
-          [curr.industry]: {
-            [curr.externalId]: {
-              label: curr.attributes[selector.principal],
-              extra: [curr],
-            },
-          },
-        };
-      }, {}),
-    [materials, selector]
-  );
+    }
+    return groups;
+  }, [materials, selector]);
 
-  const selectedMaterial = useMemo(
-    ()=>Object.values(materials).find((mat) => mat.id === value), [materials, value]
-  );
+  // O(1) against the catalog rather than a scan of this type's rows. Still
+  // gated on type + `filter` so a `value` outside the offered set clears the
+  // picker, exactly as the old `Object.values(materials).find` did.
+  const materialById = useAppSelector(selectMaterial(value ?? ""));
+  const selectedMaterial =
+    materialById &&
+    materialById.type === type &&
+    (!filter || filter(materialById))
+      ? materialById
+      : undefined;
   const [principalState, setPrincipalState] = useState(
     selectedMaterial
       ? `${selectedMaterial?.industry}-${selectedMaterial?.externalId}`
@@ -121,7 +110,7 @@ const MaterialSelector = ({
     (e: SelectChangeEvent<string>) => {
       if (onChange) onChange(e.target.value);
     },
-    [materials]
+    [onChange]
   );
 
   // Type not resolved yet (cold open with no cache, or a material synced ahead

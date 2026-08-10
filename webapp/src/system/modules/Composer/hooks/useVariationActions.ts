@@ -218,13 +218,15 @@ export function useVariationActions({ variationId }: { variationId: string }) {
   const vp = layoutModule.hooks.useActiveViewport();
   const vpMgr = layoutModule.hooks.useViewportManager();
 
-  const { useMaterials, useMaterialTypes } = materialsModule.hooks;
-  const materials = useMaterials();
+  const { useMaterialsGetter, useMaterialTypes } = materialsModule.hooks;
+  // The catalog is only ever read from inside an action callback here, so this
+  // reads the store at call time instead of subscribing. Subscribing re-rendered
+  // every editor on every catalog tick, and handed the closures a snapshot that
+  // was already one render stale (docs/analysis/materials-catalog-lag-analysis.md, F3).
+  const getMaterials = useMaterialsGetter();
   const materialTypes = useMaterialTypes();
 
   // Refs let action callbacks always see fresh values without invalidating useMemo.
-  const materialsRef = useRef(materials);
-  materialsRef.current = materials;
   const materialTypesRef = useRef(materialTypes);
   materialTypesRef.current = materialTypes;
   const themeRef = useRef(theme);
@@ -297,7 +299,7 @@ export function useVariationActions({ variationId }: { variationId: string }) {
         },
 
         addMaterial: (materialId: string, label: string, typeRestrictions: string[]) => {
-          const material = materialsRef.current?.[materialId];
+          const material = getMaterials()[materialId];
           if (!material) {
             console.error("Material not found:", materialId);
             return;
@@ -455,7 +457,7 @@ export function useVariationActions({ variationId }: { variationId: string }) {
             console.error("Material node not found:", materialNodeId);
             return;
           }
-          const mat = materialsRef.current![materialNode.materialId];
+          const mat = getMaterials()[materialNode.materialId];
           const schema = materialTypesRef.current[mat.type]?.schemas[mat.schemaVersion];
           const colorAttr = Object.entries(schema.attributes).find(([, v]) => v === "color");
           if (!colorAttr) {
@@ -541,7 +543,7 @@ export function useVariationActions({ variationId }: { variationId: string }) {
             console.error("Material node not found:", curr.materialNodeId);
             return;
           }
-          const currMaterial = materialsRef.current![currMaterialNode.materialId];
+          const currMaterial = getMaterials()[currMaterialNode.materialId];
           const schema =
             materialTypesRef.current[currMaterial.type]?.schemas[currMaterial.schemaVersion];
           const colorAttr = Object.entries(schema.attributes).find(([, v]) => v === "color");
@@ -575,7 +577,7 @@ export function useVariationActions({ variationId }: { variationId: string }) {
         updateMaterial: (nodeId: string, materialId: string) => {
           const g = getGraph();
           if (!g) return;
-          const material = materialsRef.current?.[materialId];
+          const material = getMaterials()[materialId];
           const newNode = {
             ...g.nodes[nodeId],
             materialId,

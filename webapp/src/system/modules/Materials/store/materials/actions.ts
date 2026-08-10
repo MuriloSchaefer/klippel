@@ -3,6 +3,7 @@ import { createAction } from "@reduxjs/toolkit";
 import { MODULE_NAME } from "../../constants";
 import type {
   AddMaterialInput,
+  CatalogDelta,
   CatalogSnapshot,
   StockDTO,
   UpdateMaterialInput,
@@ -18,6 +19,15 @@ export const loadMaterials = createAction<{ }>(
 /** Read the workspace's `MaterialCatalogCoMap` via the Jazz IPC surface. */
 export const loadMaterialsCatalog = createAction(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Load materials catalog`
+);
+
+/**
+ * Ask main what changed since this renderer last asked. This is the response to
+ * a catalog tick; `loadMaterialsCatalog` stays for the cases where there is no
+ * meaningful "since" — cold open, workspace switch, refresh-from-peers.
+ */
+export const loadMaterialsCatalogDelta = createAction(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Load materials catalog delta`
 );
 
 export const addMaterial = createAction<AddMaterialInput>(
@@ -54,6 +64,11 @@ export const materialsLoaded = createAction<MaterialsState>(
 /** Full snapshot from the workspace's Jazz catalog. */
 export const materialsCatalogLoaded = createAction<CatalogSnapshot>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials catalog loaded`
+);
+
+/** Only the catalog rows that moved since the last tick. */
+export const materialsCatalogDeltaLoaded = createAction<CatalogDelta>(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials catalog delta loaded`
 );
 
 export const materialAdded = createAction<MaterialState>(

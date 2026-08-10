@@ -33,8 +33,24 @@ const DynamicStoreProvider = ({ children }: { children: React.ReactNode }) => {
         reducer: combineReducers<{ [name: string]: Reducer<any, UnknownAction> }>({
           [slice.name]: slice.reducer,
         }),
+        // `immutableCheck` is off for the same reason `serializableCheck` is:
+        // in development RTK deep-walks the *entire* store before and after
+        // every dispatch, and the Materials catalog alone is multiple MB. That
+        // cost lands on every action in the app — a keystroke, a hover, a
+        // viewport-extra patch — not just the ones touching the big slices, and
+        // it was a large part of why the dev build sat at 100% CPU
+        // (docs/analysis/materials-catalog-lag-analysis.md, F6). To bring it
+        // back when hunting an accidental-mutation bug, set
+        // `globalThis.__klippelImmutableCheck__ = true` before boot (DevTools
+        // console, then reload) — the store is built once, so the flag is read
+        // once.
         middleware: (getDefaultMiddleware) =>
-          getDefaultMiddleware({ serializableCheck: false })
+          getDefaultMiddleware({
+            serializableCheck: false,
+            immutableCheck:
+              (globalThis as { __klippelImmutableCheck__?: boolean })
+                .__klippelImmutableCheck__ === true,
+          })
             .concat(dynamicMiddlewares as Middleware)
             .concat(middlewares.middleware),
       });

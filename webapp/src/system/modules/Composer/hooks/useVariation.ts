@@ -43,7 +43,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
 
   const viewportManager = useViewportManager();
 
-  const { useMaterials, useMaterialTypes } = materialsModule.hooks;
+  const { useMaterialsGetter, useMaterialTypes } = materialsModule.hooks;
 
   const vp = useActiveViewport()
 
@@ -51,7 +51,10 @@ export default function useVariation({ variationId }: { variationId: string }) {
     if (vp) viewportManager.functions.setHasChanged(vp.name, true);
   };
 
-  const materials = useMaterials();
+  // Read at call time, not subscribed: every use below is inside an action
+  // closure, so a subscription only bought a re-render per catalog tick
+  // (docs/analysis/materials-catalog-lag-analysis.md, F3).
+  const getMaterials = useMaterialsGetter();
   const materialTypes = useMaterialTypes();
 
   const state = useAppSelector(
@@ -111,7 +114,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
         label: string,
         typeRestrictions: string[],
       ) => {
-        const material = materials![materialId];
+        const material = getMaterials()[materialId];
         if (!material) {
           console.error("Material not found:", materialId);
           return;
@@ -246,7 +249,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           console.error("Material node not found:", materialNodeId);
           return;
         }
-        const material = materials![materialNode.materialId];
+        const material = getMaterials()[materialNode.materialId];
         const schema =
           materialTypes[material.type]?.schemas[material.schemaVersion];
         const colorAttr = Object.entries(schema.attributes).find(
@@ -317,7 +320,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
           console.error("Material node not found:", curr.materialNodeId);
           return;
         }
-        const currMaterial = materials![currMaterialNode.materialId];
+        const currMaterial = getMaterials()[currMaterialNode.materialId];
         const schema =
           materialTypes[currMaterial.type]?.schemas[currMaterial.schemaVersion];
         const colorAttr = Object.entries(schema.attributes).find(
@@ -356,7 +359,7 @@ export default function useVariation({ variationId }: { variationId: string }) {
         } as MaterialNode;
         graph.actions.updateNode(newNode);
 
-        const material = materials![materialId];
+        const material = getMaterials()[materialId];
         const schema =
           materialTypes[material.type]?.schemas[material.schemaVersion];
         const colorAttr = Object.entries(schema.attributes).find(

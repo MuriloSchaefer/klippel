@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import useModule from "@kernel/hooks/useModule";
 import type { Store } from "@kernel/modules/Store";
@@ -65,7 +65,6 @@ export default function useVariationRehydration({
   const { useAppSelector } = storeModule.hooks;
   const graph = graphModule.hooks.useGraph(variationId);
 
-  const materials = materialsModule.hooks.useMaterials();
   const materialTypes = materialsModule.hooks.useMaterialTypes();
 
   const svgInstance = useAppSelector((state) =>
@@ -73,6 +72,25 @@ export default function useVariationRehydration({
   );
 
   const nodes = graph.state?.nodes;
+
+  // This pass genuinely needs to re-run when catalog data lands (it paints
+  // material colours onto the SVG), so unlike the action hooks it stays
+  // subscribed — but only to the materials this variation references. The
+  // whole-catalog subscription re-ran it on every unrelated tick
+  // (docs/analysis/materials-catalog-lag-analysis.md, F3).
+  const referencedMaterialIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          Object.values(nodes ?? {})
+            .filter((n): n is MaterialNode => (n as any).type === "MATERIAL")
+            .map((n) => n.materialId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      ),
+    [nodes],
+  );
+  const materials = materialsModule.hooks.useMaterials(referencedMaterialIds);
 
   // Read the SVG layer through a ref, never through the effect's deps.
   //

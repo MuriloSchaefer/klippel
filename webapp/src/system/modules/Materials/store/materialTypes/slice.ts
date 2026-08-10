@@ -7,9 +7,11 @@ import {
 } from "@kernel/modules/Store/workspaceScope";
 
 import {
+  materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
   materialTypeVersionRegistered,
 } from "../materials/actions";
+import type { MaterialTypeVersionDTO } from "../../typings/catalog";
 import { MaterialType, MaterialTypeSchema, MaterialTypesState } from "./state";
 
 export const MATERIAL_TYPES_SESSION_PATH = ".session/Materials/materialTypes";
@@ -98,6 +100,51 @@ export const materialTypesRehydrated = defineRehydration<MaterialTypesState>(
   restoreMaterialTypesSession,
 );
 
+/**
+ * Merge catalog type versions (`${name}@${version}` → schema JSON) into the
+ * renderer's `name → MaterialType` shape.
+ *
+ * Preserves existing state — never erases a type, only adds one or advances
+ * its `latestSchema`. Shared by the full-snapshot and delta paths so the two
+ * cannot drift.
+ */
+export function mergeTypeVersions(
+  state: MaterialTypesState,
+  versions: { [id: string]: MaterialTypeVersionDTO } | undefined,
+): MaterialTypesState {
+  const entries = Object.values(versions ?? {});
+  if (!entries.length) return state;
+  const next: MaterialTypesState = { ...state };
+  for (const entry of entries) {
+    const [name, version] = entry.id.split("@");
+    if (!name || !version) continue;
+    let schema: MaterialTypeSchema;
+    try {
+      schema = JSON.parse(entry.schemaJson) as MaterialTypeSchema;
+    } catch {
+      continue;
+    }
+    const existing = next[name];
+    // `latestSchema` advances if the incoming version is numerically
+    // greater (lexicographic compare is fine for the `x.y.z` patches used
+    // so far; revisit if non-numeric segments are introduced).
+    const latest =
+      !existing?.latestSchema || version > existing.latestSchema
+        ? version
+        : existing.latestSchema;
+    next[name] = {
+      name,
+      label: existing?.label ?? name,
+      latestSchema: latest,
+      schemas: {
+        ...(existing?.schemas ?? {}),
+        [version]: schema,
+      },
+    };
+  }
+  return next;
+}
+
 const slice = createSlice({
     name: 'materialTypesSlice',
     initialState: await restoreMaterialTypesSession(),
@@ -120,45 +167,20 @@ const slice = createSlice({
       );
       builder.addCase(
         materialsCatalogLoaded,
-        (state: MaterialTypesState, { payload }) => {
-          // Catalog snapshots carry `materialTypes` keyed by
-          // `${name}@${version}` with the schema body as JSON. Merge
-          // them into the renderer's `name → MaterialType` shape so a
-          // peer can rehydrate types it didn't author locally (the
-          // other side of `materialTypeVersionRegistered`'s optimistic
-          // local update). Preserves existing fixture state — never
-          // erases a type, only adds or advances `latestSchema`.
-          const next: MaterialTypesState = { ...state };
-          for (const entry of Object.values(payload.materialTypes ?? {})) {
-            const [name, version] = entry.id.split("@");
-            if (!name || !version) continue;
-            let schema: MaterialTypeSchema;
-            try {
-              schema = JSON.parse(entry.schemaJson) as MaterialTypeSchema;
-            } catch {
-              continue;
-            }
-            const existing = next[name];
-            // `latestSchema` advances if the incoming version is
-            // numerically greater (lexicographic compare is fine for
-            // the `x.y.z` patches used so far; revisit if non-numeric
-            // segments are introduced).
-            const latest =
-              !existing?.latestSchema || version > existing.latestSchema
-                ? version
-                : existing.latestSchema;
-            next[name] = {
-              name,
-              label: existing?.label ?? name,
-              latestSchema: latest,
-              schemas: {
-                ...(existing?.schemas ?? {}),
-                [version]: schema,
-              },
-            };
-          }
-          return next;
-        },
+        // Catalog snapshots carry `materialTypes` keyed by
+        // `${name}@${version}` with the schema body as JSON, so a peer can
+        // rehydrate types it didn't author locally (the other side of
+        // `materialTypeVersionRegistered`'s optimistic local update).
+        (state: MaterialTypesState, { payload }) =>
+          mergeTypeVersions(state, payload.materialTypes),
+      );
+      builder.addCase(
+        materialsCatalogDeltaLoaded,
+        (state: MaterialTypesState, { payload }) =>
+          mergeTypeVersions(
+            state,
+            payload.full ? payload.full.materialTypes : payload.materialTypes,
+          ),
       );
       builder.addCase(
         materialTypeVersionRegistered,

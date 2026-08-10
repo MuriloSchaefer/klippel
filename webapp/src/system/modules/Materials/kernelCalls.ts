@@ -10,7 +10,7 @@ import MaterialStockViewport from "./components/viewports/MaterialStockViewport"
 
 import materialsMiddlewares from "./store/materials/middlewares";
 
-import { loadMaterialsCatalog } from "./store/materials/actions";
+import { loadMaterialsCatalogDelta } from "./store/materials/actions";
 import { sessionSaver } from "./store/session";
 
 export function startModule({
@@ -41,12 +41,17 @@ export function startModule({
   // Live catalog refresh — main process subscribes to the active
   // `MaterialCatalogCoMap` and pushes a `jazz-materials:changed` IPC
   // event on every mutation (local or remote-via-sync). We translate
-  // each tick into a `loadMaterialsCatalog` dispatch so the table
-  // reflects edits made on another peer without requiring a workspace
-  // switch. Subscription survives workspace changes — main re-attaches
-  // its Jazz subscription on the new catalog via `requireCatalog`.
+  // each tick into a *delta* fetch so the table reflects edits made on
+  // another peer without requiring a workspace switch, at a cost
+  // proportional to what changed rather than to the catalog size — the
+  // whole-catalog reload this used to do could not keep up with its own
+  // 150 ms debounce past a few thousand materials
+  // (docs/analysis/materials-catalog-lag-analysis.md, F2).
+  // Subscription survives workspace changes — main re-attaches its Jazz
+  // subscription on the new catalog via `requireCatalog`, and answers the
+  // first tick after the switch with a full snapshot.
   globalThis.electron?.jazz?.materials?.onChanged?.(() => {
-    dispatch(loadMaterialsCatalog());
+    dispatch(loadMaterialsCatalogDelta());
   });
 
   componentRegistryManager.functions.registerComponents({

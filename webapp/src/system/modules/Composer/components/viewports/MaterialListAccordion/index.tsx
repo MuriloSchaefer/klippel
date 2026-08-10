@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Box, IconButton, List, ListItem, Tooltip, Typography, useTheme } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import useModule from "@kernel/hooks/useModule";
@@ -34,7 +34,20 @@ function MaterialListAccordion({
   );
 
   const materialsModule = useModule<IMaterialsModule>("Materials");
-  const materials = materialsModule.hooks.useMaterials();
+  // Only the catalog rows this variation references — the list renders one row
+  // per graph node, never the whole catalog (F3).
+  const referencedMaterialIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          materialNodes
+            .map((n) => n.materialId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      ),
+    [materialNodes],
+  );
+  const materials = materialsModule.hooks.useMaterials(referencedMaterialIds);
   const keyboardShortcutsModule =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
   const { ShortcutHint } = keyboardShortcutsModule.components;
@@ -54,7 +67,10 @@ function MaterialListAccordion({
                 aria-label="refresh-materials"
                 data-testid="refresh-materials"
                 size="small"
-                disabled={!materials || materialNodes.length === 0}
+                disabled={
+                  Object.keys(materials ?? {}).length === 0 ||
+                  materialNodes.length === 0
+                }
                 onClick={() =>
                   dispatch(refreshMaterialSnapshots({ variationId }))
                 }

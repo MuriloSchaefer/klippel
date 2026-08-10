@@ -218,7 +218,15 @@ app.whenReady().then(async () => {
   // collaborative harness then times out waiting for CDP, and Electron
   // bails with `Failed to shutdown`. Skip extension install in any
   // headless e2e environment; nothing in the test path needs them.
+  //
+  // They are also off by default in ordinary development: the Redux DevTools
+  // backend serializes every action *and* a full state snapshot, and with a
+  // multi-MB Materials catalog ticking as often as sync does, that alone
+  // saturates a core (docs/analysis/materials-catalog-lag-analysis.md, F6).
+  // Opt in with `KLIPPEL_DEV_EXTENSIONS=1` when you actually need to inspect
+  // actions or the component tree.
   const skipDevExtensions =
+    process.env.KLIPPEL_DEV_EXTENSIONS !== "1" ||
     process.env.KLIPPEL_USE_XVFB === "1" ||
     process.env.KLIPPEL_E2E_SKIP_DEV_EXTENSIONS === "1";
   if (!skipDevExtensions) {

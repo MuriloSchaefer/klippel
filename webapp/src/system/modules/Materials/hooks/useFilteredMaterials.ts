@@ -13,10 +13,11 @@ import type { MaterialState } from "../store/materials/state";
  * changes — this hook is pure.
  */
 
+/** Both arguments must already be lower-cased — see `useFilteredMaterials`. */
 function scoreSubsequence(needle: string, haystack: string): number {
   if (!needle) return 1;
-  const n = needle.toLowerCase();
-  const h = haystack.toLowerCase();
+  const n = needle;
+  const h = haystack;
   if (h.includes(n)) return 100 - Math.max(0, h.indexOf(n));
   let score = 0;
   let lastIdx = -1;
@@ -54,17 +55,28 @@ export default function useFilteredMaterials(query: string): MaterialState[] {
   const materials = useMaterials();
   const materialTypes = useMaterialTypes();
 
-  return useMemo(() => {
+  // The searchable text per material is a function of the catalog, not of the
+  // query — build it once per catalog change instead of re-deriving (and
+  // re-joining) it for every material on every keystroke.
+  const index = useMemo(() => {
     const items = Object.values(materials ?? {});
-    if (!query.trim()) return items;
-    const scored = items
-      .map((m) => {
-        const typeLabel = materialTypes?.[m.type]?.label;
-        const score = scoreSubsequence(query, materialSearchKeys(m, typeLabel));
-        return { m, score };
-      })
-      .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score);
+    return {
+      items,
+      haystacks: items.map((m) =>
+        materialSearchKeys(m, materialTypes?.[m.type]?.label).toLowerCase(),
+      ),
+    };
+  }, [materials, materialTypes]);
+
+  return useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return index.items;
+    const scored: { m: MaterialState; score: number }[] = [];
+    for (let i = 0; i < index.items.length; i++) {
+      const score = scoreSubsequence(needle, index.haystacks[i]);
+      if (score > 0) scored.push({ m: index.items[i], score });
+    }
+    scored.sort((a, b) => b.score - a.score);
     return scored.map((x) => x.m);
-  }, [materials, materialTypes, query]);
+  }, [index, query]);
 }

@@ -301,7 +301,6 @@ export default function ProcessMaterialUsageButton({
 
   const { useMaterials, useMaterialTypes } = materialsModule.hooks;
 
-  const materials = useMaterials();
   const materialTypes = useMaterialTypes();
   const { actions } = useVariationActions({ variationId });
 
@@ -383,6 +382,23 @@ export default function ProcessMaterialUsageButton({
       return pk.every((k) => prev[k]?.id === next[k]?.id && prev[k]?.materialId === next[k]?.materialId);
     },
   );
+
+  // Only the materials this variation's graph actually references — bounded by
+  // the model, not by the catalog. Subscribing to the whole map re-rendered
+  // this button on every catalog tick
+  // (docs/analysis/materials-catalog-lag-analysis.md, F3).
+  const referencedMaterialIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          graphMaterials
+            .map((n) => n.materialId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      ),
+    [graphMaterials],
+  );
+  const materials = useMaterials(referencedMaterialIds);
 
   const selectedNodeMaterial =
     newForm.materialNodeId && materials
