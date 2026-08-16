@@ -34,11 +34,25 @@ export interface MaterialsWindowState {
    * Materials pinned into the mirror by open models. Kept so a later page
    * request re-sends them: main re-pins on every read, which is what stops a
    * pinned row from being evicted by a `reset`.
+   *
+   * Flattened from `pins` — the union, de-duplicated, in insertion order.
+   * Stored rather than selected because every window request sends it and the
+   * middlewares read it off the state directly.
    */
   pinnedIds: string[];
+  /**
+   * Pins by owner — a variation id, or `ADHOC_PIN_OWNER` for a pin nobody
+   * claimed. A tab that closes releases exactly its own rows, which is what
+   * makes "keep what other tabs reference" a statement the mirror can act on
+   * instead of an assumption that only ever grew.
+   */
+  pins: { [owner: string]: string[] };
   /** True once a first window answer has landed for this workspace. */
   initialized: boolean;
 }
+
+/** Owner recorded for a pin that named none — a one-off `ensureMaterialsLoaded`. */
+export const ADHOC_PIN_OWNER = "__adhoc__";
 
 export const initialState: MaterialsWindowState = {
   total: 0,
@@ -50,5 +64,6 @@ export const initialState: MaterialsWindowState = {
   loading: false,
   query: "",
   pinnedIds: [],
+  pins: {},
   initialized: false,
 };

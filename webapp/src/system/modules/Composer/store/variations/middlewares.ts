@@ -74,7 +74,12 @@ middlewares.startListening({
     // so — otherwise a node whose material ranked outside the first page
     // would render with no catalog data behind it.
     dispatch(
-      ensureMaterialsLoaded({ ids: materialIdsInGraph(graphState) }),
+      // Owned by the variation, so closing the model releases the pin —
+      // see `useVariationRehydration` for the paired release.
+      ensureMaterialsLoaded({
+        ids: materialIdsInGraph(graphState),
+        owner: variationId,
+      }),
     );
 
     dispatch(loadGraph({ graphId: variationId, graph: graphState }));

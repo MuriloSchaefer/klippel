@@ -4,6 +4,7 @@ import {
   loadMaterialsWindow,
   computeCatalogDelta,
   getMaterial,
+  appendCatalogChunk,
   seedCatalogIfEmpty,
   addMaterial,
   updateMaterial,
@@ -138,6 +139,12 @@ registerMainModule({
     ipcMain.handle(
       "jazz-materials-seed",
       async (_event, input: SeedCatalogInput) => seedCatalogIfEmpty(input),
+    );
+    // Batched fixture seeding for the 10k perf tier (e2e-tests.md §11.2).
+    // Append-only and unconditional — see `appendCatalogChunk`.
+    ipcMain.handle(
+      "jazz-materials-seed-chunk",
+      async (_event, input: SeedCatalogInput) => appendCatalogChunk(input),
     );
     ipcMain.handle(
       "jazz-materials-add",

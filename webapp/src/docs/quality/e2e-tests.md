@@ -165,7 +165,7 @@ The workload size dictates how you get the workspace into state. **Do not** use 
 | Tier | Seed | Storage / setup | Assertion read |
 | --- | --- | --- | --- |
 | ≤ 1k | live `seed` IPC (`window.electron.jazz.materials.seed`) | live seed in `beforeAll`, or `cpSync` from a materialized base | full snapshot `load()` acceptable |
-| 10k | **batched** seed (chunked) or direct-SQLite, materialized once | `cpSync` from a `BASE_WORKSPACE` base (Option 3) | targeted by-id lookup; avoid full snapshot |
+| 10k | **batched** seed (chunked) — `seedSyntheticMaterialsChunked` — or direct-SQLite, materialized once | live chunked seed in `beforeAll`, or `cpSync` from a `BASE_WORKSPACE` base (Option 3) | targeted by-id lookup; avoid full snapshot |
 | 100k | **direct-SQLite, out of band** — single bulk IPC is infeasible (blocks/OOMs main) | `cpSync` from a hash-keyed cached base; **never commit the built DB** | **must** use by-id lookup + count mirror; full `load()` is itself O(N) |
 
 - At **≥ 10k you must use the materialize-once + `cpSync` pattern** (a `pretest:perf` step seeds the base; tests copy it). Re-seeding 100k every run would dominate the measurement.
@@ -188,10 +188,14 @@ A perf test must **derive** its target a priori, never scan the catalog to find 
 ### 11.5 Shared primitives (build once, reuse)
 
 - `webapp/src/helpers/puppeteer/generateMaterialsCatalog.ts` — pure, PRNG-seeded `(opts) => SeedCatalogInput`. Emits index-derived ids, planted probes, the index sidecar, and a realistic `conformsTo` / `manufacturedBy` edge graph with representative blob/`composition` sizes. No `page` dependency.
-- `webapp/src/helpers/puppeteer/seedSyntheticMaterials.ts` — drives the tier-appropriate seed path, asserts `seeded === true`, and waits on the count mirror. This is the only seeding entry point a perf test calls.
+- `webapp/src/helpers/puppeteer/seedSyntheticMaterials.ts` — drives the tier-appropriate seed path, asserts `seeded === true`, and waits on the count mirror. This is the only seeding entry point a perf test calls. Two paths: `seedSyntheticMaterials` (one `seed` IPC, ≤ `LIVE_SEED_MAX` = 1k) and `seedSyntheticMaterialsChunked` (repeated `seedChunk` appends of `SEED_CHUNK_SIZE` rows, up to `CHUNKED_SEED_MAX` = 20k). The chunked path exists because `seedCatalogIfEmpty` is single-shot by design; its main-side counterpart is `appendCatalogChunk`, which appends unconditionally and is **fixture construction only** — no product path calls it. Chunks land with the viewport open, so a chunked seed also exercises delta ticks during a bulk import.
 - `webapp/src/helpers/puppeteer/generateBudgetsCatalog.ts` — the same contract for budgets: pure, PRNG-seeded, index-derived ids (`budget-{seed}-{i}`, `Orçamento {i}`), a planted `__probe_budget__` / `__probe_item__` pair, and an index sidecar.
 - `webapp/src/helpers/puppeteer/seedSyntheticBudgets.ts` — budget seeding and teardown. Two paths, per §11.2: `seedBudgetsViaStore` (dispatch through the live store — this *is* the write surface, use up to `LIVE_DISPATCH_MAX`) and `seedBudgetsToDisk` (write the `.session/Orders/budgets/*.json` out of band, then rehydrate). Also `clearBudgets` for isolation and `waitForBudgetCountInStore` for the rehydrate wait.
 - Standalone tests: `catalogColdOpen` (S1), `listInteraction` (S2/S3), `budgetScale` (budget/item cardinality). Collaborative: `catalogConvergence` (S6), parameterized over peer count.
+
+**Memory-shaped budgets.** Not every budget is a duration. `catalogWindowing`'s `mirror-bound` asserts a **row count**: how much of the catalog Redux still holds after browsing deep and then searching. Record it with `metric: "rows"` and a `unit`, and budget it as a flat number — a budget that scales with the tier would assert the opposite of the property (see `Materials/docs/architecture/catalog-mirror.md`). Tests that need the residency sweep to be observable shorten its TTL through `configureMaterialsResidency` and restore the default in `afterAll`; the rule under test is TTL-independent, only the waiting is not.
+
+**Heavy tiers are opt-in.** A tier whose seed dominates the run (5k+ on the live chunked path) is gated behind `KLIPPEL_PERF_HEAVY=1` rather than commented out, so the default suite stays fast and the tier stays runnable without editing the file.
 
 ### 11.6 Slices persisted as session JSON
 

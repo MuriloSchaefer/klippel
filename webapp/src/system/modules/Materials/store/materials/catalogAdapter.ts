@@ -146,14 +146,45 @@ export function catalogToMaterialsState(
  * the changed materials (see `CatalogDelta`), which is what makes deriving
  * `suppliers` / `industry` from it correct rather than partial.
  *
- * Returns `state` unchanged — same reference — when the delta is empty, so a
- * no-op tick costs nothing downstream.
+ * Rows the mirror does not hold are **skipped**, not added: membership is
+ * decided by window reads and by the residency sweep, never by a tick.
+ *
+ * Returns `state` unchanged — same reference — when the delta is empty or
+ * names nothing resident, so a no-op tick costs nothing downstream.
  */
 export function applyCatalogDelta(
   state: MaterialsState,
   delta: CatalogDelta,
 ): MaterialsState {
-  if (delta.full) return catalogToMaterialsState(delta.full);
+  if (delta.full) {
+    // A snapshot arriving on a *tick* refreshes the mirror; it does not
+    // become it. Main only sends one when it has no usable "since", and a
+    // windowed client in that position (a workspace switch drops its
+    // recorded window, and any write before its first window read lands in
+    // the gap) would otherwise swallow the entire catalog into Redux —
+    // silently undoing windowing, which is exactly what one probe of a
+    // 1 000-row seed caught: 100 rows in the view, 1 003 in the mirror.
+    //
+    // The explicit whole-catalog load has its own action
+    // (`materialsCatalogLoaded`) and still replaces; that is the perf
+    // harness's path, and it means what it says.
+    // Derived per resident row, not by projecting the snapshot and throwing
+    // most of it away: the work is O(mirror), not O(catalog).
+    const index = buildEdgeIndex(Object.values(delta.full.edges));
+    const next: MaterialsState = {};
+    let moved = false;
+    for (const id of Object.keys(state)) {
+      const dto = delta.full.materials[id];
+      // Absent from an authoritative snapshot ⇒ the row is gone.
+      if (!dto) {
+        moved = true;
+        continue;
+      }
+      next[id] = materialDtoToState(dto, index);
+      moved = true;
+    }
+    return moved ? next : state;
+  }
 
   const changed = Object.values(delta.materials ?? {});
   const removed = delta.removedMaterials ?? [];
@@ -161,11 +192,24 @@ export function applyCatalogDelta(
 
   const index = buildEdgeIndex(Object.values(delta.edges ?? {}));
   const next: MaterialsState = { ...state };
+  let moved = false;
   for (const dto of changed) {
+    // Only rows the mirror already holds. A delta is scoped to what main
+    // believes this client mirrors, and eviction has made that a superset:
+    // taking every row it names would quietly re-admit the rows the
+    // residency sweep just reclaimed, once per tick, until the mirror was
+    // the whole catalog again. A row that belongs on screen comes back
+    // through a window read, which is the only thing that decides membership.
+    if (!(dto.id in state)) continue;
     next[dto.id] = materialDtoToState(dto, index);
+    moved = true;
   }
-  for (const id of removed) delete next[id];
-  return next;
+  for (const id of removed) {
+    if (!(id in next)) continue;
+    delete next[id];
+    moved = true;
+  }
+  return moved ? next : state;
 }
 
 /**

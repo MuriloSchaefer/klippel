@@ -2,6 +2,8 @@
 
 This module owns the material catalog: the data model, its persistence, and the UI surfaces that let users inspect and edit it. The persistence model is a workspace-scoped graph stored on the workspace's Jazz node; see [graph-semantics.md](./graph-semantics.md) for node/edge details and [../jazz.md](../jazz.md) for storage layout, write paths, and multi-peer sync.
 
+**The renderer does not hold the catalog.** It mirrors a window of it and reclaims rows nothing needs — read [catalog-mirror.md](./catalog-mirror.md) before adding any path that reads material data, keeps it resident, or renders it at scale. That file is the contract; the Redux surface below is the vocabulary.
+
 ## Scope
 
 - **Catalog data**: material records, material-type schemas (versioned), industries, sellers.
@@ -46,6 +48,7 @@ system/modules/Materials/
 └── docs/
     ├── architecture/
     │   ├── overview.md                  — this file
+    │   ├── catalog-mirror.md            — windowing + residency: what the renderer holds
     │   └── graph-semantics.md
     └── jazz.md                          — storage layout, write paths, multi-peer sync
 ```
@@ -144,7 +147,10 @@ Actions in `store/materials/actions.ts` (commands + matching events):
 - `updateMaterialStock({ id, stock })` / `materialStockUpdated`
 - `deleteMaterial({ id })` / `materialDeleted`
 - `registerMaterialTypeVersion({ name, version, schemaJson, predecessorId? })` / `materialTypeVersionRegistered`
-- `loadMaterialsCatalog()` / `materialsCatalogLoaded` — catalog refetch (also triggered on `workspaceSelected` and on the system-tray Refresh button via a kernel-Store action).
+- `loadMaterialsCatalog()` / `materialsCatalogLoaded` — **whole-catalog** refetch. No longer the boot path: `workspaceSelected` and the system-tray Refresh both dispatch `loadMaterialsWindow()` instead. Kept for the perf harness and as the fallback when a stale preload lacks the window channel.
+- `loadMaterialsWindow()` / `loadMoreMaterials()` / `searchMaterialsCatalog({ query })` / `materialsWindowLoaded` — the windowed read paths (see [catalog-mirror.md](./catalog-mirror.md) §2).
+- `ensureMaterialsLoaded({ ids, owner? })` / `materialsPinned`, `unpinMaterials({ owner })` / `materialsUnpinned` — keep rows resident for an owner, and release them.
+- `sweepMaterialsResidency()` / `materialsEvicted`, `configureMaterialsResidency({ ttlMs?, sweepIntervalMs? })` — reclaim rows nothing needs, and retune the TTL (§3).
 
 `store/materials/slice.ts` has `extraReducers` for the events plus the workspace-rehydration action (`defineRehydration("materials/rehydrated", loadFromWorkspace)`).
 

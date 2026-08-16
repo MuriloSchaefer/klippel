@@ -5,6 +5,7 @@ import {
 } from "@kernel/modules/Store/actions";
 import {
   addMaterial,
+  configureMaterialsResidency,
   deleteMaterial,
   ensureMaterialsLoaded,
   loadMaterials,
@@ -17,7 +18,9 @@ import {
   materialDeleted,
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
+  materialsEvicted,
   materialsPinned,
+  materialsUnpinned,
   materialsWindowLoaded,
   materialsWindowRequested,
   materialStockUpdated,
@@ -25,6 +28,8 @@ import {
   refreshMaterialsView,
   registerMaterialTypeVersion,
   searchMaterialsCatalog,
+  sweepMaterialsResidency,
+  unpinMaterials,
   updateMaterial,
   updateMaterialStock,
 } from "./actions";
@@ -32,6 +37,14 @@ import {
   materialDtoToState,
   materialStateToDto,
 } from "./catalogAdapter";
+import {
+  collectEvictable,
+  forgetMaterials,
+  getResidencyConfig,
+  resetResidency,
+  setResidencyConfig,
+  touchMaterials,
+} from "./residency";
 import type { MaterialsModuleState } from "../state";
 import { initialState as windowInitialState } from "../window/state";
 
@@ -206,6 +219,19 @@ middlewares.startListening({
   },
 });
 
+/**
+ * Ids whose by-id resolve is in flight, or has already come back empty.
+ *
+ * Two things dispatch `ensureMaterialsLoaded` per material now — an open
+ * model, and any component reading a material that is not resident — and a
+ * grid of rows all missing the same id would otherwise issue one IPC each.
+ * Ids that do not exist in the catalog are the worse case: they come back
+ * unresolved, so without a record the next render asks again, forever.
+ *
+ * Cleared on `reset`, the only event that can change the answer.
+ */
+const resolvingIds = new Set<string>();
+
 middlewares.startListening({
   actionCreator: ensureMaterialsLoaded,
   effect: async ({ payload }, { dispatch, getState }) => {
@@ -213,17 +239,142 @@ middlewares.startListening({
     if (!api?.loadWindow) return;
     const ids = payload.ids.filter(Boolean);
     if (!ids.length) return;
-    // Pin first, unconditionally. A row already resident still has to be
-    // pinned, or the next `reset` read would evict a material the open model
-    // is rendering.
-    dispatch(materialsPinned({ ids }));
+    // Pin first, unconditionally — but only for an owner that can let go
+    // again. A row already resident still has to be pinned, or the next
+    // `reset` read would evict a material the open model is rendering.
+    if (payload.owner) dispatch(materialsPinned({ ids, owner: payload.owner }));
 
     const state = (getState() as RootState).Materials;
-    const missing = ids.filter((id) => !state?.materials?.[id]);
+    const missing = ids.filter(
+      (id) => !state?.materials?.[id] && !resolvingIds.has(id),
+    );
     if (!missing.length) return;
+    for (const id of missing) resolvingIds.add(id);
     dispatch(materialsWindowRequested({ reason: "ids" }));
-    const result = await api.loadWindow({ ids: missing, pinnedIds: ids });
-    dispatch(materialsWindowLoaded(result));
+    try {
+      const result = await api.loadWindow({
+        ids: missing,
+        pinnedIds: payload.owner ? ids : [],
+      });
+      dispatch(materialsWindowLoaded(result));
+      // Anything the answer did carry is resident now; anything it did not
+      // does not exist, and stays marked so the next render does not re-ask.
+      for (const id of Object.keys(result.materials ?? {})) resolvingIds.delete(id);
+    } catch (err) {
+      for (const id of missing) resolvingIds.delete(id);
+      console.error("[Materials] ensureMaterialsLoaded failed", err, missing);
+    }
+  },
+});
+
+middlewares.startListening({
+  actionCreator: unpinMaterials,
+  effect: async ({ payload }, { dispatch }) => {
+    dispatch(materialsUnpinned({ owner: payload.owner }));
+  },
+});
+
+// ---- residency -------------------------------------------------------
+//
+// Everything above only ever *adds* to the mirror. This is the other half:
+// the mirror gives rows back when nothing needs them, so browsing a large
+// catalog costs a bounded amount of renderer memory instead of converging on
+// "the whole catalog, eventually".
+
+/**
+ * What the mirror must keep regardless of when it was last read: the rows
+ * open tabs reference.
+ *
+ * **Not the whole view.** `resultIds` is the *list*, and it grows with every
+ * page the user scrolls through — protecting all of it meant a browse session
+ * ended up protecting the entire catalog, which is precisely the state the
+ * sweep exists to prevent (a live app was found holding 437 of 437 rows with
+ * nothing evictable). What is "on screen" is a much smaller thing, and only
+ * the grid knows it: `TableView` retains the rows it renders, plus a page of
+ * lead either way, and the rest of the view is free to be reclaimed and comes
+ * back as placeholders that resolve when scrolled to.
+ */
+const protectedIdsOf = (getState: () => unknown): Set<string> =>
+  new Set(windowState(getState).pinnedIds);
+
+middlewares.startListening({
+  actionCreator: sweepMaterialsResidency,
+  effect: async (_action, { dispatch, getState }) => {
+    const materials = (getState() as RootState).Materials?.materials;
+    if (!materials) return;
+    const evictable = collectEvictable(
+      Object.keys(materials),
+      protectedIdsOf(getState),
+    );
+    if (!evictable.length) return;
+    forgetMaterials(evictable);
+    for (const id of evictable) resolvingIds.delete(id);
+    // A type marked loaded is a claim that its rows are resident. Eviction
+    // can have just falsified that, and the guard would otherwise refuse to
+    // reload the type — leaving the next picker to mount with no options.
+    loadedTypes.clear();
+    dispatch(materialsEvicted({ ids: evictable }));
+  },
+});
+
+/**
+ * The sweep timer. One per renderer, not one per subscription — it is a
+ * property of the mirror, not of any component.
+ */
+let sweepTimer: ReturnType<typeof setInterval> | undefined;
+
+const startSweeping = (dispatch: (action: unknown) => void) => {
+  if (sweepTimer !== undefined) clearInterval(sweepTimer);
+  sweepTimer = setInterval(
+    () => dispatch(sweepMaterialsResidency()),
+    getResidencyConfig().sweepIntervalMs,
+  );
+};
+
+middlewares.startListening({
+  actionCreator: configureMaterialsResidency,
+  effect: async ({ payload }, { dispatch }) => {
+    setResidencyConfig(payload);
+    // The cadence may have changed, and `setInterval` cannot be retuned.
+    if (sweepTimer !== undefined) startSweeping(dispatch as never);
+  },
+});
+
+middlewares.startListening({
+  actionCreator: loadMaterials,
+  effect: async (_action, { dispatch }) => {
+    startSweeping(dispatch as never);
+  },
+});
+
+middlewares.startListening({
+  actionCreator: workspaceSelected,
+  effect: async (_action, { dispatch }) => {
+    // The mirror is about to be replaced: access history describes rows that
+    // are no longer there, and a by-id resolve for the old catalog says
+    // nothing about the new one.
+    resetResidency();
+    resolvingIds.clear();
+    startSweeping(dispatch as never);
+  },
+});
+
+middlewares.startListening({
+  actionCreator: materialsWindowLoaded,
+  effect: async ({ payload }, { dispatch }) => {
+    if (payload.reset) {
+      resetResidency();
+      resolvingIds.clear();
+    }
+    // Arrival counts as an access. Without this a freshly loaded row is
+    // "never read" for the instant between the reducer and the consumer's
+    // retain effect — and the sweep below would reclaim the row the caller
+    // just asked for.
+    touchMaterials(Object.keys(payload.materials ?? {}));
+    // A page just grew the mirror. Sweeping here — rather than only on the
+    // timer — is what keeps a long browse from accumulating every page it
+    // passed through, without waiting a whole interval to notice.
+    dispatch(sweepMaterialsResidency());
   },
 });
 

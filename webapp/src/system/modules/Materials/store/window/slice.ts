@@ -6,10 +6,15 @@ import {
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
   materialsPinned,
+  materialsUnpinned,
   materialsWindowLoaded,
   materialsWindowRequested,
 } from "../materials/actions";
-import { initialState, MaterialsWindowState } from "./state";
+import {
+  ADHOC_PIN_OWNER,
+  initialState,
+  MaterialsWindowState,
+} from "./state";
 
 /**
  * De-duplicating append that preserves server rank order.
@@ -32,6 +37,56 @@ function appendIds(current: string[], incoming: string[]): string[] {
   return out.length === current.length ? current : out;
 }
 
+/** The union of every owner's pins, de-duplicated, in insertion order. */
+function flattenPins(pins: { [owner: string]: string[] }): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const ids of Object.values(pins)) {
+    for (const id of ids) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push(id);
+    }
+  }
+  return out;
+}
+
+/**
+ * Record `ids` under `owner`, returning the same state when nothing moved —
+ * every open model re-pins on each render pass of its rehydration effect, and
+ * a new state identity per pass would ripple through every window consumer.
+ */
+function withPins(
+  state: MaterialsWindowState,
+  owner: string,
+  ids: string[],
+): MaterialsWindowState {
+  const current = state.pins[owner] ?? [];
+  const merged = appendIds(current, ids);
+  if (merged === current) return state;
+  const pins = { ...state.pins, [owner]: merged };
+  return { ...state, pins, pinnedIds: flattenPins(pins) };
+}
+
+/**
+ * Drop deleted ids out of every owner's pin list. A pin that outlived its row
+ * would be re-sent with each window request forever, and would keep claiming
+ * protection for a material that no longer exists.
+ */
+function prunePins(
+  pins: { [owner: string]: string[] },
+  gone: ReadonlySet<string>,
+): { [owner: string]: string[] } | undefined {
+  let changed = false;
+  const next: { [owner: string]: string[] } = {};
+  for (const [owner, ids] of Object.entries(pins)) {
+    const kept = ids.filter((id) => !gone.has(id));
+    if (kept.length !== ids.length) changed = true;
+    next[owner] = kept;
+  }
+  return changed ? next : undefined;
+}
+
 const slice = createSlice({
   name: "materialsWindowSlice",
   initialState,
@@ -42,9 +97,16 @@ const slice = createSlice({
       loading: true,
     }));
 
-    builder.addCase(materialsPinned, (state, { payload }) => {
-      const next = appendIds(state.pinnedIds, payload.ids);
-      return next === state.pinnedIds ? state : { ...state, pinnedIds: next };
+    builder.addCase(materialsPinned, (state, { payload }) =>
+      withPins(state, payload.owner ?? ADHOC_PIN_OWNER, payload.ids),
+    );
+
+    // The owner let go. Its rows stay in the mirror — they are simply no
+    // longer protected, so the residency TTL decides their fate.
+    builder.addCase(materialsUnpinned, (state, { payload }) => {
+      if (!(payload.owner in state.pins)) return state;
+      const { [payload.owner]: _released, ...pins } = state.pins;
+      return { ...state, pins, pinnedIds: flattenPins(pins) };
     });
 
     builder.addCase(materialsWindowLoaded, (state, { payload }) => {
@@ -58,7 +120,6 @@ const slice = createSlice({
           loading: false,
           total: payload.total,
           initialized: true,
-          pinnedIds: appendIds(state.pinnedIds, payload.pinned),
         };
       }
 
@@ -83,9 +144,10 @@ const slice = createSlice({
           : appendIds(state.resultIds, payload.page),
         nextOffset: payload.offset + payload.page.length,
         hasMore: payload.hasMore,
-        pinnedIds: payload.reset
-          ? payload.pinned
-          : appendIds(state.pinnedIds, payload.pinned),
+        // `pinned` is main echoing back what this client asked it to keep, so
+        // there is nothing to record: the pins are already here, filed under
+        // the owners that made them. Folding the echo in was what made pins
+        // ownerless and therefore permanent.
       };
     });
 
@@ -116,7 +178,11 @@ const slice = createSlice({
       if (removed.length) {
         const gone = new Set(removed);
         next.resultIds = state.resultIds.filter((id) => !gone.has(id));
-        next.pinnedIds = state.pinnedIds.filter((id) => !gone.has(id));
+        const pins = prunePins(state.pins, gone);
+        if (pins) {
+          next.pins = pins;
+          next.pinnedIds = flattenPins(pins);
+        }
       }
       // Recomputed last, from the settled counts: rows arriving or leaving
       // both change whether there is anything left to page in.
@@ -157,13 +223,16 @@ const slice = createSlice({
     });
 
     builder.addCase(materialDeleted, (state, { payload }) => {
-      if (!state.resultIds.includes(payload.id)) return state;
+      const pins = prunePins(state.pins, new Set([payload.id]));
+      const withoutPin = pins
+        ? { ...state, pins, pinnedIds: flattenPins(pins) }
+        : state;
+      if (!state.resultIds.includes(payload.id)) return withoutPin;
       return {
-        ...state,
+        ...withoutPin,
         total: Math.max(0, state.total - 1),
         matched: Math.max(0, state.matched - 1),
         resultIds: state.resultIds.filter((id) => id !== payload.id),
-        pinnedIds: state.pinnedIds.filter((id) => id !== payload.id),
       };
     });
   },

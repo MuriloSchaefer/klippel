@@ -28,6 +28,16 @@ export interface MaterialState{
     },
     composition?: CompositionMap,
     stock: UnitValue;
+    /**
+     * This row's data is not in the mirror — it was evicted, or has not
+     * arrived yet, and only its position in the view is known. Set exclusively
+     * by `placeholderRow` (store/window/selectors.ts); every other field is a
+     * filler the UI must not display.
+     *
+     * Consumers that render a row have to check it (`isPlaceholder`). Nothing
+     * else may set it, and it never reaches the catalog.
+     */
+    placeholder?: true;
 }
 export interface MaterialsState {
     [id: string]: MaterialState

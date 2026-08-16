@@ -14,12 +14,15 @@ const slice = createSlice({
     builder.addCase(materialsCatalogLoaded, (_state, { payload }) =>
       payload.sellers as SellersState,
     );
-    // Organizations come whole with every page — they are bounded by how
-    // many exist, not by catalog size — so a page is authoritative for them
-    // and replaces, exactly as a snapshot does.
-    builder.addCase(materialsWindowLoaded, (_state, { payload }) =>
-      payload.sellers as SellersState,
-    );
+    // Merged, not replaced — except on `reset`. See the matching case in
+    // `industries/slice.ts` for why: a page that came back without
+    // organizations (an unresolved sub-record) would otherwise empty the
+    // slice, and absence in a page means "not sent", never "deleted".
+    builder.addCase(materialsWindowLoaded, (state, { payload }) => {
+      const incoming = (payload.sellers ?? {}) as SellersState;
+      if (payload.reset) return incoming;
+      return Object.keys(incoming).length ? { ...state, ...incoming } : state;
+    });
     builder.addCase(materialsCatalogDeltaLoaded, (state, { payload }) => {
       // A full payload is authoritative and replaces, exactly as
       // `materialsCatalogLoaded` does. A delta only ever carries the entries

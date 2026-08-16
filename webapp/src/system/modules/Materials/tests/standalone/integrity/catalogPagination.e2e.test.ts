@@ -192,7 +192,7 @@ const search = async (p: Page, query: string, expectedMatches: number) => {
 const resetToFirstPage = async (p: Page) => {
   await search(p, "", TOTAL);
   await dispatchMaterials(p, ACTIONS.loadWindow, undefined);
-  await p.waitForSelector(`${VIEWPORT}[data-material-loaded="${PAGE_SIZE}"]`);
+  await p.waitForSelector(`${VIEWPORT}[data-material-view="${PAGE_SIZE}"]`);
 };
 
 beforeAll(async () => {
@@ -231,7 +231,7 @@ describe("catalog pagination", () => {
     await p.waitForSelector(`${VIEWPORT}[data-material-count="${TOTAL}"]`);
     await p.waitForSelector(`${VIEWPORT}[data-material-total="${TOTAL}"]`);
     // ...while only a page is resident, and the UI says there is more.
-    await p.waitForSelector(`${VIEWPORT}[data-material-loaded="${PAGE_SIZE}"]`);
+    await p.waitForSelector(`${VIEWPORT}[data-material-view="${PAGE_SIZE}"]`);
     await p.waitForSelector(`${VIEWPORT}[data-material-has-more="true"]`);
 
     const state = await readWindow(p);
@@ -262,8 +262,8 @@ describe("catalog pagination", () => {
         /* istanbul ignore next */
         (args: { selector: string; before: number }) => {
           const el = document.querySelector(args.selector);
-          const loaded = Number(el?.getAttribute("data-material-loaded") ?? "0");
-          return loaded > args.before;
+          const view = Number(el?.getAttribute("data-material-view") ?? "0");
+          return view > args.before;
         },
         {},
         { selector: VIEWPORT, before },
@@ -347,7 +347,7 @@ describe("catalog pagination", () => {
     // Reload the window from scratch — the cold-open / workspace-switch path,
     // which replaces the mirror rather than extending it.
     await dispatchMaterials(p, ACTIONS.loadWindow, undefined);
-    await p.waitForSelector(`${VIEWPORT}[data-material-loaded="${PAGE_SIZE}"]`);
+    await p.waitForSelector(`${VIEWPORT}[data-material-view="${PAGE_SIZE}"]`);
 
     const after = await readWindow(p);
     // Survived the reset despite ranking last: this is the pin doing its job,

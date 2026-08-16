@@ -13,15 +13,18 @@ import { selectDetailsPanel } from "@kernel/modules/Layout/store/panels/selector
 
 import { MODULE_NAME } from "../../../constants";
 import useCatalogWindow from "../../../hooks/useCatalogWindow";
+import { isPlaceholder } from "../../../store/window/selectors";
 import MaterialStockToolbar from "./MaterialStockToolbar";
 import TableView from "./TableView";
 import SummaryBar from "./SummaryBar";
 import MaterialDetails from "./MaterialDetails";
 import {
   deleteMaterial,
+  ensureMaterialsLoaded,
   loadMoreMaterials,
   searchMaterialsCatalog,
 } from "../../../store/materials/actions";
+import useMaterialResidency from "../../../hooks/useMaterialResidency";
 
 export interface MaterialStockExtra {
   view: "table" | "quadtree";
@@ -51,6 +54,7 @@ const MaterialStockViewport: React.FC = () => {
   const { DetailsPanel } = layoutModule.components;
   const { useActiveViewport } = layoutModule.hooks;
   const dispatch = storeModule.hooks.useAppDispatch();
+  const residency = useMaterialResidency();
 
   const activeVP = useActiveViewport<MaterialStockExtra>();
   const extra: MaterialStockExtra = useMemo(
@@ -85,6 +89,38 @@ const MaterialStockViewport: React.FC = () => {
   const handleReachedEnd = useCallback(() => {
     dispatch(loadMoreMaterials());
   }, [dispatch]);
+
+  // Paging status the grid *pulls* when it scrolls, instead of props it would
+  // re-render for. `hasMore` and `loading` move twice per page request; at a
+  // page every few hundred milliseconds of fast scrolling, pushing them into
+  // the grid means re-rendering every visible cell while the user is
+  // scrolling through them.
+  const pagingRef = useRef({ hasMore: catalog.hasMore, loading: catalog.loading });
+  pagingRef.current = { hasMore: catalog.hasMore, loading: catalog.loading };
+  const getPaging = useCallback(() => pagingRef.current, []);
+
+  // Rows the user scrolled to whose data the mirror no longer holds. One
+  // resolve per batch; the middleware de-duplicates ids already in flight, so
+  // a fast scroll through reclaimed territory does not fan out into an IPC
+  // per frame.
+  const handleVisibleHoles = useCallback(
+    (ids: string[]) => {
+      dispatch(ensureMaterialsLoaded({ ids }));
+    },
+    [dispatch],
+  );
+
+  /** Rows matching the current view that are not in it yet. */
+  const remaining = Math.max(0, catalog.matched - rows.length);
+
+  // Rows in the view whose data is actually here — the view minus its
+  // placeholders. Kept as its own count because `data-material-loaded` has
+  // always meant "rows the renderer holds", and placeholders are positions,
+  // not rows.
+  const residentRows = useMemo(
+    () => rows.reduce((n, row) => (isPlaceholder(row) ? n : n + 1), 0),
+    [rows],
+  );
 
   // Read latest `extra` via a ref so `patchExtra` (and the view/query
   // handlers derived from it) stay referentially stable — an unstable
@@ -129,7 +165,13 @@ const MaterialStockViewport: React.FC = () => {
   // panel is a response to a pick, never a permanently reserved strip.
   const selectedId = extra.selectedId ?? null;
   const selectedMaterial = useMemo(
-    () => (selectedId ? rows.find((m) => String(m.id) === selectedId) : undefined),
+    () => {
+      if (!selectedId) return undefined;
+      const row = rows.find((m) => String(m.id) === selectedId);
+      // A placeholder carries no data to show; the grid asks for it as soon
+      // as it is on screen, and this fills in when it lands.
+      return row && !isPlaceholder(row) ? row : undefined;
+    },
     [rows, selectedId],
   );
 
@@ -182,7 +224,24 @@ const MaterialStockViewport: React.FC = () => {
   // Leave the panel closed behind us: it is shared layout state, and a tab
   // switch unmounts our portal content, which would otherwise leave an
   // empty panel holding a row of the portrait grid.
-  useEffect(() => () => { dispatch(closeDetails()); }, [dispatch]);
+  //
+  // Then ask for a sweep. This viewport is the biggest consumer of the
+  // mirror — a browse session pulls in page after page — and closing it (or
+  // switching away from it) is the moment none of that is on screen any more.
+  // React runs the children's cleanups first, so `TableView` has already
+  // released the rows it was rendering by the time this dispatches, and the
+  // sweep sees them unprotected.
+  //
+  // Rows read moments ago still have their TTL grace and survive this pass;
+  // what goes immediately is everything the user scrolled past earlier. The
+  // rest is reclaimed by the next timer tick if they do not come back.
+  useEffect(
+    () => () => {
+      dispatch(closeDetails());
+      residency.functions.sweep();
+    },
+    [dispatch, residency],
+  );
 
   const view = useMemo(() => {
     if (extra.view === "quadtree") {
@@ -209,10 +268,14 @@ const MaterialStockViewport: React.FC = () => {
         onSelect={handleSelect}
         readInitialSelection={readSelectedId}
         onReachedEnd={handleReachedEnd}
-        hasMore={catalog.hasMore}
-        loading={catalog.loading}
+        getPaging={getPaging}
+        onVisibleHoles={handleVisibleHoles}
       />
     );
+    // Deliberately **not** keyed on `hasMore` / `loading`: every dependency
+    // here is a re-render of the grid, and those two say nothing about what
+    // the rows look like. The grid reads them through `getPaging` when it
+    // needs them.
   }, [
     extra.view,
     rows,
@@ -220,8 +283,8 @@ const MaterialStockViewport: React.FC = () => {
     handleSelect,
     readSelectedId,
     handleReachedEnd,
-    catalog.hasMore,
-    catalog.loading,
+    getPaging,
+    handleVisibleHoles,
   ]);
 
   return (
@@ -247,7 +310,11 @@ const MaterialStockViewport: React.FC = () => {
         //            pagination assertion wants.
         //   total  — catalog size regardless of query.
         data-material-count={catalog.matched}
-        data-material-loaded={rows.length}
+        // Rows in the view — including placeholders, i.e. positions the list
+        // shows whether or not their data is resident. This is what grows by
+        // a page when the user pages in.
+        data-material-view={rows.length}
+        data-material-loaded={residentRows}
         data-material-total={catalog.total}
         data-material-has-more={catalog.hasMore ? "true" : "false"}
         data-material-loading={catalog.loading ? "true" : "false"}
@@ -279,11 +346,18 @@ const MaterialStockViewport: React.FC = () => {
               disabled={catalog.loading}
               onClick={handleReachedEnd}
             >
+              {/*
+                Say what the click does, not only what is left. "Carregar mais
+                (337 restantes)" reads as "this loads 337", and one page then
+                looks like a failure — a click always fetches exactly one page,
+                so the label names both numbers.
+              */}
               {catalog.loading
                 ? "Carregando…"
-                : `Carregar mais (${(
-                    catalog.matched - rows.length
-                  ).toLocaleString()} restantes)`}
+                : `Carregar mais ${Math.min(
+                    catalog.limit,
+                    remaining,
+                  ).toLocaleString()} de ${remaining.toLocaleString()}`}
             </Button>
           </Box>
         )}

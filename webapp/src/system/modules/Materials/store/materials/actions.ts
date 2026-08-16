@@ -70,7 +70,19 @@ export const searchMaterialsCatalog = createAction<{ query: string }>(
  * window — opening a model must not depend on that model's materials having
  * ranked into the first page.
  */
-export const ensureMaterialsLoaded = createAction<{ ids: string[] }>(
+export const ensureMaterialsLoaded = createAction<{
+    ids: string[];
+    /**
+     * Who is asking — a variation id for an open model, absent for a one-off
+     * read (a picker resolving its current value, a details panel).
+     *
+     * An owner gets a **pin**: its rows are protected for as long as that tab
+     * holds them, and released by `unpinMaterials` when it lets go. An
+     * ownerless read gets no pin — it is protected only while something is
+     * rendering it, and then by the residency TTL.
+     */
+    owner?: string;
+}>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Ensure materials loaded`
 );
 
@@ -95,6 +107,30 @@ export const refreshMaterialsView = createAction(
  */
 export const loadMaterialsOfType = createAction<{ type: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Load materials of type`
+);
+
+/**
+ * Drop from the mirror every material nothing needs any more.
+ *
+ * Dispatched on a timer (see the residency middleware) and after any read
+ * that grows the mirror. Deciding *what* is droppable lives in
+ * `store/materials/residency.ts`; this is only the trigger.
+ */
+export const sweepMaterialsResidency = createAction(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Sweep materials residency`
+);
+
+/** Retune the residency TTL / sweep cadence at runtime. */
+export const configureMaterialsResidency = createAction<{
+    ttlMs?: number;
+    sweepIntervalMs?: number;
+}>(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Configure materials residency`
+);
+
+/** Release the pins a closed (or unmounted) tab was holding. */
+export const unpinMaterials = createAction<{ owner: string }>(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Unpin materials`
 );
 
 export const addMaterial = createAction<AddMaterialInput>(
@@ -157,8 +193,24 @@ export const materialsWindowLoaded = createAction<CatalogWindow>(
  * that are *already* resident too: without the pin, the next `reset` read
  * would evict a material the open model is rendering.
  */
-export const materialsPinned = createAction<{ ids: string[] }>(
+export const materialsPinned = createAction<{ ids: string[]; owner?: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials pinned`
+);
+
+/**
+ * An owner released its pins — its tab closed, or its editor unmounted.
+ *
+ * The rows do not leave the mirror here. They stop being *protected*, which
+ * hands them to the residency TTL: come back within the grace period and they
+ * are still resident; stay away and the sweep reclaims them.
+ */
+export const materialsUnpinned = createAction<{ owner: string }>(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials unpinned`
+);
+
+/** Materials dropped from the mirror because nothing needed them. */
+export const materialsEvicted = createAction<{ ids: string[] }>(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials evicted`
 );
 
 /** A window request is in flight — drives the grid's loading affordance. */

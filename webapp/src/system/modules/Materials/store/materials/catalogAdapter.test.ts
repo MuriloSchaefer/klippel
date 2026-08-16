@@ -82,12 +82,30 @@ describe("catalogToMaterialsState", () => {
 describe("applyCatalogDelta", () => {
   const base = () => catalogToMaterialsState(snapshot());
 
-  it("replaces everything on a full payload", () => {
+  it("refreshes the mirror from a full payload without absorbing it", () => {
+    // A snapshot on a *tick* is a refresh, not a replacement. Main sends one
+    // when it has no usable "since" — e.g. a windowed client whose recorded
+    // window was dropped by a workspace switch — and taking it whole would
+    // put the entire catalog in Redux, undoing windowing.
     const snap = snapshot();
-    snap.materials = { c: material("c") };
-    snap.edges = {};
+    snap.materials = {
+      ...snap.materials,
+      a: material("a", { stock: { amount: 42, unit: "m" } }),
+      c: material("c"),
+    };
     const next = applyCatalogDelta(base(), { full: snap });
-    expect(Object.keys(next)).toEqual(["c"]);
+
+    // `a` and `b` were resident and stay; `c` was not and does not arrive.
+    expect(Object.keys(next).sort()).toEqual(["a", "b"]);
+    expect(next.a.stock.amount).toBe(42);
+  });
+
+  it("drops resident rows a full payload no longer carries", () => {
+    const snap = snapshot();
+    delete snap.materials.b;
+    const next = applyCatalogDelta(base(), { full: snap });
+
+    expect(Object.keys(next)).toEqual(["a"]);
   });
 
   it("returns the same reference when nothing moved", () => {
@@ -114,6 +132,18 @@ describe("applyCatalogDelta", () => {
     const next = applyCatalogDelta(base(), { removedMaterials: ["b"] });
     expect(next.b).toBeUndefined();
     expect(next.a).toBeDefined();
+  });
+
+  it("ignores a row the mirror does not hold", () => {
+    // Main scopes deltas to what it believes the client mirrors, and eviction
+    // makes that a superset. Admitting the row here would undo the sweep on
+    // the next tick.
+    const state = base();
+    const next = applyCatalogDelta(state, {
+      materials: { evicted: material("evicted") },
+    });
+    expect(next).toBe(state);
+    expect(next.evicted).toBeUndefined();
   });
 
   it("recomputes relations from the delta's full edge set for that material", () => {

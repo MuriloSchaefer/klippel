@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Box, Typography } from "@mui/material";
 import useMaterialTypes from "../../../hooks/useMaterialTypes";
+import { isPlaceholder } from "../../../store/window/selectors";
 import type { MaterialState } from "../../../store/materials/state";
 
 interface Props {
@@ -29,6 +30,10 @@ const SummaryBar: React.FC<Props> = ({ materials, loaded, matched }) => {
     const byType: Record<string, { amount: number; unit: string; mixed: boolean }> =
       {};
     for (const m of materials) {
+      // Placeholders are positions in the list, not rows: they carry no type
+      // and no stock, and counting them would invent an unnamed group whose
+      // total is zero.
+      if (isPlaceholder(m)) continue;
       const t = m.type;
       if (!byType[t]) byType[t] = { amount: 0, unit: m.stock?.unit ?? "", mixed: false };
       const g = byType[t];
@@ -39,7 +44,11 @@ const SummaryBar: React.FC<Props> = ({ materials, loaded, matched }) => {
   }, [materials]);
 
   const total = useMemo(
-    () => materials.reduce((acc, m) => acc + (m.stock?.amount ?? 0), 0),
+    () =>
+      materials.reduce(
+        (acc, m) => (isPlaceholder(m) ? acc : acc + (m.stock?.amount ?? 0)),
+        0,
+      ),
     [materials],
   );
 

@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   materialAdded,
   materialDeleted,
+  materialsEvicted,
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
   materialsLoaded,
@@ -59,6 +60,21 @@ const slice = createSlice({
     builder.addCase(materialDeleted, (state, { payload }) => {
       const { [payload.id]: _removed, ...rest } = state;
       return rest;
+    });
+    // Eviction is the mirror shrinking, not the catalog: the rows still
+    // exist, they are just no longer worth the renderer's memory. Whoever
+    // needs one next re-resolves it by id (`useMaterial` → the lazy path).
+    builder.addCase(materialsEvicted, (state, { payload }) => {
+      if (!payload.ids.length) return state;
+      const next = { ...state };
+      let removed = 0;
+      for (const id of payload.ids) {
+        if (id in next) {
+          delete next[id];
+          removed += 1;
+        }
+      }
+      return removed ? next : state;
     });
   },
 });

@@ -555,8 +555,11 @@ export async function loadMaterialsCatalog(
   for (const [k, v] of recordEntries<AnyRecord>(catalog.edges)) {
     snapshot.edges[k] = edgeCoMapToDto(v);
   }
-  if (clientId && windowOf(clientId)) {
-    trackClientWindow(clientId, Object.keys(snapshot.materials), { reset: true });
+  // This client asked for everything, so everything is what it mirrors —
+  // and it is the one kind of client a tick may answer with a full snapshot.
+  if (clientId) {
+    fullCatalogClients.add(clientId);
+    clientWindows.delete(clientId);
   }
   return snapshot;
 }
@@ -602,9 +605,31 @@ const catalogShadows = new Map<string, CatalogShadow>();
  */
 const clientWindows = new Map<string, Set<string>>();
 
-/** Materials this client mirrors, or `null` when it holds the whole catalog. */
+/**
+ * Clients that asked for the **whole** catalog (`load()`), and may therefore
+ * be handed a full snapshot on a tick.
+ *
+ * Explicit, because "has no recorded window" is not the same question. A
+ * renderer has no window between a workspace switch (which drops every
+ * window) and its first window read — and in that gap a tick used to hand it
+ * the entire catalog, which its reducer applied wholesale. One write during
+ * a workspace switch was enough to put the whole catalog back in Redux, i.e.
+ * to undo windowing entirely (Materials/docs/architecture/catalog-mirror.md
+ * §1). Unknown clients are windowed; only saying `load()` opts out.
+ */
+const fullCatalogClients = new Set<string>();
+
+/**
+ * Materials this client mirrors, or `null` when it holds the whole catalog.
+ *
+ * An unknown client gets a fresh empty set — "windowed, mirroring nothing
+ * yet" — rather than `null`. A fresh set per call because callers mutate what
+ * they get (a removal drops out of the window); nothing is lost by throwing
+ * it away, since the client has no recorded window to update.
+ */
 const windowOf = (clientId: string): Set<string> | null =>
-  clientWindows.get(clientId) ?? null;
+  clientWindows.get(clientId) ??
+  (fullCatalogClients.has(clientId) ? null : new Set<string>());
 
 /**
  * Record that `clientId` now holds these materials, so subsequent deltas
@@ -625,6 +650,7 @@ export function trackClientWindow(
 /** Forget one client's window — it reloaded, or switched workspace. */
 function dropClientWindow(clientId: string): void {
   clientWindows.delete(clientId);
+  fullCatalogClients.delete(clientId);
 }
 
 /**
@@ -635,6 +661,7 @@ function dropClientWindow(clientId: string): void {
 export function dropCatalogShadows(): void {
   catalogShadows.clear();
   clientWindows.clear();
+  fullCatalogClients.clear();
 }
 
 /**
@@ -903,6 +930,15 @@ interface CatalogIndexCache {
   entries: Map<string, CatalogIndexEntry>;
   /** Every id, in rank order. The browse page is a slice of this. */
   ranked: string[];
+  /**
+   * `material id → its edges`, as DTOs, keyed by edge id.
+   *
+   * A window answer carries every edge of every material it returns, and that
+   * used to mean walking the whole edge record per request — 30k edges for a
+   * 100-row page at a 10k catalog, once per scroll page. The walk happens
+   * once per index build instead, and a page costs O(page).
+   */
+  edgesBySource: Map<string, Array<[string, EdgeDTO]>>;
 }
 
 let catalogIndex: CatalogIndexCache | null = null;
@@ -997,12 +1033,16 @@ async function requireCatalogIndex(
   if (catalogIndex && catalogIndex.catalogId === catalogId) return catalogIndex;
 
   const industryOf = new Map<string, string>();
-  for (const [, v] of recordEntries<AnyRecord>(catalog.edges)) {
-    const e = v as unknown as EdgeDTO;
+  const edgesBySource = new Map<string, Array<[string, EdgeDTO]>>();
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.edges)) {
+    const e = edgeCoMapToDto(v);
     // First `manufacturedBy` wins, matching the renderer's `relationsFor`.
     if (e.type === "manufacturedBy" && !industryOf.has(e.sourceId)) {
       industryOf.set(e.sourceId, e.targetId);
     }
+    const bucket = edgesBySource.get(e.sourceId);
+    if (bucket) bucket.push([k, e]);
+    else edgesBySource.set(e.sourceId, [[k, e]]);
   }
 
   const entries = new Map<string, CatalogIndexEntry>();
@@ -1022,7 +1062,7 @@ async function requireCatalogIndex(
     return a < b ? -1 : a > b ? 1 : 0;
   });
 
-  catalogIndex = { catalogId, entries, ranked };
+  catalogIndex = { catalogId, entries, ranked, edgesBySource };
   trace("requireCatalogIndex: built", {
     catalogId,
     materials: entries.size,
@@ -1125,10 +1165,13 @@ export async function loadMaterialsWindow(
   // Every current edge of every material in the answer — `suppliers` and
   // `industry` are derived from a material's whole edge set, so a partial one
   // would silently drop relations (same contract as `CatalogDelta.edges`).
+  // Read out of the index by source, so this is O(rows in the answer) rather
+  // than a walk of every edge in the catalog per page request.
   const edges: { [id: string]: EdgeDTO } = {};
-  for (const [k, v] of recordEntries<AnyRecord>(catalog.edges)) {
-    const dto = edgeCoMapToDto(v);
-    if (materials[dto.sourceId]) edges[k] = dto;
+  for (const id of Object.keys(materials)) {
+    for (const [edgeId, dto] of index.edgesBySource.get(id) ?? []) {
+      edges[edgeId] = dto;
+    }
   }
 
   // Types, industries and sellers come whole: they are bounded by how many
@@ -1344,6 +1387,51 @@ export async function seedCatalogIfEmpty(input: SeedCatalogInput): Promise<{
     `materials=${input.materials.length}, types=${input.materialTypes.length}, edges=${input.edges.length}`,
   );
   return { seeded: true };
+}
+
+/**
+ * Append one chunk of a synthetic catalog — the batched seeding path
+ * e2e-tests.md §11.2 prescribes for the 10k tier.
+ *
+ * `seedCatalogIfEmpty` is single-shot by design (it is the dev-fixture cold
+ * start and must never double-apply), which caps a live seed at whatever one
+ * IPC round trip can carry. A 10k catalog cannot go through one call — the
+ * structured clone and the CoValue writes both block main for seconds — so a
+ * perf fixture is written in chunks instead, each a plain append.
+ *
+ * **Fixture construction only.** It appends unconditionally and does not
+ * check for duplicates: callers are generators with index-derived ids
+ * (`mat-{seed}-{i}`), so uniqueness is a property of the fixture, not
+ * something this has to enforce per row at 10k scale. Nothing in the product
+ * calls it.
+ */
+export async function appendCatalogChunk(input: SeedCatalogInput): Promise<{
+  materials: number;
+}> {
+  const { catalog, owner } = await requireCatalog();
+  for (const t of input.materialTypes) {
+    if (catalog.materialTypes[t.id]) continue;
+    catalog.materialTypes.$jazz.set(t.id, createTypeCoValue(t, owner));
+  }
+  for (const i of input.industries) {
+    if (catalog.industries[i.id]) continue;
+    catalog.industries.$jazz.set(i.id, createOrgCoValue(i, owner));
+  }
+  for (const s of input.sellers) {
+    if (catalog.sellers[s.id]) continue;
+    catalog.sellers.$jazz.set(s.id, createOrgCoValue(s, owner));
+  }
+  for (const m of input.materials) {
+    catalog.materials.$jazz.set(m.id, createMaterialCoValue(m, owner));
+  }
+  for (const e of input.edges) {
+    catalog.edges.$jazz.set(e.id, createEdgeCoValue(e, owner));
+  }
+  // The rank / search index and the usage counts behind it are derived from
+  // catalog content, and this just changed it.
+  invalidateCatalogRanking();
+  trace("appendCatalogChunk", `materials=${input.materials.length}`);
+  return { materials: input.materials.length };
 }
 
 export async function addMaterial(

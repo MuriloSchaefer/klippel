@@ -9,6 +9,12 @@ import useMaterials from "./hooks/useMaterials";
 import useMaterial from "./hooks/useMaterial";
 import useMaterialsGetter from "./hooks/useMaterialsGetter";
 import useCatalogWindow from "./hooks/useCatalogWindow";
+import {
+    configureMaterialsResidency,
+    ensureMaterialsLoaded,
+    sweepMaterialsResidency,
+    unpinMaterials,
+} from "./store/materials/actions";
 
 export interface IMaterialsModule extends IModule {
     components: {
@@ -19,6 +25,16 @@ export interface IMaterialsModule extends IModule {
     },
     store: {
         actions: {
+            commands: {
+                /** Keep these ids resident; `owner` makes the pin releasable. */
+                ensureMaterialsLoaded: typeof ensureMaterialsLoaded,
+                /** Release one owner's pins — its tab closed. */
+                unpinMaterials: typeof unpinMaterials,
+                /** Reclaim everything nothing needs, now. */
+                sweepMaterialsResidency: typeof sweepMaterialsResidency,
+                /** Retune the residency TTL / sweep cadence at runtime. */
+                configureMaterialsResidency: typeof configureMaterialsResidency,
+            },
         },
         middlewares: [
         ],
@@ -49,6 +65,12 @@ const module: IMaterialsModule = {
     },
     store: {
         actions: {
+            commands: {
+                ensureMaterialsLoaded,
+                unpinMaterials,
+                sweepMaterialsResidency,
+                configureMaterialsResidency,
+            },
         },
         middlewares: [],
         reducers: {

@@ -10,7 +10,10 @@ import {
   updateProxy as updateProxyAction,
 } from "@kernel/modules/SVG/store/actions";
 import type { IMaterialsModule } from "@system/modules/Materials";
-import { ensureMaterialsLoaded } from "@system/modules/Materials/store/materials/actions";
+import {
+  ensureMaterialsLoaded,
+  unpinMaterials,
+} from "@system/modules/Materials/store/materials/actions";
 
 import type {
   DocumentNode,
@@ -99,10 +102,21 @@ export default function useVariationRehydration({
   // the rows it references — the pin is what makes the whole-catalog
   // assumption this hook used to rely on unnecessary rather than merely
   // unstated.
+  //
+  // The pin is owned by this variation and released when the editor goes
+  // away, so the mirror can reclaim a closed model's materials instead of
+  // holding every material every model ever opened referenced. Coming back
+  // within the residency TTL finds the rows still resident; later, they are
+  // re-resolved by id.
   useEffect(() => {
     if (!referencedMaterialIds.length) return;
-    dispatch(ensureMaterialsLoaded({ ids: referencedMaterialIds }));
-  }, [dispatch, referencedMaterialIds]);
+    dispatch(
+      ensureMaterialsLoaded({ ids: referencedMaterialIds, owner: variationId }),
+    );
+    return () => {
+      dispatch(unpinMaterials({ owner: variationId }));
+    };
+  }, [dispatch, referencedMaterialIds, variationId]);
 
   // Read the SVG layer through a ref, never through the effect's deps.
   //

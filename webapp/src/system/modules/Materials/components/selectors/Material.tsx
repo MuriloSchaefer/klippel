@@ -16,6 +16,7 @@ import {
   selectMaterialsByType,
 } from "../../store/materials/selectors";
 import { loadMaterialsOfType } from "../../store/materials/actions";
+import { useRetainedMaterials } from "../../hooks/useMaterialResidency";
 import { MaterialState } from "../../store/materials/state";
 import { selectMaterialType } from "../../store/materialTypes/selectors";
 import { resolveTypeSchema } from "../../store/materialTypes/resolveTypeSchema";
@@ -58,6 +59,13 @@ const MaterialSelector = ({
     () => (filter ? ofType.filter(filter) : ofType),
     [ofType, filter],
   );
+
+  // Claim residency on the options for as long as this picker is open. The
+  // type's rows belong to no page and to no tab's pin set, so without this
+  // the residency sweep would be entitled to reclaim them while the dropdown
+  // is on screen — and the picker would blank its own current value.
+  const optionIds = useMemo(() => ofType.map((m) => m.id), [ofType]);
+  useRetainedMaterials(optionIds);
 
   // A type can legitimately be absent: on a first-ever workspace open there is
   // no `.session/Materials/materialTypes` cache to rehydrate from, so the slice

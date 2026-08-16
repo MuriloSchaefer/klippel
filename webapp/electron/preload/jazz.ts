@@ -207,6 +207,13 @@ export const jazzApi = {
       ipcRenderer.invoke("jazz-materials-get", id),
     seed: (input: SeedCatalogInput): Promise<{ seeded: boolean }> =>
       ipcRenderer.invoke("jazz-materials-seed", input),
+    /**
+     * Append one chunk of a synthetic catalog. Perf-fixture construction
+     * only (e2e-tests.md §11.2) — unlike `seed` it is not idempotent and no
+     * product code path calls it.
+     */
+    seedChunk: (input: SeedCatalogInput) =>
+      ipcRenderer.invoke("jazz-materials-seed-chunk", input),
     addMaterial: (input: AddMaterialInput): Promise<MaterialDTO> =>
       ipcRenderer.invoke("jazz-materials-add", input),
     updateMaterial: (input: UpdateMaterialInput): Promise<void> =>

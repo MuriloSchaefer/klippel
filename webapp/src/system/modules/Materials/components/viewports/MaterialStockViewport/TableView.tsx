@@ -11,6 +11,8 @@ import useMaterialTypes from "../../../hooks/useMaterialTypes";
 import DeleteMaterialButton from "./DeleteMaterialButton";
 import UpdateMaterialButton from "./UpdateMaterialButton";
 import type { MaterialState } from "../../../store/materials/state";
+import { useVisibleMaterials } from "../../../hooks/useMaterialResidency";
+import { isPlaceholder } from "../../../store/window/selectors";
 import { resolveTypeSchema } from "../../../store/materialTypes/resolveTypeSchema";
 import type { MaterialTypesState } from "../../../store/materialTypes/state";
 
@@ -119,11 +121,31 @@ interface Props {
    * (or care) whether more exist — it reports the event and the store decides.
    */
   onReachedEnd?: () => void;
-  /** More rows exist beyond the resident page. */
-  hasMore?: boolean;
-  /** A page request is in flight. */
-  loading?: boolean;
+  /**
+   * Paging status, read at scroll time rather than passed as props.
+   *
+   * `hasMore` and `loading` each flip twice per page request, and a prop that
+   * changes is a re-render of the grid — DataGrid bundles its props into the
+   * context every cell reads, so a flip that changes nothing visible still
+   * re-renders every header and cell. That is the stutter a user feels when
+   * pages stream in during a fast scroll. Behind a stable callback, the same
+   * facts reach the scroll handler without touching the render path.
+   */
+  getPaging?: () => { hasMore: boolean; loading: boolean };
+  /**
+   * The rows the user can actually see changed (scroll, resize), and some of
+   * them are placeholders. Called with the ids that need fetching — the
+   * viewport turns that into one resolve.
+   */
+  onVisibleHoles?: (ids: string[]) => void;
 }
+
+/**
+ * Rows either side of the rendered range that count as "on screen" for
+ * residency. One page's worth of lead in both directions, so a fling has
+ * something to land on and the sweep is not fighting the scrollbar.
+ */
+const VISIBLE_BUFFER_ROWS = 100;
 
 /**
  * How close to the bottom (in px) counts as "reached the end". One viewport
@@ -158,8 +180,8 @@ const TableView: React.FC<Props> = ({
   onSelect,
   readInitialSelection,
   onReachedEnd,
-  hasMore = false,
-  loading = false,
+  getPaging,
+  onVisibleHoles,
 }) => {
   const materialTypes = useMaterialTypes();
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -208,13 +230,18 @@ const TableView: React.FC<Props> = ({
 
   const columns: GridColDef[] = useMemo(
     () => [
+      // A placeholder row carries an id and nothing else — the rest of its
+      // fields are filler that must never be displayed as data. Every column
+      // below therefore renders empty for one; the row keeps its height, so
+      // the list under the scrollbar does not move while the real data is
+      // fetched.
       { field: "id", headerName: "ID", width: 90 },
       {
         field: "type",
         headerName: "Tipo",
         width: 110,
         valueGetter: (_value, row: any) =>
-          materialTypes?.[row.type]?.label ?? row.type,
+          isPlaceholder(row) ? "" : (materialTypes?.[row.type]?.label ?? row.type),
       },
       {
         field: "principal",
@@ -222,6 +249,8 @@ const TableView: React.FC<Props> = ({
         flex: 1,
         valueGetter: (_value, row: any) =>
           row.attributes?.nome ?? row.attributes?.categoria ?? "",
+        renderCell: (params) =>
+          isPlaceholder(params.row as MaterialState) ? null : params.value,
       },
       {
         field: "selectorExtra",
@@ -361,6 +390,9 @@ const TableView: React.FC<Props> = ({
         headerName: "",
         width: 100,
         getActions: (params: GridRowParams) => {
+          // No actions on a row whose data is not here: Update would open a
+          // form over filler, Delete would act on a row nobody has seen.
+          if (isPlaceholder(params.row as MaterialState)) return [];
           const isSelected = String(params.id) === selectedIdRef.current;
           return [
             <UpdateMaterialButton
@@ -438,23 +470,101 @@ const TableView: React.FC<Props> = ({
   // keyboard-driven scrolling too, not only the wheel, so paging works
   // without a mouse.
   //
-  // Read `hasMore` / `loading` through a ref: making them dependencies would
-  // resubscribe on every page (they both flip twice per request), and the
-  // store guards the request anyway. The check here only exists to avoid the
-  // dispatch traffic.
-  const pagingRef = useRef({ hasMore, loading, onReachedEnd });
-  pagingRef.current = { hasMore, loading, onReachedEnd };
+  // Paging status is *pulled* at scroll time (`getPaging`) rather than pushed
+  // as props, so a page landing mid-scroll never re-renders the grid. The
+  // callbacks themselves go through a ref so the subscription is set up once.
+  const pagingRef = useRef({ getPaging, onReachedEnd });
+  pagingRef.current = { getPaging, onReachedEnd };
+
+  // What the user can actually see, and therefore what must stay resident.
+  //
+  // The view can be thousands of ids long; the mirror must not be. So the
+  // grid — the only thing that knows which rows are rendered — claims
+  // residency for that range (plus a page of lead either side) and lets go of
+  // everything else. Rows outside it are free to be reclaimed, and come back
+  // as placeholders that resolve when they are scrolled to.
+  //
+  // Kept in a ref and diffed, because this fires on every scroll frame and
+  // neither the retain nor the fetch may re-render anything.
+  const visibleRef = useRef<{ ids: string[]; first: number; last: number }>({
+    ids: [],
+    first: -1,
+    last: -1,
+  });
+  const materialsRef = useRef(materials);
+  materialsRef.current = materials;
+
+  // Residency for what is on screen. The hook owns the retain/release pairing
+  // and releases everything at unmount, so this component only reports.
+  const reportVisible = useVisibleMaterials();
+
+  const updateVisibleRange = useCallback(
+    (first: number, last: number) => {
+      const rows = materialsRef.current;
+      const from = Math.max(0, first - VISIBLE_BUFFER_ROWS);
+      const to = Math.min(rows.length - 1, last + VISIBLE_BUFFER_ROWS);
+      const prev = visibleRef.current;
+      if (prev.first === from && prev.last === to) return;
+
+      const ids: string[] = [];
+      const holes: string[] = [];
+      for (let i = from; i <= to; i++) {
+        const row = rows[i];
+        if (!row) continue;
+        ids.push(String(row.id));
+        if (isPlaceholder(row)) holes.push(String(row.id));
+      }
+
+      // One coalesced dispatch per burst — this fires on every scroll frame,
+      // and the hook diffs and batches so a fling is not a store notification
+      // per frame (see `useVisibleMaterials`).
+      reportVisible(ids);
+      visibleRef.current = { ids, first: from, last: to };
+
+      if (holes.length) onVisibleHolesRef.current?.(holes);
+    },
+    [reportVisible],
+  );
+
+  const onVisibleHolesRef = useRef(onVisibleHoles);
+  onVisibleHolesRef.current = onVisibleHoles;
 
   useEffect(() => {
     const api = apiRef.current;
     if (!api?.subscribeEvent) return;
+    return api.subscribeEvent("renderedRowsIntervalChange", (params) => {
+      updateVisibleRange(params.firstRowIndex, params.lastRowIndex);
+    });
+  }, [apiRef, updateVisibleRange]);
+
+
+  // A page landing (or a search answering) changes what sits in the rendered
+  // range without moving the range itself, so re-evaluate against the new rows.
+  useEffect(() => {
+    const { first, last } = visibleRef.current;
+    if (first < 0) return;
+    visibleRef.current = { ...visibleRef.current, first: -1, last: -1 };
+    updateVisibleRange(first + VISIBLE_BUFFER_ROWS, last - VISIBLE_BUFFER_ROWS);
+  }, [materials, updateVisibleRange]);
+
+  useEffect(() => {
+    const api = apiRef.current;
+    if (!api?.subscribeEvent) return;
+    // The scroller element is looked up once and cached: `scrollPositionChange`
+    // fires on every frame of a fling, and a `querySelector` per frame is work
+    // done on the same thread that has to paint the rows.
+    let scroller: Element | null = null;
     return api.subscribeEvent("scrollPositionChange", (params) => {
-      const { hasMore: more, loading: busy, onReachedEnd: notify } =
-        pagingRef.current;
-      if (!more || busy || !notify) return;
-      const scroller = api.rootElementRef?.current?.querySelector(
-        ".MuiDataGrid-virtualScroller",
-      );
+      const { getPaging: paging, onReachedEnd: notify } = pagingRef.current;
+      if (!notify) return;
+      const { hasMore, loading } = paging?.() ?? { hasMore: false, loading: false };
+      if (!hasMore || loading) return;
+      if (!scroller?.isConnected) {
+        scroller =
+          api.rootElementRef?.current?.querySelector(
+            ".MuiDataGrid-virtualScroller",
+          ) ?? null;
+      }
       if (!scroller) return;
       const remaining =
         scroller.scrollHeight - (params.top + scroller.clientHeight);
@@ -506,4 +616,10 @@ const TableView: React.FC<Props> = ({
   );
 };
 
-export default TableView;
+/**
+ * Memoized because the viewport around it re-renders on every window-state
+ * move — a request starting, a count arriving — and none of that changes what
+ * this renders. With the paging props gone, the only prop that moves is
+ * `materials`, i.e. the rows themselves.
+ */
+export default React.memo(TableView);
