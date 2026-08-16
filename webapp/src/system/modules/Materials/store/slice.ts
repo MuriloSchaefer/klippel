@@ -5,8 +5,8 @@ import materialTypesSlice from "./materialTypes/slice";
 import materialsSlice from "./materials/slice";
 import industriesSlice from "./industries/slice";
 import sellersSlice from "./sellers/slice";
-import graphSlice from "./graph/slice";
 import windowSlice from "./window/slice";
+import residencySlice from "./residency/slice";
 
 const slice = createSlice({
   name: MODULE_NAME,
@@ -16,8 +16,8 @@ const slice = createSlice({
     materialTypes: materialTypesSlice.getInitialState(),
     industries: industriesSlice.getInitialState(),
     sellers: sellersSlice.getInitialState(),
-    graph: graphSlice.getInitialState(),
     window: windowSlice.getInitialState(),
+    residency: residencySlice.getInitialState(),
   } as MaterialsModuleState,
   reducers: {},
   extraReducers: (builder) => {
@@ -27,8 +27,8 @@ const slice = createSlice({
       materialTypes: materialTypesSlice.reducer(state.materialTypes, action),
       industries: industriesSlice.reducer(state.industries, action),
       sellers: sellersSlice.reducer(state.sellers, action),
-      graph: graphSlice.reducer(state.graph, action),
       window: windowSlice.reducer(state.window, action),
+      residency: residencySlice.reducer(state.residency, action),
     }));
   },
 });

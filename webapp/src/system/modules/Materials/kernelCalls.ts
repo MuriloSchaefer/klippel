@@ -9,6 +9,8 @@ import TiposDeMateriaisSection from "./components/TiposDeMateriaisSection";
 import MaterialStockViewport from "./components/viewports/MaterialStockViewport";
 
 import materialsMiddlewares from "./store/materials/middlewares";
+import catalogGraphMiddlewares from "./store/graph/middlewares";
+import residencyMiddlewares from "./store/residency/middlewares";
 
 import { loadMaterialsCatalogDelta } from "./store/materials/actions";
 import { sessionSaver } from "./store/session";
@@ -20,6 +22,11 @@ export function startModule({
 }: StartModuleProps) {
   storeManager.functions.loadReducer(MODULE_NAME, slice.reducer);
   storeManager.functions.registerMiddleware(materialsMiddlewares);
+  // The catalog's relation graph is maintained in the Graph module's store,
+  // not in this module's slice — see `store/graph/middlewares.ts`.
+  storeManager.functions.registerMiddleware(catalogGraphMiddlewares);
+  // Eviction: the sweep and its timer (store/residency).
+  storeManager.functions.registerMiddleware(residencyMiddlewares);
 
   // Session writer — caches `materialTypes` so a cold renderer has the type
   // schemas before the first surface that reads them paints. Single writer for

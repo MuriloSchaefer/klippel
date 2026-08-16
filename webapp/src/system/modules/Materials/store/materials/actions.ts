@@ -109,25 +109,6 @@ export const loadMaterialsOfType = createAction<{ type: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Load materials of type`
 );
 
-/**
- * Drop from the mirror every material nothing needs any more.
- *
- * Dispatched on a timer (see the residency middleware) and after any read
- * that grows the mirror. Deciding *what* is droppable lives in
- * `store/materials/residency.ts`; this is only the trigger.
- */
-export const sweepMaterialsResidency = createAction(
-    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Sweep materials residency`
-);
-
-/** Retune the residency TTL / sweep cadence at runtime. */
-export const configureMaterialsResidency = createAction<{
-    ttlMs?: number;
-    sweepIntervalMs?: number;
-}>(
-    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Configure materials residency`
-);
-
 /** Release the pins a closed (or unmounted) tab was holding. */
 export const unpinMaterials = createAction<{ owner: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Unpin materials`

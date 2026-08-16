@@ -5,11 +5,11 @@ import { Store } from "@kernel/modules/Store";
 
 import { ensureMaterialsLoaded } from "../store/materials/actions";
 import { selectMaterial } from "../store/materials/selectors";
-import {
-  releaseMaterials,
-  retainMaterials,
-} from "../store/materials/residency";
+import { useRetainedMaterials } from "./useMaterialResidency";
 import type { MaterialState } from "../store/materials/state";
+
+/** Stable empty list, so an absent id does not allocate a new array per render. */
+const EMPTY_IDS: string[] = [];
 
 /**
  * One material, by id — an O(1) read that re-renders the caller only when
@@ -42,11 +42,9 @@ export default function useMaterial(
   // empty-string key, which no material can hold.
   const material = useAppSelector(selectMaterial(id ?? ""));
 
-  useEffect(() => {
-    if (!id) return;
-    retainMaterials([id]);
-    return () => releaseMaterials([id]);
-  }, [id]);
+  // Claims residency while mounted — the sweep never reclaims a row
+  // something is rendering, however long ago it was loaded.
+  useRetainedMaterials(id ? [id] : EMPTY_IDS);
 
   // Depend on *whether* it is missing, not on the row itself: keying the
   // effect on the object would re-run it on every edit of a material that is

@@ -9,12 +9,19 @@ import useMaterials from "./hooks/useMaterials";
 import useMaterial from "./hooks/useMaterial";
 import useMaterialsGetter from "./hooks/useMaterialsGetter";
 import useCatalogWindow from "./hooks/useCatalogWindow";
+import { CATALOG_GRAPH_ID } from "./store/graph/catalogGraph";
 import {
-    configureMaterialsResidency,
     ensureMaterialsLoaded,
-    sweepMaterialsResidency,
     unpinMaterials,
 } from "./store/materials/actions";
+import {
+    configureMaterialsResidency,
+    sweepMaterialsResidency,
+} from "./store/residency/actions";
+import useMaterialResidency, {
+    useRetainedMaterials,
+    useVisibleMaterials,
+} from "./hooks/useMaterialResidency";
 
 export interface IMaterialsModule extends IModule {
     components: {
@@ -47,6 +54,12 @@ export interface IMaterialsModule extends IModule {
         useMaterial: typeof useMaterial,
         useMaterialsGetter: typeof useMaterialsGetter,
         useCatalogWindow: typeof useCatalogWindow,
+        /** Imperative residency: retain / release / touch / sweep / configure. */
+        useMaterialResidency: typeof useMaterialResidency,
+        /** Keep a known id list resident while the caller is mounted. */
+        useRetainedMaterials: typeof useRetainedMaterials,
+        /** Retain a set that changes on every scroll frame, coalesced. */
+        useVisibleMaterials: typeof useVisibleMaterials,
     }
 }
 const module: IMaterialsModule = {
@@ -76,8 +89,25 @@ const module: IMaterialsModule = {
         reducers: {
         },
     },
-    hooks: {useMaterialTypes, useMaterials, useMaterial, useMaterialsGetter, useCatalogWindow},
-    constants: {},
+    hooks: {
+        useMaterialTypes,
+        useMaterials,
+        useMaterial,
+        useMaterialsGetter,
+        useCatalogWindow,
+        useMaterialResidency,
+        useRetainedMaterials,
+        useVisibleMaterials,
+    },
+    constants: {
+        /**
+         * Graph id of the catalog's relation graph, in the **Graph module's**
+         * store. Read it with `graphModule.hooks.useGraph(CATALOG_GRAPH_ID)`
+         * or `getGraphState(CATALOG_GRAPH_ID)`; this module keeps no graph of
+         * its own.
+         */
+        CATALOG_GRAPH_ID,
+    },
     kernelCalls: {
         startModule: startModule,
         postBootInitialization: postBootInitialization,

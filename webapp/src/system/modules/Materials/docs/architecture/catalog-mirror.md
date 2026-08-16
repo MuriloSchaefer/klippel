@@ -95,8 +95,10 @@ Two rules follow, and both have been violated before:
 
 ## 3. Getting rows out — residency
 
-`store/materials/residency.ts` is the authority on what may be dropped. A
-material stays resident if **any** of these holds:
+`store/residency` is the authority on what may be dropped — a slice like any
+other: `state.ts` (ref counts, last-read times, the two knobs), `actions.ts`,
+`slice.ts`, `selectors.ts`, `middlewares.ts`. A material stays resident if
+**any** of these holds:
 
 1. it is **retained** — a mounted component is rendering it
    (`retainMaterials` / `releaseMaterials`, paired in one effect). The stock
@@ -110,19 +112,34 @@ material stays resident if **any** of these holds:
 Anything else is swept — on a timer (default every 1 min) and after every
 window read, so a long browse sheds pages as it goes instead of at the end.
 
-Both knobs are per-renderer and retunable at runtime:
-`dispatch(configureMaterialsResidency({ ttlMs, sweepIntervalMs }))`.
+Both knobs live in the slice and are retunable at runtime —
+`useMaterialResidency().functions.configure({ ttlMs, sweepIntervalMs })`, or
+the `configureMaterialsResidency` command. The reducer clamps both to
+`MIN_RESIDENCY_MS`. The sweep *timer* is module state in the middleware: a
+timer handle is not state, cannot be serialized, and must not survive a
+reducer reload.
 
-### Why the registry is not Redux state
+### Writing it without paying for it
 
-Reads happen per row per render. If a read were a dispatch, every rendered row
-would notify the store and re-run every subscriber — on the hot path of the
-grid this exists to keep smooth. So `residency.ts` holds two plain `Map`s and
-the store only ever sees the outcome (`materialsEvicted`).
+Reads happen per row per render, and every write here is a dispatch — a store
+notification, and a selector pass in every subscriber. Three things keep that
+off the hot path, and all three matter:
 
-The consequence to remember: **it is module state, not store state.** It does
-not survive a page reload (nothing needs it to — the mirror does not either)
-and it is reset explicitly on a workspace switch and on a `reset` read.
+- **Hooks, not raw dispatches.** `useRetainedMaterials(ids)` pairs retain and
+  release in one effect keyed on the id list's *value*; `useVisibleMaterials()`
+  returns a `report(ids)` that is **debounced until the scroll settles**
+  (`SCROLL_SETTLE_MS`) and then diffed, so a fling writes the store once, when
+  it stops, and a range that did not really change writes nothing. Nothing
+  outside this module should import the slice's actions directly.
+- **Reducers return the same state when nothing moved**, so a redundant touch
+  costs no re-render anywhere.
+- **Nobody subscribes to it.** It is read by the sweep middleware through
+  `getState`, never by a component. If you find yourself selecting residency
+  state in a component, something has gone wrong.
+
+`selectEvictableIds(state, at)` is a plain function, not a memoized selector:
+it is called once per sweep with a `now` that always differs, so a memo would
+only ever miss.
 
 ### Pins have owners
 
@@ -152,6 +169,9 @@ whole catalog over a session.
 | `useMaterials(ids)` | a known set (a model's references) | yes | yes |
 | `useMaterials()` | *avoid* — the whole map | no | no |
 | `useMaterialsGetter()` | imperative reads in handlers | no | no |
+| `useRetainedMaterials(ids)` | keep a known list resident while mounted | no | yes |
+| `useVisibleMaterials()` | a set that changes per scroll frame (coalesced) | no | yes |
+| `useMaterialResidency()` | retain / release / touch / sweep / configure | no | n/a |
 | `useCatalogWindow()` | the stock grid's page + counts | via the grid | the grid retains its rendered range |
 
 "Resolves" means: if the mirror does not hold it, the hook asks for it and
@@ -189,7 +209,40 @@ picked, and the picked id lives in the viewport `extra` — see
 
 ---
 
-## 6. Main-process side
+## 6. The relation graph lives in the Graph module
+
+Materials, their type versions, and the organizations that make and sell them
+form a graph — so it is stored as one, in the module built for graphs, under
+`CATALOG_GRAPH_ID` (`materials-catalog`). **The Materials slice has no `graph`
+key**, deliberately: two places to keep a graph is one too many, and the local
+copy was an edge bag with its own adjacency format that nothing could search.
+
+- `store/graph/catalogGraph.ts` — pure translation: catalog payload in,
+  `GraphState` out. Materials become `MATERIAL` nodes, edge targets become
+  `MATERIAL_TYPE` / `INDUSTRY` / `SELLER` nodes (an endpoint with no DTO in
+  the payload still becomes a node, typed by the edge that reached it, so no
+  edge dangles).
+- `store/graph/middlewares.ts` — publishes it with the Graph module's own
+  `loadGraph` command, once per catalog answer. One dispatch per answer rather
+  than `addEdge` per edge: a page carries ~3 edges per row.
+- **It mirrors the mirror.** A material reclaimed by the residency sweep, or
+  deleted, takes its relations with it (`pruneCatalogGraph`). Types and orgs
+  stay — they are bounded and shared, and the next page would only re-create
+  them. Without this the graph would be the one structure that still grew with
+  everything the user ever scrolled past.
+
+Read it like any other graph: `useGraph(CATALOG_GRAPH_ID)` or
+`getGraphState(CATALOG_GRAPH_ID)`. The id is re-exported as
+`MaterialsModule.constants.CATALOG_GRAPH_ID`.
+
+Known cost: the Graph module persists every graph on a session save and
+rehydrates them at boot, so this one is written to `.session/Graph/graphs/`
+too. It is bounded by the mirror, and `workspaceSelected` resets it before any
+stale copy can be read — but a graph derived from Jazz does not really want
+persisting, and an "ephemeral graph" flag in the Graph module would be the
+clean fix.
+
+## 7. Main-process side
 
 - `requireCatalogIndex` builds, per catalog version, the haystack per material,
   the rank order (usage desc, id asc — a total order, so paging neither skips
@@ -206,7 +259,7 @@ picked, and the picked id lives in the viewport `extra` — see
 
 ---
 
-## 7. Invariants to preserve
+## 8. Invariants to preserve
 
 Anything in this area is a regression if it breaks one of these:
 
@@ -215,25 +268,29 @@ Anything in this area is a regression if it breaks one of these:
    refresh path and must not be wired to a user action.
 2. A delta does not change mirror membership.
 3. Every pin has an owner that eventually releases it.
-4. Every `retainMaterials` has exactly one paired `releaseMaterials`.
+4. Every retain has exactly one paired release — which is why callers use the
+   hooks rather than dispatching retain/release themselves.
 5. Search and rank are answered by main, from the index, not by the renderer.
 6. Nothing that flips per page request is a prop of the grid.
-7. The view (`resultIds`) is a list of positions, not a residency claim. Rows
+7. The catalog's graph lives in the Graph module and mirrors the mirror. No
+   `graph` key in the Materials slice.
+8. The view (`resultIds`) is a list of positions, not a residency claim. Rows
    may be reclaimed while their id is still in it; they render as placeholders
    and resolve when scrolled to.
-8. A page never deletes types, industries or sellers — only a `reset` read
+9. A page never deletes types, industries or sellers — only a `reset` read
    replaces them.
-9. The counts (`total`, `matched`, resident) keep their distinct
+10. The counts (`total`, `matched`, resident) keep their distinct
    meanings — including in the `data-*` mirrors the e2e suite waits on
    (`data-material-count` = matched, `data-material-view` = positions in the
    view incl. placeholders, `data-material-loaded` = those whose data is
    resident, `data-material-total` = catalog size).
 
-## 8. How this is tested
+## 9. How this is tested
 
-- Unit: `store/materials/residency.test.ts` (eviction rules, ref counting,
-  TTL, owner pins), `store/materials/catalogAdapter.test.ts` (a delta must not
-  admit a non-resident row).
+- Unit: `store/residency/residency.test.ts` (reducer bookkeeping + eviction
+  rules: ref counting, TTL, config clamping), `store/materials/catalogAdapter.test.ts` (a delta must not
+  admit a non-resident row), `store/window/selectors.test.ts` (placeholders),
+  `store/graph/catalogGraph.test.ts` (graph merge / reset / prune).
 - Perf: `tests/standalone/performance/catalogWindowing.e2e.test.ts` — paging,
   search and the resident-row bound at thousands of materials;
   `catalogRender.e2e.test.ts` — cold open at ≤ 1k; `catalogDelta.e2e.test.ts` —

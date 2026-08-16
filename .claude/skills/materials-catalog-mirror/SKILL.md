@@ -37,13 +37,25 @@ tail of what was recently read. Never the catalog.
 - **An open tab / model references them** → `ensureMaterialsLoaded({ ids, owner })`
   with an owner, **and** `unpinMaterials({ owner })` in the same effect's
   cleanup. A pin with no release is the bug this design exists to prevent.
-- **A component is rendering them** → `retainMaterials` / `releaseMaterials`,
-  paired in one effect. Never one without the other.
+- **A component is rendering them** → `useRetainedMaterials(ids)`. It pairs
+  retain/release in one effect; never dispatch the actions yourself.
+- **A set that changes per scroll frame** → `useVisibleMaterials()` and call
+  its `report(ids)`. It debounces until the scroll stops, then diffs;
+  dispatching per frame would put a store notification on the scroll path.
 - **They are on screen in the stock grid** → nothing to do; the grid retains
   its rendered range. Note that being *in the view* (`resultIds`) protects
   nothing — the view is a list of positions, and a reclaimed row renders as a
   placeholder until it is scrolled to.
 - **"Just in case"** → no. That is how the mirror became the catalog.
+
+## The catalog's graph is not in this module
+
+Materials → types / industries / sellers is a graph, stored in the **Graph
+module** under `CATALOG_GRAPH_ID`. Read it with `useGraph(CATALOG_GRAPH_ID)`;
+never add a `graph` key to the Materials slice. `store/graph/catalogGraph.ts`
+holds the pure merge rules, `store/graph/middlewares.ts` publishes them with
+`loadGraph`, and both prune a material's vertices when the sweep reclaims it —
+the graph mirrors the mirror.
 
 ## Hard rules
 
@@ -57,8 +69,10 @@ tail of what was recently read. Never the catalog.
 - **Nothing that flips per page request may be a prop of the DataGrid**
   (`hasMore`, `loading`, selection). Pull it through a stable callback or
   `apiRef`; a changed prop re-renders every cell mid-scroll.
-- **Residency bookkeeping stays out of Redux.** It is read per row per render;
-  a dispatch per read would notify the store on the grid's hot path.
+- **Residency is a slice (`store/residency`), reached through hooks.** It is
+  written from render and scroll paths, so the hooks debounce and diff, and the
+  reducers return the same state when nothing moved. Never subscribe a
+  component to residency state.
 - **Per-instance UI state belongs in the viewport `extra` or in a ref**, never
   in module state — a viewport tab is an independent component instance
   (repo `CLAUDE.md`).
@@ -73,17 +87,19 @@ tail of what was recently read. Never the catalog.
    was reclaimed and is re-resolved when it comes on screen. A placeholder
    that never fills in means the resolve is not firing (`onVisibleHoles`).
 4. If it arrived and then vanished — it was swept. Something is missing a pin
-   owner or a `retain`. Check the four protections in §3 of the doc before
-   raising the TTL; a longer TTL hides the bug rather than fixing it.
-5. `configureMaterialsResidency({ ttlMs, sweepIntervalMs })` retunes both knobs
-   at runtime — useful to bisect, not a fix.
+   owner or a `useRetainedMaterials`. Check the three protections in §3 of the
+   doc before raising the TTL; a longer TTL hides the bug rather than fixing it.
+   The state is inspectable: `getState().Materials.residency`.
+5. `useMaterialResidency().functions.configure({ ttlMs, sweepIntervalMs })`
+   retunes both knobs at runtime — useful to bisect, not a fix.
 
 ## Changing this area
 
 - Update `catalog-mirror.md` in the same change — especially §7 (invariants)
   and §2 (the read commands table) if you add a path.
-- Unit-test the rule you changed: `store/materials/residency.test.ts` and
-  `catalogAdapter.test.ts` are the homes for eviction/pin/delta rules.
+- Unit-test the rule you changed: `store/residency/residency.test.ts` (ref
+  counts, TTL, eviction) and `store/materials/catalogAdapter.test.ts`
+  (delta/snapshot rules).
 - Anything touching scroll, search or the resident bound gets a budget in
   `tests/standalone/performance/catalogWindowing.e2e.test.ts` — see the
   [performance-tests](../performance-tests/SKILL.md) skill for the tiering

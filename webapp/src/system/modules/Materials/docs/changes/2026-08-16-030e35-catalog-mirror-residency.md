@@ -28,17 +28,22 @@ stock grid that stutters while pages stream in during a scroll or a search.
 
 ## Change
 
-**Residency (`store/materials/residency.ts`, new).** A module-level registry —
-deliberately *not* Redux state, because reads happen per row per render and a
-dispatch per read would put a store notification on the grid's hot path. It
-tracks a ref count per id (`retainMaterials` / `releaseMaterials`, paired in an
-effect) and a last-access timestamp, and answers `collectEvictable`. Config is
-`{ ttlMs, sweepIntervalMs }`, defaulting to 5 min / 1 min, retunable at runtime
-via the `configureMaterialsResidency` command.
+**Residency (`store/residency`, new slice).** State, actions, selectors and
+middleware of its own: a ref count per id, a last-read timestamp per id, and
+`{ ttlMs, sweepIntervalMs }` (5 min / 1 min, clamped, retunable at runtime).
+`selectEvictableIds` answers what may go; the middleware owns the sweep and its
+timer.
 
-A material is kept when it is on screen (`window.resultIds`), pinned by a tab,
-being rendered by a mounted consumer, or was read within the TTL. Everything
-else is reclaimed.
+It is written from render and scroll paths, so the cost of being store state
+is managed rather than ignored: consumers go through **hooks**
+(`useRetainedMaterials`, `useVisibleMaterials`, `useMaterialResidency`) which
+pair retain/release, debounce until the scroll settles, and diff before
+dispatching; the reducers return the same state when nothing moved; and nothing subscribes to
+the slice — only the sweep reads it, through `getState`. Timestamps are taken
+in the action creators, never in a reducer.
+
+A material is kept when a mounted consumer is rendering it, a tab pins it, or
+it was read within the TTL. Everything else is reclaimed.
 
 **Eviction.** `sweepMaterialsResidency` (command) → `materialsEvicted` (event),
 which the materials slice applies by dropping exactly those ids and keeping
@@ -108,6 +113,20 @@ the view (what a page grows by), `data-material-loaded` keeps its meaning of
 rows whose data is resident. `catalogPagination` and the seed helper now wait
 on the former.
 
+**The "load more" label says what a click does.** It read `Carregar mais (337
+restantes)`, which parses as "this loads 337"; a click fetches exactly one
+page, so it looked broken. It now reads `Carregar mais 100 de 337`. Paging
+itself is unchanged — one page per click, plus the pre-existing scroll trigger.
+
+Context for anyone tempted to make this an infinite scroller: `@mui/x-data-grid`
+(MIT) forces `pagination` on — it is in `DataGridForcedPropsKey` — and
+**throws** on a `pageSize` above 100. The list can therefore never scroll past
+one page; extra rows appear as extra *pages*. That is also why loading 100 more
+rows can look like nothing happened. Genuine infinite scrolling needs
+`DataGridPro` (`onRowsScrollEnd`, licensed) or a virtualized list in place of
+the grid body. An auto-fetch on `paginationModelChange` was tried and removed —
+it papered over the paging model rather than changing it.
+
 **A tick could hand a windowed client the whole catalog.** Found by probing
 the live app during the first perf run: the view held 100 rows and the mirror
 held all 1 003. `computeCatalogDelta` treats "no recorded window" as "this
@@ -135,6 +154,32 @@ previous workspace genuinely must not survive). Absence in a page means "not
 sent", never "deleted" — the same rule the `materialTypes` slice already
 followed. Found by the user against the running app during this work; covered
 by `store/orgSlices.test.ts`.
+
+**The catalog's relation graph moved to the Graph module.** `Materials.graph`
+was a second, private graph implementation — an edge map plus a `sourceId →
+edgeIds` adjacency of its own shape, which nothing read and no graph algorithm
+could traverse. The slice key is gone. The catalog is now a graph instance
+(`CATALOG_GRAPH_ID = "materials-catalog"`) maintained through the Graph
+module's own `loadGraph` command:
+
+- `store/graph/catalogGraph.ts` — pure payload → `GraphState` translation.
+  Materials become `MATERIAL` nodes; edge targets become `MATERIAL_TYPE` /
+  `INDUSTRY` / `SELLER` nodes, including endpoints whose DTO the payload did
+  not carry (typed by the edge that reached them), so no edge dangles.
+- `store/graph/middlewares.ts` — one `loadGraph` per catalog answer (a page
+  carries ~3 edges per row; `addEdge` per edge would be 300 dispatches for one
+  answer), plus a reset on `workspaceSelected`.
+- The graph **mirrors the mirror**: `pruneCatalogGraph` drops a material's
+  vertex and its edges when the residency sweep reclaims it, or when it is
+  deleted. Types and organizations stay — bounded, shared, and re-sent with
+  every page. Without this the graph would have been the one structure still
+  growing with everything the user scrolled past.
+
+Known cost, not addressed here: the Graph module persists every graph on a
+session save and rehydrates them at boot, so this derived graph is written to
+`.session/Graph/graphs/` too. Bounded by the mirror, and `workspaceSelected`
+resets it before a stale copy can be read; an "ephemeral graph" flag in the
+Graph module would be the clean fix.
 
 **Documentation.** The contract this all implements is now written down:
 [docs/architecture/catalog-mirror.md](../architecture/catalog-mirror.md) — the

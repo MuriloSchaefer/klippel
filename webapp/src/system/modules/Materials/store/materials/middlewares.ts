@@ -5,7 +5,6 @@ import {
 } from "@kernel/modules/Store/actions";
 import {
   addMaterial,
-  configureMaterialsResidency,
   deleteMaterial,
   ensureMaterialsLoaded,
   loadMaterials,
@@ -28,7 +27,6 @@ import {
   refreshMaterialsView,
   registerMaterialTypeVersion,
   searchMaterialsCatalog,
-  sweepMaterialsResidency,
   unpinMaterials,
   updateMaterial,
   updateMaterialStock,
@@ -37,14 +35,6 @@ import {
   materialDtoToState,
   materialStateToDto,
 } from "./catalogAdapter";
-import {
-  collectEvictable,
-  forgetMaterials,
-  getResidencyConfig,
-  resetResidency,
-  setResidencyConfig,
-  touchMaterials,
-} from "./residency";
 import type { MaterialsModuleState } from "../state";
 import { initialState as windowInitialState } from "../window/state";
 
@@ -276,105 +266,34 @@ middlewares.startListening({
 
 // ---- residency -------------------------------------------------------
 //
-// Everything above only ever *adds* to the mirror. This is the other half:
-// the mirror gives rows back when nothing needs them, so browsing a large
-// catalog costs a bounded amount of renderer memory instead of converging on
-// "the whole catalog, eventually".
-
-/**
- * What the mirror must keep regardless of when it was last read: the rows
- * open tabs reference.
- *
- * **Not the whole view.** `resultIds` is the *list*, and it grows with every
- * page the user scrolls through — protecting all of it meant a browse session
- * ended up protecting the entire catalog, which is precisely the state the
- * sweep exists to prevent (a live app was found holding 437 of 437 rows with
- * nothing evictable). What is "on screen" is a much smaller thing, and only
- * the grid knows it: `TableView` retains the rows it renders, plus a page of
- * lead either way, and the rest of the view is free to be reclaimed and comes
- * back as placeholders that resolve when scrolled to.
- */
-const protectedIdsOf = (getState: () => unknown): Set<string> =>
-  new Set(windowState(getState).pinnedIds);
+// The sweep itself, its timer, and the access bookkeeping live in
+// `store/residency` — state, actions, selectors and middleware of their own.
+// What stays here is the part that is about *this* slice's caches: an
+// eviction can falsify things the loaders memoized.
 
 middlewares.startListening({
-  actionCreator: sweepMaterialsResidency,
-  effect: async (_action, { dispatch, getState }) => {
-    const materials = (getState() as RootState).Materials?.materials;
-    if (!materials) return;
-    const evictable = collectEvictable(
-      Object.keys(materials),
-      protectedIdsOf(getState),
-    );
-    if (!evictable.length) return;
-    forgetMaterials(evictable);
-    for (const id of evictable) resolvingIds.delete(id);
+  actionCreator: materialsEvicted,
+  effect: async ({ payload }) => {
+    for (const id of payload.ids) resolvingIds.delete(id);
     // A type marked loaded is a claim that its rows are resident. Eviction
     // can have just falsified that, and the guard would otherwise refuse to
     // reload the type — leaving the next picker to mount with no options.
     loadedTypes.clear();
-    dispatch(materialsEvicted({ ids: evictable }));
-  },
-});
-
-/**
- * The sweep timer. One per renderer, not one per subscription — it is a
- * property of the mirror, not of any component.
- */
-let sweepTimer: ReturnType<typeof setInterval> | undefined;
-
-const startSweeping = (dispatch: (action: unknown) => void) => {
-  if (sweepTimer !== undefined) clearInterval(sweepTimer);
-  sweepTimer = setInterval(
-    () => dispatch(sweepMaterialsResidency()),
-    getResidencyConfig().sweepIntervalMs,
-  );
-};
-
-middlewares.startListening({
-  actionCreator: configureMaterialsResidency,
-  effect: async ({ payload }, { dispatch }) => {
-    setResidencyConfig(payload);
-    // The cadence may have changed, and `setInterval` cannot be retuned.
-    if (sweepTimer !== undefined) startSweeping(dispatch as never);
-  },
-});
-
-middlewares.startListening({
-  actionCreator: loadMaterials,
-  effect: async (_action, { dispatch }) => {
-    startSweeping(dispatch as never);
   },
 });
 
 middlewares.startListening({
   actionCreator: workspaceSelected,
-  effect: async (_action, { dispatch }) => {
-    // The mirror is about to be replaced: access history describes rows that
-    // are no longer there, and a by-id resolve for the old catalog says
-    // nothing about the new one.
-    resetResidency();
+  effect: async () => {
+    // A by-id resolve for the old catalog says nothing about the new one.
     resolvingIds.clear();
-    startSweeping(dispatch as never);
   },
 });
 
 middlewares.startListening({
   actionCreator: materialsWindowLoaded,
-  effect: async ({ payload }, { dispatch }) => {
-    if (payload.reset) {
-      resetResidency();
-      resolvingIds.clear();
-    }
-    // Arrival counts as an access. Without this a freshly loaded row is
-    // "never read" for the instant between the reducer and the consumer's
-    // retain effect — and the sweep below would reclaim the row the caller
-    // just asked for.
-    touchMaterials(Object.keys(payload.materials ?? {}));
-    // A page just grew the mirror. Sweeping here — rather than only on the
-    // timer — is what keeps a long browse from accumulating every page it
-    // passed through, without waiting a whole interval to notice.
-    dispatch(sweepMaterialsResidency());
+  effect: async ({ payload }) => {
+    if (payload.reset) resolvingIds.clear();
   },
 });
 

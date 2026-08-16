@@ -15,26 +15,36 @@ import {
   SellersState,
 } from "./sellers/state";
 import {
-  initialState as graphInitialState,
-  MaterialsGraphState,
-} from "./graph/state";
-import {
   initialState as windowInitialState,
   MaterialsWindowState,
 } from "./window/state";
+import {
+  initialState as residencyInitialState,
+  ResidencyState,
+} from "./residency/state";
 
 export interface MaterialsModuleState {
   materials: MaterialsState;
   materialTypes: MaterialTypesState;
   industries: IndustriesState;
   sellers: SellersState;
-  graph: MaterialsGraphState;
+  /**
+   * No `graph` key, deliberately. The catalog's relation graph is a graph,
+   * and graphs live in the Graph module — `store/graph/middlewares.ts` keeps
+   * it there under `CATALOG_GRAPH_ID` and this module reads it through
+   * `getGraphState`, like every other consumer of a graph.
+   */
   /**
    * Shape of the catalog mirror — counts, paging cursor, current view order.
    * `materials` holds a *page*, so nothing about catalog size is derivable
    * from it any more.
    */
   window: MaterialsWindowState;
+  /**
+   * Who still needs each resident row — ref counts, last-read times, and the
+   * TTL / sweep knobs. Drives eviction; nothing renders from it.
+   */
+  residency: ResidencyState;
 }
 
 export const initialState: MaterialsModuleState = {
@@ -42,6 +52,6 @@ export const initialState: MaterialsModuleState = {
   materialTypes: materialTypesInitialState,
   industries: industriesInitialState,
   sellers: sellersInitialState,
-  graph: graphInitialState,
   window: windowInitialState,
+  residency: residencyInitialState,
 };

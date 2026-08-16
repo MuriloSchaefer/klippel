@@ -37,6 +37,7 @@ system/modules/Materials/
 │   ├── useMaterials.ts                  — existing
 │   └── useMaterialTypes.ts              — existing
 ├── store/
+│   ├── graph/                           — catalog → Graph-module translation (no slice)
 │   ├── materials/                       — slice, actions, middlewares (Jazz-backed)
 │   ├── materialTypes/                   — slice (versioned-aware)
 │   ├── industries/                      — new slice

@@ -23,7 +23,7 @@
  *                    then searching, once the residency sweep has run. A
  *                    **count** budget, not a time one: it is the assertion
  *                    that the mirror gives rows back
- *                    (`store/materials/residency.ts`) rather than converging
+ *                    (`store/residency`) rather than converging
  *                    on the whole catalog.
  *
  * Seeding uses the batched live path (§11.2, "10k → batched seed (chunked)"),
@@ -58,8 +58,8 @@ import {
 import {
   configureMaterialsResidency,
   sweepMaterialsResidency,
-} from "@system/modules/Materials/store/materials/actions";
-import { DEFAULT_RESIDENCY_CONFIG } from "@system/modules/Materials/store/materials/residency";
+} from "@system/modules/Materials/store/residency/actions";
+import { DEFAULT_RESIDENCY_CONFIG } from "@system/modules/Materials/store/residency/state";
 
 const CDP_PORT = Number(process.env.KLIPPEL_CDP_PORT ?? 9222);
 const CDP_URL = `http://localhost:${CDP_PORT}`;
