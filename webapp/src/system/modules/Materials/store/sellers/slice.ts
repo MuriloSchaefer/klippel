@@ -3,6 +3,7 @@ import { initialState, SellersState } from "./state";
 import {
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
+  materialsWindowLoaded,
 } from "../materials/actions";
 
 const slice = createSlice({
@@ -11,6 +12,12 @@ const slice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(materialsCatalogLoaded, (_state, { payload }) =>
+      payload.sellers as SellersState,
+    );
+    // Organizations come whole with every page — they are bounded by how
+    // many exist, not by catalog size — so a page is authoritative for them
+    // and replaces, exactly as a snapshot does.
+    builder.addCase(materialsWindowLoaded, (_state, { payload }) =>
       payload.sellers as SellersState,
     );
     builder.addCase(materialsCatalogDeltaLoaded, (state, { payload }) => {

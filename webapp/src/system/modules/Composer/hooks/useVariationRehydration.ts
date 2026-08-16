@@ -10,6 +10,7 @@ import {
   updateProxy as updateProxyAction,
 } from "@kernel/modules/SVG/store/actions";
 import type { IMaterialsModule } from "@system/modules/Materials";
+import { ensureMaterialsLoaded } from "@system/modules/Materials/store/materials/actions";
 
 import type {
   DocumentNode,
@@ -92,6 +93,17 @@ export default function useVariationRehydration({
   );
   const materials = materialsModule.hooks.useMaterials(referencedMaterialIds);
 
+  // A variation restored from `.session/` never went through `openModel`, so
+  // nothing has told the catalog to keep its materials resident. Without this
+  // the rehydrated editor paints colours from a mirror that may not contain
+  // the rows it references — the pin is what makes the whole-catalog
+  // assumption this hook used to rely on unnecessary rather than merely
+  // unstated.
+  useEffect(() => {
+    if (!referencedMaterialIds.length) return;
+    dispatch(ensureMaterialsLoaded({ ids: referencedMaterialIds }));
+  }, [dispatch, referencedMaterialIds]);
+
   // Read the SVG layer through a ref, never through the effect's deps.
   //
   // Everything this hook dispatches lands in that same slice, so depending on
@@ -149,13 +161,19 @@ export default function useVariationRehydration({
         );
         // A logo whose document node is missing cannot be drawn at all; leaving
         // the placements uninjected is better than injecting <use>s that dangle
-        // (which is the very failure this hook exists to fix).
-        if (!doc) return;
+        // (which is the very failure this hook exists to fix). The same applies
+        // when the node is present but carries no inline `data`: logo assets
+        // are the inline shape, so that is a broken document, not an
+        // attachment-style one whose bytes live in a fileStream.
+        if (!doc?.data) return;
+        // Re-bind so the narrowing survives into the call below — TS keeps
+        // `doc.data` as `string | undefined` on a property read.
+        const inlineDoc = { ...doc, data: doc.data };
 
         inject(
           logoSymbolId(logo.logoId),
           "defs",
-          sourceDefsMarkup(logo.logoId, logo.source, doc, logo.defaultSize),
+          sourceDefsMarkup(logo.logoId, logo.source, inlineDoc, logo.defaultSize),
           0,
         );
 

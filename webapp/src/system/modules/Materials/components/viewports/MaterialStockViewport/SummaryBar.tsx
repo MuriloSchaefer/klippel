@@ -5,6 +5,10 @@ import type { MaterialState } from "../../../store/materials/state";
 
 interface Props {
   materials: MaterialState[];
+  /** Rows resident in the renderer. */
+  loaded?: number;
+  /** Rows matching the current view across the whole catalog. */
+  matched?: number;
 }
 
 /**
@@ -12,8 +16,13 @@ interface Props {
  * field in the current fixture) — Phase 4 wires them once a price
  * source lands. Unit is taken from the first material in each group;
  * mixed-unit groups fall back to a blank unit.
+ *
+ * The totals here are over the **resident** rows, not the catalog: the
+ * renderer mirrors a page, so summing what it holds is the only sum it can
+ * make. The `loaded / matched` counter says so explicitly rather than letting
+ * a partial total read as a catalog-wide one.
  */
-const SummaryBar: React.FC<Props> = ({ materials }) => {
+const SummaryBar: React.FC<Props> = ({ materials, loaded, matched }) => {
   const materialTypes = useMaterialTypes();
 
   const groups = useMemo(() => {
@@ -59,6 +68,16 @@ const SummaryBar: React.FC<Props> = ({ materials }) => {
         </Box>
       ))}
       <Box sx={{ flex: 1 }} />
+      {loaded !== undefined && matched !== undefined && (
+        <Box sx={{ textAlign: "right" }} data-testid="material-stock-loaded">
+          <Typography variant="caption" color="text.secondary">
+            Carregados
+          </Typography>
+          <Typography variant="body2">
+            {loaded.toLocaleString()} / {matched.toLocaleString()}
+          </Typography>
+        </Box>
+      )}
       <Box sx={{ textAlign: "right" }}>
         <Typography variant="caption" color="text.secondary">
           Total

@@ -89,12 +89,20 @@ const restoreActiveVPSession = async (
   return vpName;
 };
 
-const buildInitialState = async (): Promise<viewportManagerState> => ({
-  groups: groupsSlice.getInitialState(),
-  activeViewport: await restoreActiveVPSession(),
-  viewports: await restoreSession(),
-  dirtyViewports: await restoreDirtyViewports(),
-});
+const buildInitialState = async (): Promise<viewportManagerState> => {
+  const viewports = await restoreSession();
+  const activeViewport = await restoreActiveVPSession();
+  return {
+    groups: groupsSlice.getInitialState(),
+    // The pointer and the viewport states are separate files, so the pointer
+    // can name a tab that was never written back (or was pruned by a later
+    // save). Resolve it here, where both halves are in hand, rather than
+    // shipping a name that selects nothing — `home` always exists.
+    activeViewport: viewports[activeViewport] ? activeViewport : "home",
+    viewports,
+    dirtyViewports: await restoreDirtyViewports(),
+  };
+};
 
 export const viewportsRehydrated = defineRehydration<viewportManagerState>(
   `${MODULE_NAME}Viewports/rehydrated`,

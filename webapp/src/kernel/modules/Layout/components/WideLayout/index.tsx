@@ -36,8 +36,17 @@ const StyledContent = styled(Box)`
     "ribbon ribbon ribbon"
     "settings viewport details";
 
+  /*
+   * Portrait stacks the panels *under* the viewport. The panel row is
+   * sized by its content (min-content), not by a fixed fraction: a
+   * viewport that renders no panel — the materials stock table with
+   * nothing selected — must give the whole screen to its content instead
+   * of leaving a blank strip where a panel would have gone. The panel
+   * containers cap themselves at 50vh so an open panel cannot squeeze the
+   * viewport out; they scroll past that.
+   */
   @media (orientation: portrait) {
-    grid-template-rows: auto 2fr minmax(10px, 2fr);
+    grid-template-rows: min-content minmax(0, 1fr) min-content;
     grid-template-areas:
       "ribbon ribbon"
       "viewport viewport"
@@ -115,7 +124,10 @@ const Layout = () => {
               borderTop: 0,
               borderRight: 1,
               borderColor: "divider",
+              // No panel, no strip — not even the border.
+              "&:empty": { display: "none" },
               "@media (orientation: portrait)": {
+                maxHeight: "50vh",
                 borderTop: 1,
                 borderColor: "divider",
               },
@@ -144,7 +156,9 @@ const Layout = () => {
               borderLeft: 1,
               borderColor: "divider",
               overflow: "auto",
+              "&:empty": { display: "none" },
               "@media (orientation: portrait)": {
+                maxHeight: "50vh",
                 borderLeft: 0,
                 borderTop: 1,
                 borderColor: "divider",

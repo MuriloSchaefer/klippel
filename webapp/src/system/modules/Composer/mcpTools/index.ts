@@ -74,6 +74,11 @@ import { deleteLogoShortcutTool } from './deleteLogoShortcut';
 import { linkLogoElectiveTool } from './linkLogoElective';
 import { linkLogoElectiveShortcutTool } from './linkLogoElectiveShortcut';
 import { addAnnotationTool } from './addAnnotation';
+import { addDocumentTool } from './addDocument';
+import { addDocumentShortcutTool } from './addDocumentShortcut';
+import { deleteDocumentTool } from './deleteDocument';
+import { deleteDocumentShortcutTool } from './deleteDocumentShortcut';
+import { renameDocumentTool } from './renameDocument';
 import { addAnnotationShortcutTool } from './addAnnotationShortcut';
 import { editAnnotationTool } from './editAnnotation';
 import { editAnnotationShortcutTool } from './editAnnotationShortcut';
@@ -157,6 +162,11 @@ const TOOLS = [
   linkLogoElectiveTool,
   linkLogoElectiveShortcutTool,
   addAnnotationTool,
+  addDocumentTool,
+  addDocumentShortcutTool,
+  deleteDocumentTool,
+  deleteDocumentShortcutTool,
+  renameDocumentTool,
   addAnnotationShortcutTool,
   editAnnotationTool,
   editAnnotationShortcutTool,

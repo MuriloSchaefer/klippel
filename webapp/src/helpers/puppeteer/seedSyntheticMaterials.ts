@@ -33,10 +33,16 @@ export interface SeedResult {
   /** Wall-clock ms of the `seed` IPC alone — the bulk-write cost. */
   seedMs: number;
   /**
-   * Wall-clock ms from issuing the seed to all N rows being visible in
-   * the grid (count mirror == N). This is the user-facing "time to N
-   * materials on screen": seed-write + catalog-load IPC + Redux + grid
-   * render. This is the number a cold-open / render budget asserts on.
+   * Wall-clock ms from issuing the seed to the catalog being usable: the
+   * renderer reports N materials (`data-material-count`) *and* has a page of
+   * them rendered (`data-material-loaded` > 0).
+   *
+   * This used to mean "all N rows on screen", which stopped being a
+   * meaningful milestone when the renderer started mirroring a window rather
+   * than the whole catalog — the grid deliberately never holds all N. What it
+   * measures now is the same user-facing thing it always stood for, "time to
+   * a usable stock view": seed-write + window IPC + Redux + grid render.
+   * Budgets calibrated against the old meaning need re-baselining.
    */
   totalMs: number;
 }
@@ -69,11 +75,18 @@ export const seedSyntheticMaterials = async (
     );
   }
 
-  // Wait for the renderer to load the catalog and the grid to render
-  // every row — the count mirror is a single selector wait (§11.4), not
-  // a snapshot scan. Empty query ⇒ filtered count == total.
+  // Wait for the renderer to see the whole catalog and to have a page of it
+  // rendered. Both are single selector waits (§11.4), not snapshot scans.
+  //
+  // `data-material-count` is the catalog-wide match count (empty query ⇒ the
+  // catalog size), so it still reads "the catalog reached N". It is not the
+  // number of rendered rows any more — `data-material-loaded` is, and it caps
+  // at the window size by design, so it can only be asserted as "> 0" here.
   await page.waitForSelector(
     `[data-testid="material-stock-viewport"][data-material-count="${index.count}"]`,
+  );
+  await page.waitForSelector(
+    '[data-testid="material-stock-viewport"]:not([data-material-loaded="0"])',
   );
   const totalMs = performance.now() - t0;
 

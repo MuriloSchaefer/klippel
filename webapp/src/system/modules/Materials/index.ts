@@ -8,6 +8,7 @@ import useMaterialTypes from "./hooks/useMaterialTypes";
 import useMaterials from "./hooks/useMaterials";
 import useMaterial from "./hooks/useMaterial";
 import useMaterialsGetter from "./hooks/useMaterialsGetter";
+import useCatalogWindow from "./hooks/useCatalogWindow";
 
 export interface IMaterialsModule extends IModule {
     components: {
@@ -29,6 +30,7 @@ export interface IMaterialsModule extends IModule {
         useMaterials: typeof useMaterials,
         useMaterial: typeof useMaterial,
         useMaterialsGetter: typeof useMaterialsGetter,
+        useCatalogWindow: typeof useCatalogWindow,
     }
 }
 const module: IMaterialsModule = {
@@ -52,7 +54,7 @@ const module: IMaterialsModule = {
         reducers: {
         },
     },
-    hooks: {useMaterialTypes, useMaterials, useMaterial, useMaterialsGetter},
+    hooks: {useMaterialTypes, useMaterials, useMaterial, useMaterialsGetter, useCatalogWindow},
     constants: {},
     kernelCalls: {
         startModule: startModule,

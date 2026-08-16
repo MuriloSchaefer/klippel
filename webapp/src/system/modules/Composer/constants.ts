@@ -33,3 +33,4 @@ export const LOGO_LIST_CONTEXT_ID = `${MODULE_NAME}/LogoList`;
 export const LOGO_PLACEMENTS_CONTEXT_ID = `${MODULE_NAME}/LogoPlacements`;
 
 export const ANNOTATION_LIST_CONTEXT_ID = `${MODULE_NAME}/AnnotationList`;
+export const DOCUMENT_LIST_CONTEXT_ID = `${MODULE_NAME}/DocumentList`;

@@ -37,6 +37,7 @@ import {
   LogoPlacement,
   LogoSource,
   DocumentNode,
+  DOCUMENT_KIND_ATTACHMENT,
   AnnotationNode,
 } from "../typings";
 import { UnitValue } from "@system/modules/Converter/typings";
@@ -64,6 +65,10 @@ import {
 // --- Logo overlay helpers ----------------------------------------------------
 
 const shortHash = () => Math.random().toString(36).slice(2, 8);
+
+// Same accessor the variations middleware uses; the preload exposes the whole
+// Jazz surface on `globalThis.electron`.
+const jazz = globalThis.electron.jazz;
 
 /**
  * Scale that makes a fresh placement land at the same on-screen size as the
@@ -247,6 +252,14 @@ export function useVariationActions({ variationId }: { variationId: string }) {
   const getSvgPath = useCallback(
     (): string | undefined =>
       (store.getState() as any)?.Composer?.variations?.[variationId]?.svg,
+    [variationId],
+  );
+
+  // The *model* id, which is what the Jazz IPC addresses — distinct from
+  // `variationId`, which keys the graph. Same lookup `saveModel` makes.
+  const getModelId = useCallback(
+    (): string | undefined =>
+      (store.getState() as any)?.Composer?.variations?.[variationId]?.id,
     [variationId],
   );
 
@@ -1503,6 +1516,123 @@ export function useVariationActions({ variationId }: { variationId: string }) {
           markChanged();
         },
 
+        // --- Documents (attachments) -----------------------------------------
+        //
+        // Unlike every other action here, these are async: the bytes go to the
+        // main process before the graph node exists. That ordering is
+        // deliberate — the node records the stream's coId, so there is nothing
+        // to write until the upload has succeeded. A failed upload therefore
+        // leaves no node, rather than a node pointing at nothing.
+
+        addDocument: async (input: {
+          filename: string;
+          mime: string;
+          bytes: ArrayBuffer;
+          label?: string;
+          garmentId?: string;
+        }): Promise<string> => {
+          const modelId = getModelId();
+          if (!modelId) throw new Error("No model for this variation");
+          const garmentId = input.garmentId ?? "garment";
+          const documentId = shortHash();
+          const nodeId = `document-${documentId}`;
+
+          const { coId, size } = await jazz.uploadModelDocument(modelId, {
+            documentId,
+            kind: DOCUMENT_KIND_ATTACHMENT,
+            mime: input.mime || "application/octet-stream",
+            filename: input.filename,
+            bytes: input.bytes,
+          });
+
+          const node: DocumentNode = {
+            id: nodeId,
+            type: "DOCUMENT",
+            documentId,
+            kind: DOCUMENT_KIND_ATTACHMENT,
+            mime: input.mime || "application/octet-stream",
+            filename: input.filename,
+            label: input.label?.trim() || input.filename,
+            size,
+            coId,
+            position: { x: 0, y: 0 },
+          };
+
+          // Attachments hang off the garment, which is what distinguishes them
+          // from a logo's own asset document (parented to the LOGO node).
+          dispatch(
+            addNodeAction({
+              graphId: variationId,
+              node,
+              edges: {
+                inputs: {
+                  [`${garmentId}-${nodeId}`]: {
+                    id: `${garmentId}-${nodeId}`,
+                    type: "HAS_DOCUMENT",
+                    sourceId: garmentId,
+                    targetId: nodeId,
+                  },
+                },
+                outputs: {
+                  [`${nodeId}-${garmentId}`]: {
+                    id: `${nodeId}-${garmentId}`,
+                    type: "DOCUMENT_OF",
+                    sourceId: nodeId,
+                    targetId: garmentId,
+                  },
+                },
+              },
+            }),
+          );
+          markChanged();
+          return nodeId;
+        },
+
+        renameDocument: (nodeId: string, label: string) => {
+          const g = getGraph();
+          const curr = g?.nodes?.[nodeId] as DocumentNode | undefined;
+          if (!curr) return;
+          const next = label.trim();
+          if (!next || next === curr.label) return;
+          dispatch(
+            updateNodeAction({
+              graphId: variationId,
+              nodeId,
+              changes: { ...curr, label: next },
+            }),
+          );
+          markChanged();
+        },
+
+        deleteDocument: async (nodeId: string) => {
+          const g = getGraph();
+          const curr = g?.nodes?.[nodeId] as DocumentNode | undefined;
+          if (!curr) return;
+          // Remove the node first: the graph is what the UI renders, and a
+          // failed blob delete is recoverable (the save-time prune sweeps it)
+          // whereas a row that will not go away is not.
+          dispatch(removeNodeAction({ graphId: variationId, nodeId }));
+          markChanged();
+          const modelId = getModelId();
+          if (!modelId) return;
+          try {
+            await jazz.deleteModelDocument(modelId, curr.documentId);
+          } catch (err) {
+            console.error("[documents] deleting the blob failed", err);
+          }
+        },
+
+        /** Fetch an attachment's bytes on demand — nothing caches them in Redux. */
+        readDocument: async (
+          nodeId: string,
+        ): Promise<{ bytes: ArrayBuffer; mime: string; filename: string } | null> => {
+          const g = getGraph();
+          const curr = g?.nodes?.[nodeId] as DocumentNode | undefined;
+          const modelId = getModelId();
+          if (!curr || !modelId) return null;
+          return jazz.loadModelDocument(modelId, curr.documentId);
+        },
+
         // --- Annotations ----------------------------------------------------
 
         addAnnotation: (input: {
@@ -1792,6 +1922,6 @@ export function useVariationActions({ variationId }: { variationId: string }) {
         },
       },
     }),
-    [variationId, dispatch, markChanged, getGraph, getSvgPath],
+    [variationId, dispatch, markChanged, getGraph, getSvgPath, getModelId],
   );
 }

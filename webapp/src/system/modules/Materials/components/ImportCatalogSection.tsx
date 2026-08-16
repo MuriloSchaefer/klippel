@@ -15,7 +15,7 @@ import useModule from "@kernel/hooks/useModule";
 import type { IPointerModule } from "@kernel/modules/Pointer";
 import type { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
 import { MODULE_NAME } from "../constants";
-import { loadMaterialsCatalog } from "../store/materials/actions";
+import { loadMaterialsWindow } from "../store/materials/actions";
 
 type SkipEntry = { kind: "type" | "material"; id: string; reason: string };
 type ErrorEntry = { sheet: string; row: number; message: string };
@@ -41,8 +41,10 @@ type Status = "idle" | "queued" | "finished";
  *
  * The DataGrid fills in as `jazz-materials:changed` ticks land from
  * the existing catalog subscription; on a successful import we also
- * dispatch `loadMaterialsCatalog` directly so lists refresh even if
- * the change event is missed.
+ * dispatch `loadMaterialsWindow` directly so lists refresh even if
+ * the change event is missed. An import can add thousands of rows and
+ * reorders the usage ranking, so this restarts the window rather than
+ * extending it.
  */
 const ImportCatalogSection: React.FC = () => {
   const pointerModule = useModule<IPointerModule>("Pointer");
@@ -70,7 +72,7 @@ const ImportCatalogSection: React.FC = () => {
       setSummary(payload);
       setStatus("finished");
       setSnackbar(payload);
-      if (payload.ok) dispatch(loadMaterialsCatalog());
+      if (payload.ok) dispatch(loadMaterialsWindow());
     });
     return off;
   }, [dispatch]);

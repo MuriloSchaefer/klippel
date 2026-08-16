@@ -1,18 +1,20 @@
 /**
  * Unit tests for the catalog → slice adapter.
  *
- * These cover the two behaviours the perf work depends on being *unchanged*:
- * that edge-derived relations (`suppliers`, `industry`) still resolve after
- * the O(M×E) scan was replaced by an index, and that a delta applies exactly
- * the rows it names and nothing else.
+ * These cover the behaviours the perf work depends on being *unchanged*: that
+ * edge-derived relations (`suppliers`, `industry`) still resolve after the
+ * O(M×E) scan was replaced by an index, and that a delta — and now a window
+ * page — applies exactly the rows it names and nothing else.
  */
 import {
   applyCatalogDelta,
+  applyCatalogWindow,
   buildEdgeIndex,
   catalogToMaterialsState,
 } from "./catalogAdapter";
 import type {
   CatalogSnapshot,
+  CatalogWindow,
   EdgeDTO,
   MaterialDTO,
 } from "../../typings/catalog";
@@ -127,5 +129,95 @@ describe("applyCatalogDelta", () => {
     });
     expect(next.a.suppliers).toEqual(["s2"]);
     expect(next.a.industry).toBe("ind-1");
+  });
+});
+
+/**
+ * A window is a *page*, so the merge rules differ from a snapshot's in the
+ * one way that matters: it must not be treated as authoritative for rows it
+ * does not mention. These cases pin that, because getting it wrong is silent
+ * — the grid still renders, just missing the rows an open model pinned.
+ */
+const windowPayload = (over: Partial<CatalogWindow> = {}): CatalogWindow => ({
+  materials: {},
+  edges: {},
+  materialTypes: {},
+  industries: {},
+  sellers: {},
+  page: [],
+  pinned: [],
+  offset: 0,
+  limit: 100,
+  matched: 0,
+  total: 0,
+  hasMore: false,
+  query: "",
+  reset: false,
+  mode: "rank",
+  ...over,
+});
+
+describe("applyCatalogWindow", () => {
+  const base = () => catalogToMaterialsState(snapshot());
+
+  it("merges a page into the existing mirror", () => {
+    const state = base();
+    const next = applyCatalogWindow(
+      state,
+      windowPayload({ materials: { c: material("c") }, page: ["c"] }),
+    );
+    expect(Object.keys(next).sort()).toEqual(["a", "b", "c"]);
+    // Rows the page did not mention keep their identity, so their
+    // subscribers do not re-render.
+    expect(next.a).toBe(state.a);
+  });
+
+  it("replaces the mirror on reset", () => {
+    const next = applyCatalogWindow(
+      base(),
+      windowPayload({ materials: { c: material("c") }, page: ["c"], reset: true }),
+    );
+    expect(Object.keys(next)).toEqual(["c"]);
+  });
+
+  it("empties the mirror on a reset that carries nothing", () => {
+    // A workspace switch into an empty catalog. Merging here would leave the
+    // previous workspace's rows on screen.
+    expect(applyCatalogWindow(base(), windowPayload({ reset: true }))).toEqual({});
+  });
+
+  it("returns the same reference for an empty non-reset page", () => {
+    const state = base();
+    expect(applyCatalogWindow(state, windowPayload())).toBe(state);
+  });
+
+  it("derives relations from the page's edge set", () => {
+    const next = applyCatalogWindow(
+      {},
+      windowPayload({
+        materials: { c: material("c") },
+        page: ["c"],
+        edges: {
+          "manufacturedBy:c": edge("manufacturedBy:c", "manufacturedBy", "c", "ind-9"),
+          "suppliedBy:c:s7": edge("suppliedBy:c:s7", "suppliedBy", "c", "s7"),
+        },
+      }),
+    );
+    expect(next.c.industry).toBe("ind-9");
+    expect(next.c.suppliers).toEqual(["s7"]);
+  });
+
+  it("keeps pinned rows that arrive alongside a page", () => {
+    // The pinned row is in `materials` but not in `page` — it belongs to an
+    // open model, not to the grid's current page.
+    const next = applyCatalogWindow(
+      {},
+      windowPayload({
+        materials: { c: material("c"), z: material("z") },
+        page: ["c"],
+        pinned: ["z"],
+      }),
+    );
+    expect(Object.keys(next).sort()).toEqual(["c", "z"]);
   });
 });

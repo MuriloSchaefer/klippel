@@ -18,6 +18,10 @@ import {
   initialState as graphInitialState,
   MaterialsGraphState,
 } from "./graph/state";
+import {
+  initialState as windowInitialState,
+  MaterialsWindowState,
+} from "./window/state";
 
 export interface MaterialsModuleState {
   materials: MaterialsState;
@@ -25,6 +29,12 @@ export interface MaterialsModuleState {
   industries: IndustriesState;
   sellers: SellersState;
   graph: MaterialsGraphState;
+  /**
+   * Shape of the catalog mirror — counts, paging cursor, current view order.
+   * `materials` holds a *page*, so nothing about catalog size is derivable
+   * from it any more.
+   */
+  window: MaterialsWindowState;
 }
 
 export const initialState: MaterialsModuleState = {
@@ -33,4 +43,5 @@ export const initialState: MaterialsModuleState = {
   industries: industriesInitialState,
   sellers: sellersInitialState,
   graph: graphInitialState,
+  window: windowInitialState,
 };

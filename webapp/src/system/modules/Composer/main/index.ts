@@ -16,7 +16,15 @@ import {
   releaseEditLease,
   uploadModelSvg,
   loadModelSvg,
+  uploadModelDocument,
+  loadModelDocument,
+  deleteModelDocument,
+  type UploadDocumentInput,
 } from "./models";
+import { saveDocumentAs, openDocumentExternally } from "./documents";
+import { collectComposerMaterialUsage } from "./materialUsage";
+import { registerMaterialUsageProvider } from "../../Materials/main/usage";
+import { invalidateCatalogRanking } from "../../Materials/main/materials";
 
 /**
  * One-time migration for pre-lazy-hydration workspaces. If
@@ -91,11 +99,22 @@ registerMainModule({
 
   onWorkspaceLoaded: (handle) => backfillModelSummaries(handle),
 
+  onWorkspaceClose: () => {
+    // Usage counts are ids from *this* workspace's models. Carrying them into
+    // the next one would rank a catalog by references that do not exist in it.
+    invalidateCatalogRanking();
+  },
+
   syncPreloadResolve: () => ({
     modelSummaries: { $each: { $onError: "catch" }, $onError: "catch" },
   }),
 
   registerIpc: ({ ipcMain }) => {
+    // Tell Materials which materials its catalog page should favour. Composer
+    // is the only module that knows — usage lives in model graphs, not in the
+    // catalog's own edges.
+    registerMaterialUsageProvider(collectComposerMaterialUsage);
+
     ipcMain.handle("jazz-list-models", async () => listModels());
     ipcMain.handle("jazz-load-model", async (_event, id: string) => loadModel(id));
     ipcMain.handle(
@@ -107,8 +126,14 @@ registerMainModule({
     );
     ipcMain.handle(
       "jazz-update-model-graph",
-      async (_event, id: string, graphJson: string) =>
-        updateModelGraph(id, graphJson),
+      async (_event, id: string, graphJson: string) => {
+        const result = await updateModelGraph(id, graphJson);
+        // A save can add or drop `MATERIAL` nodes, which changes the usage
+        // counts the catalog's first page is ranked by. Recomputed lazily on
+        // the next window read, not here.
+        invalidateCatalogRanking();
+        return result;
+      },
     );
     ipcMain.handle(
       "jazz-update-model-description",
@@ -133,6 +158,34 @@ registerMainModule({
     );
     ipcMain.handle("jazz-load-model-svg", async (_event, id: string) =>
       loadModelSvg(id),
+    );
+
+    // Attachments. Bytes cross the boundary as ArrayBuffer both ways — they are
+    // structured-cloneable and, unlike base64, do not inflate by a third.
+    ipcMain.handle(
+      "jazz-upload-model-document",
+      async (_event, id: string, input: UploadDocumentInput) =>
+        uploadModelDocument(id, input),
+    );
+    ipcMain.handle(
+      "jazz-load-model-document",
+      async (_event, id: string, documentId: string) =>
+        loadModelDocument(id, documentId),
+    );
+    ipcMain.handle(
+      "jazz-delete-model-document",
+      async (_event, id: string, documentId: string) =>
+        deleteModelDocument(id, documentId),
+    );
+    ipcMain.handle(
+      "documents:save-as",
+      async (_event, input: { filename: string; bytes: ArrayBuffer }) =>
+        saveDocumentAs(input),
+    );
+    ipcMain.handle(
+      "documents:open",
+      async (_event, input: { filename: string; bytes: ArrayBuffer }) =>
+        openDocumentExternally(input),
     );
   },
 });

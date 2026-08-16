@@ -19,6 +19,7 @@ import {
   SVG_EMPTY_STATE_CONTEXT_ID,
   UPLOAD_SVG_SHORTCUT_ID,
   LOGO_LIST_CONTEXT_ID,
+  DOCUMENT_LIST_CONTEXT_ID,
   LOGO_PLACEMENTS_CONTEXT_ID,
   ANNOTATION_LIST_CONTEXT_ID,
   MODEL_VIEWPORT_SETTINGS_REGISTRY_NAME,
@@ -1139,6 +1140,149 @@ export function postBootInitialization({managers:{keyboardManager, storeManager}
       contextId: LOGO_LIST_CONTEXT_ID,
       action: () => document.getElementById('composer-add-logo')?.click(),
       description: 'Add logo',
+      enabled: true,
+    },
+    // --- Documents (attachments) ------------------------------------------
+    //
+    // Each of these is paired with a visible `ShortcutHint` on its control
+    // (repo `CLAUDE.md`): the accordion carries `shortcutHint`, the add button
+    // wraps its label, and every row action wraps its icon.
+    {
+      id: `${MODULE_NAME}/DocumentList/focus`,
+      key: 'Ctrl+d',
+      contextId: `${MODULE_NAME}/ModelViewport`,
+      action: () => {
+        const accordion = document.querySelector(
+          '[role="accordion-Documentos"]'
+        ) as HTMLElement | null;
+        if (!accordion) return;
+        const summary = accordion.querySelector(
+          '[aria-controls="accordion-Documentos-content"]'
+        ) as HTMLElement | null;
+        if (!summary) return;
+
+        const isExpanded = () =>
+          summary.getAttribute('aria-expanded') === 'true';
+        const rowFocusedInside = !!document.activeElement?.closest(
+          '[role="accordion-Documentos"] [data-testid="document-item"]'
+        );
+        // Collapse only when focus is already inside; otherwise open (or, if
+        // open but unfocused, pull focus in). Mirrors the Logos binding.
+        if (isExpanded() && rowFocusedInside) {
+          summary.click();
+          return;
+        }
+        if (!isExpanded()) summary.click();
+        const attempt = () => {
+          const row = accordion.querySelector(
+            '[data-testid="document-item"]'
+          ) as HTMLElement | null;
+          if (row) row.focus();
+          else
+            (accordion.querySelector(
+              '#composer-add-document'
+            ) as HTMLElement | null)?.focus();
+        };
+        setTimeout(attempt, 0);
+      },
+      description: 'Toggle / focus document list',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/DocumentList/addDocument`,
+      key: 'a',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () => document.getElementById('composer-add-document')?.click(),
+      description: 'Add document',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/DocumentList/focusNext`,
+      key: 'ArrowDown',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="document-item"]');
+        if (!current) return;
+        const next = current.nextElementSibling as HTMLElement | null;
+        if (next?.matches('[data-testid="document-item"]')) next.focus();
+      },
+      description: 'Focus next document',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/DocumentList/focusPrev`,
+      key: 'ArrowUp',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () => {
+        const current = document.activeElement?.closest('[data-testid="document-item"]');
+        if (!current) return;
+        const prev = current.previousElementSibling as HTMLElement | null;
+        if (prev?.matches('[data-testid="document-item"]')) prev.focus();
+      },
+      description: 'Focus previous document',
+      enabled: true,
+    },
+    // The row actions all address the *focused* row, so they share one lookup.
+    // Each clicks the row's own trailing icon rather than duplicating dispatch
+    // logic — the same indirection the MaterialStock row shortcuts use.
+    {
+      id: `${MODULE_NAME}/DocumentList/previewDocument`,
+      key: 'p',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () =>
+        (document.activeElement
+          ?.closest('[data-testid="document-item"]')
+          ?.querySelector('[data-testid^="document-row-preview-"]') as HTMLElement | null)
+          ?.click(),
+      description: 'Preview focused document',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/DocumentList/renameDocument`,
+      key: 'e',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () =>
+        (document.activeElement
+          ?.closest('[data-testid="document-item"]')
+          ?.querySelector('[data-testid^="document-row-rename-"]') as HTMLElement | null)
+          ?.click(),
+      description: 'Rename focused document',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/DocumentList/openDocument`,
+      key: 'o',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () =>
+        (document.activeElement
+          ?.closest('[data-testid="document-item"]')
+          ?.querySelector('[data-testid^="document-row-open-"]') as HTMLElement | null)
+          ?.click(),
+      description: 'Open focused document in the default app',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/DocumentList/saveDocumentAs`,
+      key: 's',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () =>
+        (document.activeElement
+          ?.closest('[data-testid="document-item"]')
+          ?.querySelector('[data-testid^="document-row-save-"]') as HTMLElement | null)
+          ?.click(),
+      description: 'Save focused document as…',
+      enabled: true,
+    },
+    {
+      id: `${MODULE_NAME}/DocumentList/deleteDocument`,
+      key: 'd',
+      contextId: DOCUMENT_LIST_CONTEXT_ID,
+      action: () =>
+        (document.activeElement
+          ?.closest('[data-testid="document-item"]')
+          ?.querySelector('[data-testid^="document-row-delete-"]') as HTMLElement | null)
+          ?.click(),
+      description: 'Delete focused document',
       enabled: true,
     },
     {

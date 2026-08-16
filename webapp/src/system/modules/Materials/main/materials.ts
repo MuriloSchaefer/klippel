@@ -61,6 +61,8 @@ import type {
   AttributeMap,
   CatalogDelta,
   CatalogSnapshot,
+  CatalogWindow,
+  CatalogWindowRequest,
   EdgeDTO,
   MaterialDTO,
   MaterialTypeVersionDTO,
@@ -69,6 +71,12 @@ import type {
   UpdateMaterialInput,
   UpdateMaterialStockInput,
 } from "../typings/catalog";
+import {
+  buildHaystack,
+  normalizeQuery,
+  scoreSubsequence,
+} from "../shared/materialSearch";
+import { collectMaterialUsage, invalidateMaterialUsage } from "./usage";
 
 type Owner = Parameters<typeof MaterialCatalogCoMap.create>[1];
 
@@ -198,6 +206,11 @@ export const materialsCatalogChangeResolve = {
 } as const;
 
 function notifyCatalogChange(): void {
+  // Invalidate at *schedule* time, not when the timer fires. A window read
+  // issued in the gap between a write and the debounced tick would otherwise
+  // rank and search against a pre-write index and answer with rows that no
+  // longer match.
+  invalidateCatalogIndex();
   if (notifyDebounceTimer) return;
   notifyDebounceTimer = setTimeout(() => {
     notifyDebounceTimer = null;
@@ -244,6 +257,10 @@ export function dropCatalogSubscription(): void {
   // Shadows are diffed against a specific catalog; keeping them across a
   // workspace switch would produce a delta between two unrelated catalogs.
   dropCatalogShadows();
+  // Same reasoning for the search / rank index and the usage counts behind
+  // it: both are keyed to this workspace's ids.
+  invalidateCatalogIndex();
+  invalidateMaterialUsage();
 }
 
 export function onCatalogChange(listener: CatalogChangeListener): () => void {
@@ -506,7 +523,15 @@ function typeCoMapToDto(co: AnyRecord): MaterialTypeVersionDTO {
 
 // ---- public surface --------------------------------------------------
 
-export async function loadMaterialsCatalog(): Promise<CatalogSnapshot> {
+export async function loadMaterialsCatalog(
+  /**
+   * When given, the whole catalog becomes this client's mirror — so its
+   * deltas cover every row it just received. Without it a client that took a
+   * full snapshot while marked as windowed would go stale for everything
+   * outside its last page.
+   */
+  clientId?: string,
+): Promise<CatalogSnapshot> {
   const { catalog } = await requireCatalog();
   const snapshot: CatalogSnapshot = {
     materials: {},
@@ -529,6 +554,9 @@ export async function loadMaterialsCatalog(): Promise<CatalogSnapshot> {
   }
   for (const [k, v] of recordEntries<AnyRecord>(catalog.edges)) {
     snapshot.edges[k] = edgeCoMapToDto(v);
+  }
+  if (clientId && windowOf(clientId)) {
+    trackClientWindow(clientId, Object.keys(snapshot.materials), { reset: true });
   }
   return snapshot;
 }
@@ -562,12 +590,51 @@ interface CatalogShadow {
 const catalogShadows = new Map<string, CatalogShadow>();
 
 /**
+ * Which materials each client actually mirrors.
+ *
+ * A windowed renderer holds a page, not the catalog, so a delta must be
+ * scoped to what it has: sending it a row it never loaded would silently
+ * grow its slice back towards the full catalog — exactly what windowing
+ * exists to prevent — and sending a *removal* for a row it never held is
+ * noise. Absent from this map ⇒ the client asked for the whole catalog via
+ * `load()` and gets whole-catalog deltas, which is the pre-windowing
+ * behaviour the perf harness still exercises.
+ */
+const clientWindows = new Map<string, Set<string>>();
+
+/** Materials this client mirrors, or `null` when it holds the whole catalog. */
+const windowOf = (clientId: string): Set<string> | null =>
+  clientWindows.get(clientId) ?? null;
+
+/**
+ * Record that `clientId` now holds these materials, so subsequent deltas
+ * carry their changes. Called by every path that hands a renderer rows it
+ * did not have: a window page, a by-id resolve, and its own `addMaterial`
+ * (whose optimistic reducer puts the row in Redux before any delta could).
+ */
+export function trackClientWindow(
+  clientId: string,
+  ids: Iterable<string>,
+  options?: { reset?: boolean },
+): void {
+  const current = options?.reset ? new Set<string>() : windowOf(clientId) ?? new Set<string>();
+  for (const id of ids) current.add(id);
+  clientWindows.set(clientId, current);
+}
+
+/** Forget one client's window — it reloaded, or switched workspace. */
+function dropClientWindow(clientId: string): void {
+  clientWindows.delete(clientId);
+}
+
+/**
  * Forget every client's shadow. Called when the catalog subscription is
  * dropped (workspace close/switch) so the next tick re-syncs from a full
  * snapshot rather than diffing against another workspace's catalog.
  */
 export function dropCatalogShadows(): void {
   catalogShadows.clear();
+  clientWindows.clear();
 }
 
 /**
@@ -582,6 +649,10 @@ export function dropCatalogShadows(): void {
  */
 export function dropCatalogShadow(clientId: string): void {
   catalogShadows.delete(clientId);
+  // The window goes with it, for the same reason: the renderer that comes
+  // back after a reload holds nothing, so claiming it still mirrors last
+  // session's page would scope its deltas to rows it no longer has.
+  dropClientWindow(clientId);
 }
 
 const edgeSignature = (e: EdgeDTO): string =>
@@ -631,8 +702,26 @@ export async function computeCatalogDelta(
   const catalogId = (catalog as unknown as { $jazz?: { id?: string } }).$jazz
     ?.id ?? "unknown";
 
+  // What this client mirrors. `null` ⇒ the whole catalog (a `load()` client).
+  const mirrored = windowOf(clientId);
+  const mirrors = (id: string): boolean => mirrored === null || mirrored.has(id);
+
   const previous = catalogShadows.get(clientId);
   if (!previous || previous.catalogId !== catalogId) {
+    if (mirrored !== null) {
+      // A windowed client must never be handed a full snapshot — that is the
+      // whole-catalog load windowing replaces. It has no usable "since", but
+      // it does not need one: it is about to (re)issue a window request, and
+      // that answer is authoritative. Report the size so its counters stay
+      // honest in the meantime.
+      const total = recordEntries(catalog.materials).length;
+      trace("computeCatalogDelta: windowed client with no shadow", {
+        clientId,
+        catalogId,
+        total,
+      });
+      return { total };
+    }
     const full = await loadMaterialsCatalog();
     catalogShadows.set(clientId, shadowFromSnapshot(catalogId, full));
     trace("computeCatalogDelta: full snapshot", {
@@ -657,7 +746,13 @@ export async function computeCatalogDelta(
   // re-projected DTO downstream.
   const affected = new Set<string>();
   const materialCoMaps = new Map<string, AnyRecord>();
+  let total = 0;
   for (const [k, v] of recordEntries<AnyRecord>(catalog.materials)) {
+    total += 1;
+    // Rows outside this client's window are not tracked at all: they never
+    // enter its shadow, so they can neither be reported as changed nor,
+    // later, be mistaken for removed.
+    if (!mirrors(k)) continue;
     materialCoMaps.set(k, v);
     const updatedAt = Number(
       (v as unknown as { updatedAt?: number }).updatedAt ?? 0,
@@ -673,6 +768,7 @@ export async function computeCatalogDelta(
   const changedEdges: { [id: string]: EdgeDTO } = {};
   for (const [k, v] of recordEntries<AnyRecord>(catalog.edges)) {
     const dto = edgeCoMapToDto(v);
+    if (!mirrors(dto.sourceId)) continue;
     edgeDtos.set(k, dto);
     const signature = edgeSignature(dto);
     nextShadow.edges.set(k, signature);
@@ -735,9 +831,20 @@ export async function computeCatalogDelta(
   if (removedMaterials.length) delta.removedMaterials = removedMaterials;
   if (removedEdges.length) delta.removedEdges = removedEdges;
 
+  if (mirrored !== null) {
+    // A deleted row leaves the client's window with the delta that reports
+    // it; keeping it would make the next tick re-report a removal for a row
+    // neither side holds.
+    for (const id of removedMaterials) mirrored.delete(id);
+    // Windowed clients mirror a fraction of the catalog, so "how many rows
+    // are there" is not derivable from what they hold.
+    delta.total = total;
+  }
+
   catalogShadows.set(clientId, nextShadow);
   trace("computeCatalogDelta", {
     clientId,
+    windowed: mirrored !== null,
     changedMaterials: Object.keys(delta.materials ?? {}).length,
     removedMaterials: removedMaterials.length,
     changedEdges: Object.keys(delta.edges ?? {}).length,
@@ -758,6 +865,375 @@ export async function getMaterial(id: string): Promise<MaterialDTO | null> {
   const co = catalog.materials[id] as AnyRecord | undefined;
   if (!co) return null;
   return materialCoMapToDto(co);
+}
+
+// ---- windowed reads --------------------------------------------------
+//
+// Deltas made *edits* cheap, but cold open still projected and cloned every
+// material into Redux, and the slice still held all of them — 609 ms of
+// `apply` at 1 000 rows, growing linearly, for a grid that virtualizes ~30
+// (docs/analysis/materials-catalog-lag-analysis.md, "Still open"). The
+// renderer now mirrors a *window*: what open models reference, plus the
+// most-used page, extended on search and scroll.
+//
+// The ordering that defines "the first page" has to be stable — a page whose
+// contents depend on Map iteration order would make "load more" both skip and
+// repeat rows — so ranking is a total order: usage count descending, then id
+// ascending. The tiebreak is `id` rather than `updatedAt` because an xlsx
+// import stamps thousands of rows with the same millisecond.
+
+/** Default page size — "100 more frequently used" from the product ask. */
+export const DEFAULT_WINDOW_LIMIT = 100;
+/**
+ * Ceiling on one page. A caller asking for everything would reintroduce the
+ * whole-catalog clone through the back door.
+ */
+const MAX_WINDOW_LIMIT = 1_000;
+
+interface CatalogIndexEntry {
+  id: string;
+  /** Lower-cased searchable text — see `shared/materialSearch`. */
+  haystack: string;
+  /** Material type slug, for type-scoped reads (the pickers' path). */
+  type: string;
+}
+
+interface CatalogIndexCache {
+  catalogId: string;
+  entries: Map<string, CatalogIndexEntry>;
+  /** Every id, in rank order. The browse page is a slice of this. */
+  ranked: string[];
+}
+
+let catalogIndex: CatalogIndexCache | null = null;
+
+/**
+ * Drop the search / rank index. Rebuilt on the next window read.
+ *
+ * Invalidated by any catalog change (see `notifyCatalogChange`) because both
+ * the haystacks and the id set it ranks are derived from catalog content.
+ */
+export function invalidateCatalogIndex(): void {
+  catalogIndex = null;
+}
+
+/**
+ * Drop the index *and* the usage counts behind it.
+ *
+ * The public entry point for "a model's material references changed" —
+ * Composer calls it when a model graph is written. Ranking is a function of
+ * usage, so invalidating usage alone would leave a ranked order computed from
+ * counts that no longer hold.
+ */
+export function invalidateCatalogRanking(): void {
+  invalidateMaterialUsage();
+  invalidateCatalogIndex();
+}
+
+/** JSON-decoded leaf of one attribute, or `undefined`. */
+function attributeLeaf(
+  attributes: AnyRecord | undefined | null,
+  key: string,
+): unknown {
+  const attr = (attributes as Record<string, unknown> | undefined)?.[key] as
+    | AnyRecord
+    | undefined;
+  if (!attr) return undefined;
+  const json = (attr as unknown as { valueJson?: string }).valueJson;
+  if (json === undefined) return undefined;
+  try {
+    return JSON.parse(json);
+  } catch {
+    return json;
+  }
+}
+
+/**
+ * Build the searchable text for one material, from the same fields the grid
+ * renders. `industry` comes from the edge set, so it is passed in rather than
+ * re-derived per material (that scan is what made the renderer's adapter
+ * quadratic — F1).
+ *
+ * The type label is the type's own name: nothing in the app ever renames a
+ * type away from its slug (`mergeTypeVersions` seeds `label` from `name` and
+ * no writer changes it), so main and renderer agree without main having to
+ * resolve type schemas.
+ */
+function haystackFor(co: AnyRecord, industry: string | undefined): string {
+  const m = co as unknown as {
+    type: string;
+    externalId?: string;
+    attributes?: AnyRecord;
+  };
+  const nome = attributeLeaf(m.attributes, "nome");
+  const cor = attributeLeaf(m.attributes, "cor");
+  const corLabel =
+    cor && typeof cor === "object"
+      ? ((cor as { label?: string }).label ?? (cor as { hex?: string }).hex)
+      : typeof cor === "string"
+      ? cor
+      : undefined;
+  return buildHaystack({
+    nome: typeof nome === "string" ? nome : nome == null ? undefined : String(nome),
+    corLabel,
+    typeLabel: m.type,
+    industry,
+    externalId: m.externalId,
+  });
+}
+
+/**
+ * Build (or reuse) the search + rank index.
+ *
+ * One linear pass over materials and one over edges. This is the same order
+ * of work the old full projection did — the difference is that it happens on
+ * a user action (a search, a scroll) rather than on every sync tick, and it
+ * produces ~40 bytes per material instead of a full DTO graph.
+ */
+async function requireCatalogIndex(
+  catalog: ResolvedCatalog,
+  catalogId: string,
+): Promise<CatalogIndexCache> {
+  if (catalogIndex && catalogIndex.catalogId === catalogId) return catalogIndex;
+
+  const industryOf = new Map<string, string>();
+  for (const [, v] of recordEntries<AnyRecord>(catalog.edges)) {
+    const e = v as unknown as EdgeDTO;
+    // First `manufacturedBy` wins, matching the renderer's `relationsFor`.
+    if (e.type === "manufacturedBy" && !industryOf.has(e.sourceId)) {
+      industryOf.set(e.sourceId, e.targetId);
+    }
+  }
+
+  const entries = new Map<string, CatalogIndexEntry>();
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.materials)) {
+    entries.set(k, {
+      id: k,
+      haystack: haystackFor(v, industryOf.get(k)),
+      type: String((v as unknown as { type?: string }).type ?? ""),
+    });
+  }
+
+  const usage = await collectMaterialUsage();
+  const ranked = [...entries.keys()].sort((a, b) => {
+    const ua = usage.get(a) ?? 0;
+    const ub = usage.get(b) ?? 0;
+    if (ua !== ub) return ub - ua;
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+
+  catalogIndex = { catalogId, entries, ranked };
+  trace("requireCatalogIndex: built", {
+    catalogId,
+    materials: entries.size,
+    ranked: ranked.length,
+    withUsage: usage.size,
+  });
+  return catalogIndex;
+}
+
+/**
+ * One page of the catalog for one client.
+ *
+ * Answers three addressing modes (see `CatalogWindowRequest`) and, whichever
+ * it is, always includes `pinnedIds` — the materials open models reference,
+ * which must never fall out of the renderer's mirror just because they rank
+ * poorly or do not match the current query.
+ *
+ * Side effect by design: the ids in the answer are recorded as this client's
+ * window, which is what scopes its subsequent deltas.
+ */
+export async function loadMaterialsWindow(
+  clientId: string,
+  request: CatalogWindowRequest,
+): Promise<CatalogWindow> {
+  const { catalog } = await requireCatalog();
+  const catalogId =
+    (catalog as unknown as { $jazz?: { id?: string } }).$jazz?.id ?? "unknown";
+
+  const limit = Math.min(
+    Math.max(1, request.limit ?? DEFAULT_WINDOW_LIMIT),
+    MAX_WINDOW_LIMIT,
+  );
+  const offset = Math.max(0, request.offset ?? 0);
+  const query = normalizeQuery(request.query);
+  const reset = request.reset === true;
+
+  const index = await requireCatalogIndex(catalog, catalogId);
+  const total = index.entries.size;
+
+  let mode: CatalogWindow["mode"];
+  let page: string[];
+  let matched: number;
+
+  // Candidate set. Type-scoping narrows it before ranking or scoring, so a
+  // picker's page is the type's most-used rows rather than the catalog's.
+  const candidates = request.type
+    ? [...index.entries.values()].filter((e) => e.type === request.type)
+    : null;
+  const inScope = (id: string): boolean =>
+    candidates === null || index.entries.get(id)?.type === request.type;
+
+  if (request.ids) {
+    // By-id resolve — the lazy path a graph node takes when it references a
+    // material the window has not reached. Not paged: the caller already
+    // knows exactly what it wants, and the set is bounded by one model's
+    // node count.
+    mode = "ids";
+    page = request.ids.filter((id) => index.entries.has(id));
+    matched = page.length;
+  } else if (query) {
+    mode = request.type ? "type" : "search";
+    const scored: Array<{ id: string; score: number }> = [];
+    for (const entry of candidates ?? index.entries.values()) {
+      const score = scoreSubsequence(query, entry.haystack);
+      if (score > 0) scored.push({ id: entry.id, score });
+    }
+    // Score descending, then id ascending — a total order, so paging through
+    // results neither repeats nor skips a row.
+    scored.sort((a, b) =>
+      b.score !== a.score ? b.score - a.score : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+    );
+    matched = scored.length;
+    page = scored.slice(offset, offset + limit).map((s) => s.id);
+  } else if (candidates) {
+    mode = "type";
+    // Ranked order, filtered to the type — reusing `ranked` keeps the
+    // most-used-first property inside a type without a second sort.
+    const scoped = index.ranked.filter(inScope);
+    matched = scoped.length;
+    page = scoped.slice(offset, offset + limit);
+  } else {
+    mode = "rank";
+    matched = total;
+    page = index.ranked.slice(offset, offset + limit);
+  }
+
+  // Pinned rows ride along with every answer, minus any the page already
+  // carries, so the client never has to reconcile a row appearing twice.
+  const pageSet = new Set(page);
+  const pinned = (request.pinnedIds ?? []).filter(
+    (id) => !pageSet.has(id) && index.entries.has(id),
+  );
+
+  const materials: { [id: string]: MaterialDTO } = {};
+  for (const id of [...page, ...pinned]) {
+    const co = catalog.materials[id] as AnyRecord | undefined;
+    if (co) materials[id] = materialCoMapToDto(co);
+  }
+
+  // Every current edge of every material in the answer — `suppliers` and
+  // `industry` are derived from a material's whole edge set, so a partial one
+  // would silently drop relations (same contract as `CatalogDelta.edges`).
+  const edges: { [id: string]: EdgeDTO } = {};
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.edges)) {
+    const dto = edgeCoMapToDto(v);
+    if (materials[dto.sourceId]) edges[k] = dto;
+  }
+
+  // Types, industries and sellers come whole: they are bounded by how many
+  // types and organizations exist, not by catalog size, and every rendered
+  // row needs its type schema to resolve.
+  const materialTypes: { [id: string]: MaterialTypeVersionDTO } = {};
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.materialTypes)) {
+    materialTypes[k] = typeCoMapToDto(v);
+  }
+  const industries: { [id: string]: OrgNodeDTO } = {};
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.industries)) {
+    industries[k] = orgCoMapToDto(v);
+  }
+  const sellers: { [id: string]: OrgNodeDTO } = {};
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.sellers)) {
+    sellers[k] = orgCoMapToDto(v);
+  }
+
+  // Record what this client now holds. `reset` mirrors the renderer replacing
+  // its slice rather than extending it; the two must agree or main would
+  // scope deltas to rows Redux has already dropped.
+  // On `reset` the shadow is rebuilt from scratch below rather than extended,
+  // because its old "since" describes rows the client has just dropped.
+  trackClientWindow(clientId, Object.keys(materials), { reset });
+  seedShadowFromWindow(clientId, catalogId, catalog, materials, edges, reset);
+
+  const result: CatalogWindow = {
+    materials,
+    edges,
+    materialTypes,
+    industries,
+    sellers,
+    page,
+    pinned,
+    offset,
+    limit,
+    matched,
+    total,
+    hasMore: mode === "ids" ? false : offset + page.length < matched,
+    query: request.query ?? "",
+    reset,
+    mode,
+    type: request.type,
+  };
+  trace("loadMaterialsWindow", {
+    clientId,
+    mode,
+    offset,
+    limit,
+    returned: Object.keys(materials).length,
+    pinned: pinned.length,
+    matched,
+    total,
+  });
+  return result;
+}
+
+/**
+ * Fold a window answer into the client's delta shadow.
+ *
+ * Without this, the tick that follows a window read would re-send every row
+ * the read just delivered: the shadow would have no signature for them, so
+ * they would all look changed. Seeding it here makes a window read and a
+ * delta two views of one cursor rather than two competing ones.
+ */
+function seedShadowFromWindow(
+  clientId: string,
+  catalogId: string,
+  catalog: ResolvedCatalog,
+  materials: { [id: string]: MaterialDTO },
+  edges: { [id: string]: EdgeDTO },
+  reset: boolean,
+): void {
+  const existing = catalogShadows.get(clientId);
+  const shadow: CatalogShadow =
+    existing && existing.catalogId === catalogId && !reset
+      ? existing
+      : {
+          catalogId,
+          materials: new Map(),
+          edges: new Map(),
+          materialTypes: new Map(),
+          industries: new Map(),
+          sellers: new Map(),
+        };
+
+  for (const [id, dto] of Object.entries(materials)) {
+    shadow.materials.set(id, dto.updatedAt);
+  }
+  for (const [id, dto] of Object.entries(edges)) {
+    shadow.edges.set(id, edgeSignature(dto));
+  }
+  // Types / industries / sellers went over whole, so their signatures are
+  // current for every entry, not only the ones in this page.
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.materialTypes)) {
+    shadow.materialTypes.set(k, typeCoMapToDto(v).schemaJson);
+  }
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.industries)) {
+    shadow.industries.set(k, orgCoMapToDto(v).updatedAt);
+  }
+  for (const [k, v] of recordEntries<AnyRecord>(catalog.sellers)) {
+    shadow.sellers.set(k, orgCoMapToDto(v).updatedAt);
+  }
+
+  catalogShadows.set(clientId, shadow);
 }
 
 function createMaterialCoValue(dto: MaterialDTO, owner: Owner) {
@@ -870,10 +1346,22 @@ export async function seedCatalogIfEmpty(input: SeedCatalogInput): Promise<{
   return { seeded: true };
 }
 
-export async function addMaterial(input: AddMaterialInput): Promise<MaterialDTO> {
+export async function addMaterial(
+  input: AddMaterialInput,
+  /**
+   * The renderer that authored this row. Its optimistic reducer puts the
+   * material in Redux immediately, so main must record it as mirrored —
+   * otherwise the client's window would not contain a row it is displaying,
+   * and every later edit to it would be filtered out of that client's deltas.
+   */
+  clientId?: string,
+): Promise<MaterialDTO> {
   const { catalog, owner } = await requireCatalog();
   if (catalog.materials[input.material.id]) {
     throw new Error(`Material "${input.material.id}" already exists`);
+  }
+  if (clientId && windowOf(clientId)) {
+    trackClientWindow(clientId, [input.material.id]);
   }
   trace("addMaterial", input.material.id, "→ typeVersion=", input.typeVersion);
   const dto: MaterialDTO = {

@@ -9,8 +9,13 @@ import {
   materialStockUpdated,
   materialUpdated,
 } from "./actions";
+import { materialsWindowLoaded } from "./actions";
 import type { MaterialsState } from "./state";
-import { applyCatalogDelta, catalogToMaterialsState } from "./catalogAdapter";
+import {
+  applyCatalogDelta,
+  applyCatalogWindow,
+  catalogToMaterialsState,
+} from "./catalogAdapter";
 
 const slice = createSlice({
   name: "materialsSlice",
@@ -23,6 +28,12 @@ const slice = createSlice({
     }));
     builder.addCase(materialsCatalogLoaded, (_state, { payload }) =>
       catalogToMaterialsState(payload),
+    );
+    // One page of the catalog. Merges — a page extends the mirror rather than
+    // replacing it — except on `reset`, which is the workspace-switch case
+    // where the previous workspace's rows must not survive.
+    builder.addCase(materialsWindowLoaded, (state, { payload }) =>
+      applyCatalogWindow(state, payload),
     );
     // The normal path once a workspace is open: re-derive only the rows that
     // moved. Returns the same state reference when nothing did.

@@ -6,6 +6,7 @@ import materialsSlice from "./materials/slice";
 import industriesSlice from "./industries/slice";
 import sellersSlice from "./sellers/slice";
 import graphSlice from "./graph/slice";
+import windowSlice from "./window/slice";
 
 const slice = createSlice({
   name: MODULE_NAME,
@@ -16,6 +17,7 @@ const slice = createSlice({
     industries: industriesSlice.getInitialState(),
     sellers: sellersSlice.getInitialState(),
     graph: graphSlice.getInitialState(),
+    window: windowSlice.getInitialState(),
   } as MaterialsModuleState,
   reducers: {},
   extraReducers: (builder) => {
@@ -26,6 +28,7 @@ const slice = createSlice({
       industries: industriesSlice.reducer(state.industries, action),
       sellers: sellersSlice.reducer(state.sellers, action),
       graph: graphSlice.reducer(state.graph, action),
+      window: windowSlice.reducer(state.window, action),
     }));
   },
 });

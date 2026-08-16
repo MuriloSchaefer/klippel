@@ -7,6 +7,7 @@ import { saveSession, sessionSaved } from "../models/actions";
 import { ComposerModuleState, MaterialNode } from "@system/modules/Composer/typings";
 import { modelOpened, openModel, partSelected, selectPart, uploadSVG, svgUploaded, saveModel, modelSaved, modelSaveFailed, refreshMaterialSnapshots, materialSnapshotsRefreshed } from "./actions";
 import type { MaterialsModuleState } from "@system/modules/Materials/store/state";
+import { ensureMaterialsLoaded } from "@system/modules/Materials/store/materials/actions";
 import { persistVariation } from "./slice";
 import { loadSVG } from "@kernel/modules/SVG/store/actions";
 import { sanitizeSvg } from "@kernel/modules/SVG/utils/sanitizeSvg";
@@ -18,6 +19,23 @@ import { selectActiveViewport } from "@kernel/modules/Layout/store/viewports/sel
 
 const jazz = globalThis.electron.jazz;
 const middlewares = createListenerMiddleware();
+
+/**
+ * Materials a graph's `MATERIAL` nodes reference, de-duplicated.
+ *
+ * Mirrors `Composer/main/materialUsage.ts`, which answers the same question
+ * against `graphJson` in the main process for ranking. Both read `materialId`
+ * off `MATERIAL` nodes; this one already has the graph parsed.
+ */
+const materialIdsInGraph = (graph: GraphState): string[] =>
+  Array.from(
+    new Set(
+      Object.values(graph.nodes ?? {})
+        .filter((n): n is MaterialNode => (n as MaterialNode).type === "MATERIAL")
+        .map((n) => n.materialId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
 
 middlewares.startListening({
   actionCreator: saveSession,
@@ -49,6 +67,15 @@ middlewares.startListening({
       adjacencyList: parsed.adjacencyList ?? {},
       searchResults: parsed.searchResults ?? {},
     };
+
+    // Pin this model's materials into the catalog mirror before the editor
+    // paints. The renderer holds a page of the catalog, not all of it, so a
+    // material this model references is only guaranteed resident if we say
+    // so — otherwise a node whose material ranked outside the first page
+    // would render with no catalog data behind it.
+    dispatch(
+      ensureMaterialsLoaded({ ids: materialIdsInGraph(graphState) }),
+    );
 
     dispatch(loadGraph({ graphId: variationId, graph: graphState }));
     dispatch(selectPart({ variationId, partId: "garment" }));

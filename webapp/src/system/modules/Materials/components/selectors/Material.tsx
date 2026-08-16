@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
@@ -15,6 +15,7 @@ import {
   selectMaterial,
   selectMaterialsByType,
 } from "../../store/materials/selectors";
+import { loadMaterialsOfType } from "../../store/materials/actions";
 import { MaterialState } from "../../store/materials/state";
 import { selectMaterialType } from "../../store/materialTypes/selectors";
 import { resolveTypeSchema } from "../../store/materialTypes/resolveTypeSchema";
@@ -35,6 +36,15 @@ const MaterialSelector = ({
 }) => {
   const storeModule = useModule<Store>("Store");
   const { useAppSelector } = storeModule.hooks;
+  const dispatch = storeModule.hooks.useAppDispatch();
+
+  // The renderer mirrors a page of the catalog, not the catalog, so "every
+  // material of this type" is not answerable from Redux until the type has
+  // been pulled in. Ask on mount; the middleware de-duplicates across the
+  // many pickers that mount together and no-ops once the type is resident.
+  useEffect(() => {
+    if (type) dispatch(loadMaterialsOfType({ type }));
+  }, [dispatch, type]);
 
   const materialType = useAppSelector(selectMaterialType(type));
 

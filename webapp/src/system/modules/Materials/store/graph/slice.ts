@@ -3,6 +3,7 @@ import { initialState, MaterialsGraphState } from "./state";
 import {
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
+  materialsWindowLoaded,
 } from "../materials/actions";
 import type { EdgeDTO } from "../../typings/catalog";
 
@@ -27,6 +28,15 @@ const slice = createSlice({
         adjacencyList: buildAdjacency(payload.edges),
       };
       return next;
+    });
+    // A page carries every current edge of every material in it, so those
+    // materials' relations are complete — but only theirs. Edges merge for
+    // the same reason the rows do; `reset` replaces for the same reason too.
+    builder.addCase(materialsWindowLoaded, (state, { payload }) => {
+      const incoming = payload.edges ?? {};
+      if (!payload.reset && !Object.keys(incoming).length) return state;
+      const edges = payload.reset ? { ...incoming } : { ...state.edges, ...incoming };
+      return { edges, adjacencyList: buildAdjacency(edges) };
     });
     builder.addCase(materialsCatalogDeltaLoaded, (state, { payload }) => {
       if (payload.full) {

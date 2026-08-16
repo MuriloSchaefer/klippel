@@ -339,8 +339,11 @@ picker as before.
 ### F6 — dev-build amplifiers
 
 `immutableCheck` is off (`globalThis.__klippelImmutableCheck__ = true` before
-boot brings it back), and the React/Redux DevTools extensions are now opt-in via
-`KLIPPEL_DEV_EXTENSIONS=1` instead of installing on every dev launch.
+boot brings it back). The React/Redux DevTools extensions still install by
+default — they were briefly made opt-in, which was the wrong call, since a dev
+build without those panels is a worse dev build. They now have an *opt-out*,
+`KLIPPEL_DEV_EXTENSIONS=0`, for when their serialization cost is the thing being
+measured.
 
 ### F7 — search
 
@@ -417,15 +420,24 @@ and the collaborative suites, which were not re-run.
   not exist yet. The tier stays commented out in `catalogRender`, with the
   reason updated from `// FREEZES`. Building that pipeline is the prerequisite
   for calibrating anything above 1k.
-- **Redux does not need the whole catalog.** The stock grid is virtualized and
-  shows ~30 rows; the selectors show one type's worth. The delta path removes
-  the per-edit cost but the slice still holds every material, and cold open
-  still pays a full projection + clone — visible as `apply` growing 272 → 609 ms
-  from 103 to 1003 rows. A windowed / lazy read path through the existing by-id
-  IPC is the real fix for the 10k/100k tiers, and would let
-  `materialsCatalogResolve` shrink as well.
+- **The windowed read landed but has not been measured.** Redux holding the
+  whole catalog is fixed — the renderer now
+  mirrors a page (open models' materials + the 100 most-used, extended on
+  search and scroll); see
+  [Materials/docs/changes/2026-08-11-3b71c2-catalog-windowed-reads.md](../../system/modules/Materials/docs/changes/2026-08-11-3b71c2-catalog-windowed-reads.md).
+  What has not happened is the measurement: `apply` was calibrated against
+  "every row on screen", which the grid no longer does, so the budgets in
+  `catalogRender` describe a surface that no longer exists. A reference run is
+  the prerequisite for reading anything into the 10k/100k tiers.
+- **`materialsCatalogResolve` is still the deep whole-catalog shape.** The
+  windowed read projects a page, but `requireCatalog` still deep-loads every
+  material's attribute / composition / caracteristics sub-CoMaps to do it (F8's
+  ceiling, unchanged). Shrinking it is the next real win in main, and windowing
+  is what makes it possible: nothing now needs the whole graph resolved at
+  once.
 - **How many materials does the real workspace hold?** The Jazz store is
   encrypted at rest so it couldn't be counted offline; `demo/workspaces/pessoal`
   has 8 596 CoValues / 21 MB. Confirm from the running app via
-  `data-material-count` on the stock viewport — it decides whether the windowed
-  read above is urgent or theoretical.
+  `data-material-total` on the stock viewport — it sets the scale the windowed
+  read has to hold up at, and decides how urgent the resolve-shape work above
+  is.

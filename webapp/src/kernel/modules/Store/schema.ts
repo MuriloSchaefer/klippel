@@ -35,12 +35,39 @@ export const EditLease = co.map({
  * `svg` is a BinaryCoStream so blob sync is native to Jazz; the renderer
  * fetches and sanitizes the bytes before mounting.
  */
+/**
+ * One uploaded attachment: metadata plus its bytes as a `fileStream`.
+ *
+ * Attachments are deliberately *not* stored in `ModelCoMap.graphJson`. That
+ * field is one atomic string, rewritten in full on every save and retained per
+ * version in CRDT history — fine for a small logo SVG, ruinous for a 5 MB PDF.
+ * A `fileStream` chunks and syncs natively and is fetched only when something
+ * actually needs the bytes, so the graph carries the metadata node alone.
+ *
+ * The corresponding graph node is `DocumentNode` (Composer `typings.ts`), which
+ * points here by `documentId` and holds the stream's coId.
+ */
+export const DocumentCoMap = co.map({
+  documentId: z.string(),
+  kind: z.string(),
+  mime: z.string(),
+  filename: z.string(),
+  size: z.number(),
+  updatedAt: z.number(),
+  blob: co.fileStream(),
+});
+
+export const DocumentsMap = co.record(z.string(), DocumentCoMap);
+
 export const ModelCoMap = co.map({
   id: z.string(),
   name: z.string(),
   description: z.string(),
   graphJson: z.string(),
   svg: co.optional(co.fileStream()),
+  // Optional so models written before attachments existed still load. Created
+  // lazily on the first upload.
+  documents: co.optional(DocumentsMap),
   editLease: co.optional(EditLease),
   updatedAt: z.number(),
 });

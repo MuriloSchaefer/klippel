@@ -219,14 +219,17 @@ app.whenReady().then(async () => {
   // bails with `Failed to shutdown`. Skip extension install in any
   // headless e2e environment; nothing in the test path needs them.
   //
-  // They are also off by default in ordinary development: the Redux DevTools
-  // backend serializes every action *and* a full state snapshot, and with a
-  // multi-MB Materials catalog ticking as often as sync does, that alone
-  // saturates a core (docs/analysis/materials-catalog-lag-analysis.md, F6).
-  // Opt in with `KLIPPEL_DEV_EXTENSIONS=1` when you actually need to inspect
-  // actions or the component tree.
+  // They install by default otherwise: a dev build without the React and Redux
+  // panels is a worse dev build, and that is the whole point of running one.
+  //
+  // There is a real cost — the Redux DevTools backend serializes every action
+  // *and* a full state snapshot, and with a multi-MB Materials catalog ticking
+  // as often as sync does, that alone can saturate a core
+  // (docs/analysis/materials-catalog-lag-analysis.md, F6). Set
+  // `KLIPPEL_DEV_EXTENSIONS=0` to opt out when that cost is what you are
+  // measuring; it is a diagnosis tool, not the default posture.
   const skipDevExtensions =
-    process.env.KLIPPEL_DEV_EXTENSIONS !== "1" ||
+    process.env.KLIPPEL_DEV_EXTENSIONS === "0" ||
     process.env.KLIPPEL_USE_XVFB === "1" ||
     process.env.KLIPPEL_E2E_SKIP_DEV_EXTENSIONS === "1";
   if (!skipDevExtensions) {

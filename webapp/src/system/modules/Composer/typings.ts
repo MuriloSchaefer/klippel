@@ -345,18 +345,40 @@ export type AnnotationNode = Node & {
     electiveNodeId?: string;       // optional elective gate (same field/pattern as LogoNode)
 }
 
-// Generic blob storage node. Holds draw-view SVGs, plotter files, orders,
-// receipts, etc. — this change implements only the minimum needed for logos
-// while leaving the type open to other kinds.
+/**
+ * Generic blob storage node. Holds draw-view SVGs, plotter files, orders,
+ * receipts, etc.
+ *
+ * Two storage shapes coexist, and they are told apart by which fields are set:
+ *
+ * - **`coId`** — the bytes live in a `co.fileStream()` under the model's
+ *   `documents` record. This is the shape for user attachments (`kind:
+ *   "attachment"`, parented to the GARMENT node) and the only one that scales:
+ *   a graph node carries metadata alone, so the bytes never enter `graphJson`.
+ * - **`encoding` + `data`** — the bytes are inline base64. This is the legacy
+ *   shape used by logo assets (`kind: "logo-svg" | "logo-raster"`, parented to
+ *   a LOGO node), kept because migrating them is a separate change. Every
+ *   reader must therefore treat `data` as possibly absent.
+ *
+ * `graphJson` is one atomic string re-serialized on every save, so anything
+ * inline is re-written and retained in CRDT history in full — which is exactly
+ * why attachments do not go that way.
+ */
 export type DocumentNode = Node & {
     type: "DOCUMENT";
     documentId: string;                  // small hash; referenced by LogoSource.documentId
-    kind: string;                        // open discriminator — "logo-svg" | "logo-raster" now
+    kind: string;                        // "logo-svg" | "logo-raster" | "attachment"
     mime: string;                        // e.g. "image/svg+xml", "image/png"
     filename?: string;                   // original upload name
-    encoding: "base64";                  // only encoding for now
-    data: string;                        // base64-encoded blob content
+    label?: string;                      // user-facing name; falls back to filename
+    size?: number;                       // bytes, for display and the upload cap
+    coId?: string;                       // fileStream CoValue id (attachments)
+    encoding?: "base64";                 // legacy inline shape (logo assets)
+    data?: string;                       // legacy inline base64 content
 }
+
+/** `kind` of a user-uploaded attachment, as opposed to a logo's own asset. */
+export const DOCUMENT_KIND_ATTACHMENT = "attachment";
 
 // edges definitions
 export type HasPartEdge = Edge & {

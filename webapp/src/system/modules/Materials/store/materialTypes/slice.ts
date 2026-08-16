@@ -9,6 +9,7 @@ import {
 import {
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
+  materialsWindowLoaded,
   materialTypeVersionRegistered,
 } from "../materials/actions";
 import type { MaterialTypeVersionDTO } from "../../typings/catalog";
@@ -171,6 +172,15 @@ const slice = createSlice({
         // `${name}@${version}` with the schema body as JSON, so a peer can
         // rehydrate types it didn't author locally (the other side of
         // `materialTypeVersionRegistered`'s optimistic local update).
+        (state: MaterialTypesState, { payload }) =>
+          mergeTypeVersions(state, payload.materialTypes),
+      );
+      builder.addCase(
+        materialsWindowLoaded,
+        // Every page carries the whole type record — types are bounded by
+        // how many exist, and a row cannot render without the schema that
+        // describes it, so a page that omitted them would paint materials
+        // with no type.
         (state: MaterialTypesState, { payload }) =>
           mergeTypeVersions(state, payload.materialTypes),
       );

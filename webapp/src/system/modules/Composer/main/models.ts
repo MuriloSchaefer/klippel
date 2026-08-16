@@ -1,5 +1,7 @@
 import { co } from "jazz-tools";
 import {
+  DocumentCoMap,
+  DocumentsMap,
   EditLease,
   ModelCoMap,
   ModelSummary,
@@ -101,8 +103,29 @@ type LoadedFullModel = {
   graphJson: string;
   updatedAt: number;
   svg?: unknown;
+  documents?: DocumentsRecord | null;
   editLease?: unknown;
   $jazz: { id: string; owner: unknown; refs: { svg?: unknown }; set: (k: string, v: unknown) => void };
+};
+
+type ResolvedDocument = {
+  documentId: string;
+  kind: string;
+  mime: string;
+  filename: string;
+  size: number;
+  updatedAt: number;
+  blob?: unknown;
+  $jazz: { id: string; refs: { blob?: { id: string } }; set: (k: string, v: unknown) => void };
+};
+
+type DocumentsRecord = {
+  [documentId: string]: ResolvedDocument | undefined;
+} & {
+  $jazz: {
+    set: (k: string, v: unknown) => void;
+    delete?: (k: string) => void;
+  };
 };
 
 function loadedLease(model: { editLease?: unknown }): LoadedLease | undefined {
@@ -124,7 +147,13 @@ function leaseHeldByOther(model: { editLease?: unknown }): boolean {
 
 async function loadFullModel(modelCoId: string): Promise<LoadedFullModel | null> {
   const settled = await ModelCoMap.load(modelCoId, {
-    resolve: { editLease: { $onError: "catch" } },
+    // `documents.$each` resolves the metadata CoMaps only — their `blob`
+    // fileStreams stay unresolved refs, so listing a model's attachments never
+    // drags the bytes through sync. `loadModelDocument` fetches one on demand.
+    resolve: {
+      editLease: { $onError: "catch" },
+      documents: { $each: { $onError: "catch" }, $onError: "catch" },
+    },
   });
   if (!settled || ("$isLoaded" in settled && settled.$isLoaded === false)) {
     return null;
@@ -242,6 +271,48 @@ export async function updateModelGraph(id: string, graphJson: string): Promise<v
   model.$jazz.set("graphJson", graphJson);
   model.$jazz.set("updatedAt", now);
   patchSummary(summary, { updatedAt: now });
+
+  // A save is the moment the graph becomes authoritative, so it is also the
+  // moment to reconcile the attachment blobs against it: bytes are written on
+  // upload, but the node naming them only arrives here. Anything the graph no
+  // longer references is dropped.
+  try {
+    pruneOrphanDocuments(model, graphJson);
+  } catch (err) {
+    // Never fail the save over housekeeping — a surviving orphan costs storage,
+    // a failed save costs the user's work.
+    console.error("[models] pruning orphan documents failed", err);
+  }
+}
+
+/**
+ * Ids of every DOCUMENT node in a serialized graph. Parsing the JSON we just
+ * wrote is deliberate: it is the exact state being persisted, so the prune can
+ * never disagree with it.
+ */
+function documentIdsInGraph(graphJson: string): string[] {
+  const parsed = JSON.parse(graphJson) as {
+    nodes?: Record<string, { type?: string; documentId?: string }>;
+  };
+  const out: string[] = [];
+  for (const node of Object.values(parsed.nodes ?? {})) {
+    if (node?.type === "DOCUMENT" && node.documentId) out.push(node.documentId);
+  }
+  return out;
+}
+
+function pruneOrphanDocuments(model: LoadedFullModel, graphJson: string): void {
+  const documents = model.documents as DocumentsRecord | null | undefined;
+  if (!documents) return;
+  const keep = new Set(documentIdsInGraph(graphJson));
+  for (const [key] of documentEntries(documents)) {
+    if (keep.has(key)) continue;
+    if (typeof documents.$jazz.delete === "function") {
+      documents.$jazz.delete(key);
+    } else {
+      documents.$jazz.set(key, undefined);
+    }
+  }
 }
 
 export async function updateModelDescription(id: string, description: string): Promise<void> {
@@ -351,3 +422,166 @@ export async function loadModelSvg(id: string): Promise<string | null> {
   if (!blob) return null;
   return new TextDecoder().decode(await blob.arrayBuffer());
 }
+
+// ---- attachments -----------------------------------------------------
+//
+// User-uploaded files. Metadata lives in `ModelCoMap.documents` (a record of
+// `DocumentCoMap`), the bytes in each entry's `blob` fileStream. The graph's
+// `DocumentNode` carries metadata + coId only, so nothing here ever lands in
+// `graphJson` — see the schema comment on `DocumentCoMap`.
+
+/**
+ * Largest attachment we accept.
+ *
+ * Jazz fails on blobs past ~16 MiB (recorded in the jazz-foundation change
+ * doc), and it fails deep inside sync where the user gets no usable message.
+ * Rejecting a little earlier, by our own rule, is what makes the failure
+ * explainable.
+ */
+export const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
+
+export interface UploadDocumentInput {
+  documentId: string;
+  kind: string;
+  mime: string;
+  filename: string;
+  bytes: ArrayBuffer | Uint8Array;
+}
+
+/**
+ * Entries of a Jazz record, minus the `$jazz` symbol-bag. Mirrors
+ * `summaryEntries` above.
+ */
+function documentEntries(
+  record: DocumentsRecord | null | undefined,
+): Array<[string, ResolvedDocument]> {
+  const out: Array<[string, ResolvedDocument]> = [];
+  if (!record) return out;
+  for (const [k, v] of Object.entries(record as Record<string, unknown>)) {
+    if (k === "$jazz" || !v || typeof v !== "object") continue;
+    if (!("documentId" in (v as Record<string, unknown>))) continue;
+    out.push([k, v as ResolvedDocument]);
+  }
+  return out;
+}
+
+/**
+ * Resolve the model behind `id` for a write, refusing when another peer holds
+ * the edit lease. Same guard `uploadModelSvg` applies — an attachment is a
+ * model mutation like any other.
+ */
+async function requireWritableModel(id: string): Promise<{
+  model: LoadedFullModel;
+  summary: ResolvedSummary | undefined;
+}> {
+  const workspace = await requireWorkspace();
+  const summary = workspace.modelSummaries?.[id];
+  if (!summary) throw new Error(`Model "${id}" not found`);
+  const model = await loadFullModel(summary.modelCoId);
+  if (!model) throw new Error(`Model "${id}" not found`);
+  if (leaseHeldByOther(model)) {
+    throw new Error(`Model "${id}" is locked by another editor`);
+  }
+  return { model, summary };
+}
+
+export async function uploadModelDocument(
+  id: string,
+  input: UploadDocumentInput,
+): Promise<{ coId: string; size: number }> {
+  const bytes =
+    input.bytes instanceof Uint8Array ? input.bytes : new Uint8Array(input.bytes);
+  if (bytes.byteLength > MAX_DOCUMENT_BYTES) {
+    throw new Error(
+      `File is too large (${bytes.byteLength} bytes); the limit is ${MAX_DOCUMENT_BYTES} bytes`,
+    );
+  }
+  const { model, summary } = await requireWritableModel(id);
+
+  // ArrayBuffer typing across DOM and Node lib varies; the underlying buffer
+  // is interchangeable at runtime (same cast `uploadModelSvg` makes).
+  const ab = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+  const owner = model.$jazz.owner;
+  const stream = await co.fileStream().createFromArrayBuffer(
+    ab,
+    input.mime,
+    input.filename,
+    { owner } as never,
+  );
+
+  const now = Date.now();
+  const entry = DocumentCoMap.create(
+    {
+      documentId: input.documentId,
+      kind: input.kind,
+      mime: input.mime,
+      filename: input.filename,
+      size: bytes.byteLength,
+      updatedAt: now,
+      blob: stream as never,
+    },
+    owner as never,
+  );
+
+  // The record is optional on `ModelCoMap` so pre-attachment models load
+  // unchanged; create it on first upload.
+  let documents = model.documents as DocumentsRecord | null | undefined;
+  if (!documents) {
+    documents = DocumentsMap.create({}, owner as never) as unknown as DocumentsRecord;
+    model.$jazz.set("documents", documents);
+  }
+  documents.$jazz.set(input.documentId, entry);
+  model.$jazz.set("updatedAt", now);
+  patchSummary(summary, { updatedAt: now });
+
+  return { coId: (stream as { $jazz: { id: string } }).$jazz.id, size: bytes.byteLength };
+}
+
+/**
+ * Fetch one attachment's bytes. Returns `null` when the id is unknown — a
+ * legitimate answer, since a peer may have deleted it since the graph node was
+ * written.
+ */
+export async function loadModelDocument(
+  id: string,
+  documentId: string,
+): Promise<{ bytes: ArrayBuffer; mime: string; filename: string } | null> {
+  const workspace = await requireWorkspace();
+  const summary = workspace.modelSummaries?.[id];
+  if (!summary) throw new Error(`Model "${id}" not found`);
+  const model = await loadFullModel(summary.modelCoId);
+  if (!model) throw new Error(`Model "${id}" not found`);
+
+  const entry = (model.documents as DocumentsRecord | null | undefined)?.[documentId];
+  if (!entry) return null;
+  const blobRef = entry.$jazz.refs.blob;
+  if (!blobRef) return null;
+  const blob = await co.fileStream().loadAsBlob(blobRef.id);
+  if (!blob) return null;
+  return {
+    bytes: await blob.arrayBuffer(),
+    mime: entry.mime,
+    filename: entry.filename,
+  };
+}
+
+export async function deleteModelDocument(
+  id: string,
+  documentId: string,
+): Promise<void> {
+  const { model, summary } = await requireWritableModel(id);
+  const documents = model.documents as DocumentsRecord | null | undefined;
+  if (!documents?.[documentId]) return;
+  if (typeof documents.$jazz.delete === "function") {
+    documents.$jazz.delete(documentId);
+  } else {
+    documents.$jazz.set(documentId, undefined);
+  }
+  const now = Date.now();
+  model.$jazz.set("updatedAt", now);
+  patchSummary(summary, { updatedAt: now });
+}
+

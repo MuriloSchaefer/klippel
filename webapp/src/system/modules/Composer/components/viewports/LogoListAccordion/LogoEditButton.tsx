@@ -139,9 +139,13 @@ export default function LogoEditButton({
   const activeFile =
     fileKind && fileData
       ? { kind: fileKind as "svg" | "raster", data: fileData, mime: fileMime }
-      : existingDoc
+      : existingDoc?.data
         ? {
             kind: node.source.kind as "svg" | "raster",
+            // Logo assets store their bytes inline. `data` is optional on
+            // `DocumentNode` because user attachments keep theirs in a
+            // fileStream instead, so a logo document without it is a broken
+            // one — fall through to `null` and let the picker replace it.
             data: existingDoc.data,
             mime: existingDoc.mime,
           }

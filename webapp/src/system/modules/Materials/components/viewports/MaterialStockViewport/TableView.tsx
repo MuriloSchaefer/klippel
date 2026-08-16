@@ -100,7 +100,37 @@ const extraParts = (
 interface Props {
   materials: MaterialState[];
   onDelete: (id: string) => void;
+  /**
+   * A row was picked *by the user* — a click, or arrow navigation once a
+   * pick is live. Not fired by the auto-selection on mount: the details
+   * panel only exists because the user asked for it, so an automatic
+   * selection must not open it.
+   */
+  onSelect?: (id: string | null) => void;
+  /**
+   * The pick this grid should start from — the one the viewport recorded in
+   * its `extra` before the tab was switched away. A callback rather than a
+   * value so the current pick never reaches this component as a changing
+   * prop: read once, on mount.
+   */
+  readInitialSelection?: () => string | null;
+  /**
+   * The user scrolled to the end of the resident rows. The grid does not know
+   * (or care) whether more exist — it reports the event and the store decides.
+   */
+  onReachedEnd?: () => void;
+  /** More rows exist beyond the resident page. */
+  hasMore?: boolean;
+  /** A page request is in flight. */
+  loading?: boolean;
 }
+
+/**
+ * How close to the bottom (in px) counts as "reached the end". One viewport
+ * height of lead time, so the next page is usually resident by the time the
+ * user gets there rather than after they stop at a blank edge.
+ */
+const SCROLL_END_THRESHOLD_PX = 400;
 
 const EMPTY_SELECTION: GridRowSelectionModel = {
   type: "include",
@@ -122,15 +152,46 @@ const EMPTY_SELECTION: GridRowSelectionModel = {
  * state instead, so MUI's granular selectors re-render only the two rows
  * whose selection actually changed and `TableView` never re-renders.
  */
-const TableView: React.FC<Props> = ({ materials, onDelete }) => {
+const TableView: React.FC<Props> = ({
+  materials,
+  onDelete,
+  onSelect,
+  readInitialSelection,
+  onReachedEnd,
+  hasMore = false,
+  loading = false,
+}) => {
   const materialTypes = useMaterialTypes();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const apiRef = useGridApiRef();
 
+  // Read `onSelect` through a ref so notifying the parent never depends on
+  // the callback's identity — same reason the grid drives selection through
+  // `apiRef`: nothing about a selection may re-render this component.
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+
+  // The row the details panel is showing, or `null` when it is closed. A
+  // ref, not state: it only gates what the parent gets told, and nothing
+  // this component renders depends on it. Seeded from the viewport's
+  // recorded pick so a tab switched back to resumes where it left off.
+  const detailIdRef = useRef<string | null>(readInitialSelection?.() ?? null);
+
+  const notifySelect = useCallback((id: string | null) => {
+    if (detailIdRef.current === id) return;
+    detailIdRef.current = id;
+    onSelectRef.current?.(id);
+  }, []);
+
   // Source of truth for the current selection. A ref (not state) so updating
   // it never re-renders TableView; the selected row is re-rendered by MUI's
   // own selection state, and `getActions` reads this ref to toggle the hint.
-  const selectedIdRef = useRef<string | null>(null);
+  // Starts on the restored pick, so the auto-selection below leaves it
+  // alone instead of dropping the user back on the first row.
+  const selectedIdRef = useRef<string | null>(detailIdRef.current);
+
+  // Whether the grid's own selection state has been written at least once.
+  const appliedRef = useRef(false);
 
   // Push a selection into the grid's internal state. Keeps the ref in sync
   // synchronously so keyboard handlers (Enter, arrow cycling) can read the
@@ -327,12 +388,21 @@ const TableView: React.FC<Props> = ({ materials, onDelete }) => {
     const cur = selectedIdRef.current;
     if (materials.length === 0) {
       if (cur !== null) applySelection(null);
+      notifySelect(null);
       return;
     }
     if (!cur || !materials.find((m) => String(m.id) === cur)) {
+      // The user's pick left the filtered set — drop the details with it
+      // rather than silently pointing them at whatever took its place.
+      if (cur) notifySelect(null);
       applySelection(String(materials[0].id));
+    } else if (!appliedRef.current) {
+      // Restored pick, still in the set: push it into the grid's own
+      // selection state, which a fresh instance starts empty.
+      applySelection(cur);
     }
-  }, [materials, applySelection]);
+    appliedRef.current = true;
+  }, [materials, applySelection, notifySelect]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Enter" && e.key !== "Escape") {
@@ -341,6 +411,7 @@ const TableView: React.FC<Props> = ({ materials, onDelete }) => {
     const cur = selectedIdRef.current;
     if (e.key === "Escape") {
       applySelection(null);
+      notifySelect(null);
       return;
     }
     if (e.key === "Enter") {
@@ -355,8 +426,41 @@ const TableView: React.FC<Props> = ({ materials, onDelete }) => {
     const dir = e.key === "ArrowDown" ? 1 : -1;
     const nextIdx = (idx + dir + materials.length) % materials.length;
     e.preventDefault();
-    applySelection(String(materials[nextIdx].id));
+    const nextId = String(materials[nextIdx].id);
+    applySelection(nextId);
+    // Arrow keys move an open details panel, but never open one — the panel
+    // is opened by a click (or re-opened after Escape by another click).
+    if (detailIdRef.current !== null) notifySelect(nextId);
   };
+
+  // Scroll paging. The free DataGrid has no `onRowsScrollEnd`, so we read the
+  // virtual scroller's position off the grid's own event — which fires for
+  // keyboard-driven scrolling too, not only the wheel, so paging works
+  // without a mouse.
+  //
+  // Read `hasMore` / `loading` through a ref: making them dependencies would
+  // resubscribe on every page (they both flip twice per request), and the
+  // store guards the request anyway. The check here only exists to avoid the
+  // dispatch traffic.
+  const pagingRef = useRef({ hasMore, loading, onReachedEnd });
+  pagingRef.current = { hasMore, loading, onReachedEnd };
+
+  useEffect(() => {
+    const api = apiRef.current;
+    if (!api?.subscribeEvent) return;
+    return api.subscribeEvent("scrollPositionChange", (params) => {
+      const { hasMore: more, loading: busy, onReachedEnd: notify } =
+        pagingRef.current;
+      if (!more || busy || !notify) return;
+      const scroller = api.rootElementRef?.current?.querySelector(
+        ".MuiDataGrid-virtualScroller",
+      );
+      if (!scroller) return;
+      const remaining =
+        scroller.scrollHeight - (params.top + scroller.clientHeight);
+      if (remaining <= SCROLL_END_THRESHOLD_PX) notify();
+    });
+  }, [apiRef]);
 
   // Keep the ref in sync with selections originating inside the grid (row
   // clicks, native keyboard) without re-rendering TableView.
@@ -366,6 +470,18 @@ const TableView: React.FC<Props> = ({ materials, onDelete }) => {
       selectedIdRef.current = next;
     },
     [],
+  );
+
+  // A click is the gesture that opens the details panel. Clicking the row
+  // that is already open closes it again, so the list can be taken back to
+  // full height without reaching for the panel's close button.
+  const handleRowClick = useCallback(
+    (params: GridRowParams) => {
+      const id = String(params.id);
+      applySelection(id);
+      notifySelect(detailIdRef.current === id ? null : id);
+    },
+    [applySelection, notifySelect],
   );
 
   return (
@@ -383,6 +499,7 @@ const TableView: React.FC<Props> = ({ materials, onDelete }) => {
         getRowId={getRowId}
         density="compact"
         disableColumnMenu
+        onRowClick={handleRowClick}
         onRowSelectionModelChange={handleRowSelectionModelChange}
       />
     </Box>

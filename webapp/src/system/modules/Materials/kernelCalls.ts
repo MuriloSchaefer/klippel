@@ -36,7 +36,7 @@ export function startModule({
   // time races the kernel's workspace-selection bootstrap and reliably
   // fires the IPC before main has an active workspace, producing a
   // "No active workspace" rejection — workspaceSelected fires the same
-  // `loadMaterialsCatalog` once the Jazz node is open.
+  // `loadMaterialsWindow` once the Jazz node is open.
 
   // Live catalog refresh — main process subscribes to the active
   // `MaterialCatalogCoMap` and pushes a `jazz-materials:changed` IPC

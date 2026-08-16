@@ -6,16 +6,25 @@ import {
 import {
   addMaterial,
   deleteMaterial,
+  ensureMaterialsLoaded,
   loadMaterials,
   loadMaterialsCatalog,
   loadMaterialsCatalogDelta,
+  loadMaterialsOfType,
+  loadMaterialsWindow,
+  loadMoreMaterials,
   materialAdded,
   materialDeleted,
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
+  materialsPinned,
+  materialsWindowLoaded,
+  materialsWindowRequested,
   materialStockUpdated,
   materialTypeVersionRegistered,
+  refreshMaterialsView,
   registerMaterialTypeVersion,
+  searchMaterialsCatalog,
   updateMaterial,
   updateMaterialStock,
 } from "./actions";
@@ -23,10 +32,28 @@ import {
   materialDtoToState,
   materialStateToDto,
 } from "./catalogAdapter";
+import type { MaterialsModuleState } from "../state";
+import { initialState as windowInitialState } from "../window/state";
 
 const materialsApi = () =>
   (window as unknown as { electron?: { jazz?: { materials?: any } } }).electron
     ?.jazz?.materials;
+
+type RootState = { Materials: MaterialsModuleState };
+
+const windowState = (getState: () => unknown) =>
+  (getState() as RootState).Materials?.window ?? windowInitialState;
+
+/**
+ * Materials the renderer must keep resident regardless of rank or query —
+ * everything an open model references.
+ *
+ * Re-sent with **every** window request, not just the first: main re-pins on
+ * each read, and a `reset` read that omitted them would evict rows the user
+ * is currently looking at in a model.
+ */
+const pinnedIdsOf = (getState: () => unknown): string[] =>
+  windowState(getState).pinnedIds;
 
 const middlewares = createListenerMiddleware();
 middlewares.startListening({
@@ -36,8 +63,167 @@ middlewares.startListening({
     // Catalog data lives in the workspace's Jazz SQLite store and is
     // populated either by user edits or by importing the bundled xlsx
     // fixture (`public/materials/materials.xlsx`) through the import UI.
-    // Boot just reads whatever is already persisted.
-    dispatch(loadMaterialsCatalog());
+    // Boot just reads whatever is already persisted — one page of it.
+    dispatch(loadMaterialsWindow());
+  },
+});
+
+// ---- windowed reads --------------------------------------------------
+//
+// The renderer mirrors a page of the catalog, not the catalog. Three commands
+// move that window: `loadMaterialsWindow` starts it over (cold open,
+// workspace switch), `loadMoreMaterials` extends it (scroll),
+// `searchMaterialsCatalog` re-aims it at a query. A fourth,
+// `ensureMaterialsLoaded`, pulls in specific rows a model references without
+// disturbing the view at all.
+
+middlewares.startListening({
+  actionCreator: loadMaterialsWindow,
+  effect: async ({ payload }, { dispatch, getState }) => {
+    const api = materialsApi();
+    if (!api) return;
+    if (typeof api.loadWindow !== "function") {
+      // Preload predates the window channel (stale dev build). A full load is
+      // slow at scale but correct, which beats an empty catalog.
+      dispatch(loadMaterialsCatalog());
+      return;
+    }
+    const pinnedIds = Array.from(
+      new Set([...pinnedIdsOf(getState), ...(payload?.pinnedIds ?? [])]),
+    );
+    dispatch(materialsWindowRequested({ reason: "page" }));
+    const result = await api.loadWindow({ pinnedIds, offset: 0, reset: true });
+    dispatch(materialsWindowLoaded(result));
+  },
+});
+
+middlewares.startListening({
+  actionCreator: loadMoreMaterials,
+  effect: async (_action, { dispatch, getState }) => {
+    const api = materialsApi();
+    if (!api?.loadWindow) return;
+    const current = windowState(getState);
+    // Guard both ends: the grid fires this from a scroll handler, which can
+    // fire several times before the first answer lands.
+    if (current.loading || !current.hasMore) return;
+    dispatch(materialsWindowRequested({ reason: "page" }));
+    const result = await api.loadWindow({
+      pinnedIds: current.pinnedIds,
+      query: current.query || undefined,
+      offset: current.nextOffset,
+      limit: current.limit,
+    });
+    dispatch(materialsWindowLoaded(result));
+  },
+});
+
+middlewares.startListening({
+  actionCreator: refreshMaterialsView,
+  effect: async (_action, { dispatch, getState }) => {
+    const api = materialsApi();
+    if (!api?.loadWindow) return;
+    const current = windowState(getState);
+    if (!current.initialized) return;
+    // Re-request from the top, sized to what is already resident, so the user
+    // keeps the depth they scrolled to. Rounded up to a whole page so the
+    // paging cursor stays on a page boundary. Main clamps at its own ceiling,
+    // so a user who has paged past it is walked back to it and can page
+    // forward again — a bounded refresh beats an unbounded one.
+    const span = Math.max(
+      current.limit,
+      Math.ceil(current.resultIds.length / current.limit) * current.limit,
+    );
+    dispatch(materialsWindowRequested({ reason: "page" }));
+    const result = await api.loadWindow({
+      pinnedIds: current.pinnedIds,
+      query: current.query || undefined,
+      offset: 0,
+      limit: span,
+    });
+    dispatch(materialsWindowLoaded(result));
+  },
+});
+
+middlewares.startListening({
+  actionCreator: searchMaterialsCatalog,
+  effect: async ({ payload }, { dispatch, getState }) => {
+    const api = materialsApi();
+    if (!api?.loadWindow) return;
+    dispatch(materialsWindowRequested({ reason: "search" }));
+    // Search runs in main against the whole catalog. Filtering in the
+    // renderer would only ever search the resident page, which is precisely
+    // the rows the user can already see.
+    const result = await api.loadWindow({
+      pinnedIds: pinnedIdsOf(getState),
+      query: payload.query,
+      offset: 0,
+    });
+    dispatch(materialsWindowLoaded(result));
+  },
+});
+
+/**
+ * Type-scoped load, de-duplicated per type for the lifetime of the mirror.
+ *
+ * Every mounted picker asks on mount, and there are many — one per material
+ * node in an open model. Without this guard a model with 20 nodes of the same
+ * type would issue 20 identical whole-type reads on open.
+ *
+ * Cleared on `reset`, which is the only event that can invalidate it: the
+ * mirror was replaced, so a type loaded into the old one is not in this one.
+ */
+const loadedTypes = new Set<string>();
+
+middlewares.startListening({
+  actionCreator: loadMaterialsOfType,
+  effect: async ({ payload }, { dispatch, getState }) => {
+    const api = materialsApi();
+    if (!api?.loadWindow || !payload.type) return;
+    if (loadedTypes.has(payload.type)) return;
+    loadedTypes.add(payload.type);
+    try {
+      const result = await api.loadWindow({
+        type: payload.type,
+        pinnedIds: pinnedIdsOf(getState),
+        // One page, sized to the ceiling main enforces. A type with more
+        // members than this is a catalog no picker should be rendering as a
+        // flat list anyway — that is a search box, not a dropdown.
+        limit: 1_000,
+      });
+      dispatch(materialsWindowLoaded(result));
+    } catch (err) {
+      // Retryable: leaving it marked loaded would strand the picker empty.
+      loadedTypes.delete(payload.type);
+      console.error("[Materials] loadMaterialsOfType failed", err, payload.type);
+    }
+  },
+});
+
+middlewares.startListening({
+  actionCreator: materialsWindowLoaded,
+  effect: async ({ payload }) => {
+    if (payload.reset) loadedTypes.clear();
+  },
+});
+
+middlewares.startListening({
+  actionCreator: ensureMaterialsLoaded,
+  effect: async ({ payload }, { dispatch, getState }) => {
+    const api = materialsApi();
+    if (!api?.loadWindow) return;
+    const ids = payload.ids.filter(Boolean);
+    if (!ids.length) return;
+    // Pin first, unconditionally. A row already resident still has to be
+    // pinned, or the next `reset` read would evict a material the open model
+    // is rendering.
+    dispatch(materialsPinned({ ids }));
+
+    const state = (getState() as RootState).Materials;
+    const missing = ids.filter((id) => !state?.materials?.[id]);
+    if (!missing.length) return;
+    dispatch(materialsWindowRequested({ reason: "ids" }));
+    const result = await api.loadWindow({ ids: missing, pinnedIds: ids });
+    dispatch(materialsWindowLoaded(result));
   },
 });
 
@@ -63,7 +249,7 @@ middlewares.startListening({
 // (docs/analysis/materials-catalog-lag-analysis.md, F2).
 middlewares.startListening({
   actionCreator: loadMaterialsCatalogDelta,
-  effect: async (_action, { dispatch }) => {
+  effect: async (_action, { dispatch, getState }) => {
     const api = materialsApi();
     if (!api) return;
     if (typeof api.loadDelta !== "function") {
@@ -72,8 +258,29 @@ middlewares.startListening({
       dispatch(loadMaterialsCatalog());
       return;
     }
+    const before = windowState(getState);
     const delta = await api.loadDelta();
     dispatch(materialsCatalogDeltaLoaded(delta));
+
+    // The delta is scoped to what this client mirrors, so a change to a row
+    // *outside* the window is invisible in it — and that row may be exactly
+    // the one that now matches the active query, or the new material an
+    // import just wrote. A windowed client cannot tell the difference without
+    // asking, so it asks, in two cases:
+    //
+    //   - a query is active. Its result set is a function of the whole
+    //     catalog, so any tick can change it. One pass per debounce window,
+    //     only while the search box is non-empty.
+    //   - the catalog size moved. A plain edit does not move it and costs
+    //     nothing here; an add or a delete does, and in the browse view those
+    //     rows belong on a page.
+    //
+    // Both re-read the span the user has already paged to rather than the
+    // catalog, so scroll depth survives and an import's chunk writes cost one
+    // bounded page per debounce window — not the full reload that never
+    // drained (docs/analysis/materials-catalog-lag-analysis.md, F2).
+    const sizeMoved = delta.total !== undefined && delta.total !== before.total;
+    if (before.query || sizeMoved) dispatch(refreshMaterialsView());
   },
 });
 
@@ -88,7 +295,11 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: workspaceSelected,
   effect: async (_action, { dispatch }) => {
-    dispatch(loadMaterialsCatalog());
+    // Resets the mirror: the previous workspace's rows must not survive the
+    // switch. Its pins are carried into the request but main drops the ones
+    // absent from the new catalog, and `reset` replaces the pin set with what
+    // came back — so stale pins clear themselves.
+    dispatch(loadMaterialsWindow());
   },
 });
 
@@ -102,7 +313,7 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: peersRefreshed,
   effect: async (_action, { dispatch }) => {
-    dispatch(loadMaterialsCatalog());
+    dispatch(loadMaterialsWindow());
   },
 });
 

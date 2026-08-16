@@ -9,6 +9,8 @@ import type {
   AddMaterialInput,
   CatalogDelta,
   CatalogSnapshot,
+  CatalogWindow,
+  CatalogWindowRequest,
   MaterialDTO,
   MaterialTypeVersionDTO,
   SeedCatalogInput,
@@ -125,10 +127,69 @@ export const jazzApi = {
   loadModelSvg: (id: string): Promise<string | null> =>
     ipcRenderer.invoke("jazz-load-model-svg", id),
 
+  /**
+   * Model attachments — arbitrary files stored one `fileStream` each under
+   * `ModelCoMap.documents`, never inside `graphJson`. The graph's DOCUMENT node
+   * carries metadata; these move the bytes.
+   */
+  uploadModelDocument: (
+    id: string,
+    input: {
+      documentId: string;
+      kind: string;
+      mime: string;
+      filename: string;
+      bytes: ArrayBuffer;
+    },
+  ): Promise<{ coId: string; size: number }> =>
+    ipcRenderer.invoke("jazz-upload-model-document", id, input),
+  /** `null` when the id is unknown — e.g. a peer deleted it since the node was written. */
+  loadModelDocument: (
+    id: string,
+    documentId: string,
+  ): Promise<{ bytes: ArrayBuffer; mime: string; filename: string } | null> =>
+    ipcRenderer.invoke("jazz-load-model-document", id, documentId),
+  deleteModelDocument: (id: string, documentId: string): Promise<void> =>
+    ipcRenderer.invoke("jazz-delete-model-document", id, documentId),
+
+  /**
+   * Hand an attachment to the OS. `saveAs` resolves `{ saved: false }` on
+   * cancel rather than rejecting; `open` writes a decrypted copy to a temp dir
+   * (see `main/documents.ts`).
+   */
+  documents: {
+    saveAs: (input: {
+      filename: string;
+      bytes: ArrayBuffer;
+    }): Promise<{ saved: boolean; path?: string }> =>
+      ipcRenderer.invoke("documents:save-as", input),
+    open: (input: {
+      filename: string;
+      bytes: ArrayBuffer;
+    }): Promise<{ opened: boolean; error?: string }> =>
+      ipcRenderer.invoke("documents:open", input),
+  },
+
   // Materials catalog
   materials: {
+    /**
+     * The whole catalog. **Not** the app's load path any more — it projects
+     * and structured-clones every material, which is O(catalog) per call.
+     * Retained for the perf harness and for callers that genuinely want
+     * everything; production reads go through `loadWindow`.
+     */
     load: (): Promise<CatalogSnapshot> =>
       ipcRenderer.invoke("jazz-materials-load"),
+    /**
+     * One page of the catalog: the ranked/searched rows plus whatever
+     * `pinnedIds` the caller must keep resident. This is the production load
+     * path — the renderer mirrors a window, not the catalog.
+     *
+     * The answer also defines what this renderer mirrors, so subsequent
+     * `loadDelta()` calls are scoped to it.
+     */
+    loadWindow: (request: CatalogWindowRequest): Promise<CatalogWindow> =>
+      ipcRenderer.invoke("jazz-materials-load-window", request),
     /**
      * What changed since *this renderer* last asked — the normal response to
      * an `onChanged` tick. Resolves `{ full }` on the first call and after a

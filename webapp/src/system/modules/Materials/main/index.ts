@@ -1,6 +1,7 @@
 import { registerMainModule } from "../../../../../electron/main/modules";
 import {
   loadMaterialsCatalog,
+  loadMaterialsWindow,
   computeCatalogDelta,
   getMaterial,
   seedCatalogIfEmpty,
@@ -13,10 +14,12 @@ import {
   dropCatalogShadow,
   dropCatalogSubscription,
   materialsCatalogResolve,
+  trackClientWindow,
 } from "./materials";
 import { runImportXlsx, onImportFinished } from "./importer";
 import type {
   AddMaterialInput,
+  CatalogWindowRequest,
   MaterialTypeVersionDTO,
   SeedCatalogInput,
   UpdateMaterialInput,
@@ -42,9 +45,9 @@ registerMainModule({
   },
 
   registerIpc: ({ ipcMain }) => {
-    ipcMain.handle("jazz-materials-load", async () => {
+    ipcMain.handle("jazz-materials-load", async (event) => {
       try {
-        const snapshot = await loadMaterialsCatalog();
+        const snapshot = await loadMaterialsCatalog(String(event.sender.id));
         // Force a structured-clone round-trip in main so a non-cloneable
         // value (typically a leaked Jazz proxy) blows up here — with a
         // useful path — instead of in Electron's IPC layer where the
@@ -98,6 +101,24 @@ registerMainModule({
         throw new Error(`loadMaterialsCatalog failed: ${message}`);
       }
     });
+    // Windowed read — the production load path. Keyed on `event.sender.id`
+    // because the answer defines what that renderer mirrors, which is what
+    // scopes its subsequent deltas (see `loadMaterialsWindow`). The full
+    // `jazz-materials-load` above is retained for the perf harness and for
+    // any caller that genuinely wants the whole catalog; nothing in the app
+    // dispatches it any more.
+    ipcMain.handle(
+      "jazz-materials-load-window",
+      async (event, request: CatalogWindowRequest) => {
+        try {
+          return await loadMaterialsWindow(String(event.sender.id), request ?? {});
+        } catch (err) {
+          console.error("[jazz-materials-load-window] threw", err, request);
+          const message = err instanceof Error ? err.message : String(err);
+          throw new Error(`loadMaterialsWindow failed: ${message}`);
+        }
+      },
+    );
     // Delta read — the normal answer to a `jazz-materials:changed` tick.
     // Keyed on `event.sender.id` so each renderer gets its own "since",
     // and one renderer consuming a delta can't starve another.
@@ -120,7 +141,8 @@ registerMainModule({
     );
     ipcMain.handle(
       "jazz-materials-add",
-      async (_event, input: AddMaterialInput) => addMaterial(input),
+      async (event, input: AddMaterialInput) =>
+        addMaterial(input, String(event.sender.id)),
     );
     ipcMain.handle(
       "jazz-materials-update",
@@ -152,9 +174,16 @@ registerMainModule({
       const wcId = event.sender.id;
       // A (re)subscribe means this renderer started over — a fresh boot, or a
       // reload, which keeps the same `webContents.id` but empties Redux. Drop
-      // its delta shadow so the next tick answers with a full snapshot instead
-      // of "nothing changed since you last asked".
+      // its delta shadow, so main stops believing it is up to date.
       dropCatalogShadow(String(wcId));
+      // Then declare it windowed, holding nothing. Every app renderer is: it
+      // loads pages, not the catalog. Saying so here rather than waiting for
+      // its first window read closes the race in between — a tick landing in
+      // that gap would otherwise find no window on record, read that as "this
+      // client wants everything", and answer with a full snapshot, which is
+      // exactly the whole-catalog load windowing replaces. An empty window is
+      // the honest description of a renderer that has just started over.
+      trackClientWindow(String(wcId), [], { reset: true });
       materialsListeners.get(wcId)?.();
       const off = onCatalogChange(() => {
         if (event.sender.isDestroyed()) return;

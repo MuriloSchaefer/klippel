@@ -1,6 +1,7 @@
 import MaterialListAccordion from "../MaterialListAccordion";
 import ElectiveListAccordion from "../ElectiveListAccordion";
 import LogoListAccordion from "../LogoListAccordion";
+import DocumentListAccordion from "../DocumentListAccordion";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
 import { IKeyboardShortcutsModule } from "@kernel/modules/KeyboardShortcuts";
@@ -10,9 +11,11 @@ import {
   PROCESS_TIME_LIST_CONTEXT_ID,
   LOGO_LIST_CONTEXT_ID,
   ELECTIVE_LIST_CONTEXT_ID,
+  DOCUMENT_LIST_CONTEXT_ID,
 } from "../../../constants";
 import SettingsPanelExtensions from "./SettingsPanelExtensions";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import AttachFileSharpIcon from "@mui/icons-material/AttachFileSharp";
 import AccountTreeSharpIcon from "@mui/icons-material/AccountTreeSharp";
 import CompositionTree from "../CompositionTree/CompositionTree";
 import LeaseStatusRow from "./LeaseStatusRow";
@@ -120,6 +123,17 @@ function ModelViewport() {
                 focusOnOpen={focusFirstRow}
               >
                 <LogoListAccordion variationId={variationId} />
+              </Accordion>
+            </FocusShortcutProvider>
+            <FocusShortcutProvider contextId={DOCUMENT_LIST_CONTEXT_ID}>
+              <Accordion
+                shortcutHint={`${MODULE_NAME}/DocumentList/focus`}
+                name="Documentos"
+                icon={<AttachFileSharpIcon />}
+                summary="Arquivos anexados ao modelo"
+                focusOnOpen={focusFirstRow}
+              >
+                <DocumentListAccordion variationId={variationId} />
               </Accordion>
             </FocusShortcutProvider>
             <FocusShortcutProvider contextId={PROCESS_TIME_LIST_CONTEXT_ID}>

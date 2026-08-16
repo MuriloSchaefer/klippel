@@ -29,10 +29,11 @@ once, so the flag is read once — set it in the DevTools console and reload to
 bring the check back when hunting an accidental-mutation bug.
 
 Paired with a main-process change outside this module
-(`electron/main/index.ts`): the React and Redux DevTools extensions are now
-installed only when `KLIPPEL_DEV_EXTENSIONS=1`, instead of on every dev launch.
-The existing `KLIPPEL_USE_XVFB` / `KLIPPEL_E2E_SKIP_DEV_EXTENSIONS` skips are
-unchanged.
+(`electron/main/index.ts`): the React and Redux DevTools extensions gained an
+opt-out, `KLIPPEL_DEV_EXTENSIONS=0`. They were briefly opt-*in*, which was the
+wrong default — a dev build without the React and Redux panels is a worse dev
+build. The existing `KLIPPEL_USE_XVFB` / `KLIPPEL_E2E_SKIP_DEV_EXTENSIONS` skips
+are unchanged.
 
 ## Status notes
 

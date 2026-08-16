@@ -13,6 +13,7 @@ import type {
   AttributeMap,
   CatalogDelta,
   CatalogSnapshot,
+  CatalogWindow,
   EdgeDTO,
   MaterialDTO,
 } from "../../typings/catalog";
@@ -164,6 +165,37 @@ export function applyCatalogDelta(
     next[dto.id] = materialDtoToState(dto, index);
   }
   for (const id of removed) delete next[id];
+  return next;
+}
+
+/**
+ * Fold one page of the catalog into the materials slice.
+ *
+ * Merges by default: a page is an *addition* to the mirror. Replacing would
+ * evict the rows an open model pinned as soon as the user scrolled, and would
+ * make a by-id resolve for one graph node throw away the stock grid's page.
+ *
+ * `reset` is the exception, and means what it says on the main side: the
+ * client is starting over (cold open, workspace switch), so rows from before
+ * must not survive — a stale row from another workspace is worse than an
+ * absent one.
+ *
+ * Rows the page carries get a new object identity, so their subscribers
+ * re-render; rows it does not mention keep theirs and do not. Returns the
+ * same state reference when the page carries nothing.
+ */
+export function applyCatalogWindow(
+  state: MaterialsState,
+  window: CatalogWindow,
+): MaterialsState {
+  const incoming = Object.values(window.materials);
+  if (!window.reset && !incoming.length) return state;
+
+  const index = buildEdgeIndex(Object.values(window.edges));
+  const next: MaterialsState = window.reset ? {} : { ...state };
+  for (const dto of incoming) {
+    next[dto.id] = materialDtoToState(dto, index);
+  }
   return next;
 }
 

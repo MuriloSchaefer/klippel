@@ -2,53 +2,40 @@ import { useMemo } from "react";
 import useMaterials from "./useMaterials";
 import useMaterialTypes from "./useMaterialTypes";
 import type { MaterialState } from "../store/materials/state";
+import {
+  buildHaystack,
+  normalizeQuery,
+  scoreSubsequence,
+} from "../shared/materialSearch";
 
 /**
- * Subsequence-match fuzzy scorer over a material's display surface
- * (name, type label, industry, color label, externalId). No external
- * dep. Score is a stable rough heuristic: contiguous matches outrank
- * scattered ones; an empty query returns everything unsorted.
+ * Fuzzy-filter the materials **resident in Redux**.
  *
- * The component is responsible for selecting a row when the result
- * changes — this hook is pure.
+ * Not the stock grid's search any more. That grid mirrors a page of the
+ * catalog, so a renderer-side filter would only ever search the rows already
+ * on screen — it goes through `searchMaterialsCatalog`, which runs the same
+ * scorer in main over every material (`useCatalogWindow`).
+ *
+ * What remains for this hook is the case where the resident set *is* the
+ * candidate set: a picker filtering materials a model already references. The
+ * scorer is shared with main (`shared/materialSearch`) so the two cannot
+ * disagree about what matches.
+ *
+ * The component is responsible for selecting a row when the result changes —
+ * this hook is pure.
  */
-
-/** Both arguments must already be lower-cased — see `useFilteredMaterials`. */
-function scoreSubsequence(needle: string, haystack: string): number {
-  if (!needle) return 1;
-  const n = needle;
-  const h = haystack;
-  if (h.includes(n)) return 100 - Math.max(0, h.indexOf(n));
-  let score = 0;
-  let lastIdx = -1;
-  let streak = 0;
-  for (const ch of n) {
-    const idx = h.indexOf(ch, lastIdx + 1);
-    if (idx === -1) return 0;
-    if (idx === lastIdx + 1) {
-      streak += 1;
-      score += 2 + streak;
-    } else {
-      streak = 0;
-      score += 1;
-    }
-    lastIdx = idx;
-  }
-  return score;
-}
-
 function materialSearchKeys(
   m: MaterialState,
   typeLabel: string | undefined,
 ): string {
-  const parts: string[] = [];
   const attrs = m.attributes as Record<string, any>;
-  if (attrs?.nome) parts.push(String(attrs.nome));
-  if (attrs?.cor?.label) parts.push(String(attrs.cor.label));
-  if (typeLabel) parts.push(typeLabel);
-  if (m.industry) parts.push(m.industry);
-  if (m.externalId) parts.push(String(m.externalId));
-  return parts.join(" ");
+  return buildHaystack({
+    nome: attrs?.nome,
+    corLabel: attrs?.cor?.label,
+    typeLabel,
+    industry: m.industry,
+    externalId: m.externalId,
+  });
 }
 
 export default function useFilteredMaterials(query: string): MaterialState[] {
@@ -62,14 +49,16 @@ export default function useFilteredMaterials(query: string): MaterialState[] {
     const items = Object.values(materials ?? {});
     return {
       items,
+      // `buildHaystack` already lower-cases — casing once per catalog change
+      // rather than per comparison is the point of the index.
       haystacks: items.map((m) =>
-        materialSearchKeys(m, materialTypes?.[m.type]?.label).toLowerCase(),
+        materialSearchKeys(m, materialTypes?.[m.type]?.label),
       ),
     };
   }, [materials, materialTypes]);
 
   return useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = normalizeQuery(query);
     if (!needle) return index.items;
     const scored: { m: MaterialState; score: number }[] = [];
     for (let i = 0; i < index.items.length; i++) {
