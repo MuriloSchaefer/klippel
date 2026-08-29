@@ -3,13 +3,13 @@
  *
  * The renderer no longer mirrors the whole materials catalog. It mirrors a
  * window: the rows open models reference, plus a page of the most-used ones,
- * extended as the user searches or scrolls
+ * extended as the user searches or pages in
  * (`docs/changes/2026-08-11-3b71c2-catalog-windowed-reads.md`). That turns
  * "what is in Redux" from a fact into an invariant, and this file pins it.
  *
  * `integrity` rather than `functionality` because what is under test is a set
  * of relationships that must hold no matter which path produced the state —
- * cold open, a scroll, a search, a pin from an open model:
+ * cold open, a page, a search, a pin from an open model:
  *
  *   1. **The mirror is a proper subset.** Resident rows < catalog rows, while
  *      the catalog-wide count stays correct. If this fails, windowing is not

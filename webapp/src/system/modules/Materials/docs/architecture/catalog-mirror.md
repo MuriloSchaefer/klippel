@@ -59,7 +59,7 @@ of these is it like?" first.
 | Command | Who dispatches it | Effect on the view |
 | --- | --- | --- |
 | `loadMaterialsWindow` | cold open, workspace switch, peer refresh | **replaces** it (`reset`) |
-| `loadMoreMaterials` | the grid reaching the end of its rows | **extends** it by one page |
+| `loadMoreMaterials` | the "Carregar mais" button in the stock viewport | **extends** it by one page |
 | `searchMaterialsCatalog` | the stock toolbar (debounced) | **re-aims** it at a query |
 | `ensureMaterialsLoaded` | an open model, `useMaterial`/`useMaterials` | **none** — resolves rows beside the view |
 | `loadMaterialsOfType` | the material pickers | **none** — resolves a type's rows |
@@ -217,9 +217,16 @@ Two rules, both learned the hard way:
 - **Nothing that changes per page request may be a prop of `TableView`.**
   DataGrid bundles its props into the context every cell reads, so one changed
   prop re-renders every header and cell — while the user is scrolling through
-  them. `hasMore` / `loading` are *pulled* through a stable `getPaging()`
-  callback at scroll time instead. Selection goes through `apiRef` for the
-  same reason.
+  them. `hasMore` / `loading` never reach the grid at all; they belong to the
+  "Carregar mais" button. Selection goes through `apiRef` for the same reason.
+- **`columns` may only depend on the table's *shape*.** It is the same trap one
+  level down: `columns` is handed to every cell, so keying it on bulk-selection
+  state made one tick a full-grid re-render — measured at ~600 ms with 22 rows
+  on screen. Per-row state reaches cells through `SelectionContext`, so a tick
+  re-renders the tick boxes and nothing else.
+- **Paging is not a scroll side effect.** Applying a page costs a long frame,
+  so auto-loading at the bottom edge delivered that stall mid-fling, exactly
+  when the user was moving fastest and had not asked for it.
 - **Per-instance state is keyed on the instance.** A viewport tab is an
   independent component instance; the grid's selection, the details pick and
   the scroll position are either in the viewport's `extra` (so they survive a

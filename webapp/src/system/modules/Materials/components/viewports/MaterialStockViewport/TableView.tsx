@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Box, Checkbox, Tooltip } from "@mui/material";
+import { Box, Tooltip } from "@mui/material";
 import {
   DataGrid,
   GridColDef,
@@ -10,6 +10,12 @@ import {
 import useMaterialTypes from "../../../hooks/useMaterialTypes";
 import useUnitLabel from "../../../hooks/useUnitLabel";
 import DeleteMaterialButton from "./DeleteMaterialButton";
+import {
+  HeaderSelectCheckbox,
+  RowSelectCheckbox,
+  SelectionContext,
+  type SelectionContextValue,
+} from "./SelectionCheckboxes";
 import UpdateMaterialButton from "./UpdateMaterialButton";
 import type { MaterialState } from "../../../store/materials/state";
 import { useVisibleMaterials } from "../../../hooks/useMaterialResidency";
@@ -75,22 +81,6 @@ interface Props {
    */
   readInitialSelection?: () => string | null;
   /**
-   * The user scrolled to the end of the resident rows. The grid does not know
-   * (or care) whether more exist — it reports the event and the store decides.
-   */
-  onReachedEnd?: () => void;
-  /**
-   * Paging status, read at scroll time rather than passed as props.
-   *
-   * `hasMore` and `loading` each flip twice per page request, and a prop that
-   * changes is a re-render of the grid — DataGrid bundles its props into the
-   * context every cell reads, so a flip that changes nothing visible still
-   * re-renders every header and cell. That is the stutter a user feels when
-   * pages stream in during a fast scroll. Behind a stable callback, the same
-   * facts reach the scroll handler without touching the render path.
-   */
-  getPaging?: () => { hasMore: boolean; loading: boolean };
-  /**
    * The rows the user can actually see changed (scroll, resize), and some of
    * them are placeholders. Called with the ids that need fetching — the
    * viewport turns that into one resolve.
@@ -110,13 +100,6 @@ interface Props {
  * something to land on and the sweep is not fighting the scrollbar.
  */
 const VISIBLE_BUFFER_ROWS = 100;
-
-/**
- * How close to the bottom (in px) counts as "reached the end". One viewport
- * height of lead time, so the next page is usually resident by the time the
- * user gets there rather than after they stop at a blank edge.
- */
-const SCROLL_END_THRESHOLD_PX = 400;
 
 /**
  * Principal and Extra wrap instead of being clipped to one line, up to this
@@ -154,6 +137,28 @@ const autoRowHeight = () => "auto" as const;
 
 const EMPTY_SELECTED: ReadonlySet<string> = new Set();
 
+const ROOT_SX = { flex: 1, minHeight: 0 } as const;
+
+/**
+ * Module-level for the same reason `autoRowHeight` is: an `sx` object literal
+ * in the JSX is a new object on every render, which is a changed prop on the
+ * grid — and DataGrid hands its props to every cell through context.
+ */
+const GRID_SX = {
+  // Auto-height rows have no fixed line box to centre against, so the
+  // breathing room has to be explicit — otherwise a one-line row sits flush
+  // against the row divider.
+  "& .MuiDataGrid-cell": {
+    paddingTop: 0.5,
+    paddingBottom: 0.5,
+  },
+  // A wrapped cell is a block of text, not a centred single line.
+  "& .MuiDataGrid-cell.wrapped-cell": {
+    alignItems: "flex-start",
+    whiteSpace: "normal",
+  },
+} as const;
+
 const EMPTY_SELECTION: GridRowSelectionModel = {
   type: "include",
   ids: new Set(),
@@ -179,8 +184,6 @@ const TableView: React.FC<Props> = ({
   onDelete,
   onSelect,
   readInitialSelection,
-  onReachedEnd,
-  getPaging,
   onVisibleHoles,
   selectedIds = EMPTY_SELECTED,
   onToggleSelected,
@@ -190,20 +193,19 @@ const TableView: React.FC<Props> = ({
   const unitLabel = useUnitLabel();
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  // Handlers through refs so the column definitions do not depend on them —
-  // rebuilding `columns` re-renders every cell in the grid.
-  const onToggleSelectedRef = useRef(onToggleSelected);
-  onToggleSelectedRef.current = onToggleSelected;
-  const onToggleAllSelectedRef = useRef(onToggleAllSelected);
-  onToggleAllSelectedRef.current = onToggleAllSelected;
-
   const selectableIds = useMemo(
     () => materials.filter((m) => !isPlaceholder(m)).map((m) => String(m.id)),
     [materials],
   );
-  const someSelected = selectedIds.size > 0;
-  const allSelected =
-    selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+
+  // Selection reaches the tick boxes through context, never through `columns`.
+  // See `SelectionCheckboxes.tsx` for why — in short, `columns` is handed to
+  // every cell by DataGrid, so keying it on the selection turned one tick into
+  // a full-grid re-render.
+  const selection = useMemo<SelectionContextValue>(
+    () => ({ selectedIds, selectableIds, onToggleSelected, onToggleAllSelected }),
+    [selectedIds, selectableIds, onToggleSelected, onToggleAllSelected],
+  );
   const apiRef = useGridApiRef();
 
   // Read `onSelect` through a ref so notifying the parent never depends on
@@ -266,32 +268,13 @@ const TableView: React.FC<Props> = ({
         sortable: false,
         filterable: false,
         disableColumnMenu: true,
-        renderHeader: () => (
-          <Checkbox
-            size="small"
-            data-testid="material-select-all"
-            checked={allSelected}
-            indeterminate={someSelected && !allSelected}
-            onChange={() => onToggleAllSelectedRef.current?.()}
-            slotProps={{ input: { "aria-label": "Selecionar todos" } }}
-          />
-        ),
+        // Both read the selection from context, so this column definition —
+        // and therefore `columns` — never changes when a row is ticked.
+        renderHeader: () => <HeaderSelectCheckbox />,
         renderCell: (params) => {
           const row = params.row as MaterialState;
           if (isPlaceholder(row)) return null;
-          const id = String(row.id);
-          return (
-            <Checkbox
-              size="small"
-              data-testid={`material-select-${id}`}
-              checked={selectedIds.has(id)}
-              onChange={() => onToggleSelectedRef.current?.(id)}
-              // The row click opens the details panel; ticking is its own
-              // gesture and must not do both.
-              onClick={(e) => e.stopPropagation()}
-              slotProps={{ input: { "aria-label": `Selecionar ${id}` } }}
-            />
-          );
+          return <RowSelectCheckbox id={String(row.id)} />;
         },
       },
       {
@@ -464,7 +447,10 @@ const TableView: React.FC<Props> = ({
         },
       },
     ],
-    [materialTypes, unitLabel, onDelete, selectedIds, allSelected, someSelected],
+    // Only what describes the *shape* of the table. Selection is deliberately
+    // absent — it reaches the tick boxes through `SelectionContext`, because a
+    // `columns` array rebuilt per tick re-renders every cell in the grid.
+    [materialTypes, unitLabel, onDelete],
   );
 
   // Auto-select first row on mount + when the filtered set changes and the
@@ -518,17 +504,6 @@ const TableView: React.FC<Props> = ({
     // is opened by a click (or re-opened after Escape by another click).
     if (detailIdRef.current !== null) notifySelect(nextId);
   };
-
-  // Scroll paging. The free DataGrid has no `onRowsScrollEnd`, so we read the
-  // virtual scroller's position off the grid's own event — which fires for
-  // keyboard-driven scrolling too, not only the wheel, so paging works
-  // without a mouse.
-  //
-  // Paging status is *pulled* at scroll time (`getPaging`) rather than pushed
-  // as props, so a page landing mid-scroll never re-renders the grid. The
-  // callbacks themselves go through a ref so the subscription is set up once.
-  const pagingRef = useRef({ getPaging, onReachedEnd });
-  pagingRef.current = { getPaging, onReachedEnd };
 
   // What the user can actually see, and therefore what must stay resident.
   //
@@ -601,30 +576,11 @@ const TableView: React.FC<Props> = ({
     updateVisibleRange(first + VISIBLE_BUFFER_ROWS, last - VISIBLE_BUFFER_ROWS);
   }, [materials, updateVisibleRange]);
 
-  useEffect(() => {
-    const api = apiRef.current;
-    if (!api?.subscribeEvent) return;
-    // The scroller element is looked up once and cached: `scrollPositionChange`
-    // fires on every frame of a fling, and a `querySelector` per frame is work
-    // done on the same thread that has to paint the rows.
-    let scroller: Element | null = null;
-    return api.subscribeEvent("scrollPositionChange", (params) => {
-      const { getPaging: paging, onReachedEnd: notify } = pagingRef.current;
-      if (!notify) return;
-      const { hasMore, loading } = paging?.() ?? { hasMore: false, loading: false };
-      if (!hasMore || loading) return;
-      if (!scroller?.isConnected) {
-        scroller =
-          api.rootElementRef?.current?.querySelector(
-            ".MuiDataGrid-virtualScroller",
-          ) ?? null;
-      }
-      if (!scroller) return;
-      const remaining =
-        scroller.scrollHeight - (params.top + scroller.clientHeight);
-      if (remaining <= SCROLL_END_THRESHOLD_PX) notify();
-    });
-  }, [apiRef]);
+  // Paging is a deliberate click on "Carregar mais", not a side effect of
+  // scrolling. Auto-loading at the bottom edge meant a page could land
+  // mid-fling, and applying one costs a long frame (~800 ms measured) — the
+  // stutter arrived exactly when the user was moving fastest, and they had no
+  // way to not ask for it. The explicit control lives in the viewport.
 
   // Keep the ref in sync with selections originating inside the grid (row
   // clicks, native keyboard) without re-rendering TableView.
@@ -651,36 +607,25 @@ const TableView: React.FC<Props> = ({
   return (
     <Box
       ref={rootRef}
-      sx={{ flex: 1, minHeight: 0 }}
+      sx={ROOT_SX}
       data-testid="material-stock-table"
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      <DataGrid
-        apiRef={apiRef}
-        rows={materials as unknown as Record<string, unknown>[]}
-        columns={columns}
-        getRowId={getRowId}
-        density="compact"
-        getRowHeight={autoRowHeight}
-        sx={{
-          // Auto-height rows have no fixed line box to centre against, so the
-          // breathing room has to be explicit — otherwise a one-line row sits
-          // flush against the row divider.
-          "& .MuiDataGrid-cell": {
-            paddingTop: 0.5,
-            paddingBottom: 0.5,
-          },
-          // A wrapped cell is a block of text, not a centred single line.
-          "& .MuiDataGrid-cell.wrapped-cell": {
-            alignItems: "flex-start",
-            whiteSpace: "normal",
-          },
-        }}
-        disableColumnMenu
-        onRowClick={handleRowClick}
-        onRowSelectionModelChange={handleRowSelectionModelChange}
-      />
+      <SelectionContext.Provider value={selection}>
+        <DataGrid
+          apiRef={apiRef}
+          rows={materials as unknown as Record<string, unknown>[]}
+          columns={columns}
+          getRowId={getRowId}
+          density="compact"
+          getRowHeight={autoRowHeight}
+          sx={GRID_SX}
+          disableColumnMenu
+          onRowClick={handleRowClick}
+          onRowSelectionModelChange={handleRowSelectionModelChange}
+        />
+      </SelectionContext.Provider>
     </Box>
   );
 };

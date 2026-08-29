@@ -91,21 +91,13 @@ const MaterialStockViewport: React.FC = () => {
     dispatch(searchMaterialsCatalog({ query: extra.query }));
   }, [dispatch, extra.query]);
 
-  // Scroll paging. The grid tells us it reached the end; whether that means
-  // anything is the middleware's call — it drops the request when a page is
-  // already in flight or there is nothing left.
-  const handleReachedEnd = useCallback(() => {
+  // Paging is an explicit request — the "Carregar mais" button below — not
+  // something scrolling triggers. Whether a click means anything is still the
+  // middleware's call: it drops the request when a page is already in flight
+  // or there is nothing left.
+  const handleLoadMore = useCallback(() => {
     dispatch(loadMoreMaterials());
   }, [dispatch]);
-
-  // Paging status the grid *pulls* when it scrolls, instead of props it would
-  // re-render for. `hasMore` and `loading` move twice per page request; at a
-  // page every few hundred milliseconds of fast scrolling, pushing them into
-  // the grid means re-rendering every visible cell while the user is
-  // scrolling through them.
-  const pagingRef = useRef({ hasMore: catalog.hasMore, loading: catalog.loading });
-  pagingRef.current = { hasMore: catalog.hasMore, loading: catalog.loading };
-  const getPaging = useCallback(() => pagingRef.current, []);
 
   // Rows the user scrolled to whose data the mirror no longer holds. One
   // resolve per batch; the middleware de-duplicates ids already in flight, so
@@ -340,8 +332,6 @@ const MaterialStockViewport: React.FC = () => {
         onDelete={handleDelete}
         onSelect={handleSelect}
         readInitialSelection={readSelectedId}
-        onReachedEnd={handleReachedEnd}
-        getPaging={getPaging}
         onVisibleHoles={handleVisibleHoles}
         selectedIds={selectedIds}
         onToggleSelected={handleToggleSelected}
@@ -350,16 +340,17 @@ const MaterialStockViewport: React.FC = () => {
     );
     // Deliberately **not** keyed on `hasMore` / `loading`: every dependency
     // here is a re-render of the grid, and those two say nothing about what
-    // the rows look like. The grid reads them through `getPaging` when it
-    // needs them.
+    // the rows look like. They belong to the "Carregar mais" button instead.
+    //
+    // `selectedIds` *is* a dependency, and has to be — the grid puts it on a
+    // context for the tick boxes. What changed is that it no longer reaches
+    // `columns`, so a tick re-renders the tick boxes rather than every cell.
   }, [
     extra.view,
     rows,
     handleDelete,
     handleSelect,
     readSelectedId,
-    handleReachedEnd,
-    getPaging,
     handleVisibleHoles,
     selectedIds,
     handleToggleSelected,
@@ -415,10 +406,12 @@ const MaterialStockViewport: React.FC = () => {
         />
         {view}
         {/*
-          Explicit paging affordance alongside the scroll trigger. Scrolling
-          is the discoverable gesture but it is not the only one: a user on a
-          keyboard, or a screen reader, needs a control they can reach, and a
-          test needs a target it can click without simulating momentum.
+          The only way to page in. Scrolling used to trigger it at the bottom
+          edge, which meant a page could land mid-fling — and applying one
+          costs a long frame, so the stutter arrived exactly when the user was
+          moving fastest, unasked. A button also gives a keyboard or screen
+          reader user a reachable control, and a test a target it can click
+          without simulating momentum.
         */}
         {catalog.hasMore && (
           <Box sx={{ display: "flex", justifyContent: "center", py: 0.5 }}>
@@ -427,7 +420,7 @@ const MaterialStockViewport: React.FC = () => {
               variant="text"
               data-testid="material-stock-load-more"
               disabled={catalog.loading}
-              onClick={handleReachedEnd}
+              onClick={handleLoadMore}
             >
               {/*
                 Say what the click does, not only what is left. "Carregar mais
