@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
+  CircularProgress,
+  IconButton,
   InputAdornment,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
 } from "@mui/material";
+import UpgradeSharpIcon from "@mui/icons-material/UpgradeSharp";
 import TableChartSharpIcon from "@mui/icons-material/TableChartSharp";
 import GridViewSharpIcon from "@mui/icons-material/GridViewSharp";
 import SearchSharpIcon from "@mui/icons-material/SearchSharp";
@@ -28,6 +32,13 @@ interface Props {
   onViewChange: (view: "table" | "quadtree") => void;
   query: string;
   onQueryChange: (q: string) => void;
+  /** Ticked rows that are behind their type's latest schema version. */
+  migratableCount?: number;
+  /** Ticked rows in total — a selection of already-current rows is not an error. */
+  selectedCount?: number;
+  /** Move the ticked rows onto their type's latest version. */
+  onMigrate?: () => void;
+  migrating?: boolean;
 }
 
 /**
@@ -42,6 +53,10 @@ const MaterialStockToolbar: React.FC<Props> = ({
   onViewChange,
   query,
   onQueryChange,
+  migratableCount = 0,
+  selectedCount = 0,
+  onMigrate,
+  migrating = false,
 }) => {
   const keyboardShortcuts =
     useModule<IKeyboardShortcutsModule>("KeyboardShortcuts");
@@ -108,6 +123,36 @@ const MaterialStockToolbar: React.FC<Props> = ({
           sx={{ flex: 1, maxWidth: 320 }}
         />
       </ShortcutHint>
+
+      {/*
+        Bulk version migration, beside the search because it acts on what the
+        search produced. Hidden until something is ticked: it is a rare,
+        deliberate action, and a permanently visible button that is almost
+        always disabled reads as broken.
+      */}
+      {selectedCount > 0 && (
+        <Tooltip
+          title={
+            migratableCount > 0
+              ? `Migrar ${migratableCount} de ${selectedCount} para a versão mais recente`
+              : "As linhas selecionadas já estão na versão mais recente"
+          }
+        >
+          {/* A disabled button does not emit the events a Tooltip needs. */}
+          <Box component="span" sx={{ display: "inline-flex" }}>
+            <IconButton
+              size="small"
+              color="warning"
+              data-testid="material-stock-migrate"
+              aria-label="Migrar versão dos materiais selecionados"
+              disabled={migrating || migratableCount === 0}
+              onClick={onMigrate}
+            >
+              {migrating ? <CircularProgress size={16} /> : <UpgradeSharpIcon />}
+            </IconButton>
+          </Box>
+        </Tooltip>
+      )}
 
       <Box sx={{ flex: 1 }} />
 

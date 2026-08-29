@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Box, Divider, Link, Typography } from "@mui/material";
 
 import useMaterialTypes from "../../../hooks/useMaterialTypes";
+import useUnitLabel from "../../../hooks/useUnitLabel";
 import type { MaterialState } from "../../../store/materials/state";
 import { resolveTypeSchema } from "../../../store/materialTypes/resolveTypeSchema";
 
@@ -85,6 +86,7 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({
  */
 const MaterialDetails: React.FC<Props> = ({ material }) => {
   const materialTypes = useMaterialTypes();
+  const unitLabel = useUnitLabel();
 
   const type = materialTypes?.[material.type];
   const schema = useMemo(
@@ -165,12 +167,12 @@ const MaterialDetails: React.FC<Props> = ({ material }) => {
         }}
       >
         <Field label="Estoque">
-          {`${(material.stock?.amount ?? 0).toLocaleString()} ${
-            material.stock?.unit ?? ""
-          }`.trim()}
+          {`${(material.stock?.amount ?? 0).toLocaleString()} ${unitLabel(
+            material.stock?.unit,
+          )}`.trim()}
         </Field>
         {schema?.consumptionUnit && (
-          <Field label="Un. consumo">{schema.consumptionUnit}</Field>
+          <Field label="Un. consumo">{unitLabel(schema.consumptionUnit)}</Field>
         )}
         <Field label="Indústria">{material.industry || "—"}</Field>
         {suppliers.length > 0 && (

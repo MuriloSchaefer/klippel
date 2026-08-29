@@ -21,8 +21,10 @@ import {
   materialsPinned,
   materialsUnpinned,
   materialsWindowLoaded,
+  materialsMigrated,
   materialsWindowRequested,
   materialStockUpdated,
+  migrateMaterials,
   materialTypeVersionRegistered,
   refreshMaterialsView,
   registerMaterialTypeVersion,
@@ -254,6 +256,56 @@ middlewares.startListening({
       for (const id of missing) resolvingIds.delete(id);
       console.error("[Materials] ensureMaterialsLoaded failed", err, missing);
     }
+  },
+});
+
+/**
+ * Move the named rows onto their type's latest schema version.
+ *
+ * The patch carries `type` as well as `schemaVersion`, and that is not
+ * redundant: main only re-points the row's `conformsTo` edge when `type` is
+ * present in the patch, so without it the row would claim the new version
+ * while the catalog graph still said the old one.
+ *
+ * `attributes` is deliberately absent. `updateMaterial` replaces the whole
+ * attribute record when given one, so omitting it is what makes this a pure
+ * version move: nothing is dropped and nothing is re-encoded.
+ *
+ * Rows already on the latest version, or whose type is not resident, are
+ * skipped rather than written — a no-op write would still bump `updatedAt`
+ * and tick the catalog for every peer.
+ */
+middlewares.startListening({
+  actionCreator: migrateMaterials,
+  effect: async ({ payload }, { dispatch, getState }) => {
+    const api = materialsApi();
+    if (!api?.updateMaterial) return;
+    const state = (getState() as RootState).Materials;
+    const migrated: string[] = [];
+    const failed: string[] = [];
+
+    for (const id of payload.ids) {
+      const material = state?.materials?.[id];
+      const latest = material
+        ? state?.materialTypes?.[material.type]?.latestSchema
+        : undefined;
+      if (!material || !latest || material.schemaVersion === latest) continue;
+      try {
+        await api.updateMaterial({
+          id,
+          patch: { type: material.type, schemaVersion: latest },
+        });
+        migrated.push(id);
+      } catch (err) {
+        failed.push(id);
+        console.error("[Materials] migrateMaterials failed", err, id);
+      }
+    }
+
+    dispatch(materialsMigrated({ ids: migrated, failed }));
+    // Re-read the span the user is looking at, so the rows show their new
+    // version without waiting for the catalog tick to make its way back.
+    if (migrated.length) dispatch(refreshMaterialsView());
   },
 });
 

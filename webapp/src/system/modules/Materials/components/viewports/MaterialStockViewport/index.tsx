@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Box, Button } from "@mui/material";
 import useModule from "@kernel/hooks/useModule";
 import { ILayoutModule } from "@kernel/modules/Layout";
@@ -23,8 +29,11 @@ import {
   deleteMaterial,
   ensureMaterialsLoaded,
   loadMoreMaterials,
+  migrateMaterials,
   searchMaterialsCatalog,
 } from "../../../store/materials/actions";
+import { isOutdated } from "../../../store/materials/selectors";
+import useMaterialTypes from "../../../hooks/useMaterialTypes";
 
 export interface MaterialStockExtra {
   view: "table" | "quadtree";
@@ -108,6 +117,71 @@ const MaterialStockViewport: React.FC = () => {
     },
     [dispatch],
   );
+
+  // ---- bulk selection (schema migration) -----------------------------
+  //
+  // Kept here rather than in the grid so it survives the grid's own
+  // re-renders, and so the toolbar — a sibling — can read it. Ticks are
+  // dropped whenever the view changes underneath them: a selection is a
+  // statement about rows the user can see, and after a search or a page it
+  // would silently include rows they never looked at.
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const [migrating, setMigrating] = useState(false);
+  const materialTypes = useMaterialTypes();
+
+  useEffect(() => {
+    setSelectedIds((current) => (current.size ? new Set<string>() : current));
+  }, [catalog.query]);
+
+  const handleToggleSelected = useCallback((id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
+  const handleToggleAllSelected = useCallback(() => {
+    setSelectedIds((current) => {
+      const selectable = rowsRef.current
+        .filter((row) => !isPlaceholder(row))
+        .map((row) => String(row.id));
+      const allOn =
+        selectable.length > 0 && selectable.every((id) => current.has(id));
+      return allOn ? new Set<string>() : new Set(selectable);
+    });
+  }, []);
+
+  /** Of the ticked rows, the ones actually behind their type's latest. */
+  const migratableIds = useMemo(
+    () =>
+      rows
+        .filter(
+          (row) =>
+            selectedIds.has(String(row.id)) &&
+            !isPlaceholder(row) &&
+            isOutdated(row, materialTypes),
+        )
+        .map((row) => String(row.id)),
+    [rows, selectedIds, materialTypes],
+  );
+
+  const handleMigrate = useCallback(async () => {
+    if (!migratableIds.length) return;
+    setMigrating(true);
+    try {
+      await dispatch(migrateMaterials({ ids: migratableIds }));
+    } finally {
+      setMigrating(false);
+      setSelectedIds(new Set());
+    }
+  }, [dispatch, migratableIds]);
 
   /** Rows matching the current view that are not in it yet. */
   const remaining = Math.max(0, catalog.matched - rows.length);
@@ -269,6 +343,9 @@ const MaterialStockViewport: React.FC = () => {
         onReachedEnd={handleReachedEnd}
         getPaging={getPaging}
         onVisibleHoles={handleVisibleHoles}
+        selectedIds={selectedIds}
+        onToggleSelected={handleToggleSelected}
+        onToggleAllSelected={handleToggleAllSelected}
       />
     );
     // Deliberately **not** keyed on `hasMore` / `loading`: every dependency
@@ -284,6 +361,9 @@ const MaterialStockViewport: React.FC = () => {
     handleReachedEnd,
     getPaging,
     handleVisibleHoles,
+    selectedIds,
+    handleToggleSelected,
+    handleToggleAllSelected,
   ]);
 
   return (
@@ -328,6 +408,10 @@ const MaterialStockViewport: React.FC = () => {
           onViewChange={handleViewChange}
           query={extra.query}
           onQueryChange={handleQueryChange}
+          selectedCount={selectedIds.size}
+          migratableCount={migratableIds.length}
+          onMigrate={handleMigrate}
+          migrating={migrating}
         />
         {view}
         {/*

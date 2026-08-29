@@ -1,6 +1,7 @@
 import { createSelector } from "reselect";
 import { MaterialsModuleState } from "../state";
 import { MaterialsState, MaterialState } from "./state";
+import type { MaterialTypesState } from "../materialTypes/state";
 
 export type MaterialSelector = (state: MaterialsState) => MaterialsState;
 
@@ -20,6 +21,24 @@ export const selectMaterials = (selector?: MaterialSelector) => {
 };
 
 const EMPTY_MATERIALS: MaterialState[] = [];
+
+/**
+ * Is this row pinned to something older than its type's latest schema?
+ *
+ * The comparison is against `latestSchema` — the version the type itself
+ * says is current — not against "any newer version exists", because a type
+ * whose successor has not synced yet must not mark every row outdated.
+ * A row whose type is not resident answers `false`: unknown is not outdated.
+ */
+export const isOutdated = (
+  material: MaterialState | undefined,
+  materialTypes: MaterialTypesState | undefined,
+): boolean => {
+  if (!material) return false;
+  const latest = materialTypes?.[material.type]?.latestSchema;
+  if (!latest) return false;
+  return Boolean(material.schemaVersion) && material.schemaVersion !== latest;
+};
 
 /**
  * Per-argument selector caches.

@@ -129,6 +129,30 @@ does to their data.
 | UI | `UpdateMaterialTypeSection` | mapping editor seeded by the schema diff + preview |
 | MCP | `mcpTools/updateMaterialType.ts` | accept the mapping, so the flow stays automatable and e2e-testable |
 
+## Shipped ahead of this plan: a manual version move
+
+The read-time chain is not built yet, so rows still display through the
+version they pinned. In the meantime the stock viewport gained the smallest
+thing that unblocks a type version bump, and it is deliberately *not* a
+migration engine:
+
+- tick rows in the grid (a column of its own, kept separate from the grid's
+  selection model so ticking never opens the details panel);
+- a **Versão** column shows each row's pinned version and marks the ones
+  behind their type's latest — without it a version move would be invisible;
+- an icon button beside the search migrates the ticked rows
+  (`migrateMaterials`), then re-reads the view.
+
+**It re-points the version and nothing else.** The patch carries `type` and
+`schemaVersion` only, so main moves the row's `conformsTo` edge and leaves the
+attributes untouched: nothing is dropped and nothing is re-encoded. An
+attribute the successor no longer declares stays in the data, unread. A value
+that must be *transformed* between versions — the `{label} ({codigo})` fold —
+still needs the rule engine below, and this button will not do it.
+
+When the read-time chain lands, this stays useful as the "make it permanent"
+action for chosen rows, which is what §3 of the design calls for.
+
 ## Status notes
 
 Draft. The two big questions from the batch design are answered by the decision

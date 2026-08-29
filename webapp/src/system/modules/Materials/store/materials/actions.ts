@@ -126,6 +126,30 @@ export const closeMaterialsView = createAction(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Close materials view`
 );
 
+/**
+ * Move these materials onto their type's latest schema version.
+ *
+ * Version *re-pointing* only: the row's attributes are left exactly as they
+ * are, and the `conformsTo` edge follows the new version. That is safe by
+ * construction — nothing is dropped, nothing is rewritten — but it is also
+ * the limit of what this can do without authored mapping rules. An attribute
+ * the successor no longer declares stays in the data, unread; a value that
+ * should be *transformed* between versions (the `{label} ({codigo})` fold)
+ * needs the rule engine described in
+ * `docs/changes/2026-08-16-905b3f-material-schema-migrations.md`.
+ */
+export const migrateMaterials = createAction<{ ids: string[] }>(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Migrate materials`
+);
+
+/** Materials whose pinned schema version moved. `failed` did not. */
+export const materialsMigrated = createAction<{
+    ids: string[];
+    failed: string[];
+}>(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials migrated`
+);
+
 /** Release the pins a closed (or unmounted) tab was holding. */
 export const unpinMaterials = createAction<{ owner: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Unpin materials`

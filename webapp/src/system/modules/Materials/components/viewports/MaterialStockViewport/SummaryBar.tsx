@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Box, Typography } from "@mui/material";
 import useMaterialTypes from "../../../hooks/useMaterialTypes";
+import useUnitLabel from "../../../hooks/useUnitLabel";
 import { isPlaceholder } from "../../../store/window/selectors";
 import type { MaterialState } from "../../../store/materials/state";
 
@@ -25,6 +26,7 @@ interface Props {
  */
 const SummaryBar: React.FC<Props> = ({ materials, loaded, matched }) => {
   const materialTypes = useMaterialTypes();
+  const unitLabel = useUnitLabel();
 
   const groups = useMemo(() => {
     const byType: Record<string, { amount: number; unit: string; mixed: boolean }> =
@@ -72,7 +74,7 @@ const SummaryBar: React.FC<Props> = ({ materials, loaded, matched }) => {
             {materialTypes?.[type]?.label ?? type}
           </Typography>
           <Typography variant="body2">
-            {g.amount.toLocaleString()} {g.mixed ? "" : g.unit}
+            {g.amount.toLocaleString()} {g.mixed ? "" : unitLabel(g.unit)}
           </Typography>
         </Box>
       ))}

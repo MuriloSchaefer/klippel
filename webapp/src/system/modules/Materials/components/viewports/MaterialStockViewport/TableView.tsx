@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Box } from "@mui/material";
+import { Box, Checkbox, Tooltip } from "@mui/material";
 import {
   DataGrid,
   GridColDef,
@@ -8,11 +8,13 @@ import {
   useGridApiRef,
 } from "@mui/x-data-grid";
 import useMaterialTypes from "../../../hooks/useMaterialTypes";
+import useUnitLabel from "../../../hooks/useUnitLabel";
 import DeleteMaterialButton from "./DeleteMaterialButton";
 import UpdateMaterialButton from "./UpdateMaterialButton";
 import type { MaterialState } from "../../../store/materials/state";
 import { useVisibleMaterials } from "../../../hooks/useMaterialResidency";
 import { isPlaceholder } from "../../../store/window/selectors";
+import { isOutdated } from "../../../store/materials/selectors";
 import { resolveTypeSchema } from "../../../store/materialTypes/resolveTypeSchema";
 import type { MaterialTypesState } from "../../../store/materialTypes/state";
 
@@ -94,6 +96,12 @@ interface Props {
    * viewport turns that into one resolve.
    */
   onVisibleHoles?: (ids: string[]) => void;
+  /** Rows ticked for a bulk action. Empty is the common case. */
+  selectedIds?: ReadonlySet<string>;
+  /** A row's tick box was clicked. */
+  onToggleSelected?: (id: string) => void;
+  /** The header tick box was clicked — select or clear every row on screen. */
+  onToggleAllSelected?: () => void;
 }
 
 /**
@@ -109,6 +117,42 @@ const VISIBLE_BUFFER_ROWS = 100;
  * user gets there rather than after they stop at a blank edge.
  */
 const SCROLL_END_THRESHOLD_PX = 400;
+
+/**
+ * Principal and Extra wrap instead of being clipped to one line, up to this
+ * many lines. Pure CSS (`-webkit-line-clamp`), so the browser does the
+ * measuring — no per-row JS, and no dynamic row height, which would make MUI
+ * observe every rendered row and re-measure it mid-scroll.
+ */
+const CLAMP_LINES = 3;
+
+const CLAMPED_TEXT = {
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: CLAMP_LINES,
+  overflow: "hidden",
+  whiteSpace: "normal",
+  wordBreak: "break-word",
+  lineHeight: 1.35,
+} as const;
+
+/**
+ * Rows size to their content: a one-line row stays one line tall, and only a
+ * row whose Principal or Extra actually wraps grows — up to `CLAMP_LINES`,
+ * which is what bounds the variation.
+ *
+ * Module-level so the reference never changes; a fresh function per render
+ * would be a new prop on every render, and DataGrid hands its props to every
+ * cell through context.
+ *
+ * The cost, accepted deliberately: MUI measures each rendered row with a
+ * `ResizeObserver` instead of multiplying one constant. The clamp is what
+ * keeps that bounded — no row can be taller than three lines, so a scroll
+ * cannot hit a wall of arbitrarily tall rows.
+ */
+const autoRowHeight = () => "auto" as const;
+
+const EMPTY_SELECTED: ReadonlySet<string> = new Set();
 
 const EMPTY_SELECTION: GridRowSelectionModel = {
   type: "include",
@@ -138,9 +182,28 @@ const TableView: React.FC<Props> = ({
   onReachedEnd,
   getPaging,
   onVisibleHoles,
+  selectedIds = EMPTY_SELECTED,
+  onToggleSelected,
+  onToggleAllSelected,
 }) => {
   const materialTypes = useMaterialTypes();
+  const unitLabel = useUnitLabel();
   const rootRef = useRef<HTMLDivElement | null>(null);
+
+  // Handlers through refs so the column definitions do not depend on them —
+  // rebuilding `columns` re-renders every cell in the grid.
+  const onToggleSelectedRef = useRef(onToggleSelected);
+  onToggleSelectedRef.current = onToggleSelected;
+  const onToggleAllSelectedRef = useRef(onToggleAllSelected);
+  onToggleAllSelectedRef.current = onToggleAllSelected;
+
+  const selectableIds = useMemo(
+    () => materials.filter((m) => !isPlaceholder(m)).map((m) => String(m.id)),
+    [materials],
+  );
+  const someSelected = selectedIds.size > 0;
+  const allSelected =
+    selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
   const apiRef = useGridApiRef();
 
   // Read `onSelect` through a ref so notifying the parent never depends on
@@ -191,22 +254,74 @@ const TableView: React.FC<Props> = ({
       // below therefore renders empty for one; the row keeps its height, so
       // the list under the scrollbar does not move while the real data is
       // fetched.
-      { field: "id", headerName: "ID", width: 90 },
       {
-        field: "type",
-        headerName: "Tipo",
-        width: 110,
-        valueGetter: (_value, row: any) =>
-          isPlaceholder(row) ? "" : (materialTypes?.[row.type]?.label ?? row.type),
+        // Ticking rows is a bulk-action concern, kept deliberately separate
+        // from the grid's own selection: that one drives the details panel
+        // and the keyboard shortcuts (`e` / `d` act on `.Mui-selected`), and
+        // MUI's `checkboxSelection` shares that single model — turning it on
+        // would make opening a row's details also tick it for migration.
+        field: "__selected",
+        headerName: "",
+        width: 48,
+        sortable: false,
+        filterable: false,
+        disableColumnMenu: true,
+        renderHeader: () => (
+          <Checkbox
+            size="small"
+            data-testid="material-select-all"
+            checked={allSelected}
+            indeterminate={someSelected && !allSelected}
+            onChange={() => onToggleAllSelectedRef.current?.()}
+            slotProps={{ input: { "aria-label": "Selecionar todos" } }}
+          />
+        ),
+        renderCell: (params) => {
+          const row = params.row as MaterialState;
+          if (isPlaceholder(row)) return null;
+          const id = String(row.id);
+          return (
+            <Checkbox
+              size="small"
+              data-testid={`material-select-${id}`}
+              checked={selectedIds.has(id)}
+              onChange={() => onToggleSelectedRef.current?.(id)}
+              // The row click opens the details panel; ticking is its own
+              // gesture and must not do both.
+              onClick={(e) => e.stopPropagation()}
+              slotProps={{ input: { "aria-label": `Selecionar ${id}` } }}
+            />
+          );
+        },
+      },
+      {
+        // Amount and unit in one cell: they are one fact about the row, and
+        // splitting them left a column of bare numbers whose meaning lived
+        // two columns away. Sorting still keys on the amount, so the column
+        // orders numerically rather than as "10 m" < "9 m".
+        field: "stock",
+        headerName: "Estoque",
+        width: 130,
+        type: "number",
+        valueGetter: (_value, row: any) => row.stock?.amount ?? 0,
+        renderCell: (params) => {
+          const row = params.row as MaterialState;
+          if (isPlaceholder(row)) return null;
+          const amount = row.stock?.amount ?? 0;
+          return `${amount.toLocaleString()} ${unitLabel(row.stock?.unit)}`.trim();
+        },
       },
       {
         field: "principal",
         headerName: "Principal",
         flex: 1,
+        cellClassName: "wrapped-cell",
         valueGetter: (_value, row: any) =>
           row.attributes?.nome ?? row.attributes?.categoria ?? "",
         renderCell: (params) =>
-          isPlaceholder(params.row as MaterialState) ? null : params.value,
+          isPlaceholder(params.row as MaterialState) ? null : (
+            <Box sx={CLAMPED_TEXT}>{params.value}</Box>
+          ),
       },
       {
         // The type schema names which attribute distinguishes two rows of the
@@ -219,6 +334,7 @@ const TableView: React.FC<Props> = ({
         headerName: "Extra",
         width: 180,
         sortable: true,
+        cellClassName: "wrapped-cell",
         valueGetter: (_value, row: any) => {
           const v = row.attributes?.[selectorExtraKey(materialTypes, row)];
           if (v && typeof v === "object") return (v as any).label ?? (v as any).hex ?? "";
@@ -240,7 +356,16 @@ const TableView: React.FC<Props> = ({
               : hex ?? (typeof v === "object" ? "" : String(v));
           if (!label && !hex) return null;
           return (
-            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+            <Box
+              sx={{
+                display: "inline-flex",
+                // Top-aligned, because the swatch must sit beside the *first*
+                // line of a label that may now be three lines tall.
+                alignItems: "flex-start",
+                gap: 0.5,
+                minWidth: 0,
+              }}
+            >
               {hex && (
                 <Box
                   component="span"
@@ -255,7 +380,7 @@ const TableView: React.FC<Props> = ({
                   }}
                 />
               )}
-              <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <Box component="span" sx={CLAMPED_TEXT}>
                 {label}
               </Box>
             </Box>
@@ -279,29 +404,39 @@ const TableView: React.FC<Props> = ({
         },
       },
       {
-        field: "stockAmount",
-        headerName: "Estoque",
+        // The pinned schema version, and whether it is the type's latest.
+        // Without this the bulk migration would be invisible: it re-points a
+        // row's version and leaves its attributes alone, so nothing else in
+        // the grid moves when it runs.
+        field: "schemaVersion",
+        headerName: "Versão",
         width: 110,
-        type: "number",
-        valueGetter: (_value, row: any) => row.stock?.amount ?? 0,
-      },
-      {
-        field: "stockUnit",
-        headerName: "Unidade",
-        width: 110,
-        valueGetter: (_value, row: any) => row.stock?.unit ?? "",
-      },
-      {
-        // Read-only mirror of the type schema's `consumptionUnit` —
-        // the target unit Composer converts usage into. Blank when the
-        // schema declares none, in which case usage lands in the stock
-        // unit above.
-        field: "consumptionUnit",
-        headerName: "Un. consumo",
-        width: 120,
         valueGetter: (_value, row: any) =>
-          resolveTypeSchema(materialTypes?.[row.type], row.schemaVersion)
-            ?.consumptionUnit ?? "",
+          isPlaceholder(row) ? "" : (row.schemaVersion ?? ""),
+        renderCell: (params) => {
+          const row = params.row as MaterialState;
+          if (isPlaceholder(row) || !row.schemaVersion) return null;
+          const outdated = isOutdated(row, materialTypes);
+          const latest = materialTypes?.[row.type]?.latestSchema;
+          if (!outdated) {
+            return (
+              <Box component="span" sx={{ color: "text.secondary" }}>
+                {row.schemaVersion}
+              </Box>
+            );
+          }
+          return (
+            <Tooltip title={`Versão mais recente: ${latest}`}>
+              <Box
+                component="span"
+                data-testid={`material-version-outdated-${row.id}`}
+                sx={{ color: "warning.main", fontWeight: 500 }}
+              >
+                {row.schemaVersion} →
+              </Box>
+            </Tooltip>
+          );
+        },
       },
       {
         field: "actions",
@@ -329,7 +464,7 @@ const TableView: React.FC<Props> = ({
         },
       },
     ],
-    [materialTypes, onDelete],
+    [materialTypes, unitLabel, onDelete, selectedIds, allSelected, someSelected],
   );
 
   // Auto-select first row on mount + when the filtered set changes and the
@@ -527,6 +662,21 @@ const TableView: React.FC<Props> = ({
         columns={columns}
         getRowId={getRowId}
         density="compact"
+        getRowHeight={autoRowHeight}
+        sx={{
+          // Auto-height rows have no fixed line box to centre against, so the
+          // breathing room has to be explicit — otherwise a one-line row sits
+          // flush against the row divider.
+          "& .MuiDataGrid-cell": {
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
+          },
+          // A wrapped cell is a block of text, not a centred single line.
+          "& .MuiDataGrid-cell.wrapped-cell": {
+            alignItems: "flex-start",
+            whiteSpace: "normal",
+          },
+        }}
         disableColumnMenu
         onRowClick={handleRowClick}
         onRowSelectionModelChange={handleRowSelectionModelChange}

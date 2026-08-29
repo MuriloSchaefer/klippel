@@ -9,15 +9,25 @@
  *
  * Re-run with: `node webapp/scripts/generate-materials-fixture.mjs`.
  *
- * Source of truth is the `mockedMaterials` literal embedded below — copied
- * verbatim from the pre-2026-05-24 middleware so the script is
- * self-contained and stays runnable even after the middleware is cleaned
- * up.
+ * O fixture tem duas fontes:
+ *
+ * 1. O literal `mockedMaterials` embutido abaixo — cópia verbatim do
+ *    middleware pré-2026-05-24, mantida aqui para o script seguir rodando
+ *    depois que aquele middleware foi removido. Tratar como dado histórico.
+ * 2. O catálogo da linha Duo (Linhas Corrente), montado a partir de
+ *    `scripts/data/correnteDuo.mjs` com os dados publicados pelo
+ *    fabricante. Esse bloco é regerável: para atualizar, edite o módulo de
+ *    dados e rode o script de novo.
  */
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import * as XLSX from "xlsx";
+
+import {
+  buildCorrenteDuoMateriais,
+  CORRENTE_DUO_TIPO_LINHA,
+} from "./data/correnteDuo.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = resolve(__dirname, "../public/materials/materials.xlsx");
@@ -385,6 +395,32 @@ const mockedMaterialTypes = {
   },
 };
 
+// -- Catálogo Linhas Corrente / linha Duo --------------------------------
+//
+// Diferente do bloco acima, este não é um snapshot histórico: vem do
+// catálogo publicado pelo fabricante e é regerado a partir de
+// `scripts/data/correnteDuo.mjs`. São 16 títulos × 355 cores da cartela
+// unificada Coats, o que dá ao fixture uma cardinalidade parecida com a de
+// um estoque de aviamentos real — muitas variantes de cor sob poucos
+// produtos — em vez das ~18 linhas do mock legado.
+//
+// Nota: `parseMaterialTypesSheet` reconstrói o schema só a partir de
+// `{version, attributes, selector}`, então `stockUnit`/`consumptionUnit`
+// declarados aqui não sobrevivem à importação. É a mesma limitação que o
+// tipo `linha@0.0.1` legado já tinha; workspaces que importam este fixture
+// ficam com o tipo sem as unidades.
+const correnteDuoMateriais = buildCorrenteDuoMateriais();
+
+const allMaterials = {
+  ...mockedMaterials,
+  ...Object.fromEntries(correnteDuoMateriais.map((m) => [m.id, m])),
+};
+
+const allMaterialTypes = {
+  ...mockedMaterialTypes,
+  "linha@0.0.5": CORRENTE_DUO_TIPO_LINHA,
+};
+
 // -- Sheet builders ------------------------------------------------------
 
 /**
@@ -393,7 +429,7 @@ const mockedMaterialTypes = {
  * selector. The importer reconstructs `MaterialTypeVersionDTO` from
  * these columns.
  */
-const materialTypesRows = Object.values(mockedMaterialTypes).map((t) => ({
+const materialTypesRows = Object.values(allMaterialTypes).map((t) => ({
   name: t.name,
   label: t.label,
   version: t.version,
@@ -402,7 +438,7 @@ const materialTypesRows = Object.values(mockedMaterialTypes).map((t) => ({
 }));
 
 /** One row per material with flat scalar columns; nested fields go to other sheets. */
-const materialsRows = Object.values(mockedMaterials).map((m) => ({
+const materialsRows = Object.values(allMaterials).map((m) => ({
   id: m.id,
   type: m.type,
   industry: m.industry ?? "",
@@ -417,7 +453,7 @@ const materialsRows = Object.values(mockedMaterials).map((m) => ({
 
 /** materialId, supplierName — one row per (material, supplier) pair. */
 const suppliersRows = [];
-for (const m of Object.values(mockedMaterials)) {
+for (const m of Object.values(allMaterials)) {
   for (const s of m.suppliers ?? []) {
     suppliersRows.push({ materialId: m.id, supplier: s });
   }
@@ -429,7 +465,7 @@ for (const m of Object.values(mockedMaterials)) {
  * so we don't lose structure; the importer can decide whether to expand them.
  */
 const attributesRows = [];
-for (const m of Object.values(mockedMaterials)) {
+for (const m of Object.values(allMaterials)) {
   for (const [key, value] of Object.entries(m.attributes ?? {})) {
     attributesRows.push({
       materialId: m.id,
@@ -442,7 +478,7 @@ for (const m of Object.values(mockedMaterials)) {
 
 /** materialId, component, fraction — composition is always a flat string→number map. */
 const compositionRows = [];
-for (const m of Object.values(mockedMaterials)) {
+for (const m of Object.values(allMaterials)) {
   for (const [component, fraction] of Object.entries(m.composition ?? {})) {
     compositionRows.push({ materialId: m.id, component, fraction });
   }
@@ -450,7 +486,7 @@ for (const m of Object.values(mockedMaterials)) {
 
 /** materialId, key, value — caracteristics can be boolean / number / string. */
 const caracteristicsRows = [];
-for (const m of Object.values(mockedMaterials)) {
+for (const m of Object.values(allMaterials)) {
   for (const [key, value] of Object.entries(m.caracteristics ?? {})) {
     caracteristicsRows.push({
       materialId: m.id,
@@ -471,7 +507,14 @@ XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(attributesRows), "Attr
 XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(compositionRows), "Composition");
 XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(caracteristicsRows), "Caracteristics");
 
-const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+// `compression` não é o default do xlsx. Com as ~68k linhas da aba
+// Attributes o arquivo sai em ~18 MB sem ela, encostando no teto de 20 MB
+// que `runImportXlsx` impõe ao buffer — e é um binário versionado.
+const buf = XLSX.write(wb, {
+  type: "buffer",
+  bookType: "xlsx",
+  compression: true,
+});
 writeFileSync(OUT_PATH, buf);
 console.log(
   `Wrote ${OUT_PATH} — ${materialTypesRows.length} types, ${materialsRows.length} materials, ` +
