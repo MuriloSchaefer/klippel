@@ -18,14 +18,16 @@ tail of what was recently read. Never the catalog.
 
 ## Decision tree — I need material data in a component
 
-- **One row, by id** → `useMaterial(id)`. Resolves it if absent, retains it
-  while mounted. Handle `undefined`: it is the frame before the row lands, and
-  the permanent answer for a reference no row answers to.
+- **One row, by id** → `useMaterial(id)`. Resolves it if absent; it does **not**
+  retain. Handle `undefined`: it is the frame before the row lands, and the
+  permanent answer for a reference no row answers to.
 - **A known set** (a model's references) → `useMaterials(ids)`. Same contract
-  in bulk.
+  in bulk. Protection for a model's rows comes from its **pin**, not from
+  reading them.
 - **Every row of a type** (a picker) → `loadMaterialsOfType` on mount +
-  `selectMaterialsByType`, and **retain the option ids while mounted** — a
-  type's rows are in no view and no pin set, so nothing else protects them.
+  `selectMaterialsByType`, and retain the option ids **only while the dropdown
+  is open** — a thousand-id retain per mounted picker is what this rule exists
+  to prevent.
 - **The stock grid's page + counts** → `useCatalogWindow()`.
 - **Read once, in a handler** → `useMaterialsGetter()`. No subscription, no
   stale snapshot.
@@ -46,6 +48,9 @@ tail of what was recently read. Never the catalog.
   its rendered range. Note that being *in the view* (`resultIds`) protects
   nothing — the view is a list of positions, and a reclaimed row renders as a
   placeholder until it is scrolled to.
+- **Reading them** → no. Reading resolves; it never retains. A retain in a
+  read path fires from every row of every open surface, and in Composer it is
+  redundant with the variation's pin besides.
 - **"Just in case"** → no. That is how the mirror became the catalog.
 
 ## The catalog's graph is not in this module
@@ -76,6 +81,15 @@ the graph mirrors the mirror.
 - **Per-instance UI state belongs in the viewport `extra` or in a ref**, never
   in module state — a viewport tab is an independent component instance
   (repo `CLAUDE.md`).
+
+## When a surface goes away
+
+Dispatch `closeMaterialsView` (the stock viewport does this on unmount), not a
+plain `sweep()`. The TTL runs from the moment the last reader released, so an
+ordinary sweep right after an unmount finds everything freshly "accessed" and
+reclaims nothing — that is the whole reason `sweep({ force: true })` exists.
+`closeMaterialsView` also clears the view, so reopening fetches a fresh page
+instead of restoring a scroll position into reclaimed rows.
 
 ## When something disappears or never arrives
 

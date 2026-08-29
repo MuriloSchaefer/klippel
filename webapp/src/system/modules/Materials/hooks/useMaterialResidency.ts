@@ -38,8 +38,11 @@ export interface MaterialResidencyManager {
     release(ids: string[]): void;
     /** Record a read without claiming residency. */
     touch(ids: string[]): void;
-    /** Reclaim everything nothing needs, now. */
-    sweep(): void;
+    /**
+     * Reclaim everything nothing needs. `force` ignores the TTL — use it when
+     * a whole surface has gone away, not on a timer.
+     */
+    sweep(options?: { force?: boolean }): void;
     /** Retune the TTL / sweep cadence. */
     configure(patch: Partial<ResidencyConfig>): void;
   };
@@ -68,7 +71,8 @@ export default function useMaterialResidency(): MaterialResidencyManager {
         touch: (ids: string[]) => {
           if (ids.length) dispatch(touchMaterials(ids));
         },
-        sweep: () => dispatch(sweepMaterialsResidency()),
+        sweep: (options?: { force?: boolean }) =>
+          dispatch(sweepMaterialsResidency(options)),
         configure: (patch: Partial<ResidencyConfig>) =>
           dispatch(configureMaterialsResidency(patch)),
       },

@@ -8,7 +8,6 @@ import {
   selectMaterials,
   selectMaterialsByIds,
 } from "../store/materials/selectors";
-import { useRetainedMaterials } from "./useMaterialResidency";
 import type { MaterialsState } from "../store/materials/state";
 
 /**
@@ -26,11 +25,13 @@ const SEP = "\u0000";
  * prefer `useMaterial(id)` or an id list wherever the caller knows what it
  * wants.
  *
- * With ids, the hook behaves like `useMaterial` in bulk: it **resolves the
- * ones the mirror does not hold** and **claims residency** for all of them
- * while mounted, so they are not swept out from under the caller. Without ids
- * it does neither — "everything" is not a set this hook can keep resident,
- * and pretending otherwise would defeat the windowing.
+ * With ids, the hook **resolves the ones the mirror does not hold**. It does
+ * *not* claim residency: protection belongs to whoever owns the surface — a
+ * variation pins the materials it references, the stock grid retains what it
+ * renders — and retaining here as well meant every accordion, process row and
+ * picker in an open model dispatched a retain (and a release) over the same
+ * already-pinned ids. Callers that really do own protection say so with
+ * `useRetainedMaterials`.
  *
  * The previous id-filtering branch never narrowed anything: it iterated the
  * requested ids and asked whether each was in that same list — always true —
@@ -59,8 +60,6 @@ export default function (materials?: string[]) {
   );
 
   const resolved = useAppSelector(selector);
-
-  useRetainedMaterials(ids);
 
   // Which of the requested ids the mirror is missing. Recomputed only when
   // the id list or the projection changes — the projection changes when a

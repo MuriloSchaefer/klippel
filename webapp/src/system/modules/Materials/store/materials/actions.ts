@@ -109,6 +109,23 @@ export const loadMaterialsOfType = createAction<{ type: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Load materials of type`
 );
 
+/**
+ * The stock view is gone — its viewport closed, or the user switched away
+ * from its tab.
+ *
+ * Two things follow, and neither is the residency TTL's job. The *view*
+ * (`resultIds`, paging cursor, `initialized`) described a grid that no longer
+ * exists, so it is cleared and a reopen fetches a fresh first page. And the
+ * rows it was showing are needed by nothing, *now* — not "in five minutes" —
+ * so the sweep that follows is forced past the grace period.
+ *
+ * Rows another consumer is rendering, or a tab has pinned, survive: this
+ * closes one view, it does not empty the mirror.
+ */
+export const closeMaterialsView = createAction(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Close materials view`
+);
+
 /** Release the pins a closed (or unmounted) tab was holding. */
 export const unpinMaterials = createAction<{ owner: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.COMMAND}] Unpin materials`

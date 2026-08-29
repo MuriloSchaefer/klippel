@@ -100,10 +100,11 @@ other: `state.ts` (ref counts, last-read times, the two knobs), `actions.ts`,
 `slice.ts`, `selectors.ts`, `middlewares.ts`. A material stays resident if
 **any** of these holds:
 
-1. it is **retained** — a mounted component is rendering it
-   (`retainMaterials` / `releaseMaterials`, paired in one effect). The stock
-   grid retains its *rendered range* plus a page of lead either side, and
-   releases the rest as the user scrolls: that is what "on screen" means here;
+1. it is **retained** — a component that owns its protection said so. The
+   stock grid retains its *rendered range* plus a page of lead either side and
+   releases the rest as the user scrolls (that is what "on screen" means
+   here), and a material picker retains its option list only while its
+   dropdown is open. Merely *reading* a row does not retain it;
 2. it is **pinned** by an owner (`window.pins[owner]`) — an open model
    references it;
 3. it was read within the **TTL** (default 5 min) — the grace that makes a tab
@@ -111,6 +112,16 @@ other: `state.ts` (ref counts, last-read times, the two knobs), `actions.ts`,
 
 Anything else is swept — on a timer (default every 1 min) and after every
 window read, so a long browse sheds pages as it goes instead of at the end.
+
+**Closing the stock view is the exception that has to be forced.** The grace
+period is measured from the moment the last reader *let go*, so at exactly the
+moment a whole view is dropped — the grid unmounts, releases its rows, and the
+viewport sweeps — every row looks freshly accessed and an ordinary sweep
+reclaims nothing. `closeMaterialsView` therefore clears the view and dispatches
+`sweepMaterialsResidency({ force: true })`, which skips the TTL. Retains and
+pins are still honoured, so a forced sweep can never take a row another
+consumer is rendering or a model tab has pinned: it closes one view, it does
+not empty the mirror.
 
 Both knobs live in the slice and are retunable at runtime —
 `useMaterialResidency().functions.configure({ ttlMs, sweepIntervalMs })`, or
@@ -165,14 +176,25 @@ whole catalog over a session.
 
 | Hook | Use for | Resolves? | Retains? |
 | --- | --- | --- | --- |
-| `useMaterial(id)` | one row (row-level UI) | yes | yes |
-| `useMaterials(ids)` | a known set (a model's references) | yes | yes |
+| `useMaterial(id)` | one row (row-level UI) | yes | **no** |
+| `useMaterials(ids)` | a known set (a model's references) | yes | **no** |
 | `useMaterials()` | *avoid* — the whole map | no | no |
 | `useMaterialsGetter()` | imperative reads in handlers | no | no |
 | `useRetainedMaterials(ids)` | keep a known list resident while mounted | no | yes |
 | `useVisibleMaterials()` | a set that changes per scroll frame (coalesced) | no | yes |
 | `useMaterialResidency()` | retain / release / touch / sweep / configure | no | n/a |
 | `useCatalogWindow()` | the stock grid's page + counts | via the grid | the grid retains its rendered range |
+
+**Reading is not retaining.** The reading hooks resolve but do not protect,
+and that separation is deliberate: protection has an owner, and the owner is
+the surface, not the row. A model tab pins what it references
+(`ensureMaterialsLoaded` with an `owner`); the stock grid retains what it
+renders. Composer reads through these hooks once per visualization, per
+process row, per accordion and per picker — if reading retained, opening one
+model would dispatch dozens of retains (and later releases) over ids the
+variation's pin already covers, each one notifying every subscriber in the
+app. A caller that genuinely owns protection asks for it with
+`useRetainedMaterials`.
 
 "Resolves" means: if the mirror does not hold it, the hook asks for it and
 re-renders when it lands. `undefined` is therefore an ordinary transient

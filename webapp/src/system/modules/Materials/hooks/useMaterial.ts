@@ -5,11 +5,7 @@ import { Store } from "@kernel/modules/Store";
 
 import { ensureMaterialsLoaded } from "../store/materials/actions";
 import { selectMaterial } from "../store/materials/selectors";
-import { useRetainedMaterials } from "./useMaterialResidency";
 import type { MaterialState } from "../store/materials/state";
-
-/** Stable empty list, so an absent id does not allocate a new array per render. */
-const EMPTY_IDS: string[] = [];
 
 /**
  * One material, by id — an O(1) read that re-renders the caller only when
@@ -27,9 +23,14 @@ const EMPTY_IDS: string[] = [];
  * that — and permanently, for an id no catalog row answers to (a reference to
  * a material a peer deleted).
  *
- * **Claims residency while mounted.** A material something is rendering is
- * never swept, however long ago it was loaded; the TTL only starts once the
- * last reader unmounts.
+ * **Reading does not claim residency.** Protection is a separate decision
+ * with a separate owner: a tab pins what it references
+ * (`ensureMaterialsLoaded` with an `owner`), and the stock grid retains the
+ * rows it is actually rendering. A hook that retained on every read would
+ * dispatch from every material row in every open surface — Composer alone
+ * reads through this hook once per visualization, per process and per picker —
+ * and each dispatch notifies every subscriber in the app. Where a caller
+ * genuinely owns protection, `useRetainedMaterials` says so explicitly.
  */
 export default function useMaterial(
   id: string | undefined,
@@ -41,10 +42,6 @@ export default function useMaterial(
   // Hooks can't be called conditionally, so an absent id reads through the
   // empty-string key, which no material can hold.
   const material = useAppSelector(selectMaterial(id ?? ""));
-
-  // Claims residency while mounted — the sweep never reclaims a row
-  // something is rendering, however long ago it was loaded.
-  useRetainedMaterials(id ? [id] : EMPTY_IDS);
 
   // Depend on *whether* it is missing, not on the row itself: keying the
   // effect on the object would re-run it on every edit of a material that is

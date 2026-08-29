@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 import {
+  closeMaterialsView,
   materialAdded,
   materialDeleted,
   materialsCatalogDeltaLoaded,
@@ -95,6 +96,20 @@ const slice = createSlice({
     builder.addCase(materialsWindowRequested, (state) => ({
       ...state,
       loading: true,
+    }));
+
+    // The grid that this view described is gone. Counts and pins survive —
+    // `total` is a fact about the catalog, and pins belong to other tabs —
+    // but the page, the cursor and `initialized` are cleared so reopening
+    // fetches a fresh first page instead of restoring positions into rows the
+    // forced sweep has just reclaimed.
+    builder.addCase(closeMaterialsView, (state) => ({
+      ...state,
+      resultIds: [],
+      nextOffset: 0,
+      hasMore: false,
+      loading: false,
+      initialized: false,
     }));
 
     builder.addCase(materialsPinned, (state, { payload }) =>

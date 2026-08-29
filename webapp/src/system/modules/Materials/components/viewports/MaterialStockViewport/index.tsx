@@ -19,12 +19,12 @@ import TableView from "./TableView";
 import SummaryBar from "./SummaryBar";
 import MaterialDetails from "./MaterialDetails";
 import {
+  closeMaterialsView,
   deleteMaterial,
   ensureMaterialsLoaded,
   loadMoreMaterials,
   searchMaterialsCatalog,
 } from "../../../store/materials/actions";
-import useMaterialResidency from "../../../hooks/useMaterialResidency";
 
 export interface MaterialStockExtra {
   view: "table" | "quadtree";
@@ -54,7 +54,6 @@ const MaterialStockViewport: React.FC = () => {
   const { DetailsPanel } = layoutModule.components;
   const { useActiveViewport } = layoutModule.hooks;
   const dispatch = storeModule.hooks.useAppDispatch();
-  const residency = useMaterialResidency();
 
   const activeVP = useActiveViewport<MaterialStockExtra>();
   const extra: MaterialStockExtra = useMemo(
@@ -225,22 +224,22 @@ const MaterialStockViewport: React.FC = () => {
   // switch unmounts our portal content, which would otherwise leave an
   // empty panel holding a row of the portrait grid.
   //
-  // Then ask for a sweep. This viewport is the biggest consumer of the
-  // mirror — a browse session pulls in page after page — and closing it (or
-  // switching away from it) is the moment none of that is on screen any more.
-  // React runs the children's cleanups first, so `TableView` has already
-  // released the rows it was rendering by the time this dispatches, and the
-  // sweep sees them unprotected.
+  // Then close the view. This viewport is the biggest consumer of the mirror —
+  // a browse session pulls in page after page — and closing it (or switching
+  // away from its tab) is the moment none of that is on screen any more, so
+  // `closeMaterialsView` clears the view and forces the sweep past the TTL.
   //
-  // Rows read moments ago still have their TTL grace and survive this pass;
-  // what goes immediately is everything the user scrolled past earlier. The
-  // rest is reclaimed by the next timer tick if they do not come back.
+  // The force is the whole point: the grace period runs from the moment the
+  // last reader lets go, and React has just run `TableView`'s cleanup, so an
+  // ordinary sweep here would find every row freshly "accessed" and reclaim
+  // nothing. Rows another consumer renders, or a model tab pins, still
+  // survive — this closes one view, it does not empty the mirror.
   useEffect(
     () => () => {
       dispatch(closeDetails());
-      residency.functions.sweep();
+      dispatch(closeMaterialsView());
     },
-    [dispatch, residency],
+    [dispatch],
   );
 
   const view = useMemo(() => {

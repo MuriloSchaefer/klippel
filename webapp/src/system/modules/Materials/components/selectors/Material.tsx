@@ -22,6 +22,9 @@ import { selectMaterialType } from "../../store/materialTypes/selectors";
 import { resolveTypeSchema } from "../../store/materialTypes/resolveTypeSchema";
 import ColorItem from "./ColorItem";
 
+/** Stable empty list, so a closed picker allocates nothing per render. */
+const EMPTY_IDS: string[] = [];
+
 const MaterialSelector = ({
   type,
   value,
@@ -60,12 +63,17 @@ const MaterialSelector = ({
     [ofType, filter],
   );
 
-  // Claim residency on the options for as long as this picker is open. The
-  // type's rows belong to no page and to no tab's pin set, so without this
-  // the residency sweep would be entitled to reclaim them while the dropdown
-  // is on screen — and the picker would blank its own current value.
+  // Claim residency on the options only while a dropdown is actually open.
+  //
+  // A picker mounts once per material node, and a type can carry a thousand
+  // rows, so retaining the option list on mount meant a thousand-id dispatch
+  // per picker on opening a model — the reducer copying two maps each time,
+  // every subscriber notified each time, for rows the variation's pin already
+  // protects. Open is the only moment the *whole list* has to survive: it is
+  // rare, short, and user-driven, so it costs one retain and one release.
   const optionIds = useMemo(() => ofType.map((m) => m.id), [ofType]);
-  useRetainedMaterials(optionIds);
+  const [menuOpen, setMenuOpen] = useState(false);
+  useRetainedMaterials(menuOpen ? optionIds : EMPTY_IDS);
 
   // A type can legitimately be absent: on a first-ever workspace open there is
   // no `.session/Materials/materialTypes` cache to rehydrate from, so the slice
@@ -154,6 +162,8 @@ const MaterialSelector = ({
           id={`material-name`}
           value={principalState ?? ""}
           onChange={(e) => setPrincipalState(e.target.value)}
+          onOpen={() => setMenuOpen(true)}
+          onClose={() => setMenuOpen(false)}
           label={selector.principal}
           disabled={disabled}
           sx={{minWidth: 120}}
@@ -192,6 +202,8 @@ const MaterialSelector = ({
           id={`material-extra`}
           value={selectedMaterial?.id ?? ""}
           onChange={handleMaterialSelection}
+          onOpen={() => setMenuOpen(true)}
+          onClose={() => setMenuOpen(false)}
           label={selector.extra}
           disabled={disabled}
         >

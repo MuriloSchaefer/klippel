@@ -41,12 +41,17 @@ export const selectProtectedIds = createSelector(
  * Which resident ids may be dropped: nobody is rendering them, nothing
  * protects them, and their grace period has run out.
  *
+ * With `force`, the grace period is not consulted — everything unprotected
+ * goes. The two protections that matter are unchanged: a row a component is
+ * rendering, or a tab has pinned, is never evictable by either mode.
+ *
  * A plain function rather than a memoized selector — it is called once per
  * sweep with a `now` that changes every time, so a memo would only ever miss.
  */
 export function selectEvictableIds(
   state: RootState,
   at: number = Date.now(),
+  options: { force?: boolean } = {},
 ): string[] {
   const materials = state.Materials?.materials;
   if (!materials) return [];
@@ -57,6 +62,10 @@ export function selectEvictableIds(
   for (const id of Object.keys(materials)) {
     if (protectedIds.has(id)) continue;
     if ((refCounts[id] ?? 0) > 0) continue;
+    if (options.force) {
+      out.push(id);
+      continue;
+    }
     const seen = lastAccess[id];
     // Never seen means never read by any UI — it arrived in a page and was
     // scrolled past. Treat it as due, or a mirror filled by scrolling would

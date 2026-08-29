@@ -10,7 +10,11 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { workspaceSelected } from "@kernel/modules/Store/actions";
 
-import { materialsEvicted, materialsWindowLoaded } from "../materials/actions";
+import {
+  closeMaterialsView,
+  materialsEvicted,
+  materialsWindowLoaded,
+} from "../materials/actions";
 import {
   configureMaterialsResidency,
   materialsResidencySwept,
@@ -27,11 +31,23 @@ const middlewares = createListenerMiddleware();
 
 middlewares.startListening({
   actionCreator: sweepMaterialsResidency,
-  effect: async (_action, { dispatch, getState }) => {
-    const evictable = selectEvictableIds(getState() as RootState);
+  effect: async ({ payload }, { dispatch, getState }) => {
+    const evictable = selectEvictableIds(getState() as RootState, Date.now(), {
+      force: payload?.force,
+    });
     dispatch(materialsResidencySwept({ evicted: evictable.length }));
     if (!evictable.length) return;
     dispatch(materialsEvicted({ ids: evictable }));
+  },
+});
+
+// Closing the stock view reclaims its rows immediately. An ordinary sweep
+// would find them all inside the grace period — the release that just
+// happened *is* their last access — so this is the one caller that forces it.
+middlewares.startListening({
+  actionCreator: closeMaterialsView,
+  effect: async (_action, { dispatch }) => {
+    dispatch(sweepMaterialsResidency({ force: true }));
   },
 });
 

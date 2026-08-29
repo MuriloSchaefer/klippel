@@ -46,12 +46,19 @@ export const touchMaterials = createAction(
  * Drop from the mirror everything nothing needs any more.
  *
  * What is droppable is computed from this slice plus the window's pins (see
- * `selectors.ts`); this is only the trigger. Runs on a timer, after a window
- * read, and when the stock viewport closes.
+ * `selectors.ts`); this is only the trigger. Runs on a timer and after a
+ * window read.
+ *
+ * `force` skips the TTL — "nothing needs these *now*", rather than "nothing
+ * has needed these for a while". Retains and pins are still honoured, so a
+ * forced sweep can never take a row something is rendering. It exists because
+ * the grace period is measured from the moment the last reader let go, which
+ * makes an ordinary sweep a no-op at exactly the moment a whole view is
+ * dropped (see `closeMaterialsView`).
  */
-export const sweepMaterialsResidency = createAction(
-  `[${MODULE_NAME}:Residency:${ACTION_TYPES.COMMAND}] Sweep materials residency`,
-);
+export const sweepMaterialsResidency = createAction<
+  { force?: boolean } | undefined
+>(`[${MODULE_NAME}:Residency:${ACTION_TYPES.COMMAND}] Sweep materials residency`);
 
 /** Retune the TTL / sweep cadence at runtime. */
 export const configureMaterialsResidency = createAction<Partial<ResidencyConfig>>(

@@ -42,8 +42,9 @@ dispatching; the reducers return the same state when nothing moved; and nothing 
 the slice — only the sweep reads it, through `getState`. Timestamps are taken
 in the action creators, never in a reducer.
 
-A material is kept when a mounted consumer is rendering it, a tab pins it, or
-it was read within the TTL. Everything else is reclaimed.
+A material is kept when a component **retains** it (the stock grid's rendered
+range, a picker's open dropdown), a tab **pins** it, or it was read within the
+TTL. Everything else is reclaimed.
 
 **Eviction.** `sweepMaterialsResidency` (command) → `materialsEvicted` (event),
 which the materials slice applies by dropping exactly those ids and keeping
@@ -60,9 +61,8 @@ but unprotected, so the TTL decides. `ensureMaterialsLoaded` only pins when an
 owner is named; an ownerless read is protected by retention and the TTL alone.
 
 **Lazy resolve on read.** `useMaterial(id)` and `useMaterials(ids)` now dispatch
-`ensureMaterialsLoaded` for what the mirror does not hold, and retain what they
-render. Eviction is therefore invisible to callers apart from a frame of
-`undefined`. The middleware de-duplicates in-flight and already-answered ids
+`ensureMaterialsLoaded` for what the mirror does not hold. Eviction is
+therefore invisible to callers apart from a frame of `undefined`. The middleware de-duplicates in-flight and already-answered ids
 (`resolvingIds`), so a grid of rows missing the same material costs one IPC and
 an id no catalog row answers to is asked for exactly once.
 
@@ -126,6 +126,25 @@ rows can look like nothing happened. Genuine infinite scrolling needs
 `DataGridPro` (`onRowsScrollEnd`, licensed) or a virtualized list in place of
 the grid body. An auto-fetch on `paginationModelChange` was tried and removed —
 it papered over the paging model rather than changing it.
+
+**Reading stopped retaining.** `useMaterial` / `useMaterials` claimed
+residency for everything they read, which meant every Composer surface —
+`useVariationRehydration`, `MaterialListAccordion`, one `ProcessItem` per
+process, `VisualizationItem`, the usage button — dispatched a retain and a
+release over ids the variation's pin already protected. The `MaterialSelector`
+was worse: one retain of the type's *entire* option list (up to 1 000 ids) per
+mounted picker, and a model has one picker per material node. Reading now only
+resolves; protection is the surface owner's job (a tab pins, the grid retains
+what it renders, and the picker retains its options only while its dropdown is
+open).
+
+**Closing the stock view clears it, and the sweep is forced.** The first cut
+dispatched a plain sweep on unmount and reclaimed nothing — the grid's release
+had just stamped every row as accessed, so the whole page sat inside its
+five-minute grace. `closeMaterialsView` now clears the view (`resultIds`,
+cursor, `initialized`, so a reopen fetches fresh) and dispatches
+`sweepMaterialsResidency({ force: true })`, which skips the TTL while still
+honouring retains and pins.
 
 **A tick could hand a windowed client the whole catalog.** Found by probing
 the live app during the first perf run: the view held 100 rows and the mirror

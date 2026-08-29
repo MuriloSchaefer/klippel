@@ -172,6 +172,22 @@ describe("selectEvictableIds", () => {
     ).toEqual(["short"]);
   });
 
+  it("forces past the TTL, but never past a retain or a pin", () => {
+    // The close-the-view case: rows were released a moment ago, so their
+    // grace period has barely started — an unforced sweep reclaims nothing.
+    const justReleased = applied(
+      retainMaterials(["shown", "held", "pinned"]),
+      releaseMaterials(["shown"]),
+      releaseMaterials(["pinned"]),
+    );
+    const state = rootState(["shown", "held", "pinned"], justReleased, ["pinned"]);
+
+    expect(selectEvictableIds(state)).toEqual([]);
+    expect(selectEvictableIds(state, Date.now(), { force: true })).toEqual([
+      "shown",
+    ]);
+  });
+
   it("treats a never-read row as due — a page scrolled past is not a reader", () => {
     expect(selectEvictableIds(rootState(["untouched"], initialState))).toEqual([
       "untouched",
