@@ -1,5 +1,8 @@
 # Materials — Jazz storage & sync
 
+> **History — Jazz is being removed.** This describes what exists today, not
+> the direction. See [jazz-is-dead.md](../../../../docs/jazz-is-dead.md) before writing code against it.
+
 How the materials catalog is laid out on Jazz, how a single edit travels from a click to other peers, and where the seams live.
 
 For the higher-level module shape see [architecture/overview.md](./architecture/overview.md). For the node/edge taxonomy see [architecture/graph-semantics.md](./architecture/graph-semantics.md). For the kernel Jazz foundation (account, workspace, IPC) see [`kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md`](../../../../kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md).

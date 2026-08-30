@@ -248,7 +248,7 @@ export const PointerContainer = ({
     onClose?.(e);
   }, [doClose, onClose]);
 
-  const handleOpen = useCallback((e: MouseEvent) => {
+  const handleOpen = useCallback((e: MouseEvent, stopBubble = true) => {
     const isFirst = focusStackRef.current.length === 0;
     const target = e.currentTarget as HTMLElement | null;
     const active = document.activeElement as HTMLElement | null;
@@ -280,8 +280,43 @@ export const PointerContainer = ({
     });
     dispatch(pushContainer(instanceId.current));
     if (isFirst) dispatch(pushContext(POINTER_CONTAINER_CONTEXT_ID));
-    e.stopPropagation();
+    if (stopBubble) e.stopPropagation();
   }, [doClose, dispatch, setPosition]);
+
+  /**
+   * Open on **mouse down**, not on click.
+   *
+   * A trigger that lives in a surface which re-renders on selection — a
+   * DataGrid actions cell is the case that found this — has its element
+   * replaced between `mousedown` and `click`, so React never dispatches the
+   * `click` and the panel silently does not open. The user learns to click
+   * twice. `mousedown` fires before the re-render, so the first press works.
+   *
+   * The event is deliberately allowed to bubble here: the click still has to
+   * reach the grid so the row it belongs to becomes selected, which is what
+   * the details panel and the `e` / `d` shortcuts act on.
+   */
+  const handleMouseDownOpen = useCallback(
+    (e: MouseEvent) => {
+      // Primary button only — a right-click is a context menu, not an open.
+      if (typeof e.button === "number" && e.button !== 0) return;
+      handleOpen(e, false);
+    },
+    [handleOpen],
+  );
+
+  /**
+   * Keyboard activation only. Enter / Space on a focused button fire `click`
+   * with `detail === 0` and no preceding `mousedown`, so this is the path that
+   * still needs it; a real pointer click has already opened on mouse down.
+   */
+  const handleClickOpen = useCallback(
+    (e: MouseEvent) => {
+      if (e.detail !== 0) return;
+      handleOpen(e);
+    },
+    [handleOpen],
+  );
 
   const handleInteract = useCallback(() => {
     dispatch(focusContainer(instanceId.current));
@@ -324,7 +359,10 @@ export const PointerContainer = ({
           <Box></Box>
         )}
       </Modal>
-      {cloneElement(children, { onClick: handleOpen } as any)}
+      {cloneElement(children, {
+        onMouseDown: handleMouseDownOpen,
+        onClick: handleClickOpen,
+      } as any)}
     </>
   );
 };

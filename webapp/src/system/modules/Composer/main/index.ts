@@ -23,8 +23,9 @@ import {
 } from "./models";
 import { saveDocumentAs, openDocumentExternally } from "./documents";
 import { collectComposerMaterialUsage } from "./materialUsage";
-import { registerMaterialUsageProvider } from "../../Materials/main/usage";
-import { invalidateCatalogRanking } from "../../Materials/main/materials";
+// Through the Materials module's own export surface, not its internals — the
+// catalog's storage is mid-migration and its files move.
+import { materialsMain } from "../../Materials/main";
 
 /**
  * One-time migration for pre-lazy-hydration workspaces. If
@@ -102,7 +103,7 @@ registerMainModule({
   onWorkspaceClose: () => {
     // Usage counts are ids from *this* workspace's models. Carrying them into
     // the next one would rank a catalog by references that do not exist in it.
-    invalidateCatalogRanking();
+    materialsMain.invalidateRanking();
   },
 
   syncPreloadResolve: () => ({
@@ -113,7 +114,7 @@ registerMainModule({
     // Tell Materials which materials its catalog page should favour. Composer
     // is the only module that knows — usage lives in model graphs, not in the
     // catalog's own edges.
-    registerMaterialUsageProvider(collectComposerMaterialUsage);
+    materialsMain.registerUsageProvider(collectComposerMaterialUsage);
 
     ipcMain.handle("jazz-list-models", async () => listModels());
     ipcMain.handle("jazz-load-model", async (_event, id: string) => loadModel(id));
@@ -129,9 +130,13 @@ registerMainModule({
       async (_event, id: string, graphJson: string) => {
         const result = await updateModelGraph(id, graphJson);
         // A save can add or drop `MATERIAL` nodes, which changes the usage
-        // counts the catalog's first page is ranked by. Recomputed lazily on
-        // the next window read, not here.
-        invalidateCatalogRanking();
+        // counts the catalog's first page is ranked by. The counts are a
+        // projection in SQLite now, so re-derive them rather than only
+        // dropping a cache — and do it without blocking the save.
+        materialsMain.invalidateRanking();
+        void materialsMain.refreshRanking().catch((err) =>
+          console.error("[Composer] catalog re-rank failed", err),
+        );
         return result;
       },
     );

@@ -1,5 +1,13 @@
 # Klippel — workspace guidance
 
+## Jazz is being removed
+
+Jazz / cojson is still the store of record for workspace metadata, models and the materials catalog, but it is on the way out — storage, querying and sync move to SQLite. **Do not add new Jazz surface**: no new CoValue types, no new fields on `WorkspaceCoMap`, no new `requireCatalog` call sites.
+
+**Why:** cojson re-verifies every transaction on every load, including from local SQLite, and keeps no local snapshot — so opening a `co.record` costs one verification per entry, on every app start, forever. At 2 110 materials that is 2.4 s before a single row can be read; at 10k the warm surfaces are already over budget. Full reasoning and measurements: [webapp/src/docs/jazz-is-dead.md](webapp/src/docs/jazz-is-dead.md).
+
+**How to apply:** Bug fixes in the Jazz layer are fine while it keeps the app usable. New per-workspace UI state goes to `.session/` under the rules below; new domain data waits for the SQLite store ([migration plan](webapp/src/docs/analysis/post-jazz-storage-study.md)). The renderer's mirror contract (`Materials/docs/architecture/catalog-mirror.md`) is unaffected and still applies.
+
 ## Keyboard shortcuts
 
 Every keyboard shortcut registered in the webapp must be paired with a visible `ShortcutHint` (from `@kernel/modules/KeyboardShortcuts`) on the corresponding control. No shortcut ships without a hint.

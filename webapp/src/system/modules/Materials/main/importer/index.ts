@@ -12,11 +12,14 @@
  */
 import { randomUUID } from "node:crypto";
 
+import { loadMaterialsCatalog } from "../materials";
+// Through the service, not the Jazz layer directly: an imported row has to
+// land in SQLite too, and the service is the one place that writes both
+// stores. See `catalogService.ts`.
 import {
-  addMaterial as catalogAddMaterial,
-  loadMaterialsCatalog,
+  addMaterials as catalogAddMaterials,
   registerMaterialTypeVersion as catalogRegisterTypeVersion,
-} from "../materials";
+} from "../catalogService";
 import { recordEntry as recordSyncLog } from "../../../../../../electron/main/jazzLogBuffer";
 import { parseWorkbook, type ParseError } from "./parser";
 
@@ -132,38 +135,57 @@ const run = async (jobId: string, buffer: ArrayBuffer): Promise<void> => {
   // 4. Materials in chunks, yielding between chunks so cojson sync
   //    flushes and IPC ticks (Atualizar, other materials reads) can
   //    interleave.
-  for (let i = 0; i < parsed.materials.length; i += CHUNK_SIZE) {
-    const chunk = parsed.materials.slice(i, i + CHUNK_SIZE);
-    for (const input of chunk) {
-      const id = input.material.id;
-      if (existingMaterialIds.has(id)) {
-        skipped.push({ kind: "material", id, reason: "already exists" });
-        continue;
-      }
-      // If the referenced typeVersion isn't in the catalog and wasn't
-      // added in this run, skip with a clear reason — `addMaterial`
-      // would otherwise throw on the missing conformsTo target.
-      if (!existingTypeIds.has(input.typeVersion)) {
-        skipped.push({
-          kind: "material",
-          id,
-          reason: `unknown typeVersion ${input.typeVersion}`,
-        });
-        continue;
-      }
-      try {
-        await catalogAddMaterial(input);
-        existingMaterialIds.add(id);
+  const writable: typeof parsed.materials = [];
+  for (const input of parsed.materials) {
+    const id = input.material.id;
+    if (existingMaterialIds.has(id)) {
+      skipped.push({ kind: "material", id, reason: "already exists" });
+      continue;
+    }
+    // If the referenced typeVersion isn't in the catalog and wasn't added in
+    // this run, skip with a clear reason — the write would otherwise leave a
+    // conformsTo edge pointing at nothing.
+    if (!existingTypeIds.has(input.typeVersion)) {
+      skipped.push({
+        kind: "material",
+        id,
+        reason: `unknown typeVersion ${input.typeVersion}`,
+      });
+      continue;
+    }
+    writable.push(input);
+  }
+
+  if (writable.length) {
+    try {
+      // **One** call for the whole import. The catalog resolve behind a write
+      // is its fixed cost, so paying it per row — or even per chunk — made
+      // importing thousands of rows quadratic, and eventually fatal. The bulk
+      // path resolves once and yields to the event loop as it goes, so the
+      // renderer stays responsive without the resolve being repeated.
+      const result = await catalogAddMaterials(writable);
+      for (const dto of result.materials) {
+        existingMaterialIds.add(dto.id);
         addedMaterials += 1;
-      } catch (err) {
+      }
+      for (const failure of result.failed) {
         parsed.errors.push({
           sheet: "Materials",
           row: 0,
-          message: `${id}: ${(err as Error).message ?? String(err)}`,
+          message: `${failure.id}: ${failure.reason}`,
+        });
+      }
+    } catch (err) {
+      for (const input of writable) {
+        parsed.errors.push({
+          sheet: "Materials",
+          row: 0,
+          message: `${input.material.id}: ${
+            (err as Error).message ?? String(err)
+          }`,
         });
       }
     }
-    await yieldToEventLoop();
   }
 
   emit({

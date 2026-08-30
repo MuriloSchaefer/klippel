@@ -1,5 +1,8 @@
 # Joining a peer's workspace
 
+> **History — Jazz is being removed.** This describes what exists today, not
+> the direction. See [jazz-is-dead.md](./jazz-is-dead.md) before writing code against it.
+
 How collaborative workspaces work in Klippel: the trust model, the actors involved, and the exact byte-for-byte flow when one user shares a workspace and another joins it.
 
 The Jazz foundation underneath this doc is described in [`user-management.md`](./user-management.md); read that first if any of the terms `WorkspaceCoMap`, `EditLease`, or "cojson peer" are unfamiliar.

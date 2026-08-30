@@ -330,8 +330,15 @@ describe("catalog pagination", () => {
     const before = await readWindow(p);
     expect(before.residentIds).not.toContain(pinned);
 
-    // What opening a model does: pin the materials its nodes reference.
-    await dispatchMaterials(p, ACTIONS.ensureLoaded, { ids: [pinned] });
+    // What opening a model does: pin the materials its nodes reference, under
+    // an owner that can later let go. The owner is not optional — an ownerless
+    // `ensureMaterialsLoaded` resolves the row but does **not** pin it, because
+    // nothing would ever release it (catalog-mirror.md §3, invariant 8.3). The
+    // second half of this test is that rule.
+    await dispatchMaterials(p, ACTIONS.ensureLoaded, {
+      ids: [pinned],
+      owner: "test-model",
+    });
     await p.waitForFunction(
       /* istanbul ignore next */
       (id: string) => {
@@ -355,5 +362,32 @@ describe("catalog pagination", () => {
     expect(after.residentIds).toContain(pinned);
     expect(after.resultIds).not.toContain(pinned);
     expect(after.resultIds).toHaveLength(PAGE_SIZE);
+  });
+
+  it("drops an ownerless resolve on the next window reset", async () => {
+    const p = page!;
+    const resolved = index.probes.delete;
+
+    // Reading resolves; it does not retain. Without an owner there is nobody
+    // to release the claim, so the mirror would only ever grow — the row is
+    // fetched, rendered, and then let go at the next reset.
+    await dispatchMaterials(p, ACTIONS.ensureLoaded, { ids: [resolved] });
+    await p.waitForFunction(
+      /* istanbul ignore next */
+      (id: string) => {
+        const store = (
+          globalThis as unknown as { __klippelStore__?: { getState: () => any } }
+        ).__klippelStore__;
+        return Boolean(store?.getState().Materials.materials?.[id]);
+      },
+      {},
+      resolved,
+    );
+
+    await dispatchMaterials(p, ACTIONS.loadWindow, undefined);
+    await p.waitForSelector(`${VIEWPORT}[data-material-view="${PAGE_SIZE}"]`);
+
+    const after = await readWindow(p);
+    expect(after.residentIds).not.toContain(resolved);
   });
 });

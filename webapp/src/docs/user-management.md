@@ -1,5 +1,8 @@
 # Plan: Local-First Distributed Workspace System (Jazz.tools only)
 
+> **History — Jazz is being removed.** This describes what exists today, not
+> the direction. See [jazz-is-dead.md](./jazz-is-dead.md) before writing code against it.
+
 ## Context
 
 Klippel's workspace system is entirely local today — JSON files in `~/klippel/envs/{ENV}/workspaces/` persisted via fs-extra through Electron IPC. Helia is scaffolded but unused (empty preload stub). The goal is to make workspaces **local-first** (always functional offline) and **distributed** (multi-device sync, optional sharing) using **Jazz.tools exclusively**.

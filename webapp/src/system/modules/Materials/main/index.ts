@@ -1,5 +1,15 @@
 import { registerMainModule } from "../../../../../electron/main/modules";
 import {
+  onCatalogChange,
+  dropCatalogShadow,
+  dropCatalogSubscription,
+  materialsCatalogResolve,
+  trackClientWindow,
+} from "./materials";
+// Reads are answered from SQLite and writes are mirrored into it; Jazz is
+// still the store of record underneath. See `catalogService.ts` and
+// `src/docs/jazz-is-dead.md`.
+import {
   loadMaterialsCatalog,
   loadMaterialsWindow,
   computeCatalogDelta,
@@ -11,12 +21,35 @@ import {
   updateMaterialStock,
   deleteMaterial,
   registerMaterialTypeVersion,
-  onCatalogChange,
-  dropCatalogShadow,
-  dropCatalogSubscription,
-  materialsCatalogResolve,
-  trackClientWindow,
-} from "./materials";
+} from "./catalogService";
+import { resetCatalogMigration } from "./catalogMigration";
+import { resetCatalogClients, refreshCatalogRanking } from "./catalogService";
+import { invalidateCatalogRanking } from "./materials";
+import { registerMaterialUsageProvider } from "./usage";
+import { closeWorkspaceDb } from "../../../../../electron/main/db";
+
+/**
+ * What other main-process modules may use.
+ *
+ * This file is the module's export surface: the tables, the SQL in
+ * `queries/`, and the readers and writers over them are internal, so they can
+ * change together without a caller elsewhere pinning one of them. A module
+ * that reaches past this — importing `catalogService` or `materials` directly —
+ * is coupling itself to an implementation that is mid-migration.
+ */
+export const materialsMain = {
+  /**
+   * Contribute usage counts ("in how many models does this material appear").
+   * The catalog cannot answer it: usage lives in Composer's model graphs.
+   */
+  registerUsageProvider: registerMaterialUsageProvider,
+  /**
+   * A model's material references changed — drop the cached counts and
+   * re-derive the ranking the first catalog page is ordered by.
+   */
+  invalidateRanking: invalidateCatalogRanking,
+  refreshRanking: refreshCatalogRanking,
+} as const;
 import { runImportXlsx, onImportFinished } from "./importer";
 import type {
   AddMaterialInput,
@@ -43,6 +76,12 @@ registerMainModule({
     // per-renderer listeners stay registered and pick the new
     // workspace's catalog back up on the next `requireCatalog`.
     dropCatalogSubscription();
+    // The SQLite store is per workspace too: close the handle and forget that
+    // this one was projected, or the next workspace would read the last one's
+    // catalog.
+    resetCatalogMigration();
+    resetCatalogClients();
+    closeWorkspaceDb();
   },
 
   registerIpc: ({ ipcMain }) => {

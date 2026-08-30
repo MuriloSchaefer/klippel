@@ -1,5 +1,8 @@
 # Composer — Jazz storage & sync
 
+> **History — Jazz is being removed.** This describes what exists today, not
+> the direction. See [jazz-is-dead.md](../../../../docs/jazz-is-dead.md) before writing code against it.
+
 How a Composer model is laid out on Jazz, how an explicit save travels from the viewport to other peers, and how the edit-lease keeps concurrent editors from clobbering each other.
 
 For the kernel Jazz foundation (account, workspace, IPC) see [`kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md`](../../../kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md). For lazy hydration see [`kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md`](../../../kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md). For multi-peer plumbing see [`kernel/modules/Store/docs/changes/2026-05-18-b5c2fb-collaborative-jazz-multi-peer-harness.md`](../../../kernel/modules/Store/docs/changes/2026-05-18-b5c2fb-collaborative-jazz-multi-peer-harness.md). Performance rationale lives in [`webapp/src/docs/analysis/jazz-performance.md`](../../../../docs/analysis/jazz-performance.md).

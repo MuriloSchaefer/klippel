@@ -84,21 +84,27 @@ const MaterialStockViewport: React.FC = () => {
   // that produced the page already on screen.
   const servedQueryRef = useRef(catalog.query);
   servedQueryRef.current = catalog.query;
-  const initializedRef = useRef(catalog.initialized);
-  initializedRef.current = catalog.initialized;
 
   // This effect is also what *first* fills the view: nothing loads the catalog
   // at boot any more (a workspace switch only empties the mirror), because
   // resolving it costs the main process seconds at a few thousand materials
   // and every other boot IPC queues behind it. The grid mounting is the first
   // moment someone actually wants a page.
+  //
+  // `initialized` is read from state, not from a ref: opening a *second* stock
+  // tab unmounts this one, and that cleanup dispatches `closeMaterialsView`,
+  // which clears the view. A ref captured at render time still said
+  // "initialized" when the new instance's effect ran, so it skipped the fetch
+  // and the new tab rendered an empty grid over a catalog that was there. As a
+  // dependency it re-runs when the view is emptied underneath us.
+  const { initialized } = catalog;
   useEffect(() => {
-    if (initializedRef.current && servedQueryRef.current === extra.query) return;
+    if (initialized && servedQueryRef.current === extra.query) return;
     if (extra.query) dispatch(searchMaterialsCatalog({ query: extra.query }));
     // A view with no query is the ranked browse page — and `loadMaterialsWindow`
     // asks for it as a `reset`, which is what a view being (re)started means.
     else dispatch(loadMaterialsWindow());
-  }, [dispatch, extra.query]);
+  }, [dispatch, extra.query, initialized]);
 
   // Paging is an explicit request — the "Carregar mais" button below — not
   // something scrolling triggers. Whether a click means anything is still the

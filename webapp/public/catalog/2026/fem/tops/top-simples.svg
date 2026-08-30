@@ -4,8 +4,30 @@
    id="svg24041"
    width="1963.9862"
    height="862.70508"
+   sodipodi:docname="top-simples.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.59398489"
+     inkscape:cx="1058.1077"
+     inkscape:cy="438.56335"
+     inkscape:window-width="1920"
+     inkscape:window-height="1148"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg24041" />
   <defs
      id="defs24041" />
   <g
@@ -18,7 +40,8 @@
        stroke="#000000"
        stroke-opacity="1"
        stroke-width="0.944882"
-       id="path466" />
+       id="path466"
+       inkscape:label="frente-vista-costas" />
     <path
        d="m 686.50257,5288.2548 c -159.73303,1.4095 -246.78618,-8.154 -364.87975,-45.9128 -13.405,-92.2691 -20.30674,-149.4411 -33.97311,-245.7617 66.60716,-29.3786 122.26037,-122.2831 132.94044,-438.4202 l 48.0165,-13.4317 c 52.20714,328.6664 88.46148,411.1272 217.89592,411.2963 129.43443,-0.1691 165.68877,-82.6299 217.89591,-411.2963 l 48.0165,13.4317 c 10.68007,316.1371 66.33332,409.0416 132.94042,438.4202 -13.6664,96.3206 -20.5681,153.4926 -33.9731,245.7617 -118.09356,37.7588 -205.1467,47.3223 -364.87973,45.9128 z"
        fill="#ec9a82"
@@ -26,7 +49,8 @@
        stroke="#000000"
        stroke-opacity="1"
        stroke-width="0.944882"
-       id="path467" />
+       id="path467"
+       inkscape:label="frente" />
     <path
        d="M 686.50257,5392.9151 H 321.55194 l 0.0709,-150.5731 h 364.87975 364.87971 l 0.071,150.5731 z"
        fill="#ec9a82"
@@ -34,7 +58,8 @@
        stroke="#000000"
        stroke-opacity="1"
        stroke-width="0.944882"
-       id="path468" />
+       id="path468"
+       inkscape:label="elastico-frente" />
     <path
        d="m 1852.311,5406.3628 h -369.7936 l 3.061,-141.1286 h 366.7326 366.7326 l 3.061,141.1286 z"
        fill="#ec9a82"
@@ -42,7 +67,8 @@
        stroke="#000000"
        stroke-opacity="1"
        stroke-width="0.944882"
-       id="path469" />
+       id="path469"
+       inkscape:label="elastico-costas" />
     <path
        d="m 1643.1837,4554.3484 c 172.7261,269.9293 463.5001,364.374 607.4299,475.3019 l -31.3659,235.5839 c -97.8103,8.5143 -259.4059,0 -366.9367,0 l 0.3096,-90.4979 c 100.9,-3.6225 231.0495,-81.4446 84.6453,-223.7438 -55.8658,-46.6788 -245.5309,-190.7168 -376.9589,-377.5328 z"
        fill="#ec9a82"
@@ -50,7 +76,8 @@
        stroke="#20221d"
        stroke-opacity="1"
        stroke-width="0.944882"
-       id="path22061" />
+       id="path22061"
+       inkscape:label="tecido-costas-alca-esq" />
     <path
        d="m 2061.4382,4554.3484 c -172.726,269.9293 -463.5,364.374 -607.4298,475.3019 l 31.3659,235.5839 c 97.8103,8.5143 259.4059,0 366.9367,0 l -0.3096,-90.4979 c -100.9,-3.6225 -231.0495,-81.4446 -84.6454,-223.7438 55.8659,-46.6788 245.531,-190.7168 376.959,-377.5328 z"
        fill="#ec9a82"
@@ -58,6 +85,7 @@
        stroke="#20221d"
        stroke-opacity="1"
        stroke-width="0.944882"
-       id="path22062" />
+       id="path22062"
+       inkscape:label="tecido-costas-alca-dir" />
   </g>
 </svg>

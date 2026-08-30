@@ -3,8 +3,12 @@
 **Date:** 2026-08-30
 **Question:** can the catalog reach 10k locally and 100k in production on Jazz,
 and if not, what replaces it?
-**Answer:** not on the current CoValue shape. The cheapest fix that gets there
-keeps Jazz as the *sync transport* and stops using it as the *query engine*.
+**Answer:** no — and the decision taken on 2026-08-30 was to leave Jazz
+entirely rather than keep it as a sync transport. See
+[jazz-is-dead.md](../jazz-is-dead.md) for the decision and
+[rxdb-migration-study.md](./post-jazz-storage-study.md) for what replaces it.
+This document is the measurement that produced that decision; §4's options are
+kept as the record of what was weighed, not as live proposals.
 
 Follow-on to
 [materials-catalog-scale-analysis.md](./materials-catalog-scale-analysis.md)
@@ -33,9 +37,23 @@ No resolve shape gets under it, because a page cannot be read without knowing
 which ids exist.
 
 **It scales with the catalog, linearly, and it is on the interaction path.**
-At 10k that floor is ~12 s; at 100k it is minutes, and the store is ~3 GB
-(§3 of the scale analysis: ~19 CoValues per material, ~1.9M CoValues at 100k).
-Import at 1.6 rows/s puts 100k materials at ~17 hours.
+At 100k it is minutes, and the store is ~3 GB (§3 of the scale analysis:
+~19 CoValues per material, ~1.9M CoValues at 100k). Import at 1.6 rows/s puts
+100k materials at ~17 hours.
+
+The 10k tier, measured on the fixed code with a **warm** process (the perf
+suite seeds and reads in one run, so cojson already holds every CoValue and the
+open cost above is not being paid):
+
+| Surface | 1k | 5k | 10k | Budget |
+|---|---|---|---|---|
+| window-open | 535 ms | 1 391 ms | 4 155 ms | 4 500 ms |
+| search | 992 ms | 1 378 ms | 2 606 ms | 2 500 ms — **over** |
+| page-in p95 | 386 ms | 673 ms | — | 2 000 ms |
+
+`page-in` and `scroll-sweep` did not produce a 10k measurement: the search test
+failed before them and left the view on a single hit, so there was nothing to
+page or scroll. They are cascade failures, not budget breaches.
 
 So: **10k is not reachable by tuning, and 100k is not reachable at all.**
 
@@ -137,14 +155,20 @@ per row. That is Fix 4 of the scale analysis. It makes 10k plausible
 still linear in catalog size and still paid before any read. It is strictly
 less work than Option A and strictly less capable; it buys time, not headroom.
 
-## 5. Recommendation
+## 5. What was decided
 
-Option A, in this order:
+**Superseded.** Option A was the recommendation when this was written; the 10k
+measurement in §1 (step 1 below, now done) and the cojson finding in
+[jazz-is-dead.md](../jazz-is-dead.md) — that every transaction is re-verified
+on every load, with no local snapshot — moved the decision to leaving Jazz
+altogether. The plan now lives in
+[rxdb-migration-study.md](./post-jazz-storage-study.md) §6, whose first two phases
+are steps 2 and 3 below, unchanged.
 
-1. **Measure the 10k tier on today's code** — seed via `appendCatalogChunk` and
-   confirm the ~12 s extrapolation. It is the number that justifies the work,
-   and it is a morning's measurement, not a guess. (Also: the perf suite's 10k
-   tier is currently unseedable for exactly the throughput reason above.)
+The original recommendation, for the record:
+
+1. ~~**Measure the 10k tier on today's code**~~ — done; see §1. Search is
+   already over budget warm, before any cold-start cost.
 2. **Build the SQLite projection behind the existing IPC** —
    `loadMaterialsWindow` / `getMaterial` / search / rank answered from tables,
    with Jazz still the store of record. Nothing in the renderer changes, so

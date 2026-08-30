@@ -1,5 +1,8 @@
 # Jazz Scalability Analysis
 
+> **History — Jazz is being removed.** This describes what exists today, not
+> the direction. See [jazz-is-dead.md](../jazz-is-dead.md) before writing code against it.
+
 > Scope: project the load profile of Klippel's planned Jazz.tools deployment against Jazz's architectural primitives and surface the failure modes we should design for **before** they hit production. Anchors:
 >
 > - **Concurrency:** dozens of concurrent users per workspace (target: 24–60 active peers).

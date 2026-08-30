@@ -248,6 +248,18 @@ export const materialsCatalogChangeResolve = {
   edges: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
 } as const;
 
+/**
+ * Tell every renderer the catalog moved.
+ *
+ * Exported for the SQLite write paths: once writes stop going through
+ * CoValues, the Jazz subscription no longer fires for a local edit, so the
+ * writer has to say so itself. Same debounce and same channel, so the
+ * renderer side is unchanged.
+ */
+export function notifyCatalogChanged(): void {
+  notifyCatalogChange();
+}
+
 function notifyCatalogChange(): void {
   // Invalidate at *schedule* time, not when the timer fires. A window read
   // issued in the gap between a write and the debounced tick would otherwise
@@ -780,7 +792,7 @@ const fullCatalogClients = new Set<string>();
  * they get (a removal drops out of the window); nothing is lost by throwing
  * it away, since the client has no recorded window to update.
  */
-const windowOf = (clientId: string): Set<string> | null =>
+export const windowOf = (clientId: string): Set<string> | null =>
   clientWindows.get(clientId) ??
   (fullCatalogClients.has(clientId) ? null : new Set<string>());
 
@@ -1050,6 +1062,23 @@ export async function getMaterial(id: string): Promise<MaterialDTO | null> {
   const co = (await loadMaterialRows(catalog, [id])).get(id);
   if (!co) return null;
   return materialCoMapToDto(co);
+}
+
+/**
+ * Every edge whose source is this material, as DTOs.
+ *
+ * The SQLite mirror needs them per write: a material's `industry` and
+ * `suppliers` are derived from its whole edge set, so mirroring a row without
+ * its edges would drop relations the renderer then renders as missing.
+ */
+export async function edgesOfMaterial(id: string): Promise<EdgeDTO[]> {
+  const { catalog } = await requireCatalog();
+  const out: EdgeDTO[] = [];
+  for (const [, v] of recordEntries<AnyRecord>(catalog.edges)) {
+    const dto = edgeCoMapToDto(v);
+    if (dto.sourceId === id) out.push(dto);
+  }
+  return out;
 }
 
 // ---- windowed reads --------------------------------------------------
@@ -1739,6 +1768,150 @@ export async function appendCatalogChunk(input: SeedCatalogInput): Promise<{
   return { materials: input.materials.length };
 }
 
+/** Rows written between yields to the event loop, inside one bulk add. */
+const YIELD_EVERY = 100;
+
+export interface AddMaterialsResult {
+  materials: MaterialDTO[];
+  edges: EdgeDTO[];
+  organizations: OrgNodeDTO[];
+  /** Inputs that could not be written, with why. Never throws for one row. */
+  failed: Array<{ id: string; reason: string }>;
+}
+
+/**
+ * Add many materials against **one** catalog resolve.
+ *
+ * The resolve is the fixed cost of any catalog call, so doing it per row makes
+ * a bulk import quadratic — the measured 1.6 rows/s that made importing 5 680
+ * rows exhaust the app. Batched, the resolve is paid once per chunk and the
+ * per-row cost is just the CoValues.
+ *
+ * Unlike the single-row form this **does not throw for one bad row**: an
+ * import of thousands must not lose the other 5 679 because one id already
+ * exists. Rejected rows come back in `failed` for the caller to report.
+ */
+export async function addMaterials(
+  inputs: AddMaterialInput[],
+  clientId?: string,
+): Promise<AddMaterialsResult> {
+  const writtenMaterials: MaterialDTO[] = [];
+  const writtenEdges: EdgeDTO[] = [];
+  const writtenOrgs: OrgNodeDTO[] = [];
+  const failed: Array<{ id: string; reason: string }> = [];
+  const sellerOrg = (sellerId: string): OrgNodeDTO => ({
+    id: sellerId,
+    type: "seller",
+    name: sellerId,
+    updatedAt: Date.now(),
+  });
+  const { catalog, owner } = await requireCatalog();
+
+  let sinceYield = 0;
+  for (const input of inputs) {
+    // Yield periodically. The catalog is resolved once for the whole call, so
+    // a large import would otherwise hold main's thread from first row to
+    // last — no repaint, no IPC, and the renderer looks hung.
+    sinceYield += 1;
+    if (sinceYield >= YIELD_EVERY) {
+      sinceYield = 0;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    const existing = catalog.materials[input.material.id];
+    if (existing) {
+      failed.push({
+        id: input.material.id,
+        reason: `Material "${input.material.id}" already exists`,
+      });
+      continue;
+    }
+    if (clientId && windowOf(clientId)) {
+      trackClientWindow(clientId, [input.material.id]);
+    }
+    trace("addMaterial", input.material.id, "→ typeVersion=", input.typeVersion);
+    const dto: MaterialDTO = {
+      ...input.material,
+      schemaVersion: input.typeVersion.includes("@")
+        ? input.typeVersion.split("@")[1]
+        : input.material.schemaVersion,
+      updatedAt: Date.now(),
+    };
+    catalog.materials.$jazz.set(dto.id, createMaterialCoValue(dto, owner));
+
+    // conformsTo
+    const conformsId = `conformsTo:${dto.id}`;
+    const conformsEdge: EdgeDTO = {
+      id: conformsId,
+      type: "conformsTo",
+      sourceId: dto.id,
+      targetId: input.typeVersion,
+    };
+    catalog.edges.$jazz.set(conformsId, createEdgeCoValue(conformsEdge, owner));
+    writtenEdges.push(conformsEdge);
+
+    if (input.industryId) {
+      if (!catalog.industries[input.industryId]) {
+        const org: OrgNodeDTO = {
+          id: input.industryId,
+          type: "industry",
+          name: input.industryId,
+          updatedAt: Date.now(),
+        };
+        catalog.industries.$jazz.set(
+          input.industryId,
+          createOrgCoValue(org, owner),
+        );
+        writtenOrgs.push(org);
+      }
+      const eid = `manufacturedBy:${dto.id}`;
+      const industryEdge: EdgeDTO = {
+        id: eid,
+        type: "manufacturedBy",
+        sourceId: dto.id,
+        targetId: input.industryId,
+      };
+      catalog.edges.$jazz.set(eid, createEdgeCoValue(industryEdge, owner));
+      writtenEdges.push(industryEdge);
+    }
+
+    for (const sellerId of input.sellerIds ?? []) {
+      if (!catalog.sellers[sellerId]) {
+        const org = sellerOrg(sellerId);
+        catalog.sellers.$jazz.set(sellerId, createOrgCoValue(org, owner));
+        writtenOrgs.push(org);
+      }
+      const eid = `suppliedBy:${dto.id}:${sellerId}`;
+      const supplierEdge: EdgeDTO = {
+        id: eid,
+        type: "suppliedBy",
+        sourceId: dto.id,
+        targetId: sellerId,
+      };
+      catalog.edges.$jazz.set(eid, createEdgeCoValue(supplierEdge, owner));
+      writtenEdges.push(supplierEdge);
+    }
+
+    writtenMaterials.push(dto);
+  }
+
+  trace("addMaterials", {
+    requested: inputs.length,
+    written: writtenMaterials.length,
+    failed: failed.length,
+  });
+  return {
+    materials: writtenMaterials,
+    edges: writtenEdges,
+    organizations: writtenOrgs,
+    failed,
+  };
+}
+
+/**
+ * Add one material. Throws when the row is rejected, which is what the form
+ * path wants — a single save either happened or it did not.
+ */
 export async function addMaterial(
   input: AddMaterialInput,
   /**
@@ -1748,99 +1921,21 @@ export async function addMaterial(
    * and every later edit to it would be filtered out of that client's deltas.
    */
   clientId?: string,
-): Promise<MaterialDTO> {
-  const { catalog, owner } = await requireCatalog();
-  if (catalog.materials[input.material.id]) {
-    throw new Error(`Material "${input.material.id}" already exists`);
+): Promise<{
+  material: MaterialDTO;
+  edges: EdgeDTO[];
+  organizations: OrgNodeDTO[];
+}> {
+  const result = await addMaterials([input], clientId);
+  const material = result.materials[0];
+  if (!material) {
+    throw new Error(result.failed[0]?.reason ?? "addMaterial failed");
   }
-  if (clientId && windowOf(clientId)) {
-    trackClientWindow(clientId, [input.material.id]);
-  }
-  trace("addMaterial", input.material.id, "→ typeVersion=", input.typeVersion);
-  const dto: MaterialDTO = {
-    ...input.material,
-    schemaVersion: input.typeVersion.includes("@")
-      ? input.typeVersion.split("@")[1]
-      : input.material.schemaVersion,
-    updatedAt: Date.now(),
+  return {
+    material,
+    edges: result.edges,
+    organizations: result.organizations,
   };
-  catalog.materials.$jazz.set(dto.id, createMaterialCoValue(dto, owner));
-
-  // conformsTo
-  const conformsId = `conformsTo:${dto.id}`;
-  catalog.edges.$jazz.set(
-    conformsId,
-    createEdgeCoValue(
-      {
-        id: conformsId,
-        type: "conformsTo",
-        sourceId: dto.id,
-        targetId: input.typeVersion,
-      },
-      owner,
-    ),
-  );
-
-  if (input.industryId) {
-    if (!catalog.industries[input.industryId]) {
-      catalog.industries.$jazz.set(
-        input.industryId,
-        createOrgCoValue(
-          {
-            id: input.industryId,
-            type: "industry",
-            name: input.industryId,
-            updatedAt: Date.now(),
-          },
-          owner,
-        ),
-      );
-    }
-    const eid = `manufacturedBy:${dto.id}`;
-    catalog.edges.$jazz.set(
-      eid,
-      createEdgeCoValue(
-        {
-          id: eid,
-          type: "manufacturedBy",
-          sourceId: dto.id,
-          targetId: input.industryId,
-        },
-        owner,
-      ),
-    );
-  }
-
-  for (const sellerId of input.sellerIds ?? []) {
-    if (!catalog.sellers[sellerId]) {
-      catalog.sellers.$jazz.set(
-        sellerId,
-        createOrgCoValue(
-          {
-            id: sellerId,
-            type: "seller",
-            name: sellerId,
-            updatedAt: Date.now(),
-          },
-          owner,
-        ),
-      );
-    }
-    const eid = `suppliedBy:${dto.id}:${sellerId}`;
-    catalog.edges.$jazz.set(
-      eid,
-      createEdgeCoValue(
-        {
-          id: eid,
-          type: "suppliedBy",
-          sourceId: dto.id,
-          targetId: sellerId,
-        },
-        owner,
-      ),
-    );
-  }
-  return dto;
 }
 
 export async function updateMaterialStock(
