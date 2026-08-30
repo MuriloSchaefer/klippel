@@ -6,6 +6,7 @@ import {
   materialDeleted,
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
+  materialsCatalogReset,
   materialsPinned,
   materialsUnpinned,
   materialsWindowLoaded,
@@ -111,6 +112,11 @@ const slice = createSlice({
       loading: false,
       initialized: false,
     }));
+
+    // A workspace switch takes the pins with it, unlike closing a view: they
+    // named rows in the catalog that is being left. `initialized: false` is
+    // what makes the next consumer of the window fetch a first page.
+    builder.addCase(materialsCatalogReset, () => initialState);
 
     builder.addCase(materialsPinned, (state, { payload }) =>
       withPins(state, payload.owner ?? ADHOC_PIN_OWNER, payload.ids),

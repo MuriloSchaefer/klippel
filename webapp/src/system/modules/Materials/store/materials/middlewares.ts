@@ -16,6 +16,7 @@ import {
   materialAdded,
   materialDeleted,
   materialsCatalogDeltaLoaded,
+  materialsCatalogReset,
   materialsCatalogLoaded,
   materialsEvicted,
   materialsPinned,
@@ -93,6 +94,11 @@ middlewares.startListening({
       dispatch(loadMaterialsCatalog());
       return;
     }
+    // A first page already on its way. Two surfaces mounting together (or one
+    // effect running twice) would otherwise each ask main to resolve the
+    // catalog for the same page.
+    const current = windowState(getState);
+    if (current.loading && !current.initialized) return;
     const pinnedIds = Array.from(
       new Set([...pinnedIdsOf(getState), ...(payload?.pinnedIds ?? [])]),
     );
@@ -337,8 +343,10 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: workspaceSelected,
   effect: async () => {
-    // A by-id resolve for the old catalog says nothing about the new one.
+    // A by-id resolve for the old catalog says nothing about the new one, and
+    // a type loaded into the mirror that was just emptied is not loaded.
     resolvingIds.clear();
+    loadedTypes.clear();
   },
 });
 
@@ -417,11 +425,17 @@ middlewares.startListening({
 middlewares.startListening({
   actionCreator: workspaceSelected,
   effect: async (_action, { dispatch }) => {
-    // Resets the mirror: the previous workspace's rows must not survive the
-    // switch. Its pins are carried into the request but main drops the ones
-    // absent from the new catalog, and `reset` replaces the pin set with what
-    // came back — so stale pins clear themselves.
-    dispatch(loadMaterialsWindow());
+    // Empty the mirror; do **not** refill it. The previous workspace's rows
+    // must not survive the switch, but nothing on this path is asking to see
+    // materials — a cold open has no stock grid up, and a model that
+    // references rows resolves them by id when it renders.
+    //
+    // This used to dispatch `loadMaterialsWindow()`, which put a
+    // whole-catalog resolve in the main process on the boot path: main is
+    // single-threaded, so every other boot IPC queued behind it and the app
+    // was unresponsive for as long as it took. The first page is fetched by
+    // `MaterialStockViewport` when the grid actually mounts.
+    dispatch(materialsCatalogReset());
   },
 });
 
@@ -434,7 +448,10 @@ middlewares.startListening({
 // stale resolved subtree and peer deltas don't show up.
 middlewares.startListening({
   actionCreator: peersRefreshed,
-  effect: async (_action, { dispatch }) => {
+  effect: async (_action, { dispatch, getState }) => {
+    // Only for a window that exists. Refreshing one nobody has opened would
+    // resolve the catalog in main to answer a question no surface is asking.
+    if (!windowState(getState).initialized) return;
     dispatch(loadMaterialsWindow());
   },
 });

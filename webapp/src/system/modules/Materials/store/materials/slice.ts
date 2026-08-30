@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   materialAdded,
   materialDeleted,
+  materialsCatalogReset,
   materialsEvicted,
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
@@ -30,6 +31,10 @@ const slice = createSlice({
     builder.addCase(materialsCatalogLoaded, (_state, { payload }) =>
       catalogToMaterialsState(payload),
     );
+    // A workspace switch. Nothing is fetched to replace these rows — they are
+    // simply not this workspace's, and holding them would answer reads with
+    // another catalog's data until something happened to load a page.
+    builder.addCase(materialsCatalogReset, () => ({}));
     // One page of the catalog. Merges — a page extends the mirror rather than
     // replacing it — except on `reset`, which is the workspace-switch case
     // where the previous workspace's rows must not survive.

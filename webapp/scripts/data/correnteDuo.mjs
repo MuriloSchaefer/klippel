@@ -68,9 +68,20 @@ const slug = (titulo, codigoCor) =>
 export const buildCorrenteDuoMateriais = () => {
   const out = [];
   for (const titulo of CORRENTE_DUO_TITULOS) {
-    const nome = titulo.superCotton
+    const familia = titulo.superCotton
       ? "Corrente Duo Supercotton"
       : "Corrente Duo";
+    // `nome` é o atributo `principal` do seletor, e o Compositor agrupa por
+    // `externalId` rotulando cada grupo com ele. Um `nome` igual para os 16
+    // títulos rendia 16 entradas indistinguíveis no picker — o título tem de
+    // estar aqui, não só no atributo `titulo`.
+    //
+    // Artigo/etiqueta entram porque tex + metragem não bastam: 1521/120 e
+    // 1569/120 são ambos Tex 24 em cone de 5.000 m.
+    const nome =
+      `${familia} ${titulo.tex} · ` +
+      `${titulo.metragem.replace(" metros", "m")} ` +
+      `(${titulo.artigo}/${titulo.etiqueta})`;
     const descricaoTitulo =
       `Etiqueta ${titulo.etiqueta} · ${titulo.tex} · ` +
       `${titulo.metragem} · Cone`;

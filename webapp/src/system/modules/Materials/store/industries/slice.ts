@@ -3,6 +3,7 @@ import { initialState, IndustriesState } from "./state";
 import {
   materialsCatalogDeltaLoaded,
   materialsCatalogLoaded,
+  materialsCatalogReset,
   materialsWindowLoaded,
 } from "../materials/actions";
 
@@ -35,6 +36,9 @@ const slice = createSlice({
       if (payload.reset) return incoming;
       return Object.keys(incoming).length ? { ...state, ...incoming } : state;
     });
+    // A workspace switch: these named organizations in the catalog being
+    // left. Nothing refetches them until something asks for materials.
+    builder.addCase(materialsCatalogReset, () => initialState);
     builder.addCase(materialsCatalogDeltaLoaded, (state, { payload }) => {
       // A full payload is authoritative and replaces, exactly as
       // `materialsCatalogLoaded` does. A delta only ever carries the entries

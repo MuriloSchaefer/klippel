@@ -28,6 +28,7 @@ import {
   closeMaterialsView,
   deleteMaterial,
   ensureMaterialsLoaded,
+  loadMaterialsWindow,
   loadMoreMaterials,
   migrateMaterials,
   searchMaterialsCatalog,
@@ -86,9 +87,17 @@ const MaterialStockViewport: React.FC = () => {
   const initializedRef = useRef(catalog.initialized);
   initializedRef.current = catalog.initialized;
 
+  // This effect is also what *first* fills the view: nothing loads the catalog
+  // at boot any more (a workspace switch only empties the mirror), because
+  // resolving it costs the main process seconds at a few thousand materials
+  // and every other boot IPC queues behind it. The grid mounting is the first
+  // moment someone actually wants a page.
   useEffect(() => {
     if (initializedRef.current && servedQueryRef.current === extra.query) return;
-    dispatch(searchMaterialsCatalog({ query: extra.query }));
+    if (extra.query) dispatch(searchMaterialsCatalog({ query: extra.query }));
+    // A view with no query is the ranked browse page — and `loadMaterialsWindow`
+    // asks for it as a `reset`, which is what a view being (re)started means.
+    else dispatch(loadMaterialsWindow());
   }, [dispatch, extra.query]);
 
   // Paging is an explicit request — the "Carregar mais" button below — not

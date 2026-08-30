@@ -39,6 +39,7 @@ export const restartModule = ({
       // boot we'd otherwise hit "workspace has no coId"). Single call covers
       // the open-existing, fresh-bootstrap, and stale-entry cases.
       await globalThis.electron.jazz.ensureWorkspace(selected);
+
       // First sync after boot. `ensureWorkspace` only opens the local
       // Jazz node; it doesn't guarantee peer deltas have been pulled
       // (the WS reconnector dials asynchronously, and modules that
@@ -48,7 +49,18 @@ export const restartModule = ({
       // cojson context with the WS peer wired from the start, and
       // then fans out `peersRefreshed` so domain modules (Materials,
       // …) reload their slices from the freshly-resolved catalog.
-      dispatch(refreshFromPeers());
+      //
+      // **Only for a workspace that actually syncs.** The refresh is a full
+      // close and reopen of the cojson context, which throws away every
+      // CoValue the open just read and makes the next read of each of them
+      // cold again — measured at a second 2.6 s catalog resolve on a 2 110
+      // material workspace, on the boot path, to pull deltas from peers that
+      // a local-only workspace does not have. `syncStatus().syncUrl` is the
+      // authority rather than the index entry alone, because the sync URL can
+      // also come from the environment (see `resolveSyncUrl` in
+      // `electron/main/jazz.ts`).
+      const status = await globalThis.electron.jazz.syncStatus();
+      if (status?.syncUrl) dispatch(refreshFromPeers());
     } catch (err) {
       console.error("[Store/boot] Jazz attach failed", err);
     }

@@ -155,27 +155,70 @@ let unsubscribeFromCatalog: (() => void) | null = null;
 let notifyDebounceTimer: NodeJS.Timeout | null = null;
 
 /**
- * Single deep-resolve shape for the materials catalog. Shared by every
- * caller that needs the full graph in memory:
- *   1. `requireCatalog`'s `MaterialCatalogCoMap.load`.
- *   2. The kernel's join / enable-sync preload, via the
- *      `Materials` module config's `syncPreloadResolve` (`./index.ts`).
+ * How much of this process's life has gone into resolving the catalog. Every
+ * IPC entry point goes through `requireCatalog`, so these two counters are the
+ * whole fixed cost of the shape; they ride along on each resolve's trace,
+ * which is how a regression here gets noticed.
+ */
+let resolveCount = 0;
+let resolveTotalMs = 0;
+
+/**
+ * Everything `materialCoMapToDto` reads below the material node itself.
  *
- * Exported so those call sites can't drift. The live change subscription
- * deliberately uses the shallower `materialsCatalogChangeResolve` below.
+ * One row's worth of the old whole-catalog deep shape — resolved per row by
+ * `loadMaterialRows`, for the rows an answer actually carries, rather than for
+ * the whole catalog on every call.
+ */
+export const materialRowResolve = {
+  stock: { $onError: "catch" as const },
+  position: { $onError: "catch" as const },
+  attributes: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  composition: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  caracteristics: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+} as const;
+
+/**
+ * The whole catalog, deeply. The only remaining caller is the kernel's join /
+ * enable-sync preload (`syncPreloadResolve` in `./index.ts`), which has to pull
+ * every CoValue into the local node so cojson can gossip them to a peer.
+ *
+ * **Not** what `requireCatalog` loads — see `catalogReadResolve` for why.
  */
 export const materialsCatalogResolve = {
   materials: {
     $each: {
-      stock: { $onError: "catch" as const },
-      position: { $onError: "catch" as const },
-      attributes: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
-      composition: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
-      caracteristics: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+      ...materialRowResolve,
       $onError: "catch" as const,
     },
     $onError: "catch" as const,
   },
+  materialTypes: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  industries: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  sellers: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+  edges: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
+} as const;
+
+/**
+ * The shape **every ordinary read and write** resolves the catalog at:
+ * containers plus the material CoMaps themselves, and **not** the ~12 sub-CoValues
+ * each material hangs off (`attributes`, `composition`, `caracteristics`,
+ * `stock`, `position`).
+ *
+ * That subtree is where catalog size actually lives — a material is ~19
+ * CoValues, of which the node is one — and resolving it for the whole catalog
+ * on every IPC call is what put a fixed ~12 s (2 110 materials, measured) in
+ * front of the first window read at boot, with the windowing itself costing
+ * 140 ms behind it. At this shape the same load is ~2.4 s, and the rows an
+ * answer actually returns are deep-loaded per row by `loadMaterialRows`.
+ *
+ * What survives the shallower shape is everything stored *on* the material
+ * node: `id`, `type`, `externalId`, `schemaVersion`, `updatedAt`. That is
+ * enough for ranking, type-scoping, and delta change-detection. Anything that
+ * projects a `MaterialDTO` must load the row first.
+ */
+export const catalogReadResolve = {
+  materials: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
   materialTypes: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
   industries: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
   sellers: { $each: { $onError: "catch" as const }, $onError: "catch" as const },
@@ -258,9 +301,16 @@ export function dropCatalogSubscription(): void {
   // workspace switch would produce a delta between two unrelated catalogs.
   dropCatalogShadows();
   // Same reasoning for the search / rank index and the usage counts behind
-  // it: both are keyed to this workspace's ids.
+  // it: both are keyed to this workspace's ids. The haystack cache survives an
+  // ordinary index invalidation (it is keyed per row revision) but not a
+  // workspace change, for exactly the same reason.
   invalidateCatalogIndex();
   invalidateMaterialUsage();
+  haystacks.clear();
+  if (haystackWarmTimer) {
+    clearTimeout(haystackWarmTimer);
+    haystackWarmTimer = null;
+  }
 }
 
 export function onCatalogChange(listener: CatalogChangeListener): () => void {
@@ -270,7 +320,39 @@ export function onCatalogChange(listener: CatalogChangeListener): () => void {
   };
 }
 
+/**
+ * One in-flight catalog resolve, shared.
+ *
+ * Boot fires several catalog calls at once — a window read, the first change
+ * tick — and each used to start its own resolve of the same CoValues, paying
+ * the full cold cost in parallel (measured: two × 2.6 s where one would do,
+ * plus a redundant re-subscribe). Callers that arrive while a resolve is
+ * running get that one. Deliberately *not* a cache of the settled handle: a
+ * resolve that has finished is cheap to repeat (cojson has the CoValues in
+ * memory by then — 147 ms against the same catalog), and a held handle would
+ * have to be invalidated on every write to stay honest about rows added since.
+ */
+let catalogInFlight: Promise<{
+  workspace: ResolvedWorkspace;
+  catalog: ResolvedCatalog;
+  owner: Owner;
+}> | null = null;
+
 async function requireCatalog(): Promise<{
+  workspace: ResolvedWorkspace;
+  catalog: ResolvedCatalog;
+  owner: Owner;
+}> {
+  if (catalogInFlight) return catalogInFlight;
+  catalogInFlight = resolveCatalog();
+  try {
+    return await catalogInFlight;
+  } finally {
+    catalogInFlight = null;
+  }
+}
+
+async function resolveCatalog(): Promise<{
   workspace: ResolvedWorkspace;
   catalog: ResolvedCatalog;
   owner: Owner;
@@ -319,13 +401,15 @@ async function requireCatalog(): Promise<{
   }
 
   if (materialsRef) {
-    // `materialsCatalogResolve` is the single source of truth for the
-    // deep-resolve shape — also used by the live `subscribe` below and
-    // by the kernel's join / enable-sync preload via the `Materials`
-    // module config (`./index.ts`).
+    // Containers and material nodes only (`catalogReadResolve`); a row's
+    // content is loaded per row, by the paths that project it. The deep shape
+    // is now the sync preload's alone.
+    const startedAt = Date.now();
     const settled = await MaterialCatalogCoMap.load(materialsRef.id, {
-      resolve: materialsCatalogResolve,
+      resolve: catalogReadResolve,
     });
+    resolveCount += 1;
+    resolveTotalMs += Date.now() - startedAt;
     if (!settled || ("$isLoaded" in settled && (settled as { $isLoaded: boolean }).$isLoaded === false)) {
       throw new Error(
         `Could not deep-load materials catalog ${materialsRef.id}`,
@@ -341,6 +425,9 @@ async function requireCatalog(): Promise<{
       materials: recordEntries(catalog.materials).length,
       materialTypes: recordEntries(catalog.materialTypes).length,
       edges: recordEntries(catalog.edges).length,
+      resolveMs: Date.now() - startedAt,
+      resolveCount,
+      resolveTotalMs,
     });
     ensureCatalogSubscription(materialsRef.id);
     return { workspace, catalog, owner };
@@ -449,6 +536,65 @@ function attributeRecordToMap(record: AnyRecord | undefined | null): AttributeMa
   return out;
 }
 
+/**
+ * Deep-load the given rows, so they can be projected into `MaterialDTO`s.
+ *
+ * The catalog itself is resolved at `catalogReadResolve` — material nodes, not
+ * their attribute subtrees — so every path that projects a DTO comes through
+ * here first with the ids it is actually answering with. Ids the catalog does
+ * not hold are skipped; a row that fails to resolve is returned in whatever
+ * state it reached, because a partially-projected row beats failing the whole
+ * page over one bad CoValue (the same reason every `$onError` above is
+ * `catch`).
+ *
+ * Loads run concurrently: they are independent, and cojson pipelines them
+ * against one storage adapter.
+ */
+const ROW_LOAD_CONCURRENCY = 32;
+
+async function loadMaterialRows(
+  catalog: ResolvedCatalog,
+  ids: Iterable<string>,
+): Promise<Map<string, AnyRecord>> {
+  const queue: string[] = [];
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    if (catalog.materials[id]) queue.push(id);
+  }
+
+  const rows = new Map<string, AnyRecord>();
+  let cursor = 0;
+  const worker = async (): Promise<void> => {
+    while (cursor < queue.length) {
+      const id = queue[cursor];
+      cursor += 1;
+      const co = catalog.materials[id] as AnyRecord;
+      try {
+        const loaded = await (
+          co as unknown as {
+            $jazz: {
+              ensureLoaded: (o: { resolve: unknown }) => Promise<unknown>;
+            };
+          }
+        ).$jazz.ensureLoaded({ resolve: materialRowResolve });
+        rows.set(id, (loaded as AnyRecord) ?? co);
+      } catch (err) {
+        trace("loadMaterialRows: row failed to resolve", {
+          id,
+          error: String(err),
+        });
+        rows.set(id, co);
+      }
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(ROW_LOAD_CONCURRENCY, queue.length) }, worker),
+  );
+  return rows;
+}
+
 function materialCoMapToDto(co: AnyRecord): MaterialDTO {
   const m = co as unknown as {
     id: string;
@@ -540,7 +686,14 @@ export async function loadMaterialsCatalog(
     sellers: {},
     edges: {},
   };
-  for (const [k, v] of recordEntries<AnyRecord>(catalog.materials)) {
+  // The one caller that legitimately wants every row's content, so it is also
+  // the one that pays for deep-loading every row (invariant §8.1: the
+  // perf-harness / explicit-refresh path, never a user action).
+  const rows = await loadMaterialRows(
+    catalog,
+    recordEntries<AnyRecord>(catalog.materials).map(([k]) => k),
+  );
+  for (const [k, v] of rows) {
     snapshot.materials[k] = materialCoMapToDto(v);
   }
   for (const [k, v] of recordEntries<AnyRecord>(catalog.materialTypes)) {
@@ -839,8 +992,12 @@ export async function computeCatalogDelta(
 
   if (affected.size) {
     const materials: { [id: string]: MaterialDTO } = {};
+    // Change *detection* reads `updatedAt` off the material node, so it stays
+    // O(catalog) in cheap reads; only the rows that actually moved are
+    // deep-loaded for projection.
+    const affectedRows = await loadMaterialRows(catalog, affected);
     for (const id of affected) {
-      const co = materialCoMaps.get(id);
+      const co = affectedRows.get(id) ?? materialCoMaps.get(id);
       if (co) materials[id] = materialCoMapToDto(co);
     }
     if (Object.keys(materials).length) delta.materials = materials;
@@ -889,7 +1046,8 @@ export async function computeCatalogDelta(
  */
 export async function getMaterial(id: string): Promise<MaterialDTO | null> {
   const { catalog } = await requireCatalog();
-  const co = catalog.materials[id] as AnyRecord | undefined;
+  if (!catalog.materials[id]) return null;
+  const co = (await loadMaterialRows(catalog, [id])).get(id);
   if (!co) return null;
   return materialCoMapToDto(co);
 }
@@ -919,10 +1077,12 @@ const MAX_WINDOW_LIMIT = 1_000;
 
 interface CatalogIndexEntry {
   id: string;
-  /** Lower-cased searchable text — see `shared/materialSearch`. */
-  haystack: string;
   /** Material type slug, for type-scoped reads (the pickers' path). */
   type: string;
+  /** `manufacturedBy` target, if any — part of the row's searchable text. */
+  industry?: string;
+  /** Node-level revision, the key the haystack cache is validated against. */
+  updatedAt: number;
 }
 
 interface CatalogIndexCache {
@@ -939,15 +1099,19 @@ interface CatalogIndexCache {
    * once per index build instead, and a page costs O(page).
    */
   edgesBySource: Map<string, Array<[string, EdgeDTO]>>;
+  /** True once every entry has a current haystack — see `ensureHaystacks`. */
+  haystacksReady: boolean;
 }
 
 let catalogIndex: CatalogIndexCache | null = null;
 
 /**
- * Drop the search / rank index. Rebuilt on the next window read.
+ * Drop the rank index. Rebuilt on the next window read.
  *
- * Invalidated by any catalog change (see `notifyCatalogChange`) because both
- * the haystacks and the id set it ranks are derived from catalog content.
+ * Invalidated by any catalog change (see `notifyCatalogChange`) because the id
+ * set it ranks, and the order it ranks them in, are derived from catalog
+ * content. The haystack cache deliberately survives this: it is keyed per row
+ * revision, so a rebuild re-derives the rows that moved and nothing else.
  */
 export function invalidateCatalogIndex(): void {
   catalogIndex = null;
@@ -1019,12 +1183,129 @@ function haystackFor(co: AnyRecord, industry: string | undefined): string {
 }
 
 /**
- * Build (or reuse) the search + rank index.
+ * `material id → the searchable text of that revision of it`.
  *
- * One linear pass over materials and one over edges. This is the same order
- * of work the old full projection did — the difference is that it happens on
- * a user action (a search, a scroll) rather than on every sync tick, and it
- * produces ~40 bytes per material instead of a full DTO graph.
+ * Deliberately **not** part of `CatalogIndexCache`: the index is thrown away
+ * on every catalog change, and a haystack is expensive — it is the one part of
+ * the index that needs the row's attribute subtree, i.e. the ~12 CoValues per
+ * material that `catalogReadResolve` no longer loads. Keyed by the node-level
+ * `updatedAt` and the row's industry, so a rebuild re-derives only the rows
+ * that actually moved. That is what keeps a write from costing a
+ * whole-catalog re-derive on the next read — the shape that made a bulk import
+ * quadratic.
+ *
+ * Cleared only when the workspace goes away (`dropCatalogSubscription`); ids
+ * from another catalog would otherwise be scored against this one.
+ */
+const haystacks = new Map<
+  string,
+  { updatedAt: number; industry?: string; text: string }
+>();
+
+/** Chunk size for the haystack build — one yield to the loop per chunk. */
+const HAYSTACK_CHUNK = 250;
+/** Delay before warming haystacks in the background after a browse read. */
+const HAYSTACK_WARM_DELAY_MS = 2_000;
+
+let haystackBuild: Promise<void> | null = null;
+let haystackWarmTimer: NodeJS.Timeout | null = null;
+
+/**
+ * Make sure every entry in `index` has a current haystack.
+ *
+ * Only search needs this, and search is a deliberate user action, so the cost
+ * is paid there rather than on the boot path — the first window read a cold
+ * app makes is a browse, and browsing ranks by usage, not by text. The chunked
+ * loop yields between batches so a cold build cannot freeze main's event loop
+ * (and with it every other IPC) the way the old whole-catalog resolve did.
+ *
+ * Concurrent callers share one build: a search issued while the background
+ * warm is running awaits it rather than starting a second pass over the same
+ * rows.
+ */
+async function ensureHaystacks(
+  catalog: ResolvedCatalog,
+  index: CatalogIndexCache,
+): Promise<void> {
+  if (haystackBuild) return haystackBuild;
+
+  const stale: string[] = [];
+  for (const entry of index.entries.values()) {
+    const cached = haystacks.get(entry.id);
+    if (
+      !cached ||
+      cached.updatedAt !== entry.updatedAt ||
+      cached.industry !== entry.industry
+    ) {
+      stale.push(entry.id);
+    }
+  }
+  if (stale.length === 0) {
+    index.haystacksReady = true;
+    return;
+  }
+
+  haystackBuild = (async () => {
+    const startedAt = Date.now();
+    for (let i = 0; i < stale.length; i += HAYSTACK_CHUNK) {
+      const chunk = stale.slice(i, i + HAYSTACK_CHUNK);
+      // eslint-disable-next-line no-await-in-loop
+      const rows = await loadMaterialRows(catalog, chunk);
+      for (const id of chunk) {
+        const co = rows.get(id);
+        const entry = index.entries.get(id);
+        if (!co || !entry) continue;
+        haystacks.set(id, {
+          updatedAt: entry.updatedAt,
+          industry: entry.industry,
+          text: haystackFor(co, entry.industry),
+        });
+      }
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    trace("ensureHaystacks: built", {
+      rebuilt: stale.length,
+      cached: haystacks.size,
+      ms: Date.now() - startedAt,
+    });
+  })();
+
+  try {
+    await haystackBuild;
+    index.haystacksReady = true;
+  } finally {
+    haystackBuild = null;
+  }
+}
+
+/**
+ * Warm the haystacks a couple of seconds after a browse read, off the critical
+ * path, so the user's first search does not pay for the whole catalog. Cheap
+ * to schedule repeatedly: a warm with nothing stale returns immediately.
+ */
+function scheduleHaystackWarm(
+  catalog: ResolvedCatalog,
+  index: CatalogIndexCache,
+): void {
+  if (haystackWarmTimer || haystackBuild || index.haystacksReady) return;
+  haystackWarmTimer = setTimeout(() => {
+    haystackWarmTimer = null;
+    void ensureHaystacks(catalog, index).catch((err) =>
+      console.error("[materials] haystack warm failed", err),
+    );
+  }, HAYSTACK_WARM_DELAY_MS);
+  // Nothing should be held open for a background nicety.
+  haystackWarmTimer.unref?.();
+}
+
+/**
+ * Build (or reuse) the rank index.
+ *
+ * One pass over the material nodes and one over the edges — both at the
+ * shallow shape, so this stays proportional to the catalog's *node* count
+ * rather than to its CoValue count. The searchable text is not built here; see
+ * `ensureHaystacks`.
  */
 async function requireCatalogIndex(
   catalog: ResolvedCatalog,
@@ -1047,10 +1328,12 @@ async function requireCatalogIndex(
 
   const entries = new Map<string, CatalogIndexEntry>();
   for (const [k, v] of recordEntries<AnyRecord>(catalog.materials)) {
+    const node = v as unknown as { type?: string; updatedAt?: number };
     entries.set(k, {
       id: k,
-      haystack: haystackFor(v, industryOf.get(k)),
-      type: String((v as unknown as { type?: string }).type ?? ""),
+      type: String(node.type ?? ""),
+      industry: industryOf.get(k),
+      updatedAt: Number(node.updatedAt ?? 0),
     });
   }
 
@@ -1062,7 +1345,13 @@ async function requireCatalogIndex(
     return a < b ? -1 : a > b ? 1 : 0;
   });
 
-  catalogIndex = { catalogId, entries, ranked, edgesBySource };
+  catalogIndex = {
+    catalogId,
+    entries,
+    ranked,
+    edgesBySource,
+    haystacksReady: false,
+  };
   trace("requireCatalogIndex: built", {
     catalogId,
     materials: entries.size,
@@ -1087,7 +1376,9 @@ export async function loadMaterialsWindow(
   clientId: string,
   request: CatalogWindowRequest,
 ): Promise<CatalogWindow> {
+  const enteredAt = Date.now();
   const { catalog } = await requireCatalog();
+  const resolvedAt = Date.now();
   const catalogId =
     (catalog as unknown as { $jazz?: { id?: string } }).$jazz?.id ?? "unknown";
 
@@ -1124,9 +1415,12 @@ export async function loadMaterialsWindow(
     matched = page.length;
   } else if (query) {
     mode = request.type ? "type" : "search";
+    // The only mode that needs the rows' text. Everything else ranks by usage
+    // and scopes by the type slug, both of which live on the material node.
+    await ensureHaystacks(catalog, index);
     const scored: Array<{ id: string; score: number }> = [];
     for (const entry of candidates ?? index.entries.values()) {
-      const score = scoreSubsequence(query, entry.haystack);
+      const score = scoreSubsequence(query, haystacks.get(entry.id)?.text ?? "");
       if (score > 0) scored.push({ id: entry.id, score });
     }
     // Score descending, then id ascending — a total order, so paging through
@@ -1156,9 +1450,12 @@ export async function loadMaterialsWindow(
     (id) => !pageSet.has(id) && index.entries.has(id),
   );
 
+  // The answer's rows, and only those, are deep-loaded — this is the work the
+  // whole shape exists to bound: O(rows returned), not O(catalog).
   const materials: { [id: string]: MaterialDTO } = {};
+  const rows = await loadMaterialRows(catalog, [...page, ...pinned]);
   for (const id of [...page, ...pinned]) {
-    const co = catalog.materials[id] as AnyRecord | undefined;
+    const co = rows.get(id);
     if (co) materials[id] = materialCoMapToDto(co);
   }
 
@@ -1225,7 +1522,15 @@ export async function loadMaterialsWindow(
     pinned: pinned.length,
     matched,
     total,
+    // Split the answer's cost: everything before `requireCatalog` returns is
+    // the shape's fixed price, everything after is the windowing itself.
+    catalogMs: resolvedAt - enteredAt,
+    windowMs: Date.now() - resolvedAt,
   });
+
+  // A browse read means the app is up and the user has not searched yet —
+  // the moment to derive the searchable text, off the critical path.
+  scheduleHaystackWarm(catalog, index);
   return result;
 }
 
@@ -1542,7 +1847,11 @@ export async function updateMaterialStock(
   input: UpdateMaterialStockInput,
 ): Promise<void> {
   const { catalog } = await requireCatalog();
-  const material = catalog.materials[input.id] as unknown as {
+  // `stock` is its own CoValue and the catalog is resolved without it, so the
+  // row has to be loaded before it can be written through.
+  const material = (await loadMaterialRows(catalog, [input.id])).get(
+    input.id,
+  ) as unknown as {
     stock: { $jazz: { set: (k: string, v: unknown) => void } };
     $jazz: { set: (k: string, v: unknown) => void };
   } | undefined;
@@ -1556,7 +1865,11 @@ export async function updateMaterialStock(
 export async function updateMaterial(input: UpdateMaterialInput): Promise<void> {
   trace("updateMaterial", input.id, Object.keys(input.patch));
   const { catalog, owner } = await requireCatalog();
-  const material = catalog.materials[input.id] as unknown as
+  // Loaded, not just referenced: the patch may write through `stock`, and the
+  // `conformsTo` rewrite below reads the row's `schemaVersion`.
+  const material = (await loadMaterialRows(catalog, [input.id])).get(
+    input.id,
+  ) as unknown as
     | (Record<string, unknown> & {
         $jazz: { set: (k: string, v: unknown) => void };
         stock: { $jazz: { set: (k: string, v: unknown) => void } };

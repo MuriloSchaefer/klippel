@@ -3,7 +3,9 @@
 **Date:** 2026-08-29
 **Scope:** `system/modules/Materials/main` (the Jazz access layer), the xlsx
 importer, and the CoValue shape materials are stored in
-**Status:** diagnosis. Nothing fixed yet.
+**Status:** Fix 2 landed 2026-08-30 (with a variant of Fix 1); Fixes 3 and 4
+open. See §4 and
+`system/modules/Materials/docs/changes/2026-08-30-ea4277-catalog-off-the-boot-path.md`.
 
 Follow-on to
 [materials-catalog-lag-analysis.md](./materials-catalog-lag-analysis.md)
@@ -197,6 +199,14 @@ between 100k being expensive and 100k being impossible.
 ---
 
 ## 4. What to do, in order of leverage
+
+> **Landed 2026-08-30 — Fix 2, plus the in-flight half of Fix 1.** Cold open on
+> this workspace went from 24.2 s to 3.7 s; the first window read from 12.0 s to
+> 3.3 s, and every later one to 0.15 s. The open question below ("does a cached
+> handle observe later writes") was sidestepped rather than answered: only the
+> *in-flight* resolve is shared, never a settled handle. A settled handle turned
+> out to be worth little anyway — repeating a resolve against a warm cojson node
+> costs 147 ms. Fixes 3 and 4 stand as written.
 
 ### Fix 1 — cache the resolved catalog handle *(highest leverage, smallest change)*
 

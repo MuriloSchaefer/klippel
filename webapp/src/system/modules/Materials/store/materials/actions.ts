@@ -230,6 +230,26 @@ export const materialsUnpinned = createAction<{ owner: string }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials unpinned`
 );
 
+/**
+ * The mirror described a workspace that is no longer the active one.
+ *
+ * Dispatched on `workspaceSelected`, and the *only* thing that happens to the
+ * catalog at boot. The mirror used to be reset by fetching: the switch
+ * dispatched a window read and the `reset: true` answer replaced the slices.
+ * That made every cold open wait on the main process resolving the catalog —
+ * seconds of it, before anything else main was asked for during boot could be
+ * answered — for a page the user had not asked to see. Emptying is local and
+ * instant; the fetch now happens when something actually wants materials (the
+ * stock grid mounting, a model resolving the rows it references).
+ *
+ * Types are **not** reset here: they are rehydrated per workspace from
+ * `.session/` before this fires, and clearing them would blank the schemas a
+ * cold Composer needs to render costs.
+ */
+export const materialsCatalogReset = createAction(
+    `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials catalog reset`
+);
+
 /** Materials dropped from the mirror because nothing needed them. */
 export const materialsEvicted = createAction<{ ids: string[] }>(
     `[${MODULE_NAME}:Materials:${ACTION_TYPES.EVENT}] Materials evicted`

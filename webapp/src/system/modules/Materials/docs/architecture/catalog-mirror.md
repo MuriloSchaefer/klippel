@@ -58,18 +58,26 @@ of these is it like?" first.
 
 | Command | Who dispatches it | Effect on the view |
 | --- | --- | --- |
-| `loadMaterialsWindow` | cold open, workspace switch, peer refresh | **replaces** it (`reset`) |
+| `loadMaterialsWindow` | the stock viewport mounting with no query; peer refresh of a window that exists | **replaces** it (`reset`) |
 | `loadMoreMaterials` | the "Carregar mais" button in the stock viewport | **extends** it by one page |
 | `searchMaterialsCatalog` | the stock toolbar (debounced) | **re-aims** it at a query |
 | `ensureMaterialsLoaded` | an open model, `useMaterial`/`useMaterials` | **none** — resolves rows beside the view |
 | `loadMaterialsOfType` | the material pickers | **none** — resolves a type's rows |
 
+**Nothing on this list fires at boot.** A workspace switch dispatches
+`materialsCatalogReset`, which empties the mirror and stops there; the first
+read happens when a surface wants rows. Reading the catalog costs the main
+process seconds at a few thousand materials (§7), and main is single-threaded,
+so a read on the boot path delays every other boot IPC behind it — for a page
+the user may never look at. A model that references materials still resolves
+them by id when it renders, which is the only thing a cold Composer needs.
+
 Two rules follow, and both have been violated before:
 
 - **Search runs in main, never in the renderer.** A renderer-side filter can
   only search the rows that happen to be resident, which are the rows the user
-  can already see. Main scores every material against a cached haystack index
-  (`main/materials.ts`, `requireCatalogIndex`); the scorer itself is shared
+  can already see. Main scores every material against a haystack index built on
+  demand (`main/materials.ts`, `ensureHaystacks`); the scorer itself is shared
   (`shared/materialSearch.ts`) so both sides agree on what "matches" means.
 - **A page is authoritative about materials, not about absence.** Types,
   industries and sellers ride along whole with every answer because they are
@@ -273,12 +281,41 @@ clean fix.
 
 ## 7. Main-process side
 
-- `requireCatalogIndex` builds, per catalog version, the haystack per material,
-  the rank order (usage desc, id asc — a total order, so paging neither skips
-  nor repeats), and `edgesBySource`. Invalidated by any catalog change.
+**A material is ~19 CoValues, and only one of them is the material.** The node
+carries `id`, `type`, `externalId`, `schemaVersion`, `updatedAt`; `stock`,
+`position`, and every key of `attributes` / `composition` / `caracteristics`
+are CoValues of their own. Resolving that subtree for the whole catalog is the
+single most expensive thing main can do, and `requireCatalog` used to do it on
+**every** IPC call — 12 s in front of the first window read at 2 110 materials,
+with the windowing behind it costing 140 ms. Two shapes now, and the rule is:
+
+- **`catalogReadResolve`** — containers plus the material nodes. What
+  `requireCatalog` loads, for every read and every write. Enough for ranking,
+  type-scoping, and delta change-detection (`updatedAt`), and nothing else.
+- **`materialRowResolve`** — one row's subtree, applied by `loadMaterialRows`
+  to the ids an answer actually carries. **Anything that projects a
+  `MaterialDTO`, or writes through `stock`, must go through it first** — a row
+  read off the shallow catalog looks fine and is silently missing its
+  attributes.
+
+`materialsCatalogResolve` (the old whole-catalog deep shape) survives for the
+join / enable-sync preload alone, which genuinely has to pull every CoValue
+into the node to gossip it.
+
+- `requireCatalogIndex` builds, per catalog version, the rank order (usage
+  desc, id asc — a total order, so paging neither skips nor repeats),
+  `edgesBySource`, and each row's type and `updatedAt`. All node-level, so it
+  costs a pass over the catalog's *nodes*. Invalidated by any catalog change.
+- **Haystacks are built lazily** (`ensureHaystacks`), because searchable text
+  is the one part of the index that needs the row subtree. Search awaits it;
+  browse never does, and a browse read schedules a background warm so the
+  user's first search does not pay for the catalog. The cache is keyed by row
+  id + `updatedAt` + industry and **survives index invalidation** — that is
+  what stops a single write from costing a whole-catalog re-derive on the next
+  read. Cleared on workspace change only.
 - `loadMaterialsWindow` answers one page: it never walks the whole catalog per
   request. Edges for the answer come out of `edgesBySource`; a page costs
-  O(rows in the answer).
+  O(rows in the answer), plus one `loadMaterialRows` over exactly those rows.
 - `trackClientWindow` / the delta shadow record what each renderer holds, which
   is what scopes its deltas. **Known gap:** eviction is not reported back, so
   main's idea of the client's window is a superset. Costs payload on a tick,
