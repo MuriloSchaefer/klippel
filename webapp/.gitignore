@@ -30,4 +30,7 @@ yarn-error.log*
 
 ComposerOld
 ipfs/
+
 bin/
+# cr-sqlite loadable extension, fetched per platform (not committed)
+resources/crsqlite/

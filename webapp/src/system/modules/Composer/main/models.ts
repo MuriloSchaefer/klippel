@@ -585,3 +585,90 @@ export async function deleteModelDocument(
   patchSummary(summary, { updatedAt: now });
 }
 
+
+
+// ---- migration source ------------------------------------------------
+
+export interface JazzModelForMigration {
+  name: string;
+  description: string;
+  graphJson: string;
+  updatedAt: number;
+  svg: string | null;
+  documents: Array<{
+    documentId: string;
+    kind: string;
+    mime: string;
+    filename: string;
+    size: number;
+    updatedAt: number;
+    bytes: Uint8Array;
+  }>;
+}
+
+/**
+ * A model and everything hanging off it, for the one-time projection into
+ * SQLite (`modelsMigration.ts`).
+ *
+ * Deliberately the only place that pulls a model's SVG *and* every attachment's
+ * bytes in one go: that is the read the running app spent effort avoiding, and
+ * it is exactly what a migration needs.
+ */
+export async function loadJazzModelForMigration(
+  id: string,
+): Promise<JazzModelForMigration | null> {
+  const workspace = await requireWorkspace();
+  const summary = workspace.modelSummaries?.[id];
+  if (!summary) return null;
+  const model = await loadFullModel(summary.modelCoId);
+  if (!model) return null;
+
+  let svg: string | null = null;
+  const svgRef = model.$jazz.refs.svg;
+  if (svgRef) {
+    try {
+      const blob = await co.fileStream().loadAsBlob((svgRef as { id: string }).id);
+      if (blob) svg = new TextDecoder().decode(await blob.arrayBuffer());
+    } catch (err) {
+      console.error(`[models-migration] svg for "${id}" failed to load`, err);
+    }
+  }
+
+  const documents: JazzModelForMigration["documents"] = [];
+  for (const [, entry] of documentEntries(
+    model.documents as DocumentsRecord | null | undefined,
+  )) {
+    const blobRef = entry.$jazz.refs.blob;
+    if (!blobRef) continue;
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const blob = await co.fileStream().loadAsBlob(blobRef.id);
+      if (!blob) continue;
+      // eslint-disable-next-line no-await-in-loop
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      documents.push({
+        documentId: entry.documentId,
+        kind: entry.kind,
+        mime: entry.mime,
+        filename: entry.filename,
+        size: bytes.byteLength,
+        updatedAt: entry.updatedAt,
+        bytes,
+      });
+    } catch (err) {
+      console.error(
+        `[models-migration] attachment "${entry.documentId}" failed to load`,
+        err,
+      );
+    }
+  }
+
+  return {
+    name: model.name,
+    description: model.description,
+    graphJson: model.graphJson,
+    updatedAt: model.updatedAt,
+    svg,
+    documents,
+  };
+}

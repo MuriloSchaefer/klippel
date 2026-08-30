@@ -135,12 +135,18 @@ const slice = createSlice({
       // view — it loads rows something else needs (a graph node, a picker's
       // options), which are not part of any page. Recording its offsets would
       // make the next scroll skip a page.
+      //
+      // It also must not mark the view `initialized`: that flag is what the
+      // stock viewport reads to decide whether it still needs a page, and an
+      // answer with no view is not a page. Setting it here left the grid
+      // permanently empty whenever anything resolved a material *before* the
+      // grid mounted — opening a workspace on a model tab, where Composer
+      // pins the model's materials first, did exactly that.
       if (payload.mode === "ids" || payload.mode === "type") {
         return {
           ...state,
           loading: false,
           total: payload.total,
-          initialized: true,
         };
       }
 

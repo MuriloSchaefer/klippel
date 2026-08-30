@@ -47,7 +47,13 @@ export interface MaterialsWindowState {
    * instead of an assumption that only ever grew.
    */
   pins: { [owner: string]: string[] };
-  /** True once a first window answer has landed for this workspace. */
+  /**
+   * True once the *view* has been loaded — a browse or search answer.
+   *
+   * Not "an answer arrived": a by-id resolve and a type-scoped picker read
+   * carry rows without carrying a page, and treating those as initialization
+   * makes the grid skip the fetch it still needs.
+   */
   initialized: boolean;
 }
 

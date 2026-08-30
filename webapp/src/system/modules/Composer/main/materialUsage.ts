@@ -11,10 +11,7 @@
  * one model is not more broadly useful than one referenced once by each of
  * five models, and the first page should reflect breadth.
  */
-import { ModelCoMap } from "../../../../kernel/modules/Store/schema";
-import { requireActiveWorkspaceHandle } from "../../../../../electron/main/jazz";
-
-type SummaryLike = { modelCoId: string };
+import { allModelGraphs } from "./modelsService";
 
 /**
  * Materials referenced by one model's graph, de-duplicated.
@@ -44,34 +41,22 @@ export function materialIdsInGraph(graphJson: string): Set<string> {
  * `materialId → number of models referencing it`, across the active
  * workspace.
  *
- * Reads every model body, which is the expensive part — `graphJson` is one
- * atomic string per model and is deliberately not in the summary projection.
- * That is affordable here only because the result is cached in
- * `Materials/main/usage.ts` and recomputed on a graph write, never per page
- * request: models are counted in the tens, materials in the tens of
- * thousands.
+ * Reads every model's `graphJson`. That used to mean deep-resolving every
+ * model body — the reason this is cached in `Materials/main/usage.ts` and
+ * recomputed on a graph write rather than per page request. It is one column
+ * of one table now, but the caching still earns its keep: models are counted
+ * in the tens, materials in the tens of thousands.
  */
 export async function collectComposerMaterialUsage(): Promise<
   Record<string, number>
 > {
-  const workspace = (await requireActiveWorkspaceHandle()) as unknown as {
-    modelSummaries?: Record<string, unknown> | null;
-  };
-  const summaries = workspace.modelSummaries;
-  if (!summaries) return {};
-
   const counts: Record<string, number> = {};
-  for (const [key, value] of Object.entries(summaries)) {
-    if (key === "$jazz" || !value || typeof value !== "object") continue;
-    const coId = (value as SummaryLike).modelCoId;
-    if (!coId) continue;
-    // eslint-disable-next-line no-await-in-loop
-    const model = await ModelCoMap.load(coId, { resolve: true });
-    const graphJson = (model as unknown as { graphJson?: string } | null)
-      ?.graphJson;
-    if (!graphJson) continue;
-    for (const id of materialIdsInGraph(graphJson)) {
-      counts[id] = (counts[id] ?? 0) + 1;
+  // Every model's graph, from SQLite. Still the whole set — usage is a
+  // question about all of them — but it is now one indexed read of one column
+  // rather than a deep resolve of every model body.
+  for (const model of await allModelGraphs()) {
+    for (const materialId of materialIdsInGraph(model.graphJson)) {
+      counts[materialId] = (counts[materialId] ?? 0) + 1;
     }
   }
   return counts;

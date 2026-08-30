@@ -59,11 +59,11 @@
   },
   "scripts": {
     "start": "electron-vite preview --mode development",
-    "dev": "electron-vite dev --watch --mode development --sourcemap",
+    "dev": "npm run crsqlite && electron-vite dev --watch --mode development --sourcemap",
     "jazz:sync": "jazz-run sync --in-memory --host 127.0.0.1 --port ${KLIPPEL_JAZZ_SYNC_PORT:-4242}",
-    "prebuild": "electron-vite build",
-    "package": "electron-vite build && electron-forge package",
-    "make": "electron-vite build && electron-forge make",
+    "prebuild": "npm run crsqlite && electron-vite build",
+    "package": "npm run crsqlite && electron-vite build && electron-forge package",
+    "make": "npm run crsqlite && electron-vite build && electron-forge make",
     "publish": "electron-forge publish",
     "package:tests": "node scripts/build-test-bundle.mjs",
     "seed:cost-sample": "unset ELECTRON_RUN_AS_NODE; ENV_NAME=\"${ENV_NAME:-benchmark}\" KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 jest --testPathIgnorePatterns /node_modules/ --testMatch '<rootDir>/scripts/seed/costSample.seed.ts'",
@@ -77,7 +77,8 @@
     "test:e2e:collaborative:perf:headless": "npm run prebuild && unset ELECTRON_RUN_AS_NODE; KLIPPEL_E2E_SKIP_GLOBAL_SETUP=1 KLIPPEL_USE_XVFB=1 jest --testPathPatterns tests/collaborative/performance/",
     "test:repeat": "node scripts/devtools/repeat-tests.mjs",
     "test:analyze": "node scripts/devtools/analyze-test-results.mjs",
-    "rebuild:native": "node -e \"require('@electron/rebuild').rebuild({buildPath:process.cwd(),electronVersion:require('./node_modules/electron/package.json').version,onlyModules:['better-sqlite3'],force:true}).then(()=>console.log('done')).catch(e=>{console.error(e);process.exit(1)})\""
+    "rebuild:native": "node -e \"require('@electron/rebuild').rebuild({buildPath:process.cwd(),electronVersion:require('./node_modules/electron/package.json').version,onlyModules:['better-sqlite3'],force:true}).then(()=>console.log('done')).catch(e=>{console.error(e);process.exit(1)})\"",
+    "crsqlite": "node scripts/devtools/fetch-crsqlite.mjs"
   },
   "repository": {
     "url": "git@github.com:MuriloSchaefer/klippel.git"

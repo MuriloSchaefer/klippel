@@ -29,6 +29,8 @@ export const NAMESPACES = {
   edge: "0d2a9f14-3c58-5b77-8a10-6e9c4b2d7f83",
   materialType: "b4e6a1c8-5d29-5f34-9e71-1a3c8d5f2b60",
   organization: "3a8f5b62-9e14-5c48-8d27-7b1e6a9f4c05",
+  model: "c7d4e0a9-2b63-5a1f-9f38-4e5d7c2b8a16",
+  modelDocument: "e2b90f47-6c15-5d83-8b24-9a7f3e1c6d05",
 } as const;
 
 export type IdNamespace = keyof typeof NAMESPACES;

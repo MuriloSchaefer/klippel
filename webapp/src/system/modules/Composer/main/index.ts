@@ -5,6 +5,8 @@ import {
   ModelSummary,
   WorkspaceCoMap,
 } from "../../../../kernel/modules/Store/schema";
+// Models are answered from SQLite; Jazz is read once per workspace by the
+// projection behind `modelsService`. See `src/docs/jazz-is-dead.md`.
 import {
   listModels,
   loadModel,
@@ -19,8 +21,9 @@ import {
   uploadModelDocument,
   loadModelDocument,
   deleteModelDocument,
-  type UploadDocumentInput,
-} from "./models";
+} from "./modelsService";
+import type { UploadDocumentInput } from "./models";
+import { resetModelsMigration } from "./modelsMigration";
 import { saveDocumentAs, openDocumentExternally } from "./documents";
 import { collectComposerMaterialUsage } from "./materialUsage";
 // Through the Materials module's own export surface, not its internals — the
@@ -104,6 +107,8 @@ registerMainModule({
     // Usage counts are ids from *this* workspace's models. Carrying them into
     // the next one would rank a catalog by references that do not exist in it.
     materialsMain.invalidateRanking();
+    // The projection is per workspace too.
+    resetModelsMigration();
   },
 
   syncPreloadResolve: () => ({

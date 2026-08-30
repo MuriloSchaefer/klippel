@@ -64,6 +64,17 @@ const CDP_URL = `http://localhost:${CDP_PORT}`;
 const PROBES = 3; // generator plants 3 probe rows beyond the bulk count.
 const VIEWPORT = '[data-testid="material-stock-viewport"]';
 const SCROLLER = ".MuiDataGrid-virtualScroller";
+/**
+ * Wheel steps in the scroll sweep.
+ *
+ * Each step waits one animation frame, so the total is dominated by frame
+ * scheduling rather than by anything the catalog does — which makes it
+ * sensitive to whatever else is running on the machine (measured: the same
+ * sweep is ~2.3 s alone and ~2.7 s inside a full suite run, and its sibling in
+ * `catalogWindowing` ranged 2.5 s → 4.9 s). Treat the budget as a ceiling that
+ * catches a catastrophic regression; the jsonl trend in `.tests-executions/`
+ * is the real signal (e2e-tests.md §11.1).
+ */
 const SCROLL_STEPS = 30;
 
 /**
@@ -82,9 +93,17 @@ const TIERS: ReadonlyArray<{
   // `search` and `scroll` are flat on purpose: search rebuilt its haystacks
   // per keystroke before (analysis doc F7) and the grid is virtualized, so a
   // tier-dependent number in either is the regression signal.
-  { count: 100, renderBudgetMs: 1_500, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 2_500 },
-  { count: 500, renderBudgetMs: 4_500, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 2_500 },
-  { count: 1_000, renderBudgetMs: 9_000, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 2_500 },
+  // `scrollBudgetMs` is a **catastrophe ceiling, not a fine measure** — see the
+  // note on SCROLL_STEPS. Recalibrated 2026-08-30 from 2_500, which had been
+  // set to the quiet-machine floor and therefore had no headroom at all:
+  //   quiet:  2265 / 2349 / 2184 (pre-SQLite)  and  2382 / 2266 / 2316 (after)
+  //   loaded: 2731 / 2733 / 2633 (full 76-suite run), 2998 / 3050 / 2917
+  // Same numbers before and after the storage change, so the flapping was the
+  // budget, not a regression. 4_000 keeps a 10× regression loud while staying
+  // quiet under a full run.
+  { count: 100, renderBudgetMs: 1_500, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 4_000 },
+  { count: 500, renderBudgetMs: 4_500, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 4_000 },
+  { count: 1_000, renderBudgetMs: 9_000, applyBudgetMs: 800, searchBudgetMs: 1_500, scrollBudgetMs: 4_000 },
   // 10k is still out of reach here, but no longer because the renderer
   // freezes — that was the quadratic adapter + full-reload-per-tick path
   // (analysis doc F1/F2), both fixed. What blocks it now is seeding: the

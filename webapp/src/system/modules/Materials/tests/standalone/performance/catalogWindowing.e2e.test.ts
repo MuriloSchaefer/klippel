@@ -108,7 +108,11 @@ const TIERS: ReadonlyArray<Tier> = [
     openBudgetMs: 2_500,
     searchBudgetMs: 1_500,
     pageInBudgetMs: 1_200,
-    scrollBudgetMs: 3_000,
+    // Ceiling, not a fine measure — same reasoning as `catalogRender`'s
+    // scroll budget. Recalibrated 2026-08-30 from 3_000: measured 2_483 and
+    // 2_533 alone, 3_400 and 4_899 inside a full run, with no difference
+    // before and after the storage change.
+    scrollBudgetMs: 6_000,
     residentBudget: 900,
   },
   {
@@ -116,7 +120,7 @@ const TIERS: ReadonlyArray<Tier> = [
     openBudgetMs: 3_500,
     searchBudgetMs: 2_000,
     pageInBudgetMs: 1_500,
-    scrollBudgetMs: 3_500,
+    scrollBudgetMs: 7_000,
     residentBudget: 900,
   },
   {
@@ -124,7 +128,7 @@ const TIERS: ReadonlyArray<Tier> = [
     openBudgetMs: 4_500,
     searchBudgetMs: 2_500,
     pageInBudgetMs: 2_000,
-    scrollBudgetMs: 4_000,
+    scrollBudgetMs: 8_000,
     residentBudget: 900,
   },
 ].filter((t) => HEAVY || t.count < HEAVY_MIN);

@@ -21,9 +21,9 @@ import type { Database as Db } from "better-sqlite3";
 
 import { prepare, workspaceDb } from "../../../../../electron/main/db";
 import { SQL, idSet } from "./queries";
-import { buildHaystack, normalizeQuery } from "../shared/materialSearch";
+import { ftsQuery, rowToDto, type MaterialRow } from "./catalogRows";
+import { normalizeQuery } from "../shared/materialSearch";
 import type {
-  AttributeMap,
   CatalogWindow,
   CatalogWindowRequest,
   EdgeDTO,
@@ -32,66 +32,14 @@ import type {
   OrgNodeDTO,
 } from "../typings/catalog";
 
+// Re-exported so callers keep one import site for the read layer even though
+// the pure row mapping lives beside it (and is unit-tested there).
+export { ftsQuery, haystackForRow, rowToDto } from "./catalogRows";
+
 /** Default page size — "100 more frequently used" from the product ask. */
 export const DEFAULT_WINDOW_LIMIT = 100;
 /** Ceiling on one page; a caller asking for everything is asking wrongly. */
 const MAX_WINDOW_LIMIT = 1_000;
-interface MaterialRow {
-  id: string;
-  material_key: string;
-  type: string;
-  label: string;
-  external_id: string;
-  external_url: string;
-  image_url: string;
-  description: string;
-  schema_version: string;
-  name: string;
-  color_label: string;
-  industry: string;
-  stock_amount: number;
-  stock_unit: string;
-  pos_x: number;
-  pos_y: number;
-  attrs_json: string;
-  composition_json: string;
-  caracteristics_json: string;
-  updated_at: number;
-}
-
-const parseMap = (json: string): AttributeMap => {
-  if (!json) return {};
-  try {
-    return JSON.parse(json) as AttributeMap;
-  } catch {
-    return {};
-  }
-};
-
-/** A stored row as the renderer's DTO. Empty strings decode back to absent. */
-export function rowToDto(row: MaterialRow): MaterialDTO {
-  const dto: MaterialDTO = {
-    // The domain id, never the storage UUID.
-    id: row.material_key,
-    type: row.type,
-    position: { x: row.pos_x, y: row.pos_y },
-    attributes: parseMap(row.attrs_json),
-    stock: { amount: row.stock_amount, unit: row.stock_unit },
-    schemaVersion: row.schema_version,
-    updatedAt: row.updated_at,
-  };
-  if (row.label) dto.label = row.label;
-  if (row.external_id) dto.externalId = row.external_id;
-  if (row.external_url) dto.externalURL = row.external_url;
-  if (row.image_url) dto.imageURL = row.image_url;
-  if (row.description) dto.description = row.description;
-  if (row.composition_json) dto.composition = parseMap(row.composition_json);
-  if (row.caracteristics_json) {
-    dto.caracteristics = parseMap(row.caracteristics_json);
-  }
-  return dto;
-}
-
 interface OrgRow {
   org_key: string;
   type: string;
@@ -117,29 +65,6 @@ const orgToDto = (row: OrgRow): OrgNodeDTO => {
   if (row.contact) dto.contact = row.contact;
   return dto;
 };
-
-/**
- * The searchable text for a row, from the same fields the grid renders.
- *
- * Shared with the renderer through `shared/materialSearch` so both sides agree
- * on what "matches" means — the one thing that must not drift when the engine
- * underneath changes.
- */
-export function haystackForRow(row: {
-  name: string;
-  color_label: string;
-  type: string;
-  industry: string;
-  external_id: string;
-}): string {
-  return buildHaystack({
-    nome: row.name || undefined,
-    corLabel: row.color_label || undefined,
-    typeLabel: row.type,
-    industry: row.industry || undefined,
-    externalId: row.external_id || undefined,
-  });
-}
 
 const dbFor = (workspace: string): Db => workspaceDb(workspace).db;
 
@@ -304,23 +229,6 @@ export function loadWindow(
     mode,
     type: request.type,
   };
-}
-
-/**
- * Turn a user query into an FTS5 MATCH expression.
- *
- * Every token becomes a prefix term, ANDed — "royal lin" matches "linha Royal"
- * — which is close to the subsequence scorer users learned, and unlike it,
- * indexed. FTS5 syntax characters are stripped rather than escaped: a query is
- * a search box, not an expression language, and a stray quote must not throw.
- */
-export function ftsQuery(normalized: string): string {
-  const tokens = normalized
-    .replace(/["*()^:-]/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-  if (!tokens.length) return '""';
-  return tokens.map((t) => `"${t}"*`).join(" AND ");
 }
 
 /** One material by its domain id, or `null`. The O(1) read path. */

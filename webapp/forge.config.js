@@ -2,8 +2,30 @@
 // const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
+  hooks: {
+    /**
+     * Fetch the cr-sqlite extension for the platform being packaged.
+     *
+     * At **build** time, never at run time: a packaged app has to work with no
+     * network, and an install that silently shipped without the extension
+     * would run single-peer with sync quietly off. Forge passes the target
+     * platform/arch, so cross-packaging fetches the right binary rather than
+     * the build host's.
+     */
+    generateAssets: async (_forgeConfig, platform, arch) => {
+      const { fetchCrsqlite } = await import(
+        './scripts/devtools/fetch-crsqlite.mjs'
+      );
+      await fetchCrsqlite(`${platform}-${arch}`);
+    },
+  },
   packagerConfig: {
     asar: true,
+    // The cr-sqlite loadable extension. Outside the asar because SQLite loads
+    // it by path with dlopen, which cannot read from an archive. Populated per
+    // platform by `scripts/devtools/fetch-crsqlite.mjs`; without it the app
+    // runs single-peer with sync off.
+    extraResource: ['resources/crsqlite'],
     ignore: [
       /^\/src/,
       /(.eslintrc.json)|(.gitignore)|(electron.vite.config.ts)|(forge.config.cjs)|(tsconfig.*)/,

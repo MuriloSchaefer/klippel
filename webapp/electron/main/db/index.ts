@@ -21,11 +21,46 @@ import Database, {
 import { existsSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 
+import { app } from "electron";
+
 import { HOME } from "../storage";
 import { MIGRATIONS, REPLICATED_TABLES } from "./schema";
 
-/** Where the extension lives, if we are shipping it. */
-const CRSQLITE_EXT = process.env.KLIPPEL_CRSQLITE_EXT;
+/** Loadable-extension file name, per platform. */
+const EXT_FILE =
+  process.platform === "win32"
+    ? "crsqlite.dll"
+    : process.platform === "darwin"
+    ? "crsqlite.dylib"
+    : "crsqlite.so";
+
+/**
+ * The cr-sqlite extension, or `null` when this install does not have it.
+ *
+ * Resolution order:
+ *   1. `KLIPPEL_CRSQLITE_EXT` — an explicit path, for tests and bisecting.
+ *   2. The packaged resource (`process.resourcesPath`), for a built app.
+ *   3. `resources/crsqlite/<platform>-<arch>/` in the repo, for development —
+ *      populated by `scripts/devtools/fetch-crsqlite.mjs`, not committed.
+ *
+ * Absent, the app runs single-peer: every table works, `crsql_changes` does
+ * not exist, and sync is off. That degradation is reported rather than
+ * silent — see `tryReplicate`.
+ */
+function resolveExtension(): string | null {
+  const explicit = process.env.KLIPPEL_CRSQLITE_EXT;
+  if (explicit) return existsSync(explicit) ? explicit : null;
+
+  const key = `${process.platform}-${process.arch}`;
+  const candidates = [
+    join(process.resourcesPath ?? "", "crsqlite", key, EXT_FILE),
+    join(app.getAppPath(), "resources", "crsqlite", key, EXT_FILE),
+    join(app.getAppPath(), "..", "resources", "crsqlite", key, EXT_FILE),
+  ];
+  return candidates.find((path) => path && existsSync(path)) ?? null;
+}
+
+const CRSQLITE_EXT = resolveExtension();
 
 export interface WorkspaceDb {
   db: Db;
@@ -49,13 +84,11 @@ const dbPathFor = (workspace: string): string =>
  * thing that gets discovered in production.
  */
 function tryReplicate(db: Db): boolean {
-  if (!CRSQLITE_EXT) return false;
-  if (!existsSync(CRSQLITE_EXT)) {
-    console.warn(`[db] KLIPPEL_CRSQLITE_EXT set but missing: ${CRSQLITE_EXT}`);
-    return false;
-  }
   try {
-    db.loadExtension(CRSQLITE_EXT);
+    // Upgrading a table that already holds rows is supported and is the
+    // ordinary case: databases written before the extension shipped are
+    // upgraded in place on the next open, and their existing rows become
+    // replicable (verified — 500 rows in, 500 rows out, with change records).
     for (const table of REPLICATED_TABLES) {
       db.prepare(`SELECT crsql_as_crr(?)`).get(table);
     }
@@ -64,6 +97,18 @@ function tryReplicate(db: Db): boolean {
   } catch (err) {
     console.error("[db] cr-sqlite failed to load; continuing unreplicated", err);
     return false;
+  }
+}
+
+/** The site this database writes as — cr-sqlite's identity for the peer. */
+export function siteId(db: Db): string | null {
+  try {
+    const row = db.prepare(`SELECT hex(crsql_site_id()) AS id`).get() as
+      | { id: string }
+      | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -111,16 +156,25 @@ export function workspaceDb(workspace: string): WorkspaceDb {
   // Before the schema exists: cr-sqlite has to be loaded first so
   // `crsql_as_crr` is available, but the tables have to exist before they can
   // be upgraded — so load, migrate, then upgrade.
-  const hasExtension = Boolean(CRSQLITE_EXT) && existsSync(CRSQLITE_EXT ?? "");
-  if (hasExtension) {
+  // Load before migrating: `crsql_as_crr` has to exist by the time the tables
+  // do, and the tables have to exist before they can be upgraded.
+  let loaded = false;
+  if (CRSQLITE_EXT) {
     try {
-      db.loadExtension(CRSQLITE_EXT as string);
+      db.loadExtension(CRSQLITE_EXT);
+      loaded = true;
     } catch (err) {
       console.error("[db] cr-sqlite load failed", err);
     }
   }
   migrate(db);
-  const replicated = hasExtension ? tryReplicate(db) : false;
+  const replicated = loaded && tryReplicate(db);
+  if (!loaded && !CRSQLITE_EXT) {
+    console.warn(
+      "[db] cr-sqlite not found — running single-peer, sync is off. " +
+        "Run `node scripts/devtools/fetch-crsqlite.mjs`.",
+    );
+  }
 
   active = { db, workspace, path, replicated };
   return active;

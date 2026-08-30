@@ -15,11 +15,19 @@ import {
   CATALOG_MIGRATIONS,
   CATALOG_REPLICATED_TABLES,
 } from "../../../src/system/modules/Materials/main/schema";
+import {
+  MODELS_MIGRATIONS,
+  MODELS_REPLICATED_TABLES,
+} from "../../../src/system/modules/Composer/main/schema";
 
 /** Every migration, in the order they must be applied. */
-export const MIGRATIONS: readonly string[] = [...CATALOG_MIGRATIONS];
+export const MIGRATIONS: readonly string[] = [
+  ...CATALOG_MIGRATIONS,
+  ...MODELS_MIGRATIONS,
+];
 
 /** Tables `crsql_as_crr` is applied to when cr-sqlite is present. */
 export const REPLICATED_TABLES: readonly string[] = [
   ...CATALOG_REPLICATED_TABLES,
+  ...MODELS_REPLICATED_TABLES,
 ];

@@ -15,7 +15,7 @@ import type { Database as Db } from "better-sqlite3";
 import { prepare, workspaceDb } from "../../../../../electron/main/db";
 import { storageId } from "../../../../../electron/main/db/ids";
 import { SQL } from "./queries";
-import { haystackForRow } from "./catalogDb";
+import { haystackForRow, searchableColumns } from "./catalogRows";
 import type {
   AttributeMap,
   EdgeDTO,
@@ -24,43 +24,6 @@ import type {
   OrgNodeDTO,
   UpdateMaterialInput,
 } from "../typings/catalog";
-
-/** JSON-decoded leaf of one attribute, or `undefined`. */
-function attributeLeaf(attrs: AttributeMap | undefined, key: string): unknown {
-  const attr = attrs?.[key];
-  if (!attr || attr.valueJson === undefined) return undefined;
-  try {
-    return JSON.parse(attr.valueJson);
-  } catch {
-    return attr.valueJson;
-  }
-}
-
-/**
- * The searchable fields a material carries in columns rather than in its blob.
- *
- * `nome` and `cor` are attributes, so they are copied out on write. That is a
- * denormalisation and it has the usual cost: a writer that sets attributes
- * without going through here leaves the columns stale.
- */
-export function searchableColumns(dto: MaterialDTO): {
-  name: string;
-  colorLabel: string;
-} {
-  const nome = attributeLeaf(dto.attributes, "nome");
-  const cor = attributeLeaf(dto.attributes, "cor");
-  const colorLabel =
-    cor && typeof cor === "object"
-      ? ((cor as { label?: string }).label ?? (cor as { hex?: string }).hex ?? "")
-      : typeof cor === "string"
-      ? cor
-      : "";
-  return {
-    name: typeof nome === "string" ? nome : nome == null ? "" : String(nome),
-    colorLabel: String(colorLabel ?? ""),
-  };
-}
-
 
 const materialParams = (dto: MaterialDTO, industry: string) => {
   const { name, colorLabel } = searchableColumns(dto);
