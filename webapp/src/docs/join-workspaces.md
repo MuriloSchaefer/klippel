@@ -1,7 +1,16 @@
 # Joining a peer's workspace
 
-> **History — Jazz is being removed.** This describes what exists today, not
-> the direction. See [jazz-is-dead.md](./jazz-is-dead.md) before writing code against it.
+> **Partly history.** The share/join *flow* below is still accurate: sharing
+> mints a `coId`, joining resolves it from a cojson sync server, and that is
+> how two peers agree on a workspace identity today.
+>
+> The **data path is not.** Catalog and model changes no longer travel as
+> signed CoValue messages over the cojson server — they travel as
+> `crsql_changes` rows over our own relay, which is **trusted** and sees them
+> in plaintext. Everything this doc says about the relay being unable to read
+> or forge content applies to cojson, not to what carries your materials.
+> Read [p2p-sqlite/overview.md](../../electron/main/docs/p2p-sqlite/overview.md)
+> for what actually syncs, and [jazz-is-dead.md](./jazz-is-dead.md) for why.
 
 How collaborative workspaces work in Klippel: the trust model, the actors involved, and the exact byte-for-byte flow when one user shares a workspace and another joins it.
 
@@ -12,7 +21,12 @@ The Jazz foundation underneath this doc is described in [`user-management.md`](.
 1. A **sync server** is a tiny relay that knows nothing about the workspace content — it just forwards signed CoValue messages between peers.
 2. The **owner** of a workspace clicks **Share**, which flips `syncOptIn` on the workspace, grants `"everyone" → "writer"` on the workspace group, and yields an invite `klippel://join?coId=…&syncUrl=…`.
 3. Another user pastes the invite into **Join**, which spins up a local SQLite-backed Jazz node, connects to the sync server, loads the workspace by `coId`, and registers it locally.
-4. From then on, every model edit on either side is signed by the editor's account and replicated via the sync server. The lease (`EditLease`) prevents concurrent writers to the same model.
+4. From then on, every model edit on either side is replicated — **as of
+   2026-08-30 through the cr-sqlite relay, not the cojson sync server**, and
+   unsigned. The lease still marks who is editing a model (it lives in
+   `model_edit_leases` and replicates like any other row), but it is advisory:
+   two peers that acquire before hearing from each other both believe they hold
+   it, and converge on one holder afterwards. That was equally true under Jazz.
 
 ## The actors
 
@@ -86,7 +100,7 @@ sequenceDiagram
   R->>R: parseInvite() → fills coId / syncUrl / name
   U->>R: confirm
   R->>M: dispatch joinWorkspace({ name, coId, syncUrl })
-  M->>M: validate ws:// or wss://; reject if name already exists
+  M->>M: validate ws:// or wss:// — reject if the name already exists
   M->>M: upsert workspaces.index.json (syncOptIn: true, syncUrl)
   M->>M: ensureDir + write .jazz-id = coId
   M->>M: openWorkspaceJazzNode(name) — opens SQLite, dials WS peer
@@ -115,12 +129,12 @@ sequenceDiagram
 
   Note over A,B: 1. Owner creates workspace + model.
   A->>A: createWorkspace, createModel
-  Note over A: workspaces.index.json updated;<br/>graph stored in jazz.sqlite
+  Note over A: workspaces.index.json updated —<br/>graph stored in jazz.sqlite
 
   Note over A,B: 2. Owner enables sync.
   A->>A: enableWorkspaceSync (everyone→writer, syncOptIn=true)
   A->>A: closeWorkspace + ensureWorkspace
-  A->>S: WebSocket connect; publish workspace history
+  A->>S: WebSocket connect — publish workspace history
 
   Note over A,B: 3. Owner shares the invite (paste, chat, etc).
   Note over A,B: out of band: klippel://join?coId=…&syncUrl=…

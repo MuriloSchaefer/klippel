@@ -1,8 +1,12 @@
 # Jazz is dead
 
 **Decided:** 2026-08-30
-**Status:** decision taken; removal not started. Jazz is still the store of
-record — do not write new code against it.
+**Status:** the catalog, models and **sync** now run on SQLite + cr-sqlite.
+Jazz still holds workspace *identity* (share mints a `coId`, join resolves it),
+and that is the last thread. Do not write new code against it.
+
+How the replacement works: [p2p-sqlite/overview.md](../../electron/main/docs/p2p-sqlite/overview.md).
+What it costs at scale: [p2p-sqlite/scalability.md](../../electron/main/docs/p2p-sqlite/scalability.md).
 
 Klippel is leaving Jazz / cojson. Storage, querying and sync move to SQLite —
 with **cr-sqlite (vlcn.io)** the recommended way to keep CRDT merge and peer
@@ -62,7 +66,7 @@ verification on top; at 2 110 materials that alone is 2.4 s, and it is linear.
 material). The product needs 10k comfortably and 100k in production.
 
 The same shape in plain SQLite, same rows, cold
-([benchmark](../scripts/devtools/catalog-sqlite-bench.mjs)):
+([benchmark](../../scripts/devtools/catalog-sqlite-bench.mjs)):
 
 | | Jazz @ 2.1k | SQLite @ 10k | SQLite @ 100k |
 |---|---|---|---|
@@ -102,8 +106,20 @@ free:
 cr-sqlite keeps offline convergence (per-column CRDT merge, better than what
 `updateMaterial` does today) and needs only a dumb relay — but identity,
 authorization and the zero-knowledge property are ours to rebuild or to
-consciously drop. That decision is called out in §7 of the study. Nobody should
-discover it mid-migration.
+consciously drop.
+
+**Decided the same day, and dropped knowingly:** the relay is trusted. It sees
+every change in plaintext and nothing stops it forging one. Peers authenticate
+to it with a shared token, and it must be operated by whoever owns the data — a
+public relay is not an option under this design. Rebuilding zero-knowledge
+means client-side encryption plus per-peer signatures, which is a crypto design
+rather than a transport, and it interacts badly with a merge the database
+performs for us. Recorded rather than glossed, because a doc implying the old
+guarantee still held would be worse than the loss itself: `sync/protocol.ts`,
+and [p2p-sqlite/overview.md](../../electron/main/docs/p2p-sqlite/overview.md#trust-model--read-before-changing-anything).
+
+Offline convergence itself survived intact, and is asserted: 14 collaborative
+e2e tests, including catch-up in either connection order.
 
 ## What this means for code you are writing today
 

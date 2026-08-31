@@ -1,11 +1,16 @@
 # Composer — Jazz storage & sync
 
-> **History — Jazz is being removed.** This describes what exists today, not
-> the direction. See [jazz-is-dead.md](../../../../docs/jazz-is-dead.md) before writing code against it.
+> **History — storage and sync have moved.** The layout below is how this
+> module worked on Jazz until 2026-08-30. Rows now live in SQLite and reach
+> other peers as `crsql_changes` over our own relay
+> ([p2p-sqlite/overview.md](../../../../../electron/main/docs/p2p-sqlite/overview.md)); the write paths and the "how an edit travels"
+> sections here describe the old machinery. What is still current is the
+> *shape* of the data and the IPC contract, which the migration preserved.
+> See [jazz-is-dead.md](../../../../docs/jazz-is-dead.md) before writing code against it.
 
 How a Composer model is laid out on Jazz, how an explicit save travels from the viewport to other peers, and how the edit-lease keeps concurrent editors from clobbering each other.
 
-For the kernel Jazz foundation (account, workspace, IPC) see [`kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md`](../../../kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md). For lazy hydration see [`kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md`](../../../kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md). For multi-peer plumbing see [`kernel/modules/Store/docs/changes/2026-05-18-b5c2fb-collaborative-jazz-multi-peer-harness.md`](../../../kernel/modules/Store/docs/changes/2026-05-18-b5c2fb-collaborative-jazz-multi-peer-harness.md). Performance rationale lives in [`webapp/src/docs/analysis/jazz-performance.md`](../../../../docs/analysis/jazz-performance.md).
+For the kernel Jazz foundation (account, workspace, IPC) see [`kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md`](../../../../kernel/modules/Store/docs/changes/2026-05-16-932980-jazz-foundation-and-models-migration.md). For lazy hydration see [`kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md`](../../../../kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md). For multi-peer plumbing see [`kernel/modules/Store/docs/changes/2026-05-18-b5c2fb-collaborative-jazz-multi-peer-harness.md`](../../../../kernel/modules/Store/docs/changes/2026-05-18-b5c2fb-collaborative-jazz-multi-peer-harness.md). Performance rationale lives in [`webapp/src/docs/analysis/jazz-performance.md`](../../../../docs/analysis/jazz-performance.md).
 
 ## TL;DR
 
@@ -135,7 +140,7 @@ sequenceDiagram
     J->>N: try set editLease if absent/expired
     N-->>J: snapshot { status: "held" | "held_by_other" | "free" }
     J-->>H: snapshot
-    H->>H: setInterval 30s renew; setInterval 15s poll when not held
+    H->>H: setInterval 30s renew — setInterval 15s poll when not held
     H->>P: jazz.renewLease(id) (on focus + timer)
 ```
 
@@ -240,7 +245,7 @@ sequenceDiagram
 
 ## Lazy hydration
 
-Per [`jazz-lazy-hydration` change doc](../../../kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md):
+Per [`jazz-lazy-hydration` change doc](../../../../kernel/modules/Store/docs/changes/2026-05-19-af9a0f-jazz-lazy-hydration.md):
 
 - Workspace open resolves `metadata` + `modelSummaries` only.
 - `loadModel` triggers the full `ModelCoMap` deep-load on demand.
@@ -258,7 +263,7 @@ graph LR
 
 ## Diagnostics
 
-The same `jazzLogBuffer` ring buffer used by Materials catches cojson sync messages, lease churn, model creation/update — surfaced by the system-tray `SyncLogsIndicator` and `PeersIndicator`. See [Layout / SystemTray sync diagnostics change doc](../../../kernel/modules/Layout/docs/changes/2026-05-23-d48a48-system-tray-sync-diagnostics.md). `KLIPPEL_JAZZ_DEBUG=debug` raises cojson's internal log level for verbose tracing.
+The same `jazzLogBuffer` ring buffer used by Materials catches cojson sync messages, lease churn, model creation/update — surfaced by the system-tray `SyncLogsIndicator` and `PeersIndicator`. See [Layout / SystemTray sync diagnostics change doc](../../../../kernel/modules/Layout/docs/changes/2026-05-23-d48a48-system-tray-sync-diagnostics.md). `KLIPPEL_JAZZ_DEBUG=debug` raises cojson's internal log level for verbose tracing.
 
 ## Failure modes & invariants worth remembering
 

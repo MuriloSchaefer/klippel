@@ -1,12 +1,14 @@
 # Klippel — workspace guidance
 
-## Jazz is being removed
+## Jazz is (nearly) gone
 
-Jazz / cojson is still the store of record for workspace metadata, models and the materials catalog, but it is on the way out — storage, querying and sync move to SQLite. **Do not add new Jazz surface**: no new CoValue types, no new fields on `WorkspaceCoMap`, no new `requireCatalog` call sites.
+Storage, querying and sync have **moved** to SQLite + cr-sqlite: the catalog, models, attachments and peer sync all run there (`webapp/electron/main/db/`, `webapp/electron/main/sync/`). Jazz / cojson holds one thing still — workspace *identity*, minted by Share and resolved by Join. **Do not add new Jazz surface**: no new CoValue types, no new fields on `WorkspaceCoMap`, no new `requireCatalog` call sites.
 
 **Why:** cojson re-verifies every transaction on every load, including from local SQLite, and keeps no local snapshot — so opening a `co.record` costs one verification per entry, on every app start, forever. At 2 110 materials that is 2.4 s before a single row can be read; at 10k the warm surfaces are already over budget. Full reasoning and measurements: [webapp/src/docs/jazz-is-dead.md](webapp/src/docs/jazz-is-dead.md).
 
-**How to apply:** Bug fixes in the Jazz layer are fine while it keeps the app usable. New per-workspace UI state goes to `.session/` under the rules below; new domain data waits for the SQLite store ([migration plan](webapp/src/docs/analysis/post-jazz-storage-study.md)). The renderer's mirror contract (`Materials/docs/architecture/catalog-mirror.md`) is unaffected and still applies.
+**How to apply:** Bug fixes in the Jazz layer are fine while it keeps the app usable. New per-workspace UI state goes to `.session/` under the rules below; new domain data goes to the SQLite store — a module owns its DDL as `.sql` beside its main-process code and its queries in `main/queries/`, exported through the module index, never as SQL strings inline in TypeScript. A table that must reach other peers is declared in that module's replicated-tables list, and the constraints a CRR accepts are written at the top of `Materials/main/schema/catalog.sql` — read them before adding a column.
+
+Sync: [p2p-sqlite/overview.md](webapp/electron/main/docs/p2p-sqlite/overview.md) for how two peers converge, [scalability.md](webapp/electron/main/docs/p2p-sqlite/scalability.md) for what it costs and where it does not hold yet. The relay is **trusted** — it reads and could forge every change — so it is run by whoever owns the data. The renderer's mirror contract (`Materials/docs/architecture/catalog-mirror.md`) is unaffected and still applies.
 
 ## Keyboard shortcuts
 

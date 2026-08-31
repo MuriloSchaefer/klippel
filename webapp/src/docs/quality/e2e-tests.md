@@ -33,11 +33,12 @@ E2E tests live in each module's own `tests/` folder, organized first by **collab
 Rules:
 
 - **Test files** live under the module's `tests/<scope>/<category>[/<subcategory>]/` directory: `<module>/tests/standalone/functionality/<feature>.e2e.test.ts`. One file still covers both the click and shortcut variants of a feature (one `describe` block per variant).
-- **Pick `collaborative` vs `standalone` by what the test exercises**, not by what the module supports. A test is `collaborative` only if it spins up — or asserts behavior against — more than one Jazz peer / Electron instance, or a real sync server. Otherwise it is `standalone`, even if the underlying code path goes through Jazz.
+- **Pick `collaborative` vs `standalone` by what the test exercises**, not by what the module supports. A test is `collaborative` only if it spins up — or asserts behavior against — more than one Electron peer, or a real server. Otherwise it is `standalone`, even if the underlying code path goes through Jazz.
+- **The collaborative harness runs two servers**, and a test may need either. `spawnCollaborativePeers` starts the cojson sync server (`harness.sync`) *and* the cr-sqlite relay (`harness.relay`), and gives each peer both URLs. Identity — share, join, the `coId` a test asserts against — comes from the first; every material, model and lease travels over the second. A convergence assertion that fails while the join succeeded is almost always the relay, and `harness.relay.logPath` says so. See [p2p-sqlite/overview.md](../../../electron/main/docs/p2p-sqlite/overview.md).
 - **Pick the category by the failure mode the test guards against:**
   - `functionality` — "does the feature do what it claims" (default).
   - `persistence/session-management` — workspace lifecycle, single-writer locks, lease acquire/renew/release, identity handoff.
-  - `persistence/jazz` — CoValue durability, SQLite-backed rehydrate, sync convergence, content trust on load.
+  - `persistence/jazz` — durability, SQLite-backed rehydrate, sync convergence, content trust on load. (The folder name predates the migration; the surface is now SQLite + cr-sqlite.)
   - `integrity` — round-trip symmetry, idempotence, derived-value invariants that must hold regardless of path taken.
   - `performance` — assertions on time / memory / payload-size budgets. A test that merely happens to be slow is not a performance test.
   - `security` — sanitization (SVG `<script>` strip, etc.), auth/permission rejection, capability boundaries.

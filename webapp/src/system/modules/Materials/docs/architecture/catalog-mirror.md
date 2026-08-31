@@ -9,8 +9,9 @@ adding a read path, a pin, or anything that puts materials into Redux.
 
 Related: [overview.md](./overview.md) (module layout),
 [graph-semantics.md](./graph-semantics.md) (how the catalog is stored),
-[../jazz.md](../jazz.md) (sync and write paths),
-[../../../../docs/analysis/materials-catalog-lag-analysis.md](../../../../docs/analysis/materials-catalog-lag-analysis.md)
+[../jazz.md](../jazz.md) (the Jazz layout — history; storage and sync moved to
+SQLite, see [p2p-sqlite/overview.md](../../../../../../electron/main/docs/p2p-sqlite/overview.md)),
+[../../../../../docs/analysis/materials-catalog-lag-analysis.md](../../../../../docs/analysis/materials-catalog-lag-analysis.md)
 (the measurements that produced all of this).
 
 ---
@@ -20,8 +21,11 @@ Related: [overview.md](./overview.md) (module layout),
 > **Redux holds what the UI is showing, plus what open tabs reference, plus a
 > short tail of what was recently read. Never the catalog.**
 
-The catalog lives in the workspace's Jazz store and is read through the main
-process. The renderer keeps a *mirror* of a slice of it. Everything below is
+The catalog lives in the workspace's SQLite database and is read through the
+main process — one page, one row or one delta at a time, never whole. (It was
+Jazz until 2026-08-30; the renderer contract did not change with the store,
+which is how the migration stayed invisible from here.) The renderer keeps a
+*mirror* of a slice of it. Everything below is
 machinery for keeping that sentence true while the UI behaves as if the whole
 catalog were at hand.
 
@@ -275,8 +279,8 @@ Read it like any other graph: `useGraph(CATALOG_GRAPH_ID)` or
 Known cost: the Graph module persists every graph on a session save and
 rehydrates them at boot, so this one is written to `.session/Graph/graphs/`
 too. It is bounded by the mirror, and `workspaceSelected` resets it before any
-stale copy can be read — but a graph derived from Jazz does not really want
-persisting, and an "ephemeral graph" flag in the Graph module would be the
+stale copy can be read — but a graph derived from the catalog does not really
+want persisting, and an "ephemeral graph" flag in the Graph module would be the
 clean fix.
 
 ## 7. Main-process side
@@ -361,4 +365,4 @@ Anything in this area is a regression if it breaks one of these:
   search and the resident-row bound at thousands of materials;
   `catalogRender.e2e.test.ts` — cold open at ≤ 1k; `catalogDelta.e2e.test.ts` —
   propagation latency. Budgets and their tiers follow
-  [e2e-tests.md §11](../../../../docs/quality/e2e-tests.md).
+  [e2e-tests.md §11](../../../../../docs/quality/e2e-tests.md).

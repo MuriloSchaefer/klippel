@@ -1,7 +1,12 @@
 # Materials — Jazz storage & sync
 
-> **History — Jazz is being removed.** This describes what exists today, not
-> the direction. See [jazz-is-dead.md](../../../../docs/jazz-is-dead.md) before writing code against it.
+> **History — storage and sync have moved.** The layout below is how this
+> module worked on Jazz until 2026-08-30. Rows now live in SQLite and reach
+> other peers as `crsql_changes` over our own relay
+> ([p2p-sqlite/overview.md](../../../../../electron/main/docs/p2p-sqlite/overview.md)); the write paths and the "how an edit travels"
+> sections here describe the old machinery. What is still current is the
+> *shape* of the data and the IPC contract, which the migration preserved.
+> See [jazz-is-dead.md](../../../../docs/jazz-is-dead.md) before writing code against it.
 
 How the materials catalog is laid out on Jazz, how a single edit travels from a click to other peers, and where the seams live.
 

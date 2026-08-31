@@ -15,6 +15,14 @@ release staleness, quantified in §4.
 Companion to [materials-catalog-storage-options.md](./materials-catalog-storage-options.md)
 (the measurements) and [jazz-is-dead.md](../jazz-is-dead.md) (the decision).
 
+> **Update, 2026-08-30 — this is now built.** Phases 1–4 shipped: catalog,
+> models and sync all run on cr-sqlite. What it turned into, and what it costs
+> at scale, are documented where the code is:
+> [electron/main/docs/p2p-sqlite/overview.md](../../../electron/main/docs/p2p-sqlite/overview.md)
+> and [scalability.md](../../../electron/main/docs/p2p-sqlite/scalability.md).
+> This study stays as the reasoning that got there; where the two disagree, the
+> p2p-sqlite docs describe what exists.
+
 ---
 
 ## 1. What Jazz actually holds
@@ -101,7 +109,7 @@ dumb WebSocket relay carries it unchanged.
 
 **Measured**, same benchmark, CRRs enabled, prebuilt `crsqlite.so` v0.16.3
 loaded into `node:sqlite`
-([script](../../scripts/devtools/catalog-crsqlite-bench.mjs)):
+([script](../../../scripts/devtools/catalog-crsqlite-bench.mjs)):
 
 | | plain SQLite 10k | cr-sqlite 10k | plain 100k | cr-sqlite 100k |
 |---|---|---|---|---|
@@ -217,6 +225,9 @@ matter.
   `crsql_changes` rows can do both. If those properties matter they have to be
   rebuilt on top (encrypt and sign payloads client-side), and that interacts
   badly with a merge the extension performs for us.
+  **Decided 2026-08-30: dropped, knowingly.** The relay is trusted, peers
+  authenticate with a shared token, and a public relay is not an option under
+  this design. The full statement lives at the top of `sync/protocol.ts`.
 - **A vendored native extension.** cr-sqlite ships as a loadable `.so`/`.dylib`
   /`.dll` per platform, at a version whose last release is January 2024 (§4).
   We would own the build, or pin 0.16.3 and track the repo.
@@ -227,10 +238,11 @@ matter.
 
 ## 8. Still unmeasured
 
-- **cr-sqlite under Electron's `better-sqlite3` build.** `loadExtension` exists
-  on both `better-sqlite3` 12.10.0 and `node:sqlite`, and the schema loads and
-  upgrades cleanly under the latter; loading the extension into the
-  Electron-ABI build has not been tried.
+- ~~**cr-sqlite under Electron's `better-sqlite3` build.**~~ Answered: it
+  loads, and an in-place CRR upgrade of a populated database works (verified on
+  the real 2 110-material store). The extension is fetched and packaged at
+  **build** time (`scripts/devtools/fetch-crsqlite.mjs`, Forge
+  `generateAssets`), never at run time — a user is not always online.
 - **The cold-start cost of a Jazz catalog at 10k** is now moot for the catalog:
   nothing reads it at run time after the one-time projection. It would still be
   the number to know for `models`, which phase 3 moves.
