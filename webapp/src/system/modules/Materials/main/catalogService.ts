@@ -12,8 +12,14 @@
  * by diffing CoValue signatures.
  */
 import { getActiveWorkspace } from "../../../../../electron/main/jazz";
+import { pushLocalChanges } from "../../../../../electron/main/sync";
 import { notifyCatalogChanged, windowOf } from "./materials";
-import { loadWindow, getMaterialRow, countMaterials } from "./catalogDb";
+import {
+  loadWindow,
+  getMaterialRow,
+  countMaterials,
+  MAX_WINDOW_LIMIT,
+} from "./catalogDb";
 import {
   applyMaterialUpdate,
   applyStockUpdate,
@@ -83,9 +89,16 @@ export async function refreshCatalogRanking(): Promise<void> {
   await refreshUsage(active.name);
 }
 
-/** A write happened: re-rank nothing, but tell the renderers. */
+/**
+ * A write happened: tell this app's renderers, and put it on the wire.
+ *
+ * Both, because they serve different readers — the local UI refreshes from the
+ * tick, other peers from the change rows. `pushLocalChanges` is a no-op when
+ * the workspace does not sync.
+ */
 function afterWrite(): void {
   notifyCatalogChanged();
+  pushLocalChanges();
 }
 
 // ---- reads ----------------------------------------------------------
@@ -123,25 +136,45 @@ export async function computeCatalogDelta(
  * The whole catalog. The perf-harness / explicit-refresh path — invariant 8.1
  * still holds, nothing in the app dispatches it.
  */
+/**
+ * Page size for the whole-catalog read — the reader's own ceiling, so the walk
+ * makes as few round trips as it is allowed to.
+ */
+const CATALOG_PAGE = MAX_WINDOW_LIMIT;
+
 export async function loadMaterialsCatalog(
   clientId?: string,
 ): Promise<CatalogSnapshot> {
   const workspace = await ready();
-  // One page sized at the catalog: the window reader already assembles rows,
-  // edges and the bounded sets in the exact snapshot shape.
   const total = countMaterials(workspace);
-  const answer = loadWindow(workspace, { limit: Math.max(1, total), offset: 0 });
+  // Paged, not one big page. `loadWindow` clamps any request to
+  // MAX_WINDOW_LIMIT, so asking for `total` in one go silently returned the
+  // first 1 000 by rank and dropped the rest — a caller reading "the whole
+  // catalog" got a truncated one with nothing to indicate it. Walking the
+  // pages honours that ceiling and still answers the question asked.
+  const snapshot: CatalogSnapshot = {
+    materials: {},
+    materialTypes: {},
+    industries: {},
+    sellers: {},
+    edges: {},
+  };
+  for (let offset = 0; offset < Math.max(1, total); offset += CATALOG_PAGE) {
+    const answer = loadWindow(workspace, { limit: CATALOG_PAGE, offset });
+    Object.assign(snapshot.materials, answer.materials);
+    Object.assign(snapshot.materialTypes, answer.materialTypes);
+    Object.assign(snapshot.industries, answer.industries);
+    Object.assign(snapshot.sellers, answer.sellers);
+    Object.assign(snapshot.edges, answer.edges);
+    // A page that comes back short means we have reached the end — including
+    // the empty-catalog case, where `total` is 0 and one pass runs.
+    if (Object.keys(answer.materials).length < CATALOG_PAGE) break;
+  }
   if (clientId) {
-    trackClientWindow(clientId, Object.keys(answer.materials), { reset: true });
+    trackClientWindow(clientId, Object.keys(snapshot.materials), { reset: true });
     markClientCurrent(clientId);
   }
-  return {
-    materials: answer.materials,
-    materialTypes: answer.materialTypes,
-    industries: answer.industries,
-    sellers: answer.sellers,
-    edges: answer.edges,
-  };
+  return snapshot;
 }
 
 // ---- writes ---------------------------------------------------------

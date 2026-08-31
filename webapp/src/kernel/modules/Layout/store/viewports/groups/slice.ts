@@ -5,6 +5,7 @@ import { createGroup, deleteGroup } from "./actions";
 import { PathLike } from "fs";
 
 import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
+import { parseSessionFile } from "../../sessionFile";
 storage.ensureDir(`.session/Layout/viewPortManager/.groups`);
 export const GROUPS_SESSION_PATH = ".session/Layout/viewPortManager/.groups";
 
@@ -43,8 +44,12 @@ export const pruneVPGroupFiles = async (liveNames: string[]) => {
 const restoreSession = async (sessionPath: PathLike = ".session/Layout/viewPortManager/.groups") => {
   const files = await storage.searchDir(sessionPath, ['*.json'], { withFileTypes: true, });
   const state = await files.reduce(async (acc, file) => {
-    const fileContent = await storage.readFile<string>(`${sessionPath}/${file.name}`, {encoding: 'utf-8'});
-    const content = JSON.parse(fileContent) as ViewportGroupState;
+    const path = `${sessionPath}/${file.name}`;
+    const fileContent = await storage.readFile<string>(path, {encoding: 'utf-8'});
+    const content = parseSessionFile<ViewportGroupState | null>(fileContent, path, null);
+    // A group with no name cannot be keyed or restored — drop it rather than
+    // key the state by `undefined`.
+    if (!content?.name) return acc;
     return {...await acc, [content.name]: content};
   }, {})
   return state;

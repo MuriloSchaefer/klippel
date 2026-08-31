@@ -125,6 +125,31 @@ describe("Phase 3 — collaborative join + lease banner", () => {
     await waitForModel(peerB, MODEL_A);
   }, 180_000);
 
+  // The status surface both the systray indicator and the two-peer debug
+  // session (`scripts/two-peer-share.mjs`) read to answer "is sync actually
+  // working". Asserted here because every other test in this file would still
+  // pass if it reported nonsense — and a debug session that trusts a broken
+  // status is worse than one with no status at all.
+  it("both peers report a connected relay in the same room", async () => {
+    const relayOf = (peer: Peer) =>
+      peer.page.evaluate(async () => {
+        const status = await window.electron.jazz.syncStatus();
+        return status.relay;
+      });
+
+    const [a, b] = await Promise.all([relayOf(peerA), relayOf(peerB)]);
+    expect(a.enabled).toBe(true);
+    expect(b.enabled).toBe(true);
+    expect(a.connected).toBe(true);
+    expect(b.connected).toBe(true);
+    // Same room — the workspace coId, not either peer's local folder name,
+    // which differ here (B joined as `joined-<name>`).
+    expect(a.room).toBe(b.room);
+    // Different databases. Equal site ids would mean the two peers share one
+    // env dir, and would overwrite rather than merge.
+    expect(a.site).not.toBe(b.site);
+  }, 60_000);
+
   it("peer B creates a model and peer A sees it", async () => {
     // Step 5 — peer B creates via MCP.
     actAs(peerB);

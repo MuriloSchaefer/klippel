@@ -25,6 +25,7 @@ import { app } from "electron";
 
 import { HOME } from "../storage";
 import { MIGRATIONS, REPLICATED_TABLES } from "./schema";
+import { attachSync, detachSync } from "../sync";
 
 /** Loadable-extension file name, per platform. */
 const EXT_FILE =
@@ -177,12 +178,36 @@ export function workspaceDb(workspace: string): WorkspaceDb {
   }
 
   active = { db, workspace, path, replicated };
+  // Sync follows the database it replicates — same lifetime, same workspace.
+  attachSync(workspace, db, replicated);
   return active;
 }
 
 /** The open database, or `null` when no workspace is active. */
 export function activeWorkspaceDb(): WorkspaceDb | null {
   return active;
+}
+
+/**
+ * Re-evaluate sync, opening `workspace` if it is not the open one.
+ *
+ * Sharing is turned on from the UI, long after the database was opened, and
+ * the user expects to be reachable now rather than after a restart. Opening is
+ * part of the job: enabling sharing closes and reopens the workspace, and the
+ * database is opened lazily by the first read — so without this a peer that
+ * has just shared sits disconnected until something happens to touch it, and
+ * answers no one's catch-up request in the meantime.
+ *
+ * Lives here rather than in the sync module because that one must not import
+ * the database module back.
+ */
+export function reattachSync(workspace?: string): void {
+  if (workspace && active?.workspace !== workspace) {
+    workspaceDb(workspace);
+    return;
+  }
+  if (!active) return;
+  attachSync(active.workspace, active.db, active.replicated);
 }
 
 /**
@@ -210,6 +235,8 @@ export function prepare(db: Db, sql: string): Statement {
 
 export function closeWorkspaceDb(): void {
   if (!active) return;
+  // Before the handle goes: the client holds statements against it.
+  detachSync();
   try {
     // cr-sqlite keeps per-connection state that must be torn down before the
     // handle closes, or the next open of the same file finds a dangling site.

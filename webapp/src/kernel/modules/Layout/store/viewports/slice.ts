@@ -35,6 +35,8 @@ export const persistActiveVP = (vpName: string) => {
   return vpName;
 };
 
+import { parseSessionFile } from "../sessionFile";
+
 const DIRTY_SESSION_PATH = ".session/Layout/viewPortManager/dirtyViewports.json";
 
 export const persistDirtyViewports = (dirtyViewports: { [name: string]: boolean }) => {
@@ -49,7 +51,7 @@ const restoreDirtyViewports = async (): Promise<{ [name: string]: boolean }> => 
   const exists = await storage.exists(DIRTY_SESSION_PATH);
   if (!exists) return {};
   const content = await storage.readFile<string>(DIRTY_SESSION_PATH, { encoding: "utf-8" });
-  return JSON.parse(content) as { [name: string]: boolean };
+  return parseSessionFile<{ [name: string]: boolean }>(content, DIRTY_SESSION_PATH, {});
 };
 
 const restoreSession = async (
@@ -59,11 +61,15 @@ const restoreSession = async (
     withFileTypes: true,
   });
   const state = await files.reduce(async (acc, file) => {
-    const content = JSON.parse(
-      await storage.readFile<string>(`${sessionPath}/${file.name}`, {
-        encoding: "utf-8",
-      })
-    ) as ViewportState;
+    const path = `${sessionPath}/${file.name}`;
+    const content = parseSessionFile<ViewportState | null>(
+      await storage.readFile<string>(path, { encoding: "utf-8" }),
+      path,
+      null,
+    );
+    // A viewport with no name cannot be keyed, restored, or selected — drop it
+    // rather than write an `undefined` key the rest of the module then reads.
+    if (!content?.name) return acc;
     return {...await acc, [content.name]: content };
   }, {});
 

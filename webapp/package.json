@@ -61,6 +61,7 @@
     "start": "electron-vite preview --mode development",
     "dev": "npm run crsqlite && electron-vite dev --watch --mode development --sourcemap",
     "jazz:sync": "jazz-run sync --in-memory --host 127.0.0.1 --port ${KLIPPEL_JAZZ_SYNC_PORT:-4242}",
+    "sync:relay": "node scripts/devtools/sync-relay.mjs --port ${KLIPPEL_SYNC_PORT:-4300} --host ${KLIPPEL_SYNC_HOST:-127.0.0.1}",
     "prebuild": "npm run crsqlite && electron-vite build",
     "package": "npm run crsqlite && electron-vite build && electron-forge package",
     "make": "npm run crsqlite && electron-vite build && electron-forge make",

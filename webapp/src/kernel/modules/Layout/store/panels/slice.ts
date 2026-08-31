@@ -10,6 +10,7 @@ import { initialState, PanelsState } from "./state";
 import { PathLike } from "fs";
 
 import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
+import { parseSessionFile } from "../sessionFile";
 storage.ensureDir(".session/Layout/panels");
 
 export function persistPanelsState(state: PanelsState) {
@@ -29,22 +30,24 @@ export function persistPanelsState(state: PanelsState) {
 const restorePanelsSession = async (
   sessionPath: PathLike = ".session/Layout/panels"
 ) => {
-  const detailsExists = await storage.exists(`${sessionPath}/details.json`);
+  const detailsPath = `${sessionPath}/details.json`;
+  const detailsExists = await storage.exists(detailsPath);
   const detailsContent = !detailsExists
     ? initialState.details
-    : JSON.parse(
-        await storage.readFile<string>(`${sessionPath}/details.json`, {
-          encoding: "utf-8",
-        })
+    : parseSessionFile(
+        await storage.readFile<string>(detailsPath, { encoding: "utf-8" }),
+        detailsPath,
+        initialState.details,
       );
 
-  const settingsExists = await storage.exists(`${sessionPath}/settings.json`);
+  const settingsPath = `${sessionPath}/settings.json`;
+  const settingsExists = await storage.exists(settingsPath);
   const settingsContent = !settingsExists
     ? initialState.settings
-    : JSON.parse(
-        await storage.readFile<string>(`${sessionPath}/settings.json`, {
-          encoding: "utf-8",
-        })
+    : parseSessionFile(
+        await storage.readFile<string>(settingsPath, { encoding: "utf-8" }),
+        settingsPath,
+        initialState.settings,
       );
   return { details: detailsContent, settings: settingsContent } as PanelsState;
 };

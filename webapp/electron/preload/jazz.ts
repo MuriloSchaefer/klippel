@@ -27,6 +27,17 @@ export type JazzWorkspaceIndexEntry = {
 };
 export type JazzJoinWorkspaceInput = { name: string; coId: string; syncUrl: string };
 
+/** The cr-sqlite peer's state — catalog and models replicate through this. */
+export interface RelaySyncStatus {
+  enabled: boolean;
+  room: string | null;
+  url?: string;
+  site?: string;
+  connected?: boolean;
+  pushed?: number;
+  applied?: number;
+}
+
 export interface JazzSyncStatus {
   workspaceName: string | null;
   workspaceCoId: string | null;
@@ -35,6 +46,11 @@ export interface JazzSyncStatus {
   peers: string[];
   connected: boolean;
   accountId: string | null;
+  /**
+   * Deliberately separate from the cojson fields above: two servers carry two
+   * kinds of data during the migration, and either can be down alone.
+   */
+  relay: RelaySyncStatus;
 }
 
 export interface SyncLogEntry {

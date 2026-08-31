@@ -38,8 +38,14 @@ export { ftsQuery, haystackForRow, rowToDto } from "./catalogRows";
 
 /** Default page size — "100 more frequently used" from the product ask. */
 export const DEFAULT_WINDOW_LIMIT = 100;
-/** Ceiling on one page; a caller asking for everything is asking wrongly. */
-const MAX_WINDOW_LIMIT = 1_000;
+/**
+ * Ceiling on one page; a caller asking for everything is asking wrongly.
+ *
+ * Exported because the whole-catalog read walks pages of exactly this size —
+ * it used to ask for the row count in one call and get a silently truncated
+ * answer.
+ */
+export const MAX_WINDOW_LIMIT = 1_000;
 interface OrgRow {
   org_key: string;
   type: string;

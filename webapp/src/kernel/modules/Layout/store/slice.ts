@@ -8,6 +8,7 @@ import {
   LayoutState, layoutInitialState
 } from "./state";
 import { PathLike } from "fs";
+import { parseSessionFile } from "./sessionFile";
 import type { PaletteMode } from "@mui/material";
 
 import { defineRehydration, workspaceStorage as storage } from "@kernel/modules/Store/workspaceScope";
@@ -63,10 +64,13 @@ const restoreThemeSession = async (
     }
     return { theme: stored ?? layoutInitialState.theme };
   }
-  const fileContent = await storage.readFile<string>(`${sessionPath}/theme.json`, {
+  const path = `${sessionPath}/theme.json`;
+  const fileContent = await storage.readFile<string>(path, {
     encoding: "utf-8",
   });
-  return JSON.parse(fileContent) as { theme: PaletteMode };
+  return parseSessionFile(fileContent, path, {
+    theme: layoutInitialState.theme,
+  });
 };
 
 const buildLayoutInitial = async (): Promise<LayoutState> => ({

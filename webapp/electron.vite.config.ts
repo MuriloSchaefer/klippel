@@ -17,6 +17,10 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve(__dirname, "electron/main/index.ts"),
+          // The sync relay, as a process of its own. Built here so operators
+          // and the collaborative harness start the same code the app ships
+          // with, rather than a parallel script that can drift from it.
+          "sync-relay": resolve(__dirname, "electron/main/sync/relayMain.ts"),
         },
       },
     },

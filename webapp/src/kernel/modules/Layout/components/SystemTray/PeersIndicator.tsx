@@ -21,6 +21,16 @@ import { refreshFromPeers } from "@kernel/modules/Store/actions";
  * component doesn't pull the preload types into the renderer
  * bundle's type surface — the IPC payload is the contract.
  */
+interface RelayStatus {
+  enabled: boolean;
+  room: string | null;
+  url?: string;
+  site?: string;
+  connected?: boolean;
+  pushed?: number;
+  applied?: number;
+}
+
 interface SyncStatus {
   workspaceName: string | null;
   workspaceCoId: string | null;
@@ -29,6 +39,8 @@ interface SyncStatus {
   peers: string[];
   connected: boolean;
   accountId: string | null;
+  /** The cr-sqlite peer — where the catalog and the models actually travel. */
+  relay: RelayStatus;
 }
 
 const POLL_INTERVAL_MS = 1000;
@@ -41,6 +53,7 @@ const EMPTY: SyncStatus = {
   peers: [],
   connected: false,
   accountId: null,
+  relay: { enabled: false, room: null },
 };
 
 /**
@@ -52,7 +65,10 @@ const EMPTY: SyncStatus = {
  *
  * Click opens a `PointerContainer` panel with the resolved sync URL,
  * the `syncOptIn` flag, the local accountId, and the peer-id list —
- * the same payload an engineer would otherwise dig out via DevTools.
+ * the same payload an engineer would otherwise dig out via DevTools —
+ * plus the cr-sqlite relay's own state, which is what carries the catalog
+ * and the models. The icon still reflects cojson; the relay has its own
+ * rows because the two connections fail independently.
  */
 const PeersIndicator: React.FC = () => {
   const pointerModule = useModule<IPointerModule>("Pointer");
@@ -181,6 +197,40 @@ const PeersIndicator: React.FC = () => {
             label="Conta local"
             value={status.accountId ?? "—"}
             mono
+          />
+          {/*
+            The relay is a second, independent connection: the catalog and the
+            models replicate through it, while the fields above describe
+            cojson. Either can be down alone, and "my edits are not arriving"
+            is almost always this one — so it gets its own rows, including the
+            counters, because a connected relay that has carried nothing is a
+            different problem from one that is not connected.
+          */}
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="overline" color="text.secondary">
+              Relay (catálogo e modelos)
+            </Typography>
+          </Box>
+          <StatusRow
+            label="Estado"
+            value={
+              !status.relay.enabled
+                ? "desabilitado"
+                : status.relay.connected
+                ? "conectado"
+                : "desconectado"
+            }
+          />
+          <StatusRow label="Sala" value={status.relay.room ?? "—"} mono />
+          <StatusRow label="URL" value={status.relay.url ?? "—"} mono />
+          <StatusRow label="Site" value={status.relay.site ?? "—"} mono />
+          <StatusRow
+            label="Mudanças"
+            value={
+              status.relay.enabled
+                ? `${status.relay.pushed ?? 0} enviadas / ${status.relay.applied ?? 0} recebidas`
+                : "—"
+            }
           />
           <Box sx={{ mt: 1 }}>
             <Typography variant="caption" color="text.secondary">

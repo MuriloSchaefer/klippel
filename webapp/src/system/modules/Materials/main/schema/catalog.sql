@@ -29,7 +29,13 @@
 -- (`catalogWriter.ts`), and an orphan edge is ignored, not fatal.
 --
 -- CHECK constraints *are* allowed on CRR tables, so every closed-vocabulary
--- column has one. They are the part the storage engine can still enforce.
+-- column has one, and they are enforced on every local write. They are
+-- deliberately **suspended while merging** a peer's changes: a change row
+-- carries one column, so an incoming row is materialised from defaults and
+-- filled in, and `type IN (…)` would reject that intermediate row whose `type`
+-- is still ''. A check describes a complete row, which a merge only produces
+-- at the end of its (single) transaction. See `applyChanges` in
+-- `electron/main/sync/client.ts`.
 --
 -- Primary keys are uuidv5(namespace, domain key) — see `electron/main/db/ids.ts`
 -- for why they are derived rather than random.

@@ -5,10 +5,11 @@
  * store of record for models, their SVG and their attachments. Jazz is read
  * once per workspace, by the projection, and never written.
  *
- * Same channels, same DTOs. The one semantic change is the edit lease, which
- * is now local to this peer — see `modelsDb.ts`.
+ * Same channels, same DTOs. Writes also put themselves on the wire — see
+ * `afterWrite` below.
  */
 import { getActiveWorkspace } from "../../../../../electron/main/jazz";
+import { pushLocalChanges } from "../../../../../electron/main/sync";
 import * as store from "./modelsDb";
 import { MAX_DOCUMENT_BYTES } from "./modelsDb";
 import { ensureModelsProjected } from "./modelsMigration";
@@ -54,10 +55,23 @@ export async function loadModel(id: string): Promise<LoadedModel | null> {
   return store.loadModel(await ready(), id);
 }
 
+/**
+ * Put this peer's writes on the wire.
+ *
+ * Every model mutation goes through here rather than each one remembering to:
+ * a write that reaches SQLite but never the relay is invisible to everyone
+ * else, and that failure is silent on the writing peer.
+ */
+function afterWrite(): void {
+  pushLocalChanges();
+}
+
 export async function createModel(
   input: CreateModelInput,
 ): Promise<ModelSummaryDTO> {
-  return store.createModel(await ready(), input);
+  const summary = store.createModel(await ready(), input);
+  afterWrite();
+  return summary;
 }
 
 export async function updateModelGraph(
@@ -65,6 +79,7 @@ export async function updateModelGraph(
   graphJson: string,
 ): Promise<void> {
   store.updateModelGraph(await ready(), id, graphJson, currentAccountId());
+  afterWrite();
 }
 
 export async function updateModelDescription(
@@ -72,25 +87,37 @@ export async function updateModelDescription(
   description: string,
 ): Promise<void> {
   store.updateModelDescription(await ready(), id, description);
+  afterWrite();
 }
 
 export async function acquireEditLease(id: string): Promise<EditLeaseSnapshot> {
-  return store.acquireLease(await ready(), id, currentAccountId());
+  const lease = store.acquireLease(await ready(), id, currentAccountId());
+  // Push immediately: a lock the other peer learns about a minute from now is
+  // not a lock, and the whole point of taking it is that someone else stops.
+  afterWrite();
+  return lease;
 }
 
 export async function renewEditLease(id: string): Promise<EditLeaseSnapshot> {
-  return store.renewLease(await ready(), id, currentAccountId());
+  const lease = store.renewLease(await ready(), id, currentAccountId());
+  afterWrite();
+  return lease;
 }
 
 export async function releaseEditLease(id: string): Promise<void> {
   store.releaseLease(await ready(), id, currentAccountId());
+  // A release that does not reach the other peer leaves the model locked for
+  // the rest of the TTL, for no reason.
+  afterWrite();
 }
 
 export async function uploadModelSvg(
   id: string,
   svgContent: string,
 ): Promise<{ coId: string }> {
-  return store.saveModelSvg(await ready(), id, svgContent, currentAccountId());
+  const result = store.saveModelSvg(await ready(), id, svgContent, currentAccountId());
+  afterWrite();
+  return result;
 }
 
 export async function loadModelSvg(id: string): Promise<string | null> {
@@ -111,7 +138,7 @@ export async function uploadModelDocument(
         `${MAX_DOCUMENT_BYTES} byte limit`,
     );
   }
-  return store.saveModelDocument(
+  const result = store.saveModelDocument(
     await ready(),
     id,
     {
@@ -124,6 +151,8 @@ export async function uploadModelDocument(
     },
     currentAccountId(),
   );
+  afterWrite();
+  return result;
 }
 
 export async function loadModelDocument(
@@ -138,6 +167,7 @@ export async function deleteModelDocument(
   documentId: string,
 ): Promise<void> {
   store.deleteModelDocument(await ready(), id, documentId, currentAccountId());
+  afterWrite();
 }
 
 /** Every model's graph — what the material-usage projection walks. */

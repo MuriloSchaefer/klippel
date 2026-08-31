@@ -15,8 +15,15 @@ export const MODELS_MIGRATIONS: readonly string[] = [modelsV1];
 /**
  * Tables `crsql_as_crr` is applied to when the extension is present.
  *
- * `model_edit_leases` is absent on purpose: a lease describes a live session
- * on this peer, and merging one in from elsewhere would lock a model nobody is
- * editing.
+ * `model_edit_leases` included: a lease is only a lock if the other peer can
+ * see it, and under Jazz it synced. The obvious objection — a peer that goes
+ * offline holding one would lock the model forever — is answered by the TTL
+ * the lease already carries: every reader treats an expired lease as absent,
+ * so a dead holder's lock clears itself in `LEASE_TTL_MS` whether or not that
+ * peer ever comes back.
  */
-export const MODELS_REPLICATED_TABLES = ["models", "model_documents"] as const;
+export const MODELS_REPLICATED_TABLES = [
+  "models",
+  "model_documents",
+  "model_edit_leases",
+] as const;

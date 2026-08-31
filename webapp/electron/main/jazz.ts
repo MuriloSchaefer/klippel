@@ -55,6 +55,8 @@ import {
   WorkspaceCoMap,
   WorkspaceMetadata,
 } from "../../src/kernel/modules/Store/schema";
+import { reattachSync } from "./db";
+import { syncStatus, type SyncStatus } from "./sync";
 import { getAbsPath } from "./storage";
 import {
   upsertWorkspace,
@@ -424,6 +426,13 @@ async function openWorkspaceJazzNodeInner(name: string): Promise<ActiveWorkspace
     },
   };
 
+  // Connect the SQLite peer as part of opening the workspace, not lazily on
+  // the first catalog read. A shared workspace that is merely *open* must
+  // already be receiving other people's changes: waiting for a read means a
+  // peer sitting on a screen that reads nothing stays silently offline, and —
+  // worse — answers no one else's catch-up either.
+  reattachSync(name);
+
   return activeWorkspace!;
 }
 
@@ -536,6 +545,14 @@ export type JazzSyncStatus = {
   connected: boolean;
   /** Cojson account id for this peer. */
   accountId: string | null;
+  /**
+   * The cr-sqlite peer — where the catalog and models actually replicate.
+   *
+   * Separate from the fields above, which describe cojson: the two carry
+   * different data through different servers, and during the migration either
+   * can be up while the other is down.
+   */
+  relay: SyncStatus;
 };
 
 /**
@@ -556,6 +573,7 @@ export async function getSyncStatus(): Promise<JazzSyncStatus> {
       peers: [],
       connected: false,
       accountId: null,
+      relay: syncStatus(),
     };
   }
   const entry = findWorkspace(ws.name);
@@ -573,6 +591,7 @@ export async function getSyncStatus(): Promise<JazzSyncStatus> {
     peers,
     connected,
     accountId: account?.$jazz?.id ?? null,
+    relay: syncStatus(),
   };
 }
 
@@ -768,6 +787,7 @@ export async function enableJazzWorkspaceSync(
       console.error("[jazz] waitForSync after enableSync failed", err);
     }
   }
+
   return updated;
 }
 

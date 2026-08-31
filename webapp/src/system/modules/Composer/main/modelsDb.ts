@@ -12,11 +12,11 @@
  *   body; that is a primary-key lookup now), so the field stays populated and
  *   nothing downstream has to care — but it is not a Jazz reference any more
  *   and must not be handed to anything expecting one.
- * - **The edit lease is local.** Under Jazz it was a CoValue that synced, so a
- *   peer could see another peer's lock. In SQLite it is a local table, which
- *   means the lock is only enforced within this process until phase 4 gives it
- *   a coordinator. That is a *narrowing* of the guarantee, and it is called out
- *   in the schema and in the change doc rather than left to be discovered.
+ * - **The edit lease is advisory, and replicated.** Its table is a CRR like the
+ *   others, so a peer sees another peer's lock, as it did under Jazz. What it
+ *   is not is mutual exclusion: two peers that acquire before hearing from each
+ *   other both believe they hold it. Every read honours `expiresAt`, which is
+ *   what stops an offline holder locking a model for good.
  */
 import { prepare, workspaceDb } from "../../../../../electron/main/db";
 import { storageId } from "../../../../../electron/main/db/ids";

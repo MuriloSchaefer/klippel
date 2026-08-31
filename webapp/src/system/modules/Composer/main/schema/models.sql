@@ -57,10 +57,15 @@ CREATE TABLE IF NOT EXISTS model_documents (
 
 -- Who is currently editing what.
 --
--- Deliberately **not** replicated: a lease is a statement about a live editing
--- session on one peer, and a stale lease merged in from a peer that has since
--- gone offline would lock a model nobody is editing. Sharing leases across
--- peers needs a coordinator, which is phase 4's problem.
+-- Replicated: a lease that only this peer can see is not a lock. The risk that
+-- argues against replicating it — a peer that goes offline still holding one —
+-- is bounded by the expiry every row carries and every reader honours, so a
+-- dead holder's lock clears itself within the TTL.
+--
+-- What replication does not buy is mutual exclusion: two peers that acquire
+-- before hearing from each other both believe they hold it, and converge on
+-- one holder afterwards. That was equally true under Jazz; a real lock needs a
+-- coordinator, which this is not.
 CREATE TABLE IF NOT EXISTS model_edit_leases (
   model_key         TEXT    NOT NULL PRIMARY KEY,
   holder_account_id TEXT    NOT NULL DEFAULT '',

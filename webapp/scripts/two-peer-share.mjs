@@ -8,8 +8,10 @@
  *   `src/system/modules/Composer/tests/collaborative/persistence/session-management/joinAndCollaborate.e2e.test.ts`
  * but talks to the *running* Electron instances launched by VS Code
  * (Peer A on CDP :9222, Peer B on :9223) instead of spawning its own
- * via `collaborativeHarness.ts`. The Jazz Sync Server is the
- * compound's own launch (`ws://127.0.0.1:4242`).
+ * via `collaborativeHarness.ts`. Both servers are the compound's own
+ * launches: the Jazz Sync Server (`ws://127.0.0.1:4242`) carries workspace
+ * identity, and the Sync Relay (`ws://127.0.0.1:4300`) carries the catalog
+ * and models. A peer needs both.
  *
  * Flow:
  *   1. Connect puppeteer to both peers (poll CDP until ready).
@@ -22,6 +24,10 @@
  *      should be idempotent so the user can re-trigger after a partial
  *      failure. Otherwise open Join panel and submit.
  *   5. Verify both peers' Share button reflects the active workspace.
+ *   6. Verify both peers' cr-sqlite relay is connected to the *same*
+ *      room. Without this the session looks healthy right up until
+ *      an edit silently fails to cross, which is the expensive way to
+ *      find out.
  *
  * Usage:
  *   node webapp/scripts/two-peer-share.mjs
@@ -217,6 +223,39 @@ async function joinWorkspace(page, { coId, syncUrl, name }) {
   log("B: join confirmed");
 }
 
+// ---- Relay verification ---------------------------------------------
+
+async function relayStatus(page) {
+  return page.evaluate(async () => {
+    const status = await window.electron.jazz.syncStatus();
+    return status.relay ?? { enabled: false, room: null };
+  });
+}
+
+/**
+ * Wait until this peer's relay client is connected.
+ *
+ * Polled rather than read once: `attachSync` runs when the workspace database
+ * opens, and the socket takes a moment more. A peer that never gets there is
+ * reported with what it *did* have, because "enabled: false" (never opted in)
+ * and "connected: false" (relay unreachable) are different problems.
+ */
+async function waitForRelay(page, label, deadlineMs = 30_000) {
+  const start = Date.now();
+  let last = { enabled: false, room: null };
+  while (Date.now() - start < deadlineMs) {
+    last = await relayStatus(page);
+    if (last.enabled && last.connected) {
+      log(`${label} relay connected: room=${last.room} site=${last.site?.slice(0, 8)}`);
+      return last;
+    }
+    await sleep(500);
+  }
+  throw new Error(
+    `${label} relay never connected within ${deadlineMs}ms — last status ${JSON.stringify(last)}`,
+  );
+}
+
 // ---- Orchestration --------------------------------------------------
 
 async function main() {
@@ -276,7 +315,28 @@ async function main() {
       });
     }
 
+    // Step 4 — both peers must be on the relay, in the same room. The share
+    // and join flows above only prove Jazz agreed; the catalog and the models
+    // travel somewhere else entirely.
+    const [aRelay, bRelay] = await Promise.all([
+      waitForRelay(peerA.page, "A"),
+      waitForRelay(peerB.page, "B"),
+    ]);
+    if (aRelay.room !== bRelay.room) {
+      throw new Error(
+        `peers are on different relay rooms — A=${aRelay.room} B=${bRelay.room}`,
+      );
+    }
+    if (aRelay.site === bRelay.site) {
+      // Same site id means one env dir is being shared by both peers: they
+      // would overwrite each other's changes rather than merge them.
+      throw new Error(
+        `both peers report site ${aRelay.site} — check ENV_NAME differs per peer`,
+      );
+    }
+
     log("done — both peers connected to the shared workspace");
+    log(`relay room ${aRelay.room} @ ${aRelay.url}`);
   } finally {
     // `puppeteer.connect` keeps a live websocket to the browser. Detach
     // both before exit so the Electron processes (still owned by VS

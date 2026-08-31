@@ -1,9 +1,15 @@
 /* istanbul ignore file */
 /**
- * Spawn N Electron peers + a local cojson sync server for collaborative
- * e2e tests. Each peer runs against an isolated env dir under
- * `~/klippel/envs/<name>/`, its own Chromium profile, and a unique CDP
- * port; the sync server connects them via WebSocket.
+ * Spawn N Electron peers + the two servers they sync through, for
+ * collaborative e2e tests. Each peer runs against an isolated env dir under
+ * `~/klippel/envs/<name>/`, its own Chromium profile, and a unique CDP port.
+ *
+ * **Two servers, deliberately.** Domain data (the catalog, models) replicates
+ * as `crsql_changes` through our own relay, but workspace identity still lives
+ * in Jazz: sharing mints a `coId` and joining resolves that CoValue from a
+ * cojson sync server. A peer with no cojson server cannot join at all, so
+ * until the Jazz layer is deleted the harness runs both — `sync` is the cojson
+ * server (the URL the Share panel reports), `relay` is the cr-sqlite one.
  *
  * The harness assumes `dist/electron/main/index.js` is already built —
  * collaborative tests are not the place to also exercise the build
@@ -36,9 +42,19 @@ export type Peer = {
   page: Page;
 };
 
+export type Server = {
+  url: string;
+  port: number;
+  process: ChildProcess;
+  logPath: string;
+};
+
 export type CollaborativeHarness = {
   peers: Peer[];
-  sync: { url: string; port: number; process: ChildProcess; logPath: string };
+  /** The cojson sync server — workspace identity, share + join. */
+  sync: Server;
+  /** The cr-sqlite relay — catalog and model changes. */
+  relay: Server;
   teardown: () => Promise<void>;
 };
 
@@ -55,12 +71,15 @@ const REPO_WEBAPP = join(__dirname, "..", "..", "..");
 const ELECTRON_BIN = join(REPO_WEBAPP, "node_modules", ".bin", "electron");
 const JAZZ_RUN_BIN = join(REPO_WEBAPP, "node_modules", ".bin", "jazz-run");
 const DIST_MAIN = join(REPO_WEBAPP, "dist", "electron", "main", "index.js");
+const DIST_RELAY = join(REPO_WEBAPP, "dist", "electron", "main", "sync-relay.js");
 
 function assertBuilt() {
-  if (!existsSync(DIST_MAIN)) {
-    throw new Error(
-      `[collaborativeHarness] missing ${DIST_MAIN} — run \`npm run prebuild\` before collaborative tests.`,
-    );
+  for (const path of [DIST_MAIN, DIST_RELAY]) {
+    if (!existsSync(path)) {
+      throw new Error(
+        `[collaborativeHarness] missing ${path} — run \`npm run prebuild\` before collaborative tests.`,
+      );
+    }
   }
 }
 
@@ -206,11 +225,32 @@ function spawnSyncServer(port: number, logPath: string, debug: boolean): ChildPr
   return child;
 }
 
+function spawnRelay(port: number, logPath: string, debug: boolean): ChildProcess {
+  // Plain `node`, not the Electron binary: the relay is a WebSocket hub with
+  // no window and no native dependency, and booting Electron for it would
+  // cost a GPU process slot that the peers need.
+  const child = spawn(
+    process.execPath,
+    [DIST_RELAY, "--port", String(port), "--host", "127.0.0.1"],
+    {
+      env: cleanEnv(),
+      stdio: logFileStdio(logPath, debug),
+      detached: false,
+    },
+  );
+  child.on("error", (err) => {
+    // eslint-disable-next-line no-console
+    console.error("[collaborativeHarness] sync-relay spawn error", err);
+  });
+  return child;
+}
+
 function spawnPeerProcess(opts: {
   envName: string;
   cdpPort: number;
   userDataDir: string;
   syncUrl: string;
+  relayUrl: string;
   logPath: string;
   debug: boolean;
 }): ChildProcess {
@@ -242,6 +282,7 @@ function spawnPeerProcess(opts: {
       KLIPPEL_CDP_PORT: String(opts.cdpPort),
       KLIPPEL_USER_DATA_DIR: opts.userDataDir,
       KLIPPEL_JAZZ_SYNC_URL: opts.syncUrl,
+      KLIPPEL_SYNC_URL: opts.relayUrl,
     },
     stdio: logFileStdio(opts.logPath, opts.debug),
     detached: false,
@@ -286,7 +327,7 @@ async function cleanupPeer(peer: Peer): Promise<void> {
 }
 
 /**
- * Boot `count` Electron peers + one cojson sync server. Returns a
+ * Boot `count` Electron peers + one sync relay. Returns a
  * `CollaborativeHarness` with `peers[i].page` ready for puppeteer calls,
  * plus a `teardown()` that kills every spawned process and removes the
  * temp env/user-data dirs. Always call `teardown()` in `afterAll`.
@@ -310,6 +351,19 @@ export async function spawnCollaborativePeers(
     );
   }
 
+  const relayPort = await reservePort();
+  const relayUrl = `ws://127.0.0.1:${relayPort}`;
+  const relayLogPath = join(tmpdir(), `klippel-collab-relay-${prefix}.log`);
+  const relayProcess = spawnRelay(relayPort, relayLogPath, debug);
+  try {
+    await waitForTcpReady("127.0.0.1", relayPort, 15_000);
+  } catch (err) {
+    await killProcessTree(syncProcess.pid);
+    throw new Error(
+      `sync relay never bound :${relayPort}\n--- relay log ---\n${tailLog(relayLogPath)}\n--- end ---\n${err instanceof Error ? err.message : err}`,
+    );
+  }
+
   const peers: Peer[] = [];
   try {
     for (let i = 0; i < opts.count; i += 1) {
@@ -325,7 +379,15 @@ export async function spawnCollaborativePeers(
       if (existsSync(userDataDir)) rmSync(userDataDir, { recursive: true, force: true });
       if (existsSync(envDir)) rmSync(envDir, { recursive: true, force: true });
 
-      const proc = spawnPeerProcess({ envName, cdpPort, userDataDir, syncUrl, logPath, debug });
+      const proc = spawnPeerProcess({
+        envName,
+        cdpPort,
+        userDataDir,
+        syncUrl,
+        relayUrl,
+        logPath,
+        debug,
+      });
 
       try {
         await waitForHttpReady(`http://127.0.0.1:${cdpPort}/json/version`, 60_000);
@@ -357,7 +419,9 @@ export async function spawnCollaborativePeers(
     }
   } catch (err) {
     for (const peer of peers) await cleanupPeer(peer);
-    try { await killProcessTree(syncProcess.pid); } catch { /* ignore */ }
+    for (const server of [syncProcess, relayProcess]) {
+      try { await killProcessTree(server.pid); } catch { /* ignore */ }
+    }
     throw err;
   }
 
@@ -369,15 +433,24 @@ export async function spawnCollaborativePeers(
     const watched = captureTree([
       ...peers.map((p) => p.process.pid),
       syncProcess.pid,
+      relayProcess.pid,
     ]);
     for (const peer of peers) await cleanupPeer(peer);
-    try { await killProcessTree(syncProcess.pid); } catch { /* ignore */ }
+    for (const server of [syncProcess, relayProcess]) {
+      try { await killProcessTree(server.pid); } catch { /* ignore */ }
+    }
     logSurvivors(`collaborativeHarness(${prefix})`, watched);
   };
 
   return {
     peers,
     sync: { url: syncUrl, port: syncPort, process: syncProcess, logPath: syncLogPath },
+    relay: {
+      url: relayUrl,
+      port: relayPort,
+      process: relayProcess,
+      logPath: relayLogPath,
+    },
     teardown,
   };
 }

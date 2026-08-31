@@ -24,9 +24,10 @@ import {
 } from "./catalogService";
 import { resetCatalogMigration } from "./catalogMigration";
 import { resetCatalogClients, refreshCatalogRanking } from "./catalogService";
-import { invalidateCatalogRanking } from "./materials";
+import { invalidateCatalogRanking, notifyCatalogChanged } from "./materials";
 import { registerMaterialUsageProvider } from "./usage";
 import { closeWorkspaceDb } from "../../../../../electron/main/db";
+import { onRemoteChanges } from "../../../../../electron/main/sync";
 
 /**
  * What other main-process modules may use.
@@ -85,6 +86,11 @@ registerMainModule({
   },
 
   registerIpc: ({ ipcMain }) => {
+    // A peer's changes have landed in SQLite; the renderers still think they
+    // are current. Same tick a local write raises, so the renderer side needs
+    // no new path — it already refetches on this.
+    onRemoteChanges(() => notifyCatalogChanged());
+
     ipcMain.handle("jazz-materials-load", async (event) => {
       try {
         const snapshot = await loadMaterialsCatalog(String(event.sender.id));
