@@ -30,7 +30,7 @@
     "dompurify": "^3.4.4",
     "electron-ollama": "^0.1.25",
     "electron-squirrel-startup": "^1.0.1",
-    "glob": "^13.0.6",
+    "glob": "^14.0.2",
     "helia": "^6.1.4",
     "install-peerdeps": "^3.0.7",
     "jazz-tools": "^0.19.0",
